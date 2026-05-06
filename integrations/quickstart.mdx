@@ -1,0 +1,79 @@
+---
+title: 'Set up your first connector in IronBee Integrations'
+description: 'Step-by-step guide to finding a connector in the catalog, authenticating, mapping fields, and testing your first IronBee integration.'
+sidebarTitle: 'Quickstart'
+keywords: ['integrations', 'quickstart', 'connector catalog', 'field mapping', 'connection test']
+---
+
+IronBee integrations let you connect your existing tools directly to the platform so data flows automatically between systems. This page walks you through the full process of setting up your first integration — from browsing the connector catalog to running a test sync — so you understand what to expect before going deeper into any individual connector or auth method.
+
+<Steps>
+  <Step title="Open the connector catalog">
+    In the IronBee sidebar, select **Integrations**, then click **Catalog**. The catalog lists all available pre-built connectors.
+
+    Use the search bar at the top to filter by name or category. Each connector card shows:
+    - The connector name and logo
+    - The authentication method it uses (API key, OAuth 2.0, or Service account)
+    - The sync capabilities available (for example, read contacts, write deals)
+
+    When you find the connector you want, click the card to open its setup panel.
+  </Step>
+
+  <Step title="Authenticate with your tool">
+    IronBee supports three authentication methods. The method shown depends on the connector:
+
+    **API key** — Paste your API key into the provided field. You can usually generate an API key from your tool's developer or settings section.
+
+    **OAuth 2.0** — Click **Authorize**. You are redirected to the tool's authentication page. Sign in and grant the requested permissions. IronBee automatically returns you to the setup panel once access is granted, and handles token refresh going forward.
+
+    **Service account** — Upload a JSON credentials file, then fill in any additional required fields shown in the form. IronBee encrypts this file at rest.
+
+    For detailed guidance on each method, see [Authentication methods](/integrations/authentication).
+
+    <Note>
+      Some connectors require your firewall or security group to allow outbound traffic from IronBee's IP ranges. Check the connector's documentation panel for a list of IPs to allowlist before saving your credentials.
+    </Note>
+  </Step>
+
+  <Step title="Configure field mapping">
+    After authenticating, IronBee presents the field mapping screen. Field mapping controls how data from your connected tool maps to IronBee's data model.
+
+    - Fields marked with an asterisk (\*) are required and must be mapped before you can save.
+    - Many fields are pre-filled with sensible defaults. Review them to confirm they match your data.
+    - Use the dropdown on each row to select the source field from your tool that should map to each IronBee field.
+
+    If a required field has no matching source in your tool, leave it as **Unmapped** and IronBee will skip populating it during sync.
+  </Step>
+
+  <Step title="Test the connection">
+    Click **Test connection**. IronBee triggers a sample sync that pulls a small number of records from your tool — typically the five most recent — and displays them for your review.
+
+    Inspect the preview records to confirm:
+    - The correct data source is connected
+    - Fields are populating as expected
+    - Required fields contain values
+
+    If the test fails, IronBee displays an error message explaining the cause. Common causes include incorrect credentials, insufficient permissions in the source tool, or a network restriction. Resolve the issue and click **Test connection** again.
+  </Step>
+
+  <Step title="Save and activate the integration">
+    Once the test passes, click **Save and activate**. IronBee begins syncing data on its default schedule. You can adjust the sync frequency and other settings from the integration's detail page at any time.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication methods" icon="key" href="/integrations/authentication">
+    Learn the details of API key, OAuth 2.0, and service account authentication, including when to rotate credentials.
+  </Card>
+  <Card title="CRM connectors" icon="users" href="/integrations/connectors/crm">
+    Connect Salesforce, HubSpot, or Pipedrive and configure which CRM objects sync to IronBee.
+  </Card>
+  <Card title="Configure webhooks" icon="webhook" href="/integrations/webhooks/configure">
+    Set up outbound webhooks so IronBee notifies your systems when events occur.
+  </Card>
+  <Card title="Platform quickstart" icon="rocket" href="/platform/quickstart">
+    Set up your workspace, invite your team, and configure roles before connecting integrations.
+  </Card>
+</CardGroup>

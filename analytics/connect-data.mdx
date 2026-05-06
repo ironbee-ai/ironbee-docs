@@ -1,0 +1,164 @@
+---
+title: 'Connect a data source to IronBee Analytics dashboards'
+description: 'Link a database, data warehouse, or SaaS tool to IronBee Analytics so you can query your data and build dashboards from a single place.'
+sidebarTitle: 'Connect data'
+keywords: ['data source', 'database', 'data warehouse', 'BigQuery', 'Snowflake', 'Redshift', 'PostgreSQL', 'MySQL', 'SaaS', 'connection']
+---
+
+IronBee Analytics supports three categories of data sources: relational databases, cloud data warehouses, and SaaS applications. Once you connect a source, its data becomes available across every dashboard and chart in your workspace. Credentials are encrypted at rest and never exposed after the initial save. This page covers all supported source types, walks through the connection flow for each category, and explains how to resolve the most common connection errors.
+
+## Supported source types
+
+| Category | Sources |
+|---|---|
+| **Database** | PostgreSQL, MySQL, Microsoft SQL Server, MariaDB |
+| **Data warehouse** | BigQuery, Snowflake, Amazon Redshift |
+| **SaaS** | Salesforce, HubSpot, Google Analytics, Stripe |
+
+<Info>
+Don't see a source you need? SaaS sources are also available as pre-built connectors under the Integrations tab. See [Integrations quickstart](/integrations/quickstart) and [CRM connectors](/integrations/connectors/crm) for details.
+</Info>
+
+## Connect a data source
+
+Navigate to **Analytics → Data Sources**, then click **Add data source**. Select the appropriate category and follow the steps below.
+
+<Tabs>
+  <Tab title="Database">
+    Use this flow for PostgreSQL, MySQL, Microsoft SQL Server, and MariaDB.
+
+    <Steps>
+      <Step title="Choose your database engine">
+        Select your database type from the source picker and click **Continue**.
+      </Step>
+
+      <Step title="Enter connection details">
+        Fill in the fields below:
+
+        | Field | Description |
+        |---|---|
+        | **Display name** | A label for this source inside IronBee (e.g., "Production Postgres"). |
+        | **Host** | The hostname or IP address of your database server. |
+        | **Port** | Default: `5432` (PostgreSQL), `3306` (MySQL), `1433` (SQL Server). |
+        | **Database** | The name of the specific database to connect to. |
+        | **Username** | A database user with read access to the tables you want to query. |
+        | **Password** | The password for that user. |
+        | **SSL** | Enable if your server requires encrypted connections (recommended). |
+      </Step>
+
+      <Step title="Allowlist IronBee's outbound IPs (if needed)">
+        If your database restricts inbound connections, add IronBee's outbound IP ranges to your allowlist before testing. You can find the current IP list under **Settings → Data Sources → Outbound IPs**.
+      </Step>
+
+      <Step title="Test and save">
+        Click **Test connection**. IronBee opens a temporary connection and verifies credentials and network access. When the test passes, click **Save**.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Data warehouse">
+    Use this flow for BigQuery, Snowflake, and Amazon Redshift.
+
+    <Steps>
+      <Step title="Choose your warehouse">
+        Select **BigQuery**, **Snowflake**, or **Redshift** from the source picker and click **Continue**.
+      </Step>
+
+      <Step title="Provide credentials">
+        Credential requirements differ by warehouse:
+
+        **BigQuery** — upload a service account JSON key file. The service account needs at least the `BigQuery Data Viewer` and `BigQuery Job User` roles on the target project.
+
+        **Snowflake** — provide your **Account identifier** (e.g., `myorg-myaccount`), **Warehouse**, **Database**, **Schema**, **Username**, and **Password**.
+
+        **Redshift** — provide your **Host** (cluster endpoint), **Port** (default `5439`), **Database**, **Username**, and **Password**.
+      </Step>
+
+      <Step title="Allowlist IronBee's outbound IPs (if needed)">
+        Snowflake and Redshift clusters often have network policies. Add IronBee's outbound IPs to the allowlist for your cluster before running the connection test. Find the IP list under **Settings → Data Sources → Outbound IPs**.
+      </Step>
+
+      <Step title="Test and save">
+        Click **Test connection**. When the test passes, click **Save**.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="SaaS">
+    Use this flow for Salesforce, HubSpot, Google Analytics, and Stripe.
+
+    <Steps>
+      <Step title="Choose your SaaS source">
+        Select the application from the source picker and click **Continue**.
+      </Step>
+
+      <Step title="Authenticate">
+        SaaS sources support two authentication methods depending on the provider:
+
+        - **OAuth** — click **Connect with [Provider]** and complete the OAuth consent screen in the pop-up window. IronBee stores the resulting token securely.
+        - **API key** — paste your API key or secret token into the field provided. Refer to the provider's documentation for instructions on generating an API key.
+
+        For full details on authentication options, see [Authentication](/integrations/authentication).
+      </Step>
+
+      <Step title="Select data objects (if prompted)">
+        Some SaaS sources let you choose which objects to sync — for example, Contacts, Deals, or Activities in a CRM. Select the objects relevant to your dashboards.
+      </Step>
+
+      <Step title="Test and save">
+        Click **Test connection**, then click **Save** when the test passes.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Manage credentials
+
+<Warning>
+Treat credentials with the same care as passwords. Use a dedicated read-only database user rather than an admin account. Rotate credentials in your source system first, then update them in IronBee under **Analytics → Data Sources → [source name] → Edit**.
+</Warning>
+
+IronBee encrypts all credentials at rest. After you save a data source, passwords and API keys are masked in the UI and cannot be retrieved in plain text — only overwritten.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection timed out">
+    A timeout usually means IronBee cannot reach the host over the network.
+
+    **Check the following:**
+    - Verify the **Host** and **Port** values are correct.
+    - Confirm that IronBee's outbound IPs are allowlisted in your firewall or security group rules.
+    - For data warehouses, check that the cluster is running and not paused (Snowflake and Redshift can auto-suspend).
+    - If you're connecting to a database in a private network (VPC), make sure IronBee has network access to that environment.
+  </Accordion>
+
+  <Accordion title="Authentication failed">
+    An authentication error means the credentials IronBee sent were rejected by the source.
+
+    **Check the following:**
+    - Re-enter the username and password — copy-paste errors are common, especially with special characters.
+    - Confirm the user account is active and not locked in the source system.
+    - For BigQuery, verify that the service account JSON is valid and has not expired or been deleted.
+    - For OAuth sources, try disconnecting and reconnecting to refresh the token.
+    - Ensure the user has at minimum read access to the target database or schema.
+  </Accordion>
+
+  <Accordion title="IP not allowlisted">
+    This error appears when the source system's network policy rejects the connection from IronBee's IP addresses.
+
+    **To fix this:**
+    1. Go to **Settings → Data Sources → Outbound IPs** and copy the current IP list.
+    2. Add those IPs to your database's security group (AWS), firewall rule (GCP/Azure), or network policy (Snowflake).
+    3. Return to IronBee and click **Test connection** again.
+
+    If you use a dynamic firewall or need to whitelist CIDRs rather than individual IPs, contact IronBee support for the full CIDR ranges.
+  </Accordion>
+</AccordionGroup>
+
+## What's next
+
+Once your data source is connected, you're ready to build dashboards:
+
+- [Create and share an IronBee dashboard](/analytics/dashboards/create-dashboard)
+- [Schedule automated reports](/analytics/reports/scheduled-reports)

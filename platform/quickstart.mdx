@@ -1,0 +1,109 @@
+---
+title: "Set up your IronBee workspace: a step-by-step guide"
+description: "Set up your IronBee workspace from scratch: create an org, configure general settings, invite teammates, and launch your first project in minutes."
+sidebarTitle: "Quickstart"
+---
+
+IronBee's platform layer is the foundation everything else runs on — before you connect a data source or configure an integration, you need a workspace, at least one project, and the right people invited. This guide walks you through each step in order, from first login to a fully configured workspace ready for your team.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An IronBee account with **Admin** access (created during signup or granted by an existing Admin)
+- Email addresses for the teammates you want to invite
+- SSO credentials from your identity provider if your organization uses single sign-on
+
+<Note>
+  If you signed up directly with an email and password, you already have Admin access to your workspace. SSO configuration is only required if your organization mandates it.
+</Note>
+
+## Set up your workspace
+
+<Steps>
+  <Step title="Create your workspace">
+    When you first log in to IronBee, you are prompted to create a workspace. Enter a **workspace name** and a unique **slug** — the slug becomes part of your workspace URL (for example, `app.ironbee.ai/acme-corp`).
+
+    <Tip>
+      Choose a slug that matches your organization name. Slugs can only contain lowercase letters, numbers, and hyphens. You cannot change the slug after creation, so pick carefully.
+    </Tip>
+
+    Click **Create workspace** to continue.
+  </Step>
+
+  <Step title="Configure general settings">
+    After your workspace is created, open **Settings** from the left sidebar. Set the following to match your organization's defaults:
+
+    - **Display name** — the name shown throughout the UI and in notification emails
+    - **Timezone** — used for scheduled reports and activity timestamps
+    - **Default project visibility** — choose **Private** to restrict new projects to invited members, or **Internal** to make them visible to all workspace members by default
+
+    Click **Save changes** when done. These settings apply to all new members and projects going forward.
+
+    For a full overview of every setting, see [Configure your workspace settings](/platform/configuration/settings).
+  </Step>
+
+  <Step title="Invite your teammates">
+    Go to **Settings → Members** and click **Invite members**. Enter one or more email addresses (comma-separated for bulk invites), select a workspace-level role for each invite, then click **Send invitations**.
+
+    <Info>
+      Invited users receive an email with a link valid for 72 hours. If the link expires, you can resend the invitation from the **Pending invites** tab.
+    </Info>
+
+    For details on roles and what each one can do, see [Roles and permissions](/platform/administration/roles-permissions).
+  </Step>
+
+  <Step title="Create your first project">
+    From the workspace home, click **New project**. Give the project a name and an optional description, then set its visibility:
+
+    - **Private** — only members you explicitly add can see this project
+    - **Internal** — all workspace members can view it; only added members can edit
+
+    Click **Create project**. You are automatically added as a project Admin.
+  </Step>
+
+  <Step title="Add members to the project">
+    Inside the project, go to **Project settings → Members** and click **Add members**. Search for workspace members by name or email, assign each one a project-level role, and click **Add**.
+
+    <Info>
+      A project-level role overrides the workspace-level role for that member within this project. For example, a workspace Viewer granted a project Member role can create and edit content inside that project.
+    </Info>
+  </Step>
+
+  <Step title="Generate an API key (optional)">
+    If you plan to use the IronBee API, go to **Settings → API keys** and click **New API key**. Give the key a descriptive name, choose **Read-only** or **Read-write** access, then click **Generate**.
+
+    Copy the key immediately — it is shown only once. Store it securely (for example, in your password manager or secrets vault).
+
+    Pass the key in all API requests using the `Authorization` header:
+
+    ```bash
+    Authorization: Bearer <your-api-key>
+    ```
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Key concepts" icon="book-open" href="/platform/key-concepts">
+    Learn how workspaces, projects, roles, and API credentials work together.
+  </Card>
+  <Card title="Workspace settings" icon="settings" href="/platform/configuration/settings">
+    Customize timezone, visibility defaults, and notification preferences.
+  </Card>
+  <Card title="Roles and permissions" icon="shield" href="/platform/administration/roles-permissions">
+    Understand what each role can do and how to change a member's role.
+  </Card>
+</CardGroup>
+
+Once your platform is set up, continue with the other product areas:
+
+<CardGroup cols={2}>
+  <Card title="Analytics quickstart" icon="chart-line" href="/analytics/quickstart">
+    Connect a data source and build your first dashboard.
+  </Card>
+  <Card title="Integrations quickstart" icon="plug" href="/integrations/quickstart">
+    Set up a pre-built connector or configure a webhook.
+  </Card>
+</CardGroup>

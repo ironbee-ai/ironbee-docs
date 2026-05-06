@@ -1,0 +1,195 @@
+---
+title: 'Configure IronBee webhooks for real-time event delivery'
+description: 'Create webhook endpoints, subscribe to IronBee events, verify HMAC-SHA256 signatures, and handle retries for reliable event-driven automation.'
+sidebarTitle: 'Configure'
+keywords: ['webhooks', 'HMAC', 'signature verification', 'events', 'retry', 'endpoint', 'automation']
+---
+
+IronBee webhooks let your systems react to platform events in real time — for example, when a contact syncs, a report runs, or a connector encounters an error. Instead of polling IronBee for changes, your endpoint receives an HTTP POST request with a signed JSON payload the moment an event occurs. This page covers creating a webhook, selecting events, verifying signatures, and understanding retry behavior.
+
+## Create a webhook endpoint
+
+<Steps>
+  <Step title="Open webhook settings">
+    In IronBee, go to **Integrations** → **Webhooks**, then click **Add endpoint**.
+  </Step>
+  <Step title="Enter your endpoint URL">
+    In the **Endpoint URL** field, enter the publicly accessible HTTPS URL where IronBee should deliver events. HTTP URLs are not accepted; your endpoint must use TLS.
+
+    Make sure your server is ready to accept POST requests at this URL and returns a `2xx` status code within 10 seconds of receiving a delivery.
+  </Step>
+  <Step title="Select events to subscribe to">
+    Choose one or more events from the event list. You can subscribe to individual events or use **Select all** to receive every event type. See the [available events table](#available-webhook-events) below for descriptions.
+  </Step>
+  <Step title="Set a webhook secret">
+    Enter a secret string in the **Signing secret** field. IronBee uses this secret to compute an HMAC-SHA256 signature for every delivery. Your server can use the signature to verify the payload is genuine.
+
+    Use a long, randomly generated string. You can generate one with:
+
+    ```bash
+    openssl rand -hex 32
+    ```
+  </Step>
+  <Step title="Save the webhook">
+    Click **Save endpoint**. IronBee sends a test ping event to your endpoint immediately to confirm delivery. The delivery log shows whether the ping succeeded.
+  </Step>
+</Steps>
+
+## Available webhook events
+
+| Event | Description |
+|-------|-------------|
+| `sync.completed` | A connector sync completed successfully. |
+| `sync.failed` | A connector sync failed. Includes error details. |
+| `contact.created` | A new contact was created or synced for the first time. |
+| `contact.updated` | An existing contact record was updated. |
+| `deal.created` | A new deal was created or synced for the first time. |
+| `deal.updated` | An existing deal record was updated. |
+| `report.completed` | A scheduled report finished generating. |
+| `report.failed` | A scheduled report failed to generate. |
+| `connector.auth_error` | A connector failed to authenticate. Credentials may need rotation. |
+| `webhook.ping` | Sent when a new endpoint is saved or when you send a test delivery manually. |
+
+## Example webhook payload
+
+Every IronBee webhook delivery includes a JSON body structured as follows:
+
+```json
+{
+  "id": "evt_01HQZXK9F2V3M7W8NBPC4DRTSE",
+  "type": "contact.created",
+  "created_at": "2026-05-06T14:23:01Z",
+  "data": {
+    "contact_id": "con_01HQZXK9F2V3M7W8NBPC4DRTSE",
+    "email": "alex.chen@example.com",
+    "first_name": "Alex",
+    "last_name": "Chen",
+    "source_connector": "hubspot",
+    "synced_at": "2026-05-06T14:23:00Z"
+  }
+}
+```
+
+The `id` field is unique per delivery. If IronBee retries a failed delivery, it reuses the same `id`, so your endpoint can deduplicate by checking this value.
+
+## Verify HMAC-SHA256 signatures
+
+IronBee signs every delivery using HMAC-SHA256 with the signing secret you configured. The signature is included in the `X-IronBee-Signature-256` request header in the format `sha256=<hex_digest>`.
+
+Verify the signature on your server before processing the payload to confirm the delivery came from IronBee.
+
+<CodeGroup>
+
+```javascript node.js
+const crypto = require('crypto');
+
+function verifySignature(secret, rawBody, signatureHeader) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+
+  const trusted = Buffer.from(expected, 'utf8');
+  const received = Buffer.from(signatureHeader, 'utf8');
+
+  // Use timingSafeEqual to prevent timing attacks
+  if (trusted.length !== received.length) return false;
+  return crypto.timingSafeEqual(trusted, received);
+}
+
+// Express example
+app.post('/webhooks/ironbee', (req, res) => {
+  const signature = req.headers['x-ironbee-signature-256'];
+  const rawBody = req.rawBody; // requires body-parser with { verify } option
+
+  if (!verifySignature(process.env.IRONBEE_WEBHOOK_SECRET, rawBody, signature)) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const event = req.body;
+  // Process event...
+  res.status(200).send('OK');
+});
+```
+
+```python python
+import hashlib
+import hmac
+import os
+
+def verify_signature(secret: str, raw_body: bytes, signature_header: str) -> bool:
+    expected = 'sha256=' + hmac.new(
+        secret.encode('utf-8'),
+        raw_body,
+        hashlib.sha256
+    ).hexdigest()
+
+    # Use compare_digest to prevent timing attacks
+    return hmac.compare_digest(expected, signature_header)
+
+# Flask example
+from flask import Flask, request, abort
+
+app = Flask(__name__)
+
+@app.route('/webhooks/ironbee', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-IronBee-Signature-256', '')
+    raw_body = request.get_data()
+
+    if not verify_signature(os.environ['IRONBEE_WEBHOOK_SECRET'], raw_body, signature):
+        abort(401)
+
+    event = request.get_json()
+    # Process event...
+    return 'OK', 200
+```
+
+</CodeGroup>
+
+<Warning>
+  Always verify signatures using the raw request body bytes before any parsing. Parsing the JSON first and re-serializing it can change whitespace or key ordering, causing signature verification to fail.
+</Warning>
+
+## Retry behavior
+
+<Note>
+  IronBee retries failed webhook deliveries with exponential backoff. A delivery is considered failed if your endpoint returns a non-`2xx` status code or does not respond within 10 seconds. IronBee attempts up to 5 retries over approximately 24 hours: at 1 minute, 5 minutes, 30 minutes, 2 hours, and 8 hours after the initial failure. If all retries are exhausted, the delivery is marked as failed in the delivery log and no further attempts are made.
+</Note>
+
+You can view the full delivery log for each endpoint under **Integrations** → **Webhooks** → click the endpoint name → **Delivery log**. The log shows each attempt, its HTTP status code, and the response body.
+
+## Send a test delivery
+
+To send a test payload to your endpoint without waiting for a real event:
+
+1. Go to **Integrations** → **Webhooks** and click the endpoint name.
+2. Click **Send test event**.
+3. Select an event type from the dropdown.
+4. Click **Send**. IronBee delivers a sample payload immediately and shows the result in the delivery log.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What happens if my endpoint is down?">
+    If your endpoint is unreachable or returns a non-`2xx` status code, IronBee retries the delivery using exponential backoff — up to 5 attempts over 24 hours. If all retries fail, the event is recorded as permanently failed in the delivery log. You can inspect failed deliveries and manually replay them from the delivery log once your endpoint is back online.
+  </Accordion>
+  <Accordion title="Can I subscribe to multiple events on one endpoint?">
+    Yes. A single endpoint can subscribe to any combination of event types. Select all the events you want during setup, or edit the endpoint later to add or remove event subscriptions. You can also create multiple endpoints with different event subscriptions if you want to route different event types to different services.
+  </Accordion>
+  <Accordion title="How do I rotate my webhook secret?">
+    To rotate a webhook secret without dropping deliveries:
+
+    1. Go to **Integrations** → **Webhooks** and click the endpoint name.
+    2. Click **Edit**, then enter a new value in the **Signing secret** field.
+    3. Click **Save**.
+
+    IronBee starts signing new deliveries with the new secret immediately. Update your server to accept the new secret before saving. During a brief transition window, update your server's verification logic to accept both the old and new secrets, then remove the old secret once all in-flight deliveries have been processed.
+  </Accordion>
+</AccordionGroup>
+
+## Related pages
+
+- [Connect your first integration](/integrations/quickstart)
+- [Scheduled reports](/analytics/reports/scheduled-reports)
+- [Platform settings](/platform/configuration/settings)

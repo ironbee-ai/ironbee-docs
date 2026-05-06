@@ -1,0 +1,102 @@
+---
+title: 'Deliver recurring report snapshots with IronBee Analytics'
+description: 'Set up recurring dashboard snapshots in IronBee and deliver them to email addresses or Slack channels on a daily, weekly, or monthly schedule.'
+sidebarTitle: 'Scheduled reports'
+keywords: ['scheduled reports', 'recurring reports', 'email reports', 'Slack reports', 'dashboard snapshots', 'automation']
+---
+
+IronBee's scheduled reports let you automatically send a snapshot of any dashboard to one or more recipients on a recurring basis. Reports are delivered as images or PDFs via email, or posted directly to a Slack channel. Rather than asking teammates to log in and check dashboards manually, you can push the data to them on a schedule that fits their workflow. This page covers creating a schedule, configuring delivery options, and managing or pausing existing schedules.
+
+## Before you begin
+
+- You need an **Admin** or **Member** role to create scheduled reports. See [Roles and permissions](/platform/administration/roles-permissions).
+- The dashboard you want to report on must already exist. See [Create and share an IronBee dashboard](/analytics/dashboards/create-dashboard).
+- To deliver reports to Slack, the IronBee Slack app must be installed in your Slack workspace.
+
+<Note>
+Slack delivery requires the IronBee Slack app to be installed in your Slack workspace and authorized to post to the target channel. If you haven't installed it yet, ask a Slack workspace admin to do so via **Settings → Integrations → Slack** in IronBee. The app needs at minimum the `chat:write` permission.
+</Note>
+
+## Create a scheduled report
+
+<Steps>
+  <Step title="Open Scheduled Reports">
+    In the left sidebar, navigate to **Analytics → Reports**, then click **New scheduled report**.
+  </Step>
+
+  <Step title="Select a dashboard">
+    Choose the dashboard you want to snapshot from the dropdown. Every chart currently on the dashboard will be included in the report.
+  </Step>
+
+  <Step title="Set the frequency and timing">
+    Choose how often the report should run and when:
+
+    | Frequency | Available time settings |
+    |---|---|
+    | **Daily** | Time of day (hour and minute); time zone. |
+    | **Weekly** | Day of week; time of day; time zone. |
+    | **Monthly** | Day of month (1–28) or "last day of month"; time of day; time zone. |
+
+    <Info>
+    All schedules run in the time zone you select. If recipients are spread across time zones, choose a time that works for the majority or schedule separate reports per region.
+    </Info>
+  </Step>
+
+  <Step title="Choose delivery channels and add recipients">
+    Select one or both delivery channels:
+
+    **Email**
+    - Click **Add email recipient** and enter the email address.
+    - Repeat to add multiple recipients.
+    - Recipients do not need an IronBee account to receive email reports.
+
+    **Slack**
+    - Click **Add Slack channel** and select a channel from the list.
+    - Only channels the IronBee Slack app has been invited to will appear.
+    - To post to a private channel, first invite the IronBee app to that channel in Slack (`/invite @IronBee`).
+  </Step>
+
+  <Step title="Choose the report format">
+    Select the output format for the snapshot:
+
+    - **PDF** — a paginated document with all charts, suitable for email attachments and archiving.
+    - **Image (PNG)** — a single-image screenshot of the dashboard, useful for Slack posts and quick sharing.
+  </Step>
+
+  <Step title="Name and save the schedule">
+    Give the schedule a descriptive name — for example, "Weekly Sales Summary → #sales-team" — then click **Save schedule**. The report will run at the next occurrence of the configured time.
+  </Step>
+</Steps>
+
+## Manage existing schedules
+
+Navigate to **Analytics → Reports** to see all scheduled reports in your workspace.
+
+### Edit a schedule
+
+1. Find the schedule in the list and click **Edit** (pencil icon).
+2. Update the frequency, recipients, format, or dashboard selection.
+3. Click **Save schedule** to apply changes. Changes take effect at the next scheduled run.
+
+### Pause a schedule
+
+If you want to temporarily stop a report from running without deleting it:
+
+1. Find the schedule and click the **...** menu.
+2. Select **Pause**. The status changes to **Paused** and no further deliveries occur.
+3. To resume, open the same menu and select **Resume**.
+
+### Delete a schedule
+
+1. Find the schedule and click the **...** menu.
+2. Select **Delete**, then confirm when prompted.
+
+<Warning>
+Deleting a schedule is permanent. Recipients will not receive further reports, and the schedule configuration cannot be recovered. If you only want to stop deliveries temporarily, use **Pause** instead.
+</Warning>
+
+## What's next
+
+- [Create and share an IronBee dashboard](/analytics/dashboards/create-dashboard) — set up the dashboard you want to report on.
+- [Connect a data source](/analytics/connect-data) — add more data sources to expand your reporting.
+- [Workspace settings](/platform/configuration/settings) — manage integrations such as the Slack app connection.

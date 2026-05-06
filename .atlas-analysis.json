@@ -1,0 +1,88 @@
+{
+  "projectType": "saas",
+  "projectName": "IronBee",
+  "projectDescription": "IronBee is an AI-powered SaaS platform that unifies workspace management, analytics dashboards, and third-party integrations in one place.",
+  "theme": "luma",
+  "primaryColor": "#747c7f",
+  "lightColor": "#0a0b0b",
+  "darkColor": "#9fa1a4",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Platform",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "platform/quickstart",
+              "platform/key-concepts"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "platform/configuration/settings",
+              "platform/configuration/user-management",
+              "platform/administration/roles-permissions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Analytics",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "analytics/quickstart",
+              "analytics/connect-data"
+            ]
+          },
+          {
+            "group": "Dashboards & Reports",
+            "pages": [
+              "analytics/dashboards/create-dashboard",
+              "analytics/reports/scheduled-reports"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "integrations/quickstart",
+              "integrations/authentication"
+            ]
+          },
+          {
+            "group": "Connectors & Webhooks",
+            "pages": [
+              "integrations/connectors/crm",
+              "integrations/webhooks/configure"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Workspace and project management with role-based access control",
+    "Analytics dashboards with multiple chart types and live data sources",
+    "Scheduled reports delivered via email or Slack",
+    "Pre-built connectors for CRMs and other third-party platforms",
+    "Webhook support for event-driven automation",
+    "API key authentication for programmatic access",
+    "OAuth 2.0 and service account integration authentication"
+  ],
+  "publicApiSurface": [
+    "REST API with workspace-scoped API keys",
+    "Webhook event subscriptions",
+    "Data source connectors (database, SaaS, data warehouse)",
+    "Dashboard embed codes",
+    "OAuth 2.0 connector authentication",
+    "Scheduled report delivery (email, Slack)"
+  ]
+}

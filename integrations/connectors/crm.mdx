@@ -1,0 +1,148 @@
+---
+title: 'Connect Salesforce, HubSpot, or Pipedrive to IronBee'
+description: 'Set up Salesforce, HubSpot, or Pipedrive in IronBee to sync contacts, deals, activities, and company records across your workspace.'
+sidebarTitle: 'CRM'
+keywords: ['CRM', 'Salesforce', 'HubSpot', 'Pipedrive', 'contacts', 'deals', 'sync', 'field mapping']
+---
+
+IronBee's CRM connectors bring your customer relationship data — contacts, deals, activities, and companies — directly into the platform, where it can power dashboards, reports, and automated workflows. This page covers the three natively supported CRMs (Salesforce, HubSpot, and Pipedrive), the objects each connector syncs, and how to configure field mapping for CRM data.
+
+<Tip>
+  Before connecting your production CRM, test the integration against a sandbox or trial environment. Most CRM platforms let you create a free developer or sandbox org. Connecting a test environment first lets you verify field mapping and sync behavior without risk to live data.
+</Tip>
+
+## Synced objects and fields
+
+All three CRM connectors sync the following objects into IronBee:
+
+| Object | Fields synced |
+|--------|---------------|
+| Contacts | First name, last name, email, phone, job title, company, owner, created date, last activity date |
+| Deals | Name, stage, amount, close date, associated contact, owner, pipeline, created date |
+| Activities | Type (call, email, meeting, task), subject, body, associated contact, associated deal, date, owner |
+| Companies | Name, domain, industry, employee count, annual revenue, owner, created date |
+
+Some fields are CRM-specific and appear as custom mappable fields in the field mapping step.
+
+## Connect by CRM
+
+<Tabs>
+  <Tab title="Salesforce">
+    ### Salesforce
+
+    IronBee connects to Salesforce using OAuth 2.0. You need a Salesforce user account with API access enabled. The connected user must have at minimum read access to the objects you want to sync.
+
+    <Steps>
+      <Step title="Open the connector catalog">
+        In IronBee, go to **Integrations** → **Catalog** and search for **Salesforce**. Click the Salesforce card to open the setup panel.
+      </Step>
+      <Step title="Authorize with Salesforce">
+        Click **Authorize with Salesforce**. You are redirected to Salesforce's login page. Sign in with your Salesforce credentials.
+
+        On the permissions screen, review the scopes IronBee requests (Access and manage your data, Perform requests at any time) and click **Allow**.
+
+        IronBee returns you to the setup panel automatically.
+      </Step>
+      <Step title="Select your Salesforce environment">
+        Choose whether you are connecting to a **Production** org or a **Sandbox** org. This affects the API endpoint IronBee uses.
+      </Step>
+      <Step title="Choose objects to sync">
+        Select which Salesforce objects to sync: Contacts, Opportunities (mapped to Deals), Tasks and Events (mapped to Activities), and Accounts (mapped to Companies). You can enable or disable individual objects.
+      </Step>
+      <Step title="Configure field mapping">
+        IronBee pre-fills default mappings for standard Salesforce fields. Review each object's mapping table and adjust as needed. Required fields are marked with an asterisk (\*).
+
+        Map any custom Salesforce fields you want to carry into IronBee using the **Add custom field** button.
+      </Step>
+      <Step title="Test and save">
+        Click **Test connection**. IronBee pulls a sample of recent records and displays them for review. When the preview looks correct, click **Save and activate**.
+      </Step>
+    </Steps>
+
+    <Info>
+      Salesforce enforces API call limits per day based on your edition. IronBee's sync queries count against this limit. Check your Salesforce edition's API limits if you expect high sync frequency.
+    </Info>
+  </Tab>
+
+  <Tab title="HubSpot">
+    ### HubSpot
+
+    IronBee connects to HubSpot using OAuth 2.0. You need a HubSpot account with access to the Contacts, Deals, Engagements, and Companies APIs. Super Admin access is recommended for initial setup.
+
+    <Steps>
+      <Step title="Open the connector catalog">
+        In IronBee, go to **Integrations** → **Catalog** and search for **HubSpot**. Click the HubSpot card to open the setup panel.
+      </Step>
+      <Step title="Authorize with HubSpot">
+        Click **Connect HubSpot account**. You are redirected to HubSpot's OAuth authorization screen. Select the HubSpot account you want to connect if you manage multiple accounts, then click **Choose account**.
+
+        Review the permissions and click **Connect app**.
+
+        IronBee returns you to the setup panel automatically.
+      </Step>
+      <Step title="Choose objects to sync">
+        Select which HubSpot objects to sync: Contacts, Deals, Engagements (mapped to Activities), and Companies. Toggle each object on or off.
+      </Step>
+      <Step title="Configure field mapping">
+        IronBee pre-fills mappings for HubSpot's standard properties. Review the mapping table for each object. Use the **Add property** button to include any HubSpot custom properties you want to sync.
+
+        Required fields are marked with an asterisk (\*).
+      </Step>
+      <Step title="Test and save">
+        Click **Test connection**. IronBee retrieves a sample of recent records. Confirm the preview looks correct, then click **Save and activate**.
+      </Step>
+    </Steps>
+
+    <Note>
+      HubSpot's free tier limits some API endpoints. If you encounter sync errors related to API access, verify that your HubSpot subscription includes API access for the objects you selected.
+    </Note>
+  </Tab>
+
+  <Tab title="Pipedrive">
+    ### Pipedrive
+
+    IronBee connects to Pipedrive using an API key. You need a Pipedrive account with at least Company Admin access to generate an API key with sufficient permissions.
+
+    <Steps>
+      <Step title="Generate a Pipedrive API key">
+        In Pipedrive, click your avatar in the top-right corner and go to **Personal preferences** → **API**. Copy your personal API token.
+      </Step>
+      <Step title="Open the connector catalog">
+        In IronBee, go to **Integrations** → **Catalog** and search for **Pipedrive**. Click the Pipedrive card to open the setup panel.
+      </Step>
+      <Step title="Enter your API key and company domain">
+        Paste your Pipedrive API token into the **API key** field. Enter your Pipedrive company domain (the subdomain from your Pipedrive URL, for example `yourcompany` from `yourcompany.pipedrive.com`).
+      </Step>
+      <Step title="Choose objects to sync">
+        Select which Pipedrive objects to sync: Persons (mapped to Contacts), Deals, Activities, and Organizations (mapped to Companies).
+      </Step>
+      <Step title="Configure field mapping">
+        IronBee pre-fills mappings for Pipedrive's standard fields. Review and adjust as needed. Add any Pipedrive custom fields using the **Add custom field** button.
+
+        Required fields are marked with an asterisk (\*).
+      </Step>
+      <Step title="Test and save">
+        Click **Test connection**. IronBee pulls a sample of recent records. Confirm the preview is correct, then click **Save and activate**.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Sync frequency
+
+By default, IronBee syncs CRM data every hour. You can adjust the sync frequency from the integration's detail page:
+
+1. Go to **Integrations** and click the name of your CRM connection.
+2. Click **Settings**.
+3. Under **Sync schedule**, choose a frequency: every 15 minutes, hourly, every 6 hours, daily, or manual only.
+4. Click **Save**.
+
+<Note>
+  Higher sync frequencies consume more API quota from your CRM. If your CRM enforces strict API rate limits, use hourly or less frequent schedules to avoid hitting limits.
+</Note>
+
+## Related pages
+
+- [Connect your first integration](/integrations/quickstart)
+- [Authentication methods](/integrations/authentication)
+- [Create a dashboard](/analytics/dashboards/create-dashboard)

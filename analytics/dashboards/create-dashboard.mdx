@@ -1,0 +1,109 @@
+---
+title: 'Build and share a live dashboard in IronBee Analytics'
+description: 'Build a dashboard in IronBee Analytics by adding charts, configuring axes and filters, then share it via link or embed code with access level controls.'
+sidebarTitle: 'Create dashboard'
+keywords: ['dashboard', 'charts', 'bar chart', 'line chart', 'number card', 'table', 'pie chart', 'share', 'embed', 'access control']
+---
+
+IronBee dashboards are collections of charts built on top of your connected data sources. A single dashboard can mix chart types — bar, line, number card, table, and pie — and each chart has its own axis configuration, grouping, and filter settings. Once your dashboard is ready, you can share it via a public link or embed it in another application using an `<iframe>`. This page walks through creating a dashboard from scratch, configuring each chart type, and controlling who can view shared content.
+
+## Before you begin
+
+You need an **Admin** or **Member** role to create dashboards. Viewers cannot create or edit dashboards but can view ones that have been shared with them. See [Roles and permissions](/platform/administration/roles-permissions) for details.
+
+You also need at least one connected data source. If you haven't connected one yet, start with [Connect a data source](/analytics/connect-data).
+
+<Tip>
+Name your dashboards to reflect their audience or time period — for example, "Marketing — Weekly Pipeline" or "Finance — Q3 KPIs". Descriptive names make dashboards easier to find as your workspace grows.
+</Tip>
+
+## Create a dashboard
+
+<Steps>
+  <Step title="Open the Dashboards section">
+    In the left sidebar, navigate to **Analytics → Dashboards**, then click **New dashboard**.
+  </Step>
+
+  <Step title="Name your dashboard">
+    Enter a name for the dashboard and click **Create**. The dashboard opens in edit mode.
+  </Step>
+
+  <Step title="Add a chart">
+    Click **Add chart** to open the chart builder. Select a chart type from the table below, then configure it as described in the following steps.
+
+    | Chart type | Best for |
+    |---|---|
+    | **Bar** | Comparing values across discrete categories (e.g., revenue by region). |
+    | **Line** | Showing trends over a continuous axis, usually time. |
+    | **Number card** | Displaying a single KPI or stat prominently (e.g., total MRR). |
+    | **Table** | Showing detailed, row-level data or multi-column summaries. |
+    | **Pie** | Illustrating part-to-whole relationships across a small number of categories. |
+  </Step>
+
+  <Step title="Choose a data source and configure axes">
+    Select the data source this chart will query, then configure the fields:
+
+    - **X-axis** — the dimension to display along the horizontal axis (e.g., `created_at`, `country`). Not applicable for number cards.
+    - **Y-axis** — the measure to aggregate (e.g., `SUM(revenue)`, `COUNT(*)`). For number cards, this is the single value displayed.
+    - **Group by** (optional) — a second dimension to split series by, shown as color-coded segments or lines.
+    - **Filters** (optional) — conditions that narrow the data returned, such as `status = 'active'` or `date >= '2025-01-01'`.
+
+    The chart preview updates as you make changes.
+  </Step>
+
+  <Step title="Save and arrange the chart">
+    Click **Save chart**. The chart appears on the dashboard canvas. Drag the chart to reposition it and grab the bottom-right corner to resize it. Repeat from step 3 to add more charts.
+  </Step>
+
+  <Step title="Save the dashboard">
+    Click **Save** in the top-right corner to save all layout changes.
+  </Step>
+</Steps>
+
+## Share a dashboard
+
+### Share via link
+
+1. Open the dashboard and click **Share** in the top-right corner.
+2. Set the **Access level**:
+
+   | Access level | Who can view |
+   |---|---|
+   | **Anyone with the link** | Any person who receives the URL, including unauthenticated visitors. |
+   | **Workspace members only** | Only users signed in to your IronBee workspace. |
+
+3. Copy the generated URL and send it to recipients.
+
+### Embed in another application
+
+IronBee generates an `<iframe>` snippet that you can paste into any web page or internal tool.
+
+1. Open the dashboard and click **Share → Embed**.
+2. Copy the embed code shown:
+
+```html
+<iframe
+  src="https://app.ironbee.ai/embed/dashboards/dsh_xxxxxxxxxxxxxxxx"
+  width="100%"
+  height="600"
+  frameborder="0"
+  allowfullscreen
+></iframe>
+```
+
+3. Paste the snippet into your application's HTML.
+
+<Warning>
+Dashboards shared with **Anyone with the link** access are publicly accessible — including the embedded version. Do not embed dashboards that contain sensitive data in publicly visible pages unless that is intentional.
+</Warning>
+
+## Edit or delete a dashboard
+
+- To **edit** a dashboard, open it and click **Edit** in the top-right corner.
+- To **rename** a dashboard, open the **...** menu next to its name and select **Rename**.
+- To **delete** a dashboard, open the **...** menu and select **Delete**. This action is permanent and removes all charts within the dashboard.
+
+## What's next
+
+- [Schedule automated reports](/analytics/reports/scheduled-reports) — deliver snapshots of this dashboard to your team on a recurring schedule.
+- [Connect a data source](/analytics/connect-data) — add more sources to expand what you can visualize.

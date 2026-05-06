@@ -1,0 +1,171 @@
+---
+title: "IronBee roles and permissions: Admin, Member, Viewer"
+description: "Explore IronBee's three built-in roles — Admin, Member, and Viewer — understand project-level overrides, and learn how to change a member's role."
+sidebarTitle: "Roles & permissions"
+---
+
+IronBee uses a role-based access control model to determine what each member of a workspace can see and do. Roles are assigned at two levels — workspace and project — and the project-level role always takes precedence within that project's scope. This page documents every built-in role, the full capability matrix, how project-level overrides work, and how to change a member's role. Organizations on higher plans can also define custom roles to match more granular access requirements.
+
+## Built-in roles
+
+IronBee provides three built-in roles. Every workspace member has exactly one workspace-level role, and optionally a different role on each project they belong to.
+
+### Admin
+
+Admins have unrestricted access to the entire workspace. This role is intended for IT administrators, workspace owners, and team leads responsible for billing and compliance.
+
+**Admins can:**
+- Invite, remove, and manage all workspace members
+- Change any member's workspace-level role
+- Create, edit, archive, and delete any project
+- Access and modify all workspace settings
+- View and manage billing and subscription details
+- Create, view, and revoke API keys
+- Configure allowed email domains and security settings
+
+### Member
+
+Members are standard contributors. This role suits developers, analysts, and anyone who actively creates and manages work inside IronBee.
+
+**Members can:**
+- Create new projects
+- Invite workspace members to projects they own
+- Edit and manage projects they have access to
+- View workspace membership (but not change roles or billing)
+- Generate personal API keys (if enabled by an Admin)
+
+**Members cannot:**
+- Access billing settings
+- Invite new members to the workspace (only to projects)
+- Change workspace-level settings
+- Create or revoke workspace API keys
+
+### Viewer
+
+Viewers have read-only access. This role is suitable for stakeholders, auditors, and anyone who needs to monitor progress without making changes.
+
+**Viewers can:**
+- View dashboards, reports, and project data in projects they are added to
+- Export data from reports they can view
+
+**Viewers cannot:**
+- Create, edit, or delete any resource
+- Invite other members
+- Access workspace settings
+
+## Capability matrix
+
+The table below shows every key action and which roles can perform it.
+
+| Action | Admin | Member | Viewer |
+|--------|:-----:|:------:|:------:|
+| View workspace members | Yes | Yes | No |
+| Invite members to workspace | Yes | No | No |
+| Remove members from workspace | Yes | No | No |
+| Change workspace-level roles | Yes | No | No |
+| View workspace settings | Yes | Yes | No |
+| Edit workspace settings | Yes | No | No |
+| View billing details | Yes | No | No |
+| Manage billing and subscription | Yes | No | No |
+| Create workspace API keys | Yes | No | No |
+| Revoke workspace API keys | Yes | No | No |
+| Create projects | Yes | Yes | No |
+| Archive or delete any project | Yes | No | No |
+| Archive or delete own projects | Yes | Yes | No |
+| Edit project settings | Yes | Yes (own) | No |
+| Invite members to a project | Yes | Yes (own) | No |
+| Remove members from a project | Yes | Yes (own) | No |
+| View project content | Yes | Yes | Yes |
+| Create and edit content in a project | Yes | Yes | No |
+| Delete content in a project | Yes | Yes | No |
+| View and export reports | Yes | Yes | Yes |
+| Create and schedule reports | Yes | Yes | No |
+
+## Project-level role overrides
+
+When you assign a role to a member at the **project level**, that role overrides their workspace-level role for actions taken within that project.
+
+<Info>
+  Project-level roles only change what a member can do inside the specific project — their workspace-level role governs everything else. A workspace Viewer promoted to Member on a project can create and edit within that project but remains read-only throughout the rest of the workspace.
+</Info>
+
+### How IronBee evaluates permissions
+
+```
+1. Does the member have a project-level role for this project?
+   → Yes: apply the project-level role
+   → No:  apply the workspace-level role
+```
+
+### Common override patterns
+
+| Scenario | Workspace role | Project role | Result |
+|----------|---------------|--------------|--------|
+| Contractor needs edit access to one project | Viewer | Member | Can edit that project; read-only elsewhere |
+| External auditor needs full project access | Viewer | Admin | Full admin on that project; read-only elsewhere |
+| Senior member needs restricted access to sensitive project | Member | Viewer | Read-only on that project; normal Member elsewhere |
+
+To assign a project-level role, open the project, go to **Project settings → Members**, and set the role next to each member's name. See [User management](/platform/configuration/user-management) for step-by-step instructions.
+
+## How to change a member's role
+
+### Change a workspace-level role
+
+1. Go to **Settings → Members**.
+2. Find the member in the **Active** list.
+3. Click the role badge in the **Role** column.
+4. Select the new role from the dropdown.
+
+The change takes effect immediately.
+
+<Warning>
+  Before downgrading a member from **Admin**, confirm that at least one other active Admin exists in the workspace. A workspace with no Admins cannot be managed or recovered without contacting IronBee support.
+</Warning>
+
+### Change a project-level role
+
+1. Open the project.
+2. Go to **Project settings → Members**.
+3. Click the role badge next to the member's name.
+4. Select the new project-level role.
+
+To remove a project-level override and revert to the workspace-level role, select **Use workspace role** from the dropdown.
+
+## Custom roles
+
+<Info>
+  Custom roles are available on the **Business** and **Enterprise** plans.
+</Info>
+
+Custom roles let you define a named role with a specific set of capabilities, then assign it to members just like a built-in role. Use custom roles when the built-in Admin / Member / Viewer model does not map cleanly to your team structure.
+
+To create a custom role:
+
+1. Go to **Settings → Roles**.
+2. Click **New custom role**.
+3. Enter a name and optional description.
+4. Toggle each capability on or off using the capability matrix as a reference.
+5. Click **Create role**.
+
+Once created, the custom role appears in all role dropdowns alongside the built-in roles. Custom roles can be edited at any time; changes apply immediately to all members currently assigned that role.
+
+<Note>
+  Deleting a custom role automatically reassigns all members who held it to the **Viewer** role. Review assignments before deleting.
+</Note>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="User management" icon="users" href="/platform/configuration/user-management">
+    Step-by-step instructions for inviting, removing, and reassigning members.
+  </Card>
+  <Card title="Key concepts" icon="book-open" href="/platform/key-concepts">
+    Understand how workspaces, projects, and roles relate to each other.
+  </Card>
+  <Card title="Platform quickstart" icon="rocket" href="/platform/quickstart">
+    Set up your workspace, invite teammates, and create your first project.
+  </Card>
+  <Card title="Workspace settings" icon="settings" href="/platform/configuration/settings">
+    Configure defaults that apply to all new members and projects.
+  </Card>
+</CardGroup>

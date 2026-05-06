@@ -1,0 +1,129 @@
+---
+title: "Add, remove, and manage users in your IronBee workspace"
+description: "Invite new members by email, assign workspace roles, send bulk invitations, and safely remove users — all from the IronBee Members settings page."
+sidebarTitle: "User management"
+---
+
+IronBee gives workspace Admins full control over who belongs to the workspace and what they can do. From the **Members** settings page you can invite individuals or entire lists of teammates, change roles at any time, and remove members when they leave your organization. This page covers every user-management action available to Admins, including the safeguards you should follow when managing other Admin accounts.
+
+## Opening the members page
+
+In the left sidebar, click your workspace name, then go to **Settings → Members**. The page shows three tabs:
+
+- **Active** — all current workspace members and their roles
+- **Pending invites** — invitations that have been sent but not yet accepted
+- **Removed** — a log of members who have been removed (read-only)
+
+## Inviting a single member
+
+<Steps>
+  <Step title="Click Invite members">
+    On the **Active** tab, click the **Invite members** button in the top-right corner. An invitation dialog opens.
+  </Step>
+
+  <Step title="Enter the email address">
+    Type the email address of the person you want to invite. IronBee will check whether the address matches any allowed-domain restrictions configured in [workspace settings](/platform/configuration/settings).
+  </Step>
+
+  <Step title="Assign a workspace role">
+    Select a role from the dropdown:
+
+    - **Admin** — full workspace access including billing and member management
+    - **Member** — can create and manage projects
+    - **Viewer** — read-only access to projects they are added to
+
+    <Tip>
+      When in doubt, start with **Viewer** or **Member**. You can always promote a member to Admin later. Granting Admin to everyone increases your security risk surface.
+    </Tip>
+  </Step>
+
+  <Step title="Send the invitation">
+    Click **Send invitation**. IronBee sends an email to the address with an acceptance link valid for **72 hours**.
+
+    The invite appears on the **Pending invites** tab until the recipient clicks the link and completes signup.
+  </Step>
+</Steps>
+
+## Sending bulk invitations
+
+To invite multiple people at once:
+
+<Steps>
+  <Step title="Open the bulk invite dialog">
+    Click **Invite members**, then click the **Bulk invite** link below the email field.
+  </Step>
+
+  <Step title="Enter multiple email addresses">
+    Enter one email address per line, or paste a comma-separated list. IronBee validates each address before sending.
+  </Step>
+
+  <Step title="Set the role for all invitees">
+    Choose a single role that applies to all addresses in the list. If different people need different roles, send separate invitations or change roles after they accept.
+  </Step>
+
+  <Step title="Send invitations">
+    Click **Send invitations**. IronBee processes each address individually and shows a summary of successfully queued and failed addresses (for example, addresses that violate domain restrictions).
+  </Step>
+</Steps>
+
+<Note>
+  Bulk invitations count against your plan's seat limit. If the batch would exceed your limit, IronBee blocks the entire batch and shows an upgrade prompt.
+</Note>
+
+## Resending or canceling a pending invitation
+
+On the **Pending invites** tab, find the invitation and click the **...** menu:
+
+- **Resend** — sends a fresh email with a new 72-hour link and invalidates the old one
+- **Cancel** — removes the invitation; the original link no longer works
+
+## Changing a member's role
+
+On the **Active** tab, find the member, click the role badge in the **Role** column, and select the new role from the dropdown. The change takes effect immediately — no confirmation email is sent.
+
+<Warning>
+  Before changing a member's role from **Admin**, verify that at least one other active Admin remains in the workspace. IronBee blocks the change if it would leave the workspace with zero Admins, but it is best practice to confirm this before making the change rather than relying on the guardrail.
+</Warning>
+
+## Removing a member
+
+<Steps>
+  <Step title="Find the member on the Active tab">
+    Use the search bar to filter by name or email address.
+  </Step>
+
+  <Step title="Open the member's action menu">
+    Click the **...** icon at the end of the member's row, then select **Remove from workspace**.
+  </Step>
+
+  <Step title="Confirm removal">
+    A confirmation dialog lists any projects the member owns or is the sole Admin of. Review the list, then click **Confirm removal**.
+
+    <Warning>
+      Removing a member immediately revokes their access to all workspace resources. If the member is the only Admin on one or more projects, you must reassign project ownership before removal — IronBee prompts you to do this in the confirmation dialog. Never remove the last Admin from a workspace; if you need to leave, promote another member to Admin first.
+    </Warning>
+  </Step>
+</Steps>
+
+Removed members appear in the **Removed** tab for audit purposes. Their account is not deleted — if you need to re-add them, send a new invitation.
+
+## Managing project-level membership
+
+Workspace-level membership controls access to IronBee itself. Project-level membership controls what a person can do within a specific project. To add or remove a member from a project:
+
+1. Open the project.
+2. Go to **Project settings → Members**.
+3. Use **Add members** or the **...** menu next to a member's name.
+
+Project-level roles override workspace-level roles within that project. For full details, see [Roles and permissions](/platform/administration/roles-permissions).
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Roles and permissions" icon="shield" href="/platform/administration/roles-permissions">
+    Detailed capability matrix for Admin, Member, and Viewer roles.
+  </Card>
+  <Card title="Workspace settings" icon="settings" href="/platform/configuration/settings">
+    Configure domain restrictions and other settings that affect invitations.
+  </Card>
+</CardGroup>

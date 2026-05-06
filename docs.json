@@ -1,0 +1,117 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "almond",
+  "name": "IronBee",
+  "description": "IronBee documentation — platform setup, analytics dashboards, and integrations in one place.",
+  "colors": {
+    "primary": "#747c7f",
+    "light": "#0a0b0b",
+    "dark": "#9fa1a4"
+  },
+  "favicon": "https://media.brand.dev/2068afa3-5b82-43fe-9be4-e830e6660470.jpg",
+  "logo": {
+    "light": "https://media.brand.dev/93e4f98f-f031-431a-84a3-c41239a4128a.svg",
+    "dark": "https://media.brand.dev/dcd54754-0c6a-44e3-bbd5-5f6e5d0bfebd.svg"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
+  "contextual": {
+    "options": ["copy", "view", "assistant", "mcp", "add-mcp"]
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Home",
+          "icon": "house",
+          "href": "/"
+        }
+      ]
+    },
+    "directory": "card",
+    "tabs": [
+      {
+        "tab": "Platform",
+        "groups": [
+          {
+            "group": "Get Started",
+            "icon": "rocket",
+            "pages": [
+              "platform/quickstart",
+              "platform/key-concepts"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "icon": "settings",
+            "pages": [
+              "platform/configuration/settings",
+              "platform/configuration/user-management",
+              "platform/administration/roles-permissions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Analytics",
+        "groups": [
+          {
+            "group": "Get Started",
+            "icon": "rocket",
+            "pages": [
+              "analytics/quickstart",
+              "analytics/connect-data"
+            ]
+          },
+          {
+            "group": "Dashboards & Reports",
+            "icon": "chart-bar",
+            "pages": [
+              "analytics/dashboards/create-dashboard",
+              "analytics/reports/scheduled-reports"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Get Started",
+            "icon": "rocket",
+            "pages": [
+              "integrations/quickstart",
+              "integrations/authentication"
+            ]
+          },
+          {
+            "group": "Connectors & Webhooks",
+            "icon": "plug",
+            "pages": [
+              "integrations/connectors/crm",
+              "integrations/webhooks/configure"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.ironbee.ai"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/ironbeeai",
+      "linkedin": "https://linkedin.com/company/ironbee-ai"
+    }
+  }
+}

@@ -1,0 +1,127 @@
+---
+title: "IronBee workspace settings: timezone, visibility, and more"
+description: "Adjust workspace name, timezone, display preferences, default project visibility, and notification preferences — changes apply to all new members and projects."
+sidebarTitle: "Settings"
+---
+
+IronBee workspace settings control the defaults and behaviors that apply across your entire organization. Adjusting these early ensures that every new member joins with the right timezone, every new project starts with the correct visibility, and your team receives notifications through the right channels. Only workspace **Admins** can change these settings.
+
+## Accessing workspace settings
+
+In the left sidebar, click your workspace name at the top, then select **Settings**. The settings panel opens with tabs for **General**, **Notifications**, and **Advanced**.
+
+## General settings
+
+The **General** tab controls the core identity and behavior of your workspace.
+
+<Steps>
+  <Step title="Update the workspace display name">
+    Under **Workspace name**, enter the name you want to appear throughout the IronBee UI, in email notifications, and in exported reports.
+
+    Click **Save changes**. The new name takes effect immediately for all members.
+
+    <Note>
+      The workspace **slug** (used in URLs and API paths) is separate from the display name and cannot be changed after the workspace is created.
+    </Note>
+  </Step>
+
+  <Step title="Set the workspace timezone">
+    Under **Timezone**, select the timezone from the dropdown that best matches your organization's primary location.
+
+    IronBee uses this timezone for:
+
+    - Activity timestamps shown in the UI
+    - Scheduled report delivery times
+    - Analytics date bucketing when no project-level timezone override is set
+
+    Click **Save changes**.
+
+    <Tip>
+      If your team is distributed across multiple timezones, choose UTC or your headquarters timezone, then document the convention in your team's onboarding materials.
+    </Tip>
+  </Step>
+
+  <Step title="Choose display preferences">
+    Under **Display preferences**, configure how IronBee presents data across the workspace:
+
+    - **Date format** — choose between `MM/DD/YYYY`, `DD/MM/YYYY`, or `YYYY-MM-DD`
+    - **First day of week** — Sunday or Monday, used in calendar and date-range pickers
+    - **Number format** — set the decimal separator and thousands separator to match your locale
+
+    Click **Save changes**.
+  </Step>
+
+  <Step title="Set the default project visibility">
+    Under **Default project visibility**, choose what visibility level applies when a new project is created without an explicit setting:
+
+    - **Private** — only members explicitly added to the project can view or access it
+    - **Internal** — all workspace members can view the project; only added members can edit it
+
+    <Info>
+      This setting only affects projects created after you save the change. Existing projects keep their current visibility. Individual project owners can always override the visibility in their project settings.
+    </Info>
+
+    Click **Save changes**.
+  </Step>
+</Steps>
+
+## Notification preferences
+
+The **Notifications** tab controls which workspace-level events trigger emails and in-app alerts.
+
+<Steps>
+  <Step title="Configure email notifications">
+    Toggle each notification type on or off:
+
+    | Event | Default |
+    |-------|---------|
+    | New member joined workspace | On |
+    | Member role changed | On |
+    | Member removed from workspace | On |
+    | API key created or revoked | On |
+    | Billing and subscription changes | On |
+
+    Click **Save notification settings**.
+  </Step>
+
+  <Step title="Configure in-app notifications">
+    Under **In-app alerts**, choose whether workspace-level events appear in the notification bell in the top navigation bar.
+
+    <Note>
+      Individual members can override their personal notification preferences from their **Profile → Notifications** page. Workspace-level defaults only apply to members who have not customized their own preferences.
+    </Note>
+  </Step>
+</Steps>
+
+## Advanced settings
+
+The **Advanced** tab contains settings that affect security and data handling.
+
+<AccordionGroup>
+  <Accordion title="Session timeout">
+    Set the number of idle minutes before members are automatically logged out. The default is **60 minutes**. Enter a value between 15 and 1440 (24 hours), then click **Save**.
+  </Accordion>
+
+  <Accordion title="Allowed email domains">
+    Restrict workspace invitations to specific email domains. Enter one domain per line (for example, `acme.com`). When set, only email addresses matching an allowed domain can be invited. Leave empty to allow any domain.
+
+    <Warning>
+      Adding a domain restriction does not affect existing members. It only applies to new invitations sent after the restriction is saved.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="API access">
+    Enable or disable API access for the entire workspace. When disabled, all API keys are suspended and requests return `403 Forbidden` until access is re-enabled. This setting does not delete API keys.
+  </Accordion>
+</AccordionGroup>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="User management" icon="users" href="/platform/configuration/user-management">
+    Invite members, assign roles, and remove users from your workspace.
+  </Card>
+  <Card title="Roles and permissions" icon="shield" href="/platform/administration/roles-permissions">
+    Understand what each role can access and how to change a member's role.
+  </Card>
+</CardGroup>

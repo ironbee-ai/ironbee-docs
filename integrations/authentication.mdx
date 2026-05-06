@@ -1,0 +1,162 @@
+---
+title: 'Authenticate IronBee integrations with OAuth and API keys'
+description: 'Understand how IronBee handles API key, OAuth 2.0, and service account authentication for integrations, and how to manage credential rotation.'
+sidebarTitle: 'Authentication'
+keywords: ['authentication', 'OAuth 2.0', 'API key', 'service account', 'credentials', 'token refresh']
+---
+
+IronBee integrations use one of three authentication methods depending on what the connected tool supports. Understanding each method helps you set up connections correctly and maintain them securely over time. This page explains how each method works inside IronBee, when you would use it, and how to rotate credentials when needed.
+
+<Warning>
+  Never commit credentials — API keys, OAuth tokens, or JSON key files — to version control. Store them in a secrets manager or environment variable store, and copy them into IronBee's credential fields directly. Anyone with access to your repository could use exposed credentials to access your connected tools.
+</Warning>
+
+<Tabs>
+  <Tab title="API key">
+    ## API key authentication
+
+    API key authentication is the simplest method. You generate a key in your tool and paste it into IronBee. No browser redirect or file upload is required.
+
+    ### When connectors use API keys
+
+    A connector uses API key authentication when the connected tool issues static tokens scoped to a user or workspace. Common examples include analytics platforms, project management tools, and data warehouses.
+
+    ### How to set up an API key connection
+
+    <Steps>
+      <Step title="Generate an API key in your tool">
+        Open your tool's settings and navigate to its API or developer section. Generate a new API key. Give it a descriptive name so you can identify it later (for example, `ironbee-production`).
+
+        Copy the key immediately — most tools only display it once.
+      </Step>
+      <Step title="Paste the key into IronBee">
+        In IronBee, open the connector setup panel. In the **API key** field, paste the key you copied.
+
+        Some connectors require additional fields alongside the key, such as an account subdomain or workspace ID. Fill these in as prompted.
+      </Step>
+      <Step title="Save and test">
+        Click **Test connection** to confirm IronBee can authenticate with the key. If the test fails, verify the key has the required permissions in your tool.
+      </Step>
+    </Steps>
+
+    ### Rotating an API key
+
+    Rotate API keys periodically or immediately if you suspect a key has been compromised.
+
+    1. Generate a new API key in your tool.
+    2. In IronBee, open **Integrations**, find the connection, and click **Edit credentials**.
+    3. Replace the existing key with the new one and click **Save**.
+    4. Delete the old key from your tool.
+
+    <Tip>
+      Keep the old key active in your tool until you have confirmed the new key works in IronBee. This prevents a sync gap during rotation.
+    </Tip>
+  </Tab>
+
+  <Tab title="OAuth 2.0">
+    ## OAuth 2.0 authentication
+
+    OAuth 2.0 lets IronBee request access to your tool on your behalf without you sharing a password. You authorize the connection through a redirect to the tool's own login page.
+
+    ### When connectors use OAuth 2.0
+
+    A connector uses OAuth 2.0 when the connected tool supports delegated authorization flows. This is common for CRMs, communication tools, calendar services, and productivity suites.
+
+    ### How the redirect flow works
+
+    <Steps>
+      <Step title="Initiate authorization">
+        In the connector setup panel, click **Authorize**. IronBee redirects your browser to the tool's authentication page.
+      </Step>
+      <Step title="Sign in and grant access">
+        Log in to your account on the tool's page if prompted. Review the permissions IronBee is requesting, then click **Allow** or **Authorize** (exact wording depends on the tool).
+
+        Grant only the scopes necessary for the data you intend to sync. The connector's documentation panel lists the scopes it requests.
+      </Step>
+      <Step title="Return to IronBee">
+        After you grant access, the tool redirects your browser back to IronBee automatically. The connector setup panel shows a confirmation that authorization succeeded.
+      </Step>
+    </Steps>
+
+    ### Token refresh
+
+    IronBee handles OAuth token refresh automatically. When your access token expires, IronBee uses the stored refresh token to obtain a new one without any action on your part. You only need to re-authorize manually if you revoke IronBee's access from within the connected tool.
+
+    ### Re-authorizing a connection
+
+    If your connection shows an authentication error, the refresh token may have expired or been revoked.
+
+    1. In IronBee, open **Integrations** and find the connection.
+    2. Click **Re-authorize**.
+    3. Complete the redirect flow again.
+
+    <Info>
+      Revoking IronBee's access from the connected tool's settings immediately stops all syncs. You must re-authorize the connection in IronBee to resume syncing.
+    </Info>
+  </Tab>
+
+  <Tab title="Service account">
+    ## Service account authentication
+
+    Service account authentication uses a JSON credentials file issued by the connected platform. This method is common for enterprise systems and Google Cloud-based tools.
+
+    ### When connectors use service accounts
+
+    A connector uses service account authentication when the connected tool supports machine-to-machine access via a dedicated non-human account. Common examples include Google Workspace, BigQuery, and certain enterprise platforms with admin-level API access.
+
+    ### JSON key file format
+
+    The credentials file is a JSON object issued by the connected platform. A typical file looks like this:
+
+    ```json
+    {
+      "type": "service_account",
+      "project_id": "your-project-id",
+      "private_key_id": "key-id",
+      "private_key": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n",
+      "client_email": "service-account-name@your-project-id.iam.gserviceaccount.com",
+      "client_id": "123456789",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token"
+    }
+    ```
+
+    The exact structure varies by platform. Download the file directly from the platform's admin console — do not modify it manually.
+
+    ### How to set up a service account connection
+
+    <Steps>
+      <Step title="Create a service account in your tool">
+        In the connected platform's admin console, create a new service account and assign it the minimum permissions required for the data you want to sync. Generate and download a JSON key file.
+      </Step>
+      <Step title="Upload the JSON file to IronBee">
+        In the connector setup panel, click **Upload credentials file** and select the JSON key file. IronBee validates the file format and encrypts it at rest immediately.
+      </Step>
+      <Step title="Fill in any additional fields">
+        Some connectors require additional configuration alongside the key file, such as a domain, organization ID, or delegated user email. Complete any required fields shown in the setup panel.
+      </Step>
+      <Step title="Test the connection">
+        Click **Test connection**. If the test fails, verify that the service account has the correct permissions in the connected platform and that the JSON file is the most recently generated key.
+      </Step>
+    </Steps>
+
+    ### Rotating service account credentials
+
+    Rotate credentials when a key is compromised or as part of your organization's security policy.
+
+    1. In the connected platform's admin console, generate a new JSON key for the service account.
+    2. In IronBee, open **Integrations**, find the connection, and click **Edit credentials**.
+    3. Upload the new JSON key file and click **Save**.
+    4. Delete the old key from the connected platform's admin console.
+
+    <Warning>
+      After uploading a new key file, run a manual test sync to confirm the new credentials work before deactivating the old key in your platform.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Related pages
+
+- [Connect your first integration](/integrations/quickstart)
+- [CRM connectors](/integrations/connectors/crm)
+- [Roles and permissions](/platform/administration/roles-permissions)

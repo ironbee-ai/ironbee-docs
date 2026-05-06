@@ -1,0 +1,145 @@
+---
+title: "IronBee core concepts: workspaces, projects, and roles"
+description: "Understand the core building blocks of IronBee — workspaces, projects, members, roles, and API credentials — before you start configuring your account."
+sidebarTitle: "Key concepts"
+---
+
+IronBee organizes everything around a handful of interconnected concepts. Getting these straight early will save you time when configuring access, debugging permissions, or making API calls. This page defines each concept, explains how they relate to one another, and shows you how API credentials work in practice.
+
+## Workspaces
+
+A **workspace** is the top-level container for your organization in IronBee. Every account belongs to exactly one workspace. The workspace holds:
+
+- All projects created by your team
+- All member accounts and their workspace-level roles
+- Billing and subscription details
+- Shared settings such as timezone and default project visibility
+- API keys that can access any resource in the workspace
+
+Each workspace is identified by a unique **slug** — a short, URL-safe string you choose at signup (for example, `acme-corp`). The slug appears in your workspace URL and in API paths. It cannot be changed after creation.
+
+<Note>
+  If your organization needs strict data isolation between teams or business units, create a separate workspace for each unit. Projects are not shareable across workspaces.
+</Note>
+
+## Projects
+
+A **project** is the primary unit of work inside a workspace. Think of it as a self-contained environment that groups related data, dashboards, and integrations together.
+
+Each project has:
+
+- Its own member list (which can be a subset of workspace members)
+- Its own visibility setting (**Private** or **Internal**)
+- Its own project-level role assignments that can override workspace roles
+
+You can create as many projects as you need within a workspace. Projects cannot be moved between workspaces.
+
+## Members and roles
+
+Every person who has access to a workspace is a **member**. Each member is assigned a role at the workspace level, and optionally a different role at the project level.
+
+### Workspace-level roles
+
+| Role | Description | Key capabilities |
+|------|-------------|-----------------|
+| **Admin** | Full access to the entire workspace | Manage billing, invite/remove members, change roles, access all projects, manage API keys, edit all settings |
+| **Member** | Standard contributor access | Create and manage projects, invite members to their own projects, view workspace settings |
+| **Viewer** | Read-only access | View projects they are added to, view dashboards and reports, cannot create or edit anything |
+
+<Info>
+  A project-level role overrides the workspace-level role for that member within that specific project. For example, a workspace Viewer who is granted the **Member** role on a project can create and edit content inside that project, while remaining read-only everywhere else in the workspace.
+</Info>
+
+### Role assignment hierarchy
+
+```
+Workspace role (default)
+    └── Project role (override, per project)
+```
+
+When IronBee evaluates what a member can do on a given resource, it checks for a project-level role first. If one exists, it takes precedence. If not, the workspace-level role applies.
+
+For a full breakdown of every capability by role, see [Roles and permissions](/platform/administration/roles-permissions).
+
+## API credentials
+
+**API keys** let you authenticate programmatic requests to the IronBee API. Keys are scoped to the workspace — a single key can access any resource within the workspace, subject to its permission level.
+
+### Key types
+
+| Type | Description |
+|------|-------------|
+| **Read-only** | `GET` requests only; cannot create, update, or delete resources |
+| **Read-write** | Full access; can create, update, and delete resources |
+
+### Authentication
+
+Pass your API key in the `Authorization` header of every request:
+
+```
+Authorization: Bearer <your-api-key>
+```
+
+### Example API call
+
+The example below retrieves a list of projects in your workspace.
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.ironbee.ai/v1/projects \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.ironbee.ai/v1/projects",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+    },
+)
+
+projects = response.json()
+print(projects)
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.ironbee.ai/v1/projects", {
+  method: "GET",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+});
+
+const projects = await response.json();
+console.log(projects);
+```
+
+</CodeGroup>
+
+<Warning>
+  API keys are shown only once when created. Store them securely in a secrets manager or environment variable. If a key is lost or compromised, revoke it immediately from **Settings → API keys** and generate a new one.
+</Warning>
+
+## What to read next
+
+<CardGroup cols={2}>
+  <Card title="Platform quickstart" icon="rocket" href="/platform/quickstart">
+    Follow a step-by-step guide to set up your workspace and invite your team.
+  </Card>
+  <Card title="Roles and permissions" icon="shield" href="/platform/administration/roles-permissions">
+    See a detailed capability matrix for all three built-in roles.
+  </Card>
+  <Card title="Workspace settings" icon="settings" href="/platform/configuration/settings">
+    Configure timezone, visibility defaults, and notification preferences.
+  </Card>
+  <Card title="User management" icon="users" href="/platform/configuration/user-management">
+    Invite, remove, and reassign roles for members in your workspace.
+  </Card>
+</CardGroup>

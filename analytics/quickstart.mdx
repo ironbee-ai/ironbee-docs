@@ -1,0 +1,78 @@
+---
+title: 'Get started building dashboards with IronBee Analytics'
+description: 'Connect your first data source, build a dashboard, add charts, and share your work with your team in minutes using IronBee Analytics.'
+sidebarTitle: 'Quickstart'
+keywords: ['analytics', 'quickstart', 'getting started', 'dashboard', 'data source', 'charts']
+---
+
+IronBee Analytics lets you turn raw data from databases, data warehouses, and SaaS tools into shareable dashboards and automated reports. This guide walks you through the end-to-end setup: connecting a data source, creating your first dashboard, adding a chart, and sharing the result with others on your team.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An **Admin** or **Member** role in your IronBee workspace. If you're unsure of your role, ask your workspace Admin or see [Roles and permissions](/platform/administration/roles-permissions).
+- Credentials for the data source you want to connect (host, port, username, password, or an API key depending on the source type).
+
+<Note>
+If your data source restricts inbound connections by IP address, you may need to allowlist IronBee's outbound IP ranges before the connection test will succeed. Check with your database administrator or cloud provider, then add the IPs listed under **Settings → Data Sources → Outbound IPs** in your IronBee workspace.
+</Note>
+
+## Set up Analytics
+
+<Steps>
+  <Step title="Connect a data source">
+    1. In the left sidebar, navigate to **Analytics → Data Sources**.
+    2. Click **Add data source**.
+    3. Select your source type — for example, **PostgreSQL**, **BigQuery**, or **Salesforce**.
+    4. Enter your connection credentials, then click **Test connection**.
+    5. Once the test passes, click **Save**.
+
+    Your new data source appears in the **Data Sources** list and is ready to query.
+  </Step>
+
+  <Step title="Create a dashboard">
+    1. Navigate to **Analytics → Dashboards**.
+    2. Click **New dashboard**.
+    3. Give your dashboard a descriptive name — for example, "Q2 Revenue Overview" — and click **Create**.
+
+    The dashboard opens in edit mode, ready for you to add charts.
+  </Step>
+
+  <Step title="Add a chart">
+    1. Inside your dashboard, click **Add chart**.
+    2. Select a chart type: **Bar**, **Line**, **Number card**, **Table**, or **Pie**.
+    3. Choose the data source you connected in step 1.
+    4. Configure the axes and groupings:
+       - **X-axis**: the dimension to plot along the horizontal axis (e.g., date, category).
+       - **Y-axis**: the measure to aggregate (e.g., revenue, count).
+       - **Group by** (optional): a field to split series by color or segment.
+    5. Optionally add **Filters** to narrow the data shown in this chart.
+    6. Click **Save chart**.
+
+    The chart appears on your dashboard canvas. Drag it to reposition or resize as needed.
+  </Step>
+
+  <Step title="Share the dashboard">
+    1. In the top-right corner of the dashboard, click **Share**.
+    2. Choose an **Access level**:
+       - **Anyone with the link** — anyone who receives the URL can view the dashboard.
+       - **Workspace members only** — only authenticated members of your IronBee workspace can view it.
+    3. Copy the shareable link, or click **Embed** to get an `<iframe>` snippet you can paste into another application.
+    4. Click **Done**.
+  </Step>
+</Steps>
+
+## What's next
+
+<CardGroup cols={3}>
+  <Card title="Connect a data source" icon="database" href="/analytics/connect-data">
+    Learn about all supported source types, connection options, and how to troubleshoot common errors.
+  </Card>
+  <Card title="Create and share dashboards" icon="layout-dashboard" href="/analytics/dashboards/create-dashboard">
+    Explore chart configuration in depth, embedding options, and access controls.
+  </Card>
+  <Card title="Schedule reports" icon="calendar-clock" href="/analytics/reports/scheduled-reports">
+    Deliver recurring dashboard snapshots to your team via email or Slack.
+  </Card>
+</CardGroup>
