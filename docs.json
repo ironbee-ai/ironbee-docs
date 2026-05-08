@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
   "name": "IronBee",
-  "description": "IronBee documentation — install the CLI, configure your project, and explore the console.",
+  "description": "IronBee documentation — install the CLI, configure your projects, and explore the console.",
   "colors": {
     "primary": "#747c7f",
     "light": "#0a0b0b",
@@ -10,9 +10,9 @@
   },
   "favicon": "favicon.ico",
   "logo": {
-    "light": "logo/light.svg",
-    "dark": "logo/dark.svg",
-    "width": 90
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "width": 328
   },
   "icons": {
     "library": "lucide"
@@ -72,27 +72,6 @@
         ]
       },
       {
-        "tab": "GitHub Action",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket",
-            "pages": [
-              "github-action/overview",
-              "github-action/getting-started"
-            ]
-          },
-          {
-            "group": "Configuration",
-            "icon": "settings",
-            "pages": [
-              "github-action/trigger-modes",
-              "github-action/configuration"
-            ]
-          }
-        ]
-      },
-      {
         "tab": "Console",
         "groups": [
           {
@@ -126,6 +105,27 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "GitHub Action",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "github-action/overview",
+              "github-action/getting-started"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "icon": "settings",
+            "pages": [
+              "github-action/trigger-modes",
+              "github-action/configuration"
+            ]
+          }
+        ]
       }
     ]
   },
@@ -134,13 +134,13 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.ironbee.ai"
+      "href": "https://console.ironbee.dev"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/ironbeeai",
-      "linkedin": "https://linkedin.com/company/ironbee-ai"
+      "x": "https://x.com/ironbee_ai",
+      "linkedin": "https://www.linkedin.com/company/ironbee-ai"
     }
   }
 }
