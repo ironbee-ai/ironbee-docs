@@ -8,11 +8,11 @@
     "light": "#0a0b0b",
     "dark": "#9fa1a4"
   },
-  "favicon": "https://media.brand.dev/2068afa3-5b82-43fe-9be4-e830e6660470.jpg",
+  "favicon": "favicon.ico",
   "logo": {
     "light": "logo/light.svg",
     "dark": "logo/dark.svg",
-    "width": 120
+    "width": 90
   },
   "icons": {
     "library": "lucide"
