@@ -1,0 +1,131 @@
+---
+title: Configuration
+description: All inputs, outputs, and example configurations for the IronBee Action.
+---
+
+## Inputs
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `anthropic_api_key` | Yes* | | Anthropic API key for Claude Code |
+| `claude_code_oauth_token` | No* | | Claude Code OAuth token (alternative to API key) |
+| `github_token` | No | `${{ github.token }}` | GitHub token for PR operations |
+| `ironbee_cli_version` | No | `latest` | IronBee CLI version to install |
+| `claude_code_cli_version` | No | `latest` | Claude Code CLI version to install |
+| `app_url` | No | | Application URL for verification |
+| `app_start_command` | No | | Command to start the application |
+| `app_build_command` | No | | Command to build the application |
+| `app_install_command` | No | | Command to install dependencies |
+| `prompt` | No | | Additional instructions for the agent |
+| `model` | No | | Claude model override |
+| `max_turns` | No | `100` | Maximum conversation turns |
+| `claude_args` | No | | Additional Claude Code CLI arguments |
+| `aws_iam_role` | No | | AWS IAM role ARN for S3 upload |
+| `aws_region` | No | | AWS region for S3 upload |
+| `aws_s3_bucket` | No | | S3 bucket name (must be publicly readable) |
+| `exclude_ironbee_files` | No | `false` | Exclude IronBee config files from commits |
+| `verbose` | No | `false` | Enable verbose CI logging |
+| `working_directory` | No | `.` | Working directory for verification |
+
+*One of `anthropic_api_key` or `claude_code_oauth_token` is required.
+
+---
+
+## Outputs
+
+| Output | Description |
+|--------|-------------|
+| `verdict` | Final verification result: `pass`, `fail`, or `unknown` |
+| `artifacts_url` | Download URL for verification evidence (screenshots, recordings) |
+
+---
+
+## Examples
+
+### With custom build and start commands
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    app_install_command: 'npm ci'
+    app_build_command: 'npm run build'
+    app_start_command: 'npm run start'
+    app_url: 'http://localhost:3000'
+```
+
+### With custom agent instructions
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    prompt: 'Focus on the checkout flow and payment form validation'
+    max_turns: '30'
+```
+
+### Using Claude Code OAuth token
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+```
+
+### With S3 for inline screenshots in PR comments
+
+Upload evidence to a publicly readable S3 bucket so screenshots render inline in PR comments. Requires AWS OIDC configured with an IAM role.
+
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write  # Required for AWS OIDC
+
+steps:
+  - uses: actions/checkout@v4
+
+  - uses: ironbee-ai/ironbee-action@v1
+    with:
+      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+      aws_iam_role: 'arn:aws:iam::123456789012:role/github-actions-s3'
+      aws_region: 'us-east-1'
+      aws_s3_bucket: 'my-verification-evidence'
+```
+
+### Exclude IronBee config from commits
+
+By default, IronBee config files are committed to the repo so they can be used in local development. To keep them out:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    exclude_ironbee_files: 'true'
+```
+
+### Verbose logging
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verbose: 'true'
+```
+
+### Monorepo — verify a specific subdirectory
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    working_directory: 'packages/web-app'
+    app_url: 'http://localhost:3000'
+```
+
+---
+
+## Caching
+
+Playwright Chromium binaries (~200 MB) are cached using `actions/cache` to speed up subsequent runs. The cache key is based on the runner OS. Browser downloads during `npm install` are skipped and installed separately with system dependencies.

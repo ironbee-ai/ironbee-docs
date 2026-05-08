@@ -1,0 +1,178 @@
+---
+title: Configuration
+description: Customize IronBee's verification behavior with global and project-level config files.
+---
+
+## Config file locations
+
+IronBee reads configuration from two locations. Settings are **deep-merged**, with the project config taking precedence over the global config.
+
+| File | Scope |
+|------|-------|
+| `~/.ironbee/config.json` | Global — applies to all projects |
+| `<project>/.ironbee/config.json` | Project-level — overrides global |
+
+---
+
+## Full example
+
+```json
+{
+  "ignoredVerifyPatterns": ["*.test.ts", "*.spec.ts"],
+  "maxRetries": 5,
+
+  "browser": {
+    "verifyPatterns": ["*.ts", "*.tsx", "*.css"],
+    "additionalVerifyPatterns": ["*.mdx"]
+  },
+
+  "backend": {
+    "node": {
+      "verifyPatterns": ["server/**/*.ts", "pages/api/**/*.ts"],
+      "additionalVerifyPatterns": ["lib/db/**/*.ts"]
+    }
+  },
+
+  "verification": {
+    "enable": true
+  }
+}
+```
+
+---
+
+## Options reference
+
+### Core options
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from all verification cycles. Checked first — matching files never trigger a cycle. |
+| `maxRetries` | `number` | `3` | Maximum failed verification attempts before the agent is allowed to complete (and must report unresolved issues). Single global counter regardless of how many cycles are active. |
+
+### Browser cycle
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `browser.verifyPatterns` | `string[]` | 40+ code extensions | Glob patterns that trigger the browser cycle. **Replaces** the built-in defaults entirely when set. |
+| `browser.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns **appended** to the defaults (or to `verifyPatterns` if set). Use this to add patterns without replacing all defaults. |
+
+### Backend cycle
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `backend.node.verifyPatterns` | `string[]` | `[]` | Glob patterns that trigger the Node verification cycle. Empty by default — use `ironbee enable-backend node` to set opinionated defaults. |
+| `backend.node.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns appended to `backend.node.verifyPatterns`. |
+
+### Verification toggle
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `verification.enable` | `boolean` | `true` | Master enforcement switch. Set to `false` for monitoring-only mode — sessions still ship telemetry, but no verify gate is installed. Equivalent to running `ironbee disable-verification`. |
+
+---
+
+## Default browser patterns
+
+When `browser.verifyPatterns` is not set, IronBee matches a broad set of code file extensions including:
+
+`.ts` `.tsx` `.js` `.jsx` `.css` `.scss` `.html` `.py` `.go` `.rs` `.java` `.vue` `.svelte` and more.
+
+Non-code files like `README.md`, `package.json`, and `.gitignore` are never matched by the defaults.
+
+---
+
+## Devtools MCP server config
+
+You can customize the MCP server entries IronBee installs for `browser-devtools` and `node-devtools`.
+
+### Browser devtools
+
+```json
+{
+  "browserDevTools": {
+    "env": {
+      "BROWSER_HEADLESS_ENABLE": "true",
+      "OTEL_ENABLE": "true"
+    }
+  }
+}
+```
+
+To fully replace the default server config (for example, pointing to a custom server):
+
+```json
+{
+  "browserDevTools": {
+    "mcp": {
+      "url": "http://localhost:4000/mcp"
+    }
+  }
+}
+```
+
+### Node devtools
+
+```json
+{
+  "nodeDevTools": {
+    "env": {
+      "NODE_INSPECTOR_HOST": "127.0.0.1"
+    }
+  }
+}
+```
+
+| Key | Description |
+|-----|-------------|
+| `browserDevTools.mcp` / `nodeDevTools.mcp` | Full MCP server config replacement — supports `command`+`args` (stdio) or `url` (HTTP) |
+| `browserDevTools.env` / `nodeDevTools.env` | Extra env vars merged into the default config. Only used when `mcp` is not set |
+
+<Note>
+  IronBee always sets `TOOL_NAME_PREFIX`, `TOOL_INPUT_METADATA_ENABLE=true`, and `PLATFORM` — these cannot be overridden.
+</Note>
+
+---
+
+## Common setups
+
+### Ignore test files
+
+```json
+{
+  "ignoredVerifyPatterns": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**"
+  ]
+}
+```
+
+### Add MDX to browser patterns
+
+```json
+{
+  "browser": {
+    "additionalVerifyPatterns": ["*.mdx", "*.md"]
+  }
+}
+```
+
+### Strict mode — more retries
+
+```json
+{
+  "maxRetries": 10
+}
+```
+
+### Monitoring only (no enforcement)
+
+```json
+{
+  "verification": {
+    "enable": false
+  }
+}
+```

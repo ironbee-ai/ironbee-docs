@@ -2,16 +2,17 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
   "name": "IronBee",
-  "description": "IronBee documentation — platform setup, analytics dashboards, and integrations in one place.",
+  "description": "IronBee documentation — install the CLI, configure your projects, and explore the console.",
   "colors": {
     "primary": "#747c7f",
     "light": "#0a0b0b",
     "dark": "#9fa1a4"
   },
-  "favicon": "https://media.brand.dev/2068afa3-5b82-43fe-9be4-e830e6660470.jpg",
+  "favicon": "favicon.ico",
   "logo": {
-    "light": "https://media.brand.dev/93e4f98f-f031-431a-84a3-c41239a4128a.svg",
-    "dark": "https://media.brand.dev/dcd54754-0c6a-44e3-bbd5-5f6e5d0bfebd.svg"
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "width": 328
   },
   "icons": {
     "library": "lucide"
@@ -35,65 +36,93 @@
     "directory": "card",
     "tabs": [
       {
-        "tab": "Platform",
+        "tab": "Getting Started",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Introduction",
             "icon": "rocket",
             "pages": [
-              "platform/quickstart",
-              "platform/key-concepts"
+              "getting-started/introduction",
+              "getting-started/quickstart",
+              "getting-started/key-concepts"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
+          {
+            "group": "Setup",
+            "icon": "download",
+            "pages": [
+              "cli/installation",
+              "cli/setup",
+              "cli/configuration"
+            ]
+          },
+          {
+            "group": "Commands",
+            "icon": "terminal",
+            "pages": [
+              "cli/commands",
+              "cli/agent-commands"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Console",
+        "groups": [
+          {
+            "group": "Projects & Sessions",
+            "icon": "layers",
+            "pages": [
+              "console/projects",
+              "console/sessions",
+              "console/session-details",
+              "console/activities"
+            ]
+          },
+          {
+            "group": "Verification & Fixes",
+            "icon": "shield-check",
+            "pages": [
+              "console/verifications",
+              "console/verification-detail",
+              "console/fixes",
+              "console/fix-detail"
+            ]
+          },
+          {
+            "group": "Traces & Analysis",
+            "icon": "chart-bar",
+            "pages": [
+              "console/traces",
+              "console/analysis",
+              "console/findings",
+              "console/recommendations"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "GitHub Action",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "github-action/overview",
+              "github-action/getting-started"
             ]
           },
           {
             "group": "Configuration",
             "icon": "settings",
             "pages": [
-              "platform/configuration/settings",
-              "platform/configuration/user-management",
-              "platform/administration/roles-permissions"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Analytics",
-        "groups": [
-          {
-            "group": "Get Started",
-            "icon": "rocket",
-            "pages": [
-              "analytics/quickstart",
-              "analytics/connect-data"
-            ]
-          },
-          {
-            "group": "Dashboards & Reports",
-            "icon": "chart-bar",
-            "pages": [
-              "analytics/dashboards/create-dashboard",
-              "analytics/reports/scheduled-reports"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Integrations",
-        "groups": [
-          {
-            "group": "Get Started",
-            "icon": "rocket",
-            "pages": [
-              "integrations/quickstart",
-              "integrations/authentication"
-            ]
-          },
-          {
-            "group": "Connectors & Webhooks",
-            "icon": "plug",
-            "pages": [
-              "integrations/connectors/crm",
-              "integrations/webhooks/configure"
+              "github-action/trigger-modes",
+              "github-action/configuration"
             ]
           }
         ]
@@ -105,13 +134,13 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.ironbee.ai"
+      "href": "https://console.ironbee.dev"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/ironbeeai",
-      "linkedin": "https://linkedin.com/company/ironbee-ai"
+      "x": "https://x.com/ironbee_ai",
+      "linkedin": "https://www.linkedin.com/company/ironbee-ai"
     }
   }
 }

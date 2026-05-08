@@ -1,0 +1,61 @@
+---
+title: Session Details
+description: A deep view into a single agent session — timeline, verifications, fixes, traces, and analysis.
+---
+
+The session details page is the central view for understanding what happened in a single agent working session. It combines timeline, evidence, and analysis into one place.
+
+## Overview panel
+
+At the top of the page, the overview panel shows:
+
+- **Session ID** — unique identifier for the session
+- **Status** — running, passed, failed, or incomplete
+- **Started / ended** — timestamps
+- **Total duration** — overall session length
+- **Coding time** — time spent editing files
+- **Verification time** — time spent in verification cycles
+- **Fix time** — time spent fixing issues after failed verifications
+- **Retries** — number of failed verification attempts
+
+## Session timeline
+
+The timeline visualizes the entire session as a horizontal flow. Each activity appears as a block, color-coded by type:
+
+| Color | Activity type |
+|-------|--------------|
+| Blue | Code change |
+| Green | Verification (passed) |
+| Red | Verification (failed) |
+| Orange | Fix |
+
+Clicking any block in the timeline jumps to that activity's detail section.
+
+## Navigation tabs
+
+The session detail page is organized into tabs:
+
+| Tab | Contents |
+|-----|----------|
+| **Activities** | All agent actions in order |
+| **Verifications** | Each verification cycle with evidence and verdict |
+| **Fixes** | Code changes made to resolve failed verifications |
+| **Traces** | Tool call traces with the span waterfall chart |
+| **Analysis** | AI-generated findings and recommendations |
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Activities" icon="list" href="/console/activities">
+    Individual agent actions within the session.
+  </Card>
+  <Card title="Verifications" icon="shield-check" href="/console/verifications">
+    Browser and Node verification cycles with evidence.
+  </Card>
+  <Card title="Fixes" icon="wrench" href="/console/fixes">
+    Code changes made to resolve failures.
+  </Card>
+  <Card title="Traces" icon="bar-chart" href="/console/traces">
+    Tool call traces and the span waterfall chart.
+  </Card>
+</CardGroup>

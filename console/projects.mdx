@@ -1,0 +1,44 @@
+---
+title: Projects
+description: Organize your codebases and track verification health at a glance.
+---
+
+A **project** in IronBee maps to a codebase. When you run `ironbee install` in a directory, that directory is associated with a project and all session data flows there automatically.
+
+## The projects page
+
+The projects page is the home screen of the IronBee Console. It shows every project your account has access to with a summary of recent activity.
+
+For each project you can see:
+- Total sessions and recent session count
+- Overall pass rate across all verifications
+- Last active timestamp
+- Quick links to the latest sessions
+
+## Creating a project
+
+Projects are created automatically the first time a session is started in a directory that has IronBee installed. No manual setup is required in the console.
+
+You can also rename a project or update its settings from the project detail page.
+
+## Project settings
+
+From the project detail page, you can:
+- Rename the project
+- Set the default application URL used for verification
+- Manage which team members have access
+
+## Navigating into a project
+
+Clicking a project opens its detail view, which defaults to the [Sessions](/console/sessions) tab. From there you can explore all sessions, verifications, and analysis for that codebase.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Sessions" icon="clock" href="/console/sessions">
+    Browse and filter all sessions for a project.
+  </Card>
+  <Card title="Analysis" icon="sparkles" href="/console/analysis">
+    View AI-powered insights across your project.
+  </Card>
+</CardGroup>

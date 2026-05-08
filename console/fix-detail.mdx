@@ -1,0 +1,60 @@
+---
+title: Fix Detail
+description: The specific code changes an agent made to resolve a verification failure.
+---
+
+The fix detail view shows exactly what the agent changed in response to a failed verification — including the diff, the failure it was responding to, and whether the subsequent re-verification passed.
+
+## Fix context
+
+At the top of the fix detail view:
+
+- **Fix number** — which fix this is within the session (Fix 1, Fix 2, etc.)
+- **Triggered by** — link to the verification cycle that failed and prompted this fix
+- **Timestamp** — when the fix was applied
+- **Duration** — how long the agent spent making the change
+
+## Changed files
+
+A list of every file modified in this fix, with:
+
+- File path
+- Change type (modified / created / deleted)
+- Lines added / removed
+
+## Diff view
+
+The diff view shows the exact code changes, file by file, in a side-by-side or unified format. Lines added are highlighted in green, lines removed in red.
+
+For each file, you can see:
+
+- The specific lines that changed
+- Context lines around the change (3 lines by default)
+- The agent's reasoning for the change (from the conversation transcript)
+
+## Re-verification result
+
+After a fix, the agent immediately re-verifies. The fix detail view shows:
+
+- **Outcome** — did the re-verification pass or fail?
+- **Link** — jump directly to the verification cycle that followed this fix
+
+If the re-verification failed, there will be another fix after this one — navigate through the fixes list to follow the full chain.
+
+## Reading the fix chain
+
+A typical fix chain looks like:
+
+```
+Verification 1 → FAILED (console error in form.tsx)
+     ↓
+Fix 1 → Updated form validation logic in form.tsx
+     ↓
+Verification 2 → FAILED (new error in submit handler)
+     ↓
+Fix 2 → Fixed submit handler in form.tsx
+     ↓
+Verification 3 → PASSED
+```
+
+Understanding this chain helps you see what the agent tried, what it missed on the first attempt, and how it arrived at the final working solution.

@@ -1,0 +1,65 @@
+---
+title: Traces & Span Chart
+description: A structured record of every tool call during verification, visualized as a waterfall chart.
+---
+
+IronBee records a **trace** for each verification cycle — a detailed, timestamped log of every tool the agent used. Within a trace, each individual tool invocation is a **span**. The **span chart** visualizes these as an interactive waterfall diagram.
+
+## What is a trace?
+
+A trace captures the full execution path of a verification cycle:
+
+- Which browser tools were invoked and in what order
+- How long each tool call took
+- The inputs and outputs of each call
+- Where time was spent waiting (network, page load, DOM updates)
+
+Traces give you an exact picture of what the agent tested — not what it claimed to test.
+
+## The span waterfall chart
+
+The span chart renders the trace as a horizontal waterfall, with time on the X axis and individual spans stacked vertically. Each bar represents one tool call.
+
+### Reading the chart
+
+- **Width** — duration of the span (wider = took longer)
+- **Color** — tool category (navigation, screenshot, interaction, console/network check, probe)
+- **Indentation** — nesting (a screenshot span may be a child of a navigation span)
+
+### Interacting with the chart
+
+- **Hover** over a span to see the tool name, duration, and a summary of inputs/outputs
+- **Click** a span to open the span detail panel
+- **Zoom** in on a time range by dragging across the chart
+- **Filter** by tool type using the toolbar — show only navigation, only screenshots, etc.
+
+## Span detail panel
+
+Clicking a span opens its detail panel on the right side of the chart:
+
+| Field | Description |
+|-------|-------------|
+| Tool | Name of the devtools tool invoked |
+| Started at | Timestamp within the session |
+| Duration | Milliseconds |
+| Input | Arguments passed to the tool (URL, selector, etc.) |
+| Output | Tool response summary |
+| Parent span | Link to the parent span if nested |
+
+## What to look for
+
+**Long spans** on navigation or screenshot tools may indicate a slow page load — a potential performance issue in the application.
+
+**Many short spans** clustered together suggest the agent was doing a thorough job of testing many interactions.
+
+**Tool call gaps** (large empty spaces in the waterfall) indicate the agent was thinking or waiting — not actively testing.
+
+**Probe spans** (Node cycle) show where backend tracepoints or logpoints were set and read back.
+
+## Traces vs activities
+
+| | Trace | Activity |
+|--|-------|---------|
+| Granularity | Individual tool calls (millisecond precision) | Grouped actions (seconds to minutes) |
+| Purpose | Debugging verification timing | Understanding session flow |
+| Where | Traces tab in session detail | Activities tab in session detail |

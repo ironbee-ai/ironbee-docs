@@ -1,0 +1,101 @@
+---
+title: Trigger Modes
+description: How IronBee Action behaves on pull requests, pushes, schedules, and manual runs.
+---
+
+The IronBee Action adapts its behavior based on what triggered the workflow. Each trigger uses a different verification scope and fix strategy.
+
+---
+
+## Pull request
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize]
+```
+
+**Verification scope:** Diff-based — reviews changed files and verifies affected pages only.
+
+**Fix behavior:** Fixes are committed directly to the PR branch. The agent re-verifies after each fix.
+
+**Report:** A verification report is posted as a PR comment. If the comment already exists (re-run), it is updated in place.
+
+This is the most common trigger and the recommended starting point for most projects.
+
+---
+
+## Push to main
+
+```yaml
+on:
+  push:
+    branches: [main]
+```
+
+**Verification scope:** Diff-based — reviews the commit diff and verifies affected pages.
+
+**Fix behavior:** If issues are found, the action creates a new branch with fixes and opens a pull request targeting `main`.
+
+Use this alongside the PR trigger to catch anything that merged without issues but broke in context.
+
+---
+
+## Scheduled smoke test
+
+```yaml
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
+```
+
+**Verification scope:** Full — tests the entire application, not just changed files.
+
+**Fix behavior:** Creates a fix PR if issues are found.
+
+Use this for regular regression checks or to catch drift between releases. The full scope means no change is required — the agent tests every meaningful page and flow it can find.
+
+---
+
+## Manual verification
+
+```yaml
+on:
+  workflow_dispatch:
+```
+
+**Verification scope:** Full — tests the entire application.
+
+**Fix behavior:** Creates a fix PR if issues are found.
+
+Trigger from the **Actions** tab in GitHub. Useful for on-demand checks before a release or after a deployment.
+
+---
+
+## Combining triggers
+
+You can combine multiple triggers in one workflow:
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+```
+
+Each trigger type uses the appropriate verification scope automatically — no additional configuration required.
+
+---
+
+## Trigger summary
+
+| Trigger | Scope | Fixes committed to | Fix PR created |
+|---------|-------|--------------------|----------------|
+| `pull_request` | Diff | PR branch (directly) | No |
+| `push` | Diff | New fix branch | Yes |
+| `schedule` | Full | New fix branch | Yes |
+| `workflow_dispatch` | Full | New fix branch | Yes |

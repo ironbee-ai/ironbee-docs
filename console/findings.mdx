@@ -1,0 +1,62 @@
+---
+title: Findings
+description: Specific issues and problems identified during a session or across your project.
+---
+
+**Findings** are specific problems that IronBee's analysis identified — a browser console error that kept appearing, a failing form submission, a network request that returned 500, or a pattern of retries on the same file.
+
+## Finding types
+
+| Type | Description |
+|------|-------------|
+| `error` | A definite problem — console error, network failure, assertion failure |
+| `warning` | A potential issue — slow page load, deprecated API, unused variable |
+| `pattern` | A recurring behavior — same file failing across multiple verifications |
+| `coverage_gap` | Areas the agent skipped or did not test |
+
+## Severity levels
+
+| Severity | Meaning |
+|----------|---------|
+| `critical` | Caused a verification failure; must be addressed |
+| `high` | Likely to cause problems; strongly recommended to fix |
+| `medium` | Worth addressing but not urgent |
+| `low` | Informational; improve when convenient |
+
+## Findings list
+
+The Findings tab shows all findings for a session, sorted by severity. Each finding includes:
+
+- **Title** — a brief description of the issue
+- **Severity** — critical / high / medium / low
+- **Type** — error / warning / pattern / coverage gap
+- **Affected file or page** — where the issue was observed
+- **Evidence** — links to the specific tool call or screenshot where the issue appeared
+
+## Finding detail
+
+Clicking a finding opens its detail view:
+
+- **Full description** — what was observed and why it matters
+- **Evidence** — the relevant screenshot, console log, or network response
+- **Context** — which verification cycle and activity this occurred in
+- **Related findings** — other findings from the same file or session that may be connected
+
+## Filtering findings
+
+You can filter the findings list by:
+
+- Severity
+- Type
+- Affected file
+- Session or date range (on the project-level findings view)
+
+## Project-level findings
+
+The project's Analysis tab aggregates findings across all sessions. This view highlights:
+
+- Files that appear in findings most often
+- Error types that recur across sessions
+- Trends over time (are findings increasing or decreasing?)
+
+Recurring findings on the same file are a strong signal that the file needs attention — better tests, clearer logic, or a structural refactor.

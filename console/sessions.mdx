@@ -1,0 +1,52 @@
+---
+title: Sessions
+description: Browse, filter, and understand every coding session in your project.
+---
+
+A **session** represents a single continuous working period for an AI agent — from when it starts editing to when it completes or is interrupted. Every time your agent works on a task, a new session is created.
+
+## The sessions list
+
+The sessions page shows all sessions for a project in reverse chronological order. Each row displays:
+
+| Column | Description |
+|--------|-------------|
+| Status | `running`, `passed`, `failed`, or `incomplete` |
+| Started | When the session began |
+| Duration | Total elapsed time |
+| Activities | Number of distinct actions (code changes, verifications, fixes) |
+| Verifications | Count of verification cycles and their outcomes |
+| Verdict | Final pass/fail result |
+
+## Session status
+
+| Status | Meaning |
+|--------|---------|
+| `running` | The agent is still active in this session |
+| `passed` | All verifications completed with a passing verdict |
+| `failed` | One or more verifications failed and the retry limit was reached |
+| `incomplete` | The session ended before a verdict was submitted |
+
+## Filtering sessions
+
+Use the filter bar at the top of the sessions list to narrow results:
+
+- **Status** — show only passed, failed, or running sessions
+- **Date range** — filter by when sessions started
+- **Duration** — show sessions longer or shorter than a threshold
+- **Verdict** — filter by final pass/fail outcome
+
+## What a session contains
+
+Clicking a session row opens the [Session Details](/console/session-details) page, which shows:
+- A full timeline of all activities
+- Every verification cycle with evidence
+- All fixes the agent made
+- Trace data and span charts
+- Analysis findings and recommendations
+
+## Next steps
+
+<Card title="Session details" icon="layout-panel-left" href="/console/session-details">
+  Explore the timeline, verifications, fixes, and traces for a single session.
+</Card>

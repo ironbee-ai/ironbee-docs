@@ -1,6 +1,6 @@
 ---
 title: IronBee Documentation
-description: Everything you need to set up, configure, and get the most out of IronBee's platform, analytics, and integrations.
+description: Install the CLI, configure your project, and explore the console.
 mode: frame
 ---
 
@@ -10,42 +10,55 @@ mode: frame
       IronBee Documentation
     </h1>
     <p className="text-balance text-base leading-relaxed tracking-tight text-gray-600 dark:text-gray-400">
-      Everything you need to set up, configure, and get the most out of IronBee's platform, analytics, and integrations.
+      The verification and intelligence layer for agentic development. Install the CLI, ship with confidence, and understand exactly what your AI agent is doing.
     </p>
   </div>
 
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <Card
-      title={<span className="product-guide-feature-card-title">Platform</span>}
-      icon="layers"
-      href="/platform/quickstart"
+      title={<span className="product-guide-feature-card-title">Getting Started</span>}
+      icon="rocket"
+      href="/getting-started/quickstart"
       className="product-guide-feature-card"
-      size={64}
     >
-      <span className="product-guide-feature-card-description">Set up your workspace, invite your team, and configure projects.</span>
+      <span className="product-guide-feature-card-description">Install the CLI, set up a project, and run your first verification.</span>
     </Card>
 
     <a
-      href="/analytics/quickstart"
+      href="/cli/installation"
       className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
     >
-      <Icon icon="chart-column" color="rgb(var(--primary))" size={18} className="shrink-0" />
+      <Icon icon="terminal" color="rgb(var(--primary))" size={18} className="shrink-0" />
       <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Analytics</span>
+        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">CLI</span>
         <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Connect data sources, build dashboards, and schedule reports.
+          Install, configure, and use the IronBee CLI in any project.
         </span>
       </div>
     </a>
+
     <a
-      href="/integrations/quickstart"
+      href="/github-action/overview"
       className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
     >
-      <Icon icon="plug" color="rgb(var(--primary))" size={18} className="shrink-0" />
+      <Icon icon="git-branch" color="rgb(var(--primary))" size={18} className="shrink-0" />
       <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Integrations</span>
+        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">GitHub Action</span>
         <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Ready-to-use connectors for CRMs and other tools, plus flexible webhooks.
+          Automated verification and fixing on every pull request.
+        </span>
+      </div>
+    </a>
+
+    <a
+      href="/console/projects"
+      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+    >
+      <Icon icon="layout-dashboard" color="rgb(var(--primary))" size={18} className="shrink-0" />
+      <div className="flex flex-col gap-1">
+        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Console</span>
+        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+          Explore sessions, verifications, fixes, traces, and AI analysis.
         </span>
       </div>
     </a>
@@ -58,74 +71,53 @@ mode: frame
 
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <a
-        href="/platform/configuration/user-management"
+        href="/cli/installation"
         className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
       >
-        <Icon icon="users" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <Icon icon="download" color="rgb(var(--primary))" size={18} className="shrink-0" />
         <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Manage your team</span>
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Install the CLI</span>
           <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Invite members, assign roles, and control access across your workspace.
+            Get IronBee running globally with a single npm command.
           </span>
         </div>
       </a>
+
       <a
-        href="/analytics/connect-data"
+        href="/cli/configuration"
         className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
       >
-        <Icon icon="database" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <Icon icon="settings" color="rgb(var(--primary))" size={18} className="shrink-0" />
         <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Connect a data source</span>
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Configure verification</span>
           <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Link a database, data warehouse, or third-party SaaS provider.
+            Customize verify patterns, retry limits, and devtools settings.
           </span>
         </div>
       </a>
+
       <a
-        href="/integrations/connectors/crm"
+        href="/github-action/getting-started"
         className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
       >
-        <Icon icon="building-2" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <Icon icon="git-pull-request" color="rgb(var(--primary))" size={18} className="shrink-0" />
         <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Connect your CRM</span>
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Add to your CI pipeline</span>
           <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Sync contacts, deals, and activities through native CRM connectors.
+            Verify and fix pull requests automatically with the GitHub Action.
           </span>
         </div>
       </a>
+
       <a
-        href="/analytics/dashboards/create-dashboard"
+        href="/console/session-details"
         className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
       >
-        <Icon icon="layout-dashboard" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <Icon icon="chart-gantt" color="rgb(var(--primary))" size={18} className="shrink-0" />
         <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Build a dashboard</span>
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Read a session</span>
           <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Add charts, set filters, and share a live analytics dashboard.
-          </span>
-        </div>
-      </a>
-      <a
-        href="/integrations/webhooks/configure"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="webhook" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Set up a webhook</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Subscribe to IronBee events and route them to any endpoint.
-          </span>
-        </div>
-      </a>
-      <a
-        href="/analytics/reports/scheduled-reports"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="calendar-clock" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Schedule a report</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Deliver recurring analytics snapshots via email or Slack.
+            Understand what the agent did, what failed, and how it was fixed.
           </span>
         </div>
       </a>

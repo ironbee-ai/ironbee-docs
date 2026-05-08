@@ -1,0 +1,80 @@
+---
+title: Installation
+description: Install the IronBee CLI globally on your machine.
+---
+
+## Requirements
+
+- **Node.js 20 or later**
+
+Check your version:
+
+```bash
+node --version
+```
+
+---
+
+## Install
+
+```bash
+npm install -g @ironbee-ai/cli
+```
+
+Verify the installation succeeded:
+
+```bash
+ironbee --version
+```
+
+---
+
+## Supported AI clients
+
+The CLI works with:
+
+| Client | Install detects automatically |
+|--------|-------------------------------|
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Yes |
+| [Cursor](https://cursor.com) | Yes |
+
+When you run `ironbee install` in a project, IronBee reads your environment and writes the correct hook and MCP configuration for your client. You can also specify the client explicitly:
+
+```bash
+ironbee install --client claude
+ironbee install --client cursor
+```
+
+---
+
+## Update
+
+To update to the latest version:
+
+```bash
+npm update -g @ironbee-ai/cli
+```
+
+---
+
+## Uninstall
+
+To remove the CLI from your machine:
+
+```bash
+npm uninstall -g @ironbee-ai/cli
+```
+
+To also remove IronBee configuration from a project:
+
+```bash
+ironbee uninstall
+```
+
+---
+
+## Next step
+
+<Card title="Set up your project" icon="folder" href="/cli/setup">
+  Run `ironbee install` to configure hooks and MCP servers for your AI client.
+</Card>
