@@ -1,0 +1,68 @@
+---
+title: Analysis
+description: AI-powered session analysis — what went right, what went wrong, and what to do about it.
+---
+
+After a session completes, IronBee automatically runs **analysis** — an LLM-powered pass over the full session data. Analysis turns raw telemetry into actionable insights without requiring you to read through every tool call.
+
+## What analysis produces
+
+Analysis generates two types of output:
+
+- **[Findings](/console/findings)** — specific problems identified during the session
+- **[Recommendations](/console/recommendations)** — concrete actions to improve quality or the verification setup
+
+## How analysis works
+
+1. The session completes (verdict submitted or retry limit reached)
+2. IronBee queues the session for analysis
+3. The analyzer processes activity logs, verification results, tool calls, and fix chains
+4. Findings and recommendations are written to the session record
+5. The Analysis tab in the session detail view updates with results
+
+Analysis typically completes within a minute of session end.
+
+## The analysis overview
+
+The Analysis tab in session detail shows:
+
+- **Summary** — a one-paragraph description of what the agent did and the overall outcome
+- **Key metrics** — coding time, verification time, fix time, pass rate, retry count
+- **Findings** — list of issues identified (with severity)
+- **Recommendations** — list of suggested actions (with priority)
+
+## Running analysis manually
+
+You can also trigger analysis from the CLI at any time:
+
+```bash
+ironbee analyze [session-id]
+```
+
+Omit the session ID to analyze all sessions in the current project:
+
+```bash
+ironbee analyze
+```
+
+Output is printed to stdout and also available in the console.
+
+## Project-level analysis
+
+In addition to per-session analysis, IronBee aggregates findings and recommendations across all sessions in a project. Visit the project's Analysis tab to see:
+
+- Most frequently failing files
+- Common error patterns
+- Recurring recommendations
+- Pass rate trends over time
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Findings" icon="triangle-alert" href="/console/findings">
+    Specific issues identified during the session.
+  </Card>
+  <Card title="Recommendations" icon="lightbulb" href="/console/recommendations">
+    Concrete actions to address findings and improve quality.
+  </Card>
+</CardGroup>

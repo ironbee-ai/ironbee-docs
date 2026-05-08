@@ -1,0 +1,76 @@
+---
+title: Overview
+description: Automated browser verification and fixing for every pull request.
+---
+
+The **IronBee GitHub Action** brings the same verification loop you get with the CLI into your CI/CD pipeline. On every push or pull request, it orchestrates Claude Code with the IronBee CLI to review your code changes, test them in a real browser, fix any issues found, and post a detailed report on the PR.
+
+---
+
+## What it does
+
+<Steps>
+  <Step title="Review">
+    The action reads the diff for the PR or push and identifies which pages and flows are affected.
+  </Step>
+  <Step title="Build & start">
+    Your application is built and started using the commands you configure (`app_build_command`, `app_start_command`).
+  </Step>
+  <Step title="Verify">
+    Claude Code runs `/ironbee-verify` (or `/ironbee-verify full` for manual/scheduled runs), navigating pages, taking screenshots, and testing functionality in a real Chromium browser.
+  </Step>
+  <Step title="Fix">
+    If verification fails, the agent automatically fixes the issues and re-verifies. Fixes are committed to the PR branch or opened as a new PR depending on the trigger.
+  </Step>
+  <Step title="Report">
+    A verification report is posted as a PR comment with screenshots, per-cycle breakdowns, and a final pass/fail verdict.
+  </Step>
+</Steps>
+
+---
+
+## Evidence artifacts
+
+All screenshots and recordings are organized by verification cycle:
+
+```
+.ironbee/artifacts/
+  cycle-1/
+    screenshots/homepage-before-fix.png
+    recordings/verification.webm
+  cycle-2/
+    screenshots/homepage-after-fix.png
+    recordings/verification.webm
+```
+
+Evidence is uploaded as GitHub Actions artifacts (30-day retention) and linked in the PR comment. With S3 configured, screenshots render inline in the comment.
+
+---
+
+## Trigger modes
+
+The action adapts its behavior based on what triggered it:
+
+| Trigger | Verification scope | Fix behavior |
+|---------|-------------------|--------------|
+| `pull_request` | Diff-based — affected pages only | Commits fixes to the PR branch |
+| `push` (main/master) | Diff-based — affected pages only | Creates a new fix PR automatically |
+| `workflow_dispatch` | Full — entire application | Creates a new fix PR automatically |
+| `schedule` | Full — entire application | Creates a new fix PR automatically |
+
+---
+
+## Outputs
+
+| Output | Values | Description |
+|--------|--------|-------------|
+| `verdict` | `pass`, `fail`, `unknown` | Final verification result |
+| `artifacts_url` | URL string | Download link for screenshots and recordings |
+
+---
+
+## Next step
+
+<Card title="Get started" icon="rocket" href="/github-action/getting-started">
+  Add the action to your workflow in two minutes.
+</Card>

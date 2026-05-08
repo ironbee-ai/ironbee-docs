@@ -1,0 +1,103 @@
+---
+title: Agent Commands
+description: Slash commands the AI agent can use inside Claude Code and Cursor.
+---
+
+When you run `ironbee install`, IronBee installs a set of slash commands that the AI agent can invoke directly inside Claude Code or Cursor. These commands guide the agent through verification and analysis workflows.
+
+---
+
+## /ironbee-verify
+
+Run a verification cycle for the current changes.
+
+```
+/ironbee-verify
+```
+
+**Default behavior:** focused verification — the agent reviews what changed and tests only the affected areas. This is the most common mode and the one IronBee triggers automatically at task completion.
+
+The agent will:
+1. Identify which files changed and what they affect
+2. Navigate to the relevant pages or endpoints
+3. Test the specific functionality that was modified
+4. Check for console errors and network failures
+5. Submit a verdict with evidence
+
+---
+
+## /ironbee-verify full
+
+Complete verification — runs every checklist item regardless of what changed.
+
+```
+/ironbee-verify full
+```
+
+Use this when:
+- You want comprehensive coverage beyond just the changed areas
+- You are doing a final check before a release
+- A change is broad enough that focused verification might miss regressions
+
+---
+
+## /ironbee-verify visual
+
+Visual-only verification — checks UI appearance without testing functionality.
+
+```
+/ironbee-verify visual
+```
+
+Covers:
+- Contrast and accessibility
+- Layout and spacing
+- Typography and fonts
+- Images and icons
+- Theming (light/dark mode)
+
+Use when changes are purely cosmetic — CSS, layout, design tokens.
+
+---
+
+## /ironbee-verify functional
+
+Functional-only verification — tests behavior without visual checks.
+
+```
+/ironbee-verify functional
+```
+
+Covers:
+- Click interactions and event handlers
+- Form submission and validation
+- Navigation and routing
+- Data flow and state updates
+- Error handling and edge cases
+
+Use when changes are logic or behavior changes with no visual impact.
+
+---
+
+## /ironbee-analyze
+
+Run session analytics and get LLM-powered semantic insights for the current session.
+
+```
+/ironbee-analyze
+```
+
+The agent will:
+1. Pull session metrics (time spent, tool calls, pass/fail counts)
+2. Identify patterns — which files caused failures, where retries clustered
+3. Surface concrete recommendations
+
+Output is printed inline in the agent conversation. The same analysis is also available in the [Console](/console/analysis).
+
+---
+
+## When are these triggered automatically?
+
+IronBee installs a **Stop hook** that fires when the agent tries to complete a task. If code files were changed, the hook automatically triggers `/ironbee-verify` (default mode) before allowing the task to finish.
+
+You can also invoke any of these commands manually at any time — for example, to run a quick visual check mid-task or get early analysis.

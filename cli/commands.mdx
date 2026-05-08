@@ -1,0 +1,148 @@
+---
+title: Commands
+description: Complete reference for all IronBee CLI commands.
+---
+
+## ironbee install
+
+Set up IronBee in a project directory. Writes hooks, verification skill/rules, MCP server entries, and permissions for your AI client.
+
+```bash
+ironbee install [project-dir] [--client <name>]
+```
+
+| Option | Description |
+|--------|-------------|
+| `project-dir` | Path to the project. Defaults to the current directory. |
+| `--client <name>` | Force a specific client: `claude` or `cursor`. Auto-detected if omitted. |
+
+**What it writes:**
+
+- Hook that fires when the agent completes a task
+- Verification skill with workflow instructions
+- Verification rule that enforces the gate
+- Two MCP server entries (`browser-devtools`, `node-devtools`)
+- Agent permissions for devtools tools
+
+---
+
+## ironbee uninstall
+
+Remove all IronBee configuration from a project.
+
+```bash
+ironbee uninstall [project-dir] [--client <name>]
+```
+
+Removes hooks, skill, rule, MCP entries, and permissions. Does not delete `.ironbee/config.json`.
+
+---
+
+## ironbee status
+
+Show the verdict status of active or recent sessions.
+
+```bash
+ironbee status [project-dir]
+```
+
+Prints a table of session IDs with their current status: pending, pass, or fail.
+
+---
+
+## ironbee verify
+
+Dry-run verdict validation for a specific session. Checks whether the evidence collected so far would pass the gate — without submitting or affecting the session.
+
+```bash
+ironbee verify [session-id]
+```
+
+Useful for debugging a failing session to understand exactly which evidence fields are missing or invalid.
+
+---
+
+## ironbee analyze
+
+Run analytics on a session (or all sessions) and print LLM-powered insights to stdout.
+
+```bash
+ironbee analyze [session-id]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `session-id` | Analyze a specific session. Omit to analyze all sessions in the current project. |
+
+Output includes timing breakdowns, pass/fail patterns, problematic files, and top-level recommendations.
+
+---
+
+## ironbee enable-backend
+
+Opt into backend verification for a runtime.
+
+```bash
+ironbee enable-backend node
+```
+
+Writes opinionated default `verifyPatterns` under `backend.node.verifyPatterns` in the project config:
+
+```
+server/**
+pages/api/**
+**/server.{ts,js,mjs,cjs}
+```
+
+Edit `.ironbee/config.json` after running this command to customize the patterns.
+
+---
+
+## ironbee disable-backend
+
+Opt out of backend verification for a runtime.
+
+```bash
+ironbee disable-backend node
+```
+
+Sets `backend.node.verifyPatterns` to `[]` (no enforcement) but preserves any custom values for `additionalVerifyPatterns` and `alwaysRequired`. Re-enabling later restores your tuned setup.
+
+---
+
+## ironbee enable-verification
+
+Turn on enforcement (the default state).
+
+```bash
+ironbee enable-verification
+```
+
+Re-installs the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: true` in config.
+
+Takes effect on the next agent session — restart your editor after running.
+
+---
+
+## ironbee disable-verification
+
+Switch to monitoring-only mode. Sessions and tool calls still ship telemetry to the Collector, but the agent is never blocked by a verify gate.
+
+```bash
+ironbee disable-verification
+```
+
+Removes the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: false` in config.
+
+Takes effect on the next agent session — restart your editor after running.
+
+---
+
+## Global flags
+
+These flags apply to all commands:
+
+| Flag | Description |
+|------|-------------|
+| `--help` | Show help for a command |
+| `--version` | Print the CLI version |

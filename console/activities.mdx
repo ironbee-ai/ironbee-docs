@@ -1,0 +1,61 @@
+---
+title: Activities
+description: The individual actions an AI agent takes within a session.
+---
+
+An **activity** is a discrete action recorded within a session. Activities form the chronological record of everything the agent did — what files it changed, when it verified, how it responded to failures.
+
+## Activity types
+
+| Type | Description |
+|------|-------------|
+| `code_change` | The agent edits one or more source files |
+| `verification` | The agent runs a browser or Node verification cycle |
+| `fix` | The agent makes corrections after a failed verification |
+| `tool_call` | A single devtools invocation (navigation, screenshot, probe, etc.) |
+
+## Activities list
+
+The activities tab on a session detail page shows all activities in chronological order. Each row includes:
+
+- **Type** — icon indicating the activity category
+- **Timestamp** — when the activity started
+- **Duration** — how long the activity took
+- **Summary** — a brief description (files changed, pages tested, tools used)
+- **Outcome** — pass / fail / n/a depending on type
+
+## Activity detail
+
+Clicking an activity opens its detail view, which varies by type:
+
+### Code change detail
+- List of files modified with diff sizes
+- Whether the change triggered a verification requirement
+- Which verification cycle was activated (browser / Node)
+
+### Verification detail
+- See [Verification Detail](/console/verification-detail)
+
+### Fix detail
+- See [Fix Detail](/console/fix-detail)
+
+### Tool call detail
+- Tool name and input arguments
+- Response summary
+- Timing within the parent activity
+
+## Reading the activity log
+
+Activities tell a story. A healthy session typically looks like:
+
+1. **Code change** → files edited
+2. **Verification** (passed) → task completes
+
+A session with issues might look like:
+
+1. **Code change** → files edited
+2. **Verification** (failed) → console errors found
+3. **Fix** → agent corrects the issue
+4. **Verification** (passed) → task completes
+
+Multiple failed verifications followed by fixes indicate the agent struggled with a particular change — a useful signal when reviewing session analysis.

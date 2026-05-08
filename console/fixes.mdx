@@ -1,0 +1,43 @@
+---
+title: Fixes
+description: Code changes the agent makes to resolve failed verifications.
+---
+
+A **fix** is a targeted code change made by the agent in response to a failed verification. After each fix, the agent re-verifies. IronBee tracks every fix separately so you have a complete record of what changed, why, and whether it worked.
+
+## What triggers a fix
+
+A fix occurs when:
+
+1. The agent runs a verification cycle
+2. The cycle fails (console errors, broken interactions, backend errors)
+3. The agent analyzes the failure and edits code to address it
+4. The agent re-verifies with the fix applied
+
+If the re-verification passes, the session completes. If it fails again, the agent makes another fix and tries again — up to the `maxRetries` limit.
+
+## The fixes list
+
+The fixes tab on a session detail page shows all fixes in order. Each row shows:
+
+| Column | Description |
+|--------|-------------|
+| Fix number | Sequential index within the session |
+| Files changed | How many files were modified |
+| Preceding failure | Link to the verification cycle that triggered this fix |
+| Re-verification | Link to the verification cycle that followed this fix |
+| Outcome | Whether the subsequent verification passed or failed |
+
+## Fix detail
+
+Clicking a fix opens its detail view — see [Fix Detail](/console/fix-detail).
+
+## Interpreting fixes
+
+The number of fixes in a session is a signal of difficulty:
+
+- **0 fixes** — the agent got it right the first time
+- **1–2 fixes** — normal for moderately complex changes
+- **3+ fixes** — the agent struggled; worth reviewing the findings and recommendations
+
+Fixes clustered on the same files across many sessions suggest those files are error-prone and may benefit from better test coverage or clearer code.

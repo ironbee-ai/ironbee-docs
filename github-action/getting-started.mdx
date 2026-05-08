@@ -1,0 +1,108 @@
+---
+title: Getting Started
+description: Add IronBee verification to your GitHub Actions workflow.
+---
+
+## Prerequisites
+
+- An [IronBee account](https://app.ironbee.ai)
+- An Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com)) or a Claude Code OAuth token
+
+---
+
+## Minimal setup
+
+Create a file at `.github/workflows/ironbee.yml`:
+
+```yaml
+name: IronBee Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ironbee-ai/ironbee-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+Then add your Anthropic API key to your repository secrets:
+
+1. Go to **Settings → Secrets and variables → Actions**
+2. Click **New repository secret**
+3. Name: `ANTHROPIC_API_KEY`, Value: your key
+
+That's it. The next push or pull request will trigger a verification run.
+
+---
+
+## With application build and start
+
+If your application needs to be built and started before verification:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    app_install_command: 'npm ci'
+    app_build_command: 'npm run build'
+    app_start_command: 'npm run start'
+    app_url: 'http://localhost:3000'
+```
+
+---
+
+## Required permissions
+
+The action needs these GitHub token permissions to operate:
+
+| Permission | Purpose |
+|------------|---------|
+| `contents: write` | Commit fixes to PR branches, create fix branches |
+| `pull-requests: write` | Post verification report comments, create fix PRs |
+| `issues: write` | Update PR comments via the GitHub API |
+
+---
+
+## Authentication options
+
+You can authenticate with either:
+
+**Anthropic API key:**
+```yaml
+anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+**Claude Code OAuth token** (alternative):
+```yaml
+claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+```
+
+One of these is required.
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Trigger modes" icon="git-branch" href="/github-action/trigger-modes">
+    Configure how the action behaves on different events.
+  </Card>
+  <Card title="All configuration options" icon="settings" href="/github-action/configuration">
+    Build commands, app URL, S3 uploads, and more.
+  </Card>
+</CardGroup>

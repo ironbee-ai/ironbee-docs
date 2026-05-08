@@ -1,0 +1,62 @@
+---
+title: Verifications
+description: Browser and Node verification cycles — how the agent tests its changes before completing.
+---
+
+A **verification** is a complete testing cycle the agent runs to prove that its code changes work. Before any task can complete, every affected code path must be exercised with real tools.
+
+## Verification types
+
+IronBee supports two cycle types that can run in parallel:
+
+### Browser cycle
+
+The agent uses browser devtools to verify frontend and full-stack changes:
+
+- Navigates to affected pages
+- Takes screenshots at key states
+- Checks the browser console for errors
+- Tests user interactions (clicks, forms, navigation)
+- Records a browser session video
+- Submits a verdict with evidence
+
+The browser cycle is active by default for most code file types.
+
+### Node cycle
+
+The agent connects to a running Node.js process to verify backend changes:
+
+- Connects to the Node inspector
+- Sets tracepoints or logpoints at changed code paths
+- Exercises those paths via API calls or UI interactions
+- Reads back execution snapshots or runtime logs
+- Submits verdict with backend evidence
+
+The Node cycle requires opt-in — see [`ironbee enable-backend node`](/cli/setup#backend).
+
+## Verification status
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | The cycle is queued but hasn't started |
+| `in_progress` | The agent is actively verifying |
+| `passed` | All evidence checks passed |
+| `failed` | One or more checks failed |
+
+## Retry behavior
+
+If a verification fails, the agent must fix the issues and re-verify. By default, it gets 3 attempts (`maxRetries`). After the limit is reached, the session can complete but must report unresolved issues.
+
+Each retry creates a new verification cycle with fresh evidence — you can see the entire history in the verifications tab.
+
+## The verifications list
+
+The verifications tab on a session detail page shows all cycles in order:
+
+- Cycle number (1, 2, 3…)
+- Type (browser / node / both)
+- Status
+- Duration
+- Verdict — pass or fail with brief reasoning
+
+Clicking a verification opens the [Verification Detail](/console/verification-detail) view.

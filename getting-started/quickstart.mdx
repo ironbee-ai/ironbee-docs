@@ -1,0 +1,99 @@
+---
+title: Quick Start
+description: Install IronBee, set up a project, and run your first verification in five minutes.
+---
+
+## Prerequisites
+
+- **Node.js 20 or later** — check with `node --version`
+- An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Cursor](https://cursor.com)
+- An [IronBee account](https://app.ironbee.ai)
+
+---
+
+## Step 1 — Install the CLI
+
+```bash
+npm install -g @ironbee-ai/cli
+```
+
+Verify the installation:
+
+```bash
+ironbee --version
+```
+
+---
+
+## Step 2 — Set up your project
+
+Navigate to your project directory and run:
+
+```bash
+cd your-project
+ironbee install
+```
+
+IronBee auto-detects your AI client and writes:
+
+- **Hook configuration** — the client calls IronBee automatically when the agent finishes
+- **Verification skill/rules** — the agent knows the verification workflow
+- **MCP server entries** — `browser-devtools` (browser mode) and `node-devtools` (Node mode)
+- **Permissions** — grants the agent access to devtools tools
+
+<Info>
+  If you are using **Cursor**, you need one extra step after install: go to **Settings → Tools & MCP** and confirm both `browser-devtools` and `node-devtools` are enabled. See [Cursor setup](/cli/setup#cursor) for details.
+</Info>
+
+---
+
+## Step 3 — Start your application
+
+IronBee needs a running application to verify against. Start your dev server as usual:
+
+```bash
+npm run dev
+```
+
+---
+
+## Step 4 — Let your agent work
+
+Open Claude Code or Cursor and give the agent a task. When it finishes editing code, IronBee intercepts the completion and requires verification:
+
+1. The agent navigates to the affected pages in a real browser
+2. It takes screenshots, checks the console, and tests functionality
+3. It submits a verdict — pass or fail
+4. If it fails, the agent fixes the issues and re-verifies
+
+You will see the session appear in the [IronBee Console](https://app.ironbee.ai) in real time.
+
+---
+
+## Step 5 — View your results
+
+Open the [IronBee Console](https://app.ironbee.ai) and navigate to your project. You will find:
+
+- The session with all activity recorded
+- Screenshots and browser interactions from each verification cycle
+- Pass/fail verdict with evidence
+- Timing breakdowns — how long the agent spent coding, verifying, and fixing
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="CLI configuration" icon="settings" href="/cli/configuration">
+    Customize verify patterns, retry limits, and devtools settings.
+  </Card>
+  <Card title="Enable backend verification" icon="server" href="/cli/setup#backend">
+    Add Node.js verification for backend code changes.
+  </Card>
+  <Card title="GitHub Action" icon="git-branch" href="/github-action/getting-started">
+    Verify changes automatically on every pull request.
+  </Card>
+  <Card title="Explore the console" icon="layout-dashboard" href="/console/projects">
+    Understand sessions, verifications, findings, and recommendations.
+  </Card>
+</CardGroup>

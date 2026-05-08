@@ -1,0 +1,125 @@
+---
+title: Project Setup
+description: Configure IronBee hooks, skills, and MCP servers in your project.
+---
+
+## Run the installer
+
+From your project root:
+
+```bash
+ironbee install
+```
+
+IronBee auto-detects your AI client. To specify it explicitly:
+
+```bash
+ironbee install --client claude   # Claude Code
+ironbee install --client cursor   # Cursor
+```
+
+### What gets installed
+
+| File / Setting | Description |
+|----------------|-------------|
+| Hook configuration | Tells the client to call IronBee when the agent finishes a task |
+| Verification skill | Instructions the agent follows during verification |
+| Verification rule | Enforces the verification gate |
+| `browser-devtools` MCP server | Browser mode — `bdt_` prefix tools for navigation, screenshots, console |
+| `node-devtools` MCP server | Node mode — `ndt_` prefix tools (installed but inactive until you opt in) |
+| Permissions | Grants the agent access to all devtools tools |
+
+---
+
+## Cursor: additional activation
+
+After running `ironbee install` in a Cursor project:
+
+1. **Restart Cursor** to load the new hooks and MCP config
+2. Go to **Settings → Tools & MCP** and confirm both `browser-devtools` and `node-devtools` are listed as enabled
+3. If a server shows as enabled but tools are unavailable, toggle it off and back on
+
+<Warning>
+  This is a [known Cursor limitation](https://forum.cursor.com/t/mcp-tools-only-available-to-agent-after-manually-toggling-server-off-on-even-when-already-enabled/152859) — MCP servers added via `mcp.json` sometimes need manual activation.
+</Warning>
+
+---
+
+## Enable backend verification (Node.js) {#backend}
+
+By default, only the browser cycle is active. To also require Node.js verification for backend file changes:
+
+```bash
+ironbee enable-backend node
+```
+
+This writes opinionated default `verifyPatterns` under `backend.node.verifyPatterns` in your project config:
+
+```
+server/**
+pages/api/**
+**/server.{ts,js,mjs,cjs}
+```
+
+You can edit these patterns in `.ironbee/config.json` after running the command.
+
+To disable:
+
+```bash
+ironbee disable-backend node
+```
+
+Disabling empties `verifyPatterns` (no enforcement) but preserves your customizations — re-enabling later restores your tuned setup.
+
+---
+
+## Monitoring-only mode (no enforcement)
+
+If you want to collect session data without requiring the agent to verify:
+
+```bash
+ironbee disable-verification
+```
+
+In this mode:
+- The enforcement hook, verification skill, and MCP servers are **not installed**
+- Session lifecycle events, tool calls, and timing still flow to the IronBee Collector
+- The agent never sees a verify gate
+
+To re-enable enforcement:
+
+```bash
+ironbee enable-verification
+```
+
+<Note>
+  Restart your editor or agent session after toggling — the change takes effect on the next session.
+</Note>
+
+---
+
+## Check status
+
+To see the verdict status of active sessions in a project:
+
+```bash
+ironbee status
+```
+
+---
+
+## Remove IronBee from a project
+
+```bash
+ironbee uninstall
+```
+
+This removes all hooks, skills, rules, and MCP server entries IronBee added.
+
+---
+
+## Next step
+
+<Card title="Configuration" icon="settings" href="/cli/configuration">
+  Customize verify patterns, retry limits, and devtools settings.
+</Card>

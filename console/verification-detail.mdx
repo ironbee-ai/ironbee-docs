@@ -1,0 +1,56 @@
+---
+title: Verification Detail
+description: Screenshots, video playback, event timeline, and trace data for a single verification cycle.
+---
+
+The verification detail view shows everything that happened during a single verification cycle — the browser session video, tool call timeline, screenshots, and the final verdict with evidence.
+
+## Video player
+
+The video player replays the browser session recorded during verification. You can:
+
+- **Play / pause** the recording
+- **Seek** to any point in the session
+- Use the **event timeline** below the player to jump to specific interactions
+
+The video is synchronized with the event timeline — as the video plays, the timeline highlights the corresponding tool call.
+
+## Event timeline
+
+The event timeline shows every browser interaction in the order it occurred:
+
+| Event type | Description |
+|------------|-------------|
+| Navigation | The agent went to a URL |
+| Screenshot | A screenshot was captured |
+| Click | The agent clicked an element |
+| Fill | The agent typed into an input |
+| Scroll | The agent scrolled the page |
+| Console check | Browser console was read |
+| Network check | HTTP requests were examined |
+
+Clicking a row in the timeline seeks the video to that moment.
+
+## Screenshots
+
+Screenshots taken during the cycle are displayed as a gallery. Each screenshot is labeled with:
+
+- The URL at the time of capture
+- A timestamp
+- The action that preceded it (e.g., "after clicking Submit")
+
+## Verdict and evidence
+
+The verdict panel at the bottom of the view shows:
+
+- **Status** — pass or fail
+- **Pages tested** — list of URLs the agent navigated to
+- **Console errors** — count and details of any browser console errors
+- **Network failures** — any failed HTTP requests observed
+- **Node evidence** (if Node cycle was active) — backend processes connected, probes set, execution confirmed
+
+If the verdict is `fail`, the panel explains exactly which evidence check failed and why IronBee rejected the agent's claim.
+
+## Trace data
+
+The verification detail view includes a link to the full [trace waterfall](/console/traces) for this cycle, showing timing for every tool call.
