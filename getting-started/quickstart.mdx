@@ -1,17 +1,47 @@
 ---
 title: Quick Start
-description: Install IronBee, set up a project, and run your first verification in five minutes.
+description: Sign up, install the CLI, connect to your account, and run your first verification.
 ---
 
 ## Prerequisites
 
-- **Node.js 20 or later** — check with `node --version`
+- **Node.js 22 or later** — check with `node --version`
 - An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Cursor](https://cursor.com)
-- An [IronBee account](https://app.ironbee.ai)
 
 ---
 
-## Step 1 — Install the CLI
+## How it works
+
+<Steps>
+  <Step title="Sign up at console.ironbee.ai">
+    Create your account. This gives you access to the dashboard and generates the API key the CLI needs.
+  </Step>
+  <Step title="Install the CLI">
+    `npm install -g @ironbee-ai/cli` — installs the `ironbee` command globally.
+  </Step>
+  <Step title="Log in">
+    `ironbee login` — opens your browser, completes the OAuth flow, and writes your API key to `~/.ironbee/config.json` automatically. One-time per machine.
+  </Step>
+  <Step title="Set up your project">
+    `ironbee install` — auto-detects your AI client (Claude Code or Cursor) and wires up hooks, MCP servers, and the verification skill.
+  </Step>
+  <Step title="Start your app and let the agent work">
+    Run your dev server, then give the agent a task. IronBee intercepts task completion and requires the agent to verify its changes before finishing.
+  </Step>
+  <Step title="View results in the Console">
+    Every session — tool calls, screenshots, verdicts, timing breakdowns — appears in the IronBee Console in real time.
+  </Step>
+</Steps>
+
+---
+
+## Step 1 — Create your account
+
+Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up. Your account gives you access to the dashboard and generates the API key the CLI needs to ship session data.
+
+---
+
+## Step 2 — Install the CLI
 
 ```bash
 npm install -g @ironbee-ai/cli
@@ -25,7 +55,36 @@ ironbee --version
 
 ---
 
-## Step 2 — Set up your project
+## Step 3 — Connect the CLI to your account
+
+Run `ironbee login` from any directory. It opens your browser at `console.ironbee.ai`, asks you to confirm, and writes your API key and collector URL to `~/.ironbee/config.json` automatically.
+
+```bash
+ironbee login
+```
+
+The browser opens, you confirm, and the terminal prints:
+
+```
+✓ Logged in successfully!
+  Console   https://console.ironbee.ai
+  Collector https://api.ironbee.ai/collect
+  Config    ~/.ironbee/config.json
+```
+
+<Accordion title="Prefer to set the API key manually?">
+  You can skip `ironbee login` and set your credentials by hand instead. Copy your API key from **Console → Settings → API Keys**, then run:
+
+  ```bash
+  ironbee config set collector.apiKey <your-api-key> --global
+  ```
+
+  The collector URL defaults to `https://api.ironbee.ai/collect` — no need to set it unless you are self-hosting.
+</Accordion>
+
+---
+
+## Step 4 — Set up your project
 
 Navigate to your project directory and run:
 
@@ -38,16 +97,16 @@ IronBee auto-detects your AI client and writes:
 
 - **Hook configuration** — the client calls IronBee automatically when the agent finishes
 - **Verification skill/rules** — the agent knows the verification workflow
-- **MCP server entries** — `browser-devtools` (browser mode) and `node-devtools` (Node mode)
+- **MCP server entries** — `browser-devtools`, `node-devtools`, and `backend-devtools`
 - **Permissions** — grants the agent access to devtools tools
 
 <Info>
-  If you are using **Cursor**, you need one extra step after install: go to **Settings → Tools & MCP** and confirm both `browser-devtools` and `node-devtools` are enabled. See [Cursor setup](/cli/setup#cursor) for details.
+  If you are using **Cursor**, you need one extra step after install: go to **Settings → Tools & MCP** and confirm all three MCP servers (`browser-devtools`, `node-devtools`, `backend-devtools`) are enabled. See [Cursor setup](/cli/setup#cursor) for details.
 </Info>
 
 ---
 
-## Step 3 — Start your application
+## Step 5 — Start your application
 
 IronBee needs a running application to verify against. Start your dev server as usual:
 
@@ -57,7 +116,7 @@ npm run dev
 
 ---
 
-## Step 4 — Let your agent work
+## Step 6 — Let your agent work
 
 Open Claude Code or Cursor and give the agent a task. When it finishes editing code, IronBee intercepts the completion and requires verification:
 
@@ -66,13 +125,13 @@ Open Claude Code or Cursor and give the agent a task. When it finishes editing c
 3. It submits a verdict — pass or fail
 4. If it fails, the agent fixes the issues and re-verifies
 
-You will see the session appear in the [IronBee Console](https://app.ironbee.ai) in real time.
+You will see the session appear in the [IronBee Console](https://console.ironbee.ai) in real time.
 
 ---
 
-## Step 5 — View your results
+## Step 7 — View your results
 
-Open the [IronBee Console](https://app.ironbee.ai) and navigate to your project. You will find:
+Open the [IronBee Console](https://console.ironbee.ai) and navigate to your project. You will find:
 
 - The session with all activity recorded
 - Screenshots and browser interactions from each verification cycle
@@ -88,7 +147,7 @@ Open the [IronBee Console](https://app.ironbee.ai) and navigate to your project.
     Customize verify patterns, retry limits, and devtools settings.
   </Card>
   <Card title="Enable backend verification" icon="server" href="/cli/setup#backend">
-    Add Node.js verification for backend code changes.
+    Add Node.js or backend protocol verification for backend code changes.
   </Card>
   <Card title="GitHub Action" icon="git-branch" href="/github-action/getting-started">
     Verify changes automatically on every pull request.

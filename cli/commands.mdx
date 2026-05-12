@@ -3,26 +3,44 @@ title: Commands
 description: Complete reference for all IronBee CLI commands.
 ---
 
+## ironbee login
+
+Log in to IronBee and configure your API key. Opens a browser to `console.ironbee.ai`, completes the OAuth flow, and writes `collector.url` and `collector.apiKey` to `~/.ironbee/config.json` automatically.
+
+```bash
+ironbee login
+```
+
+| Option | Description |
+|--------|-------------|
+| `--console-url <url>` | Custom console URL (default: `https://console.ironbee.ai`) |
+| `--collector-url <url>` | Custom collector URL (default: `https://api.ironbee.ai`) |
+
+After running, the CLI prints the console URL, collector URL, and config file path to confirm everything is wired up. To set credentials manually instead, see [Configuration](/cli/configuration).
+
+---
+
 ## ironbee install
 
 Set up IronBee in a project directory. Writes hooks, verification skill/rules, MCP server entries, and permissions for your AI client.
 
 ```bash
-ironbee install [project-dir] [--client <name>]
+ironbee install [project-dir] [--client <name>] [--all]
 ```
 
 | Option | Description |
 |--------|-------------|
 | `project-dir` | Path to the project. Defaults to the current directory. |
-| `--client <name>` | Force a specific client: `claude` or `cursor`. Auto-detected if omitted. |
+| `--client <name>` | Force a specific client: `claude`, `cursor`, or `all`. Auto-detected if omitted. |
+| `--all` | Re-run install across every project in the user-home inventory (`~/.ironbee/projects.json`). Useful after a global config change to propagate it everywhere. |
 
 **What it writes:**
 
 - Hook that fires when the agent completes a task
 - Verification skill with workflow instructions
 - Verification rule that enforces the gate
-- Two MCP server entries (`browser-devtools`, `node-devtools`)
-- Agent permissions for devtools tools
+- Three MCP server entries (`browser-devtools`, `node-devtools`, `backend-devtools`)
+- Agent permissions for all devtools tools
 
 ---
 
@@ -31,8 +49,12 @@ ironbee install [project-dir] [--client <name>]
 Remove all IronBee configuration from a project.
 
 ```bash
-ironbee uninstall [project-dir] [--client <name>]
+ironbee uninstall [project-dir] [--client <name>] [--all] [-y]
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Wipe IronBee from every registered project. Prompts before acting (default No); pass `--yes` / `-y` to skip. |
 
 Removes hooks, skill, rule, MCP entries, and permissions. Does not delete `.ironbee/config.json`.
 
@@ -64,49 +86,111 @@ Useful for debugging a failing session to understand exactly which evidence fiel
 
 ## ironbee analyze
 
-Run analytics on a session (or all sessions) and print LLM-powered insights to stdout.
+Run analytics on a session (or all sessions) and print metrics to stdout.
 
 ```bash
-ironbee analyze [session-id]
+ironbee analyze [session-id] [--json] [--detailed]
 ```
 
-| Argument | Description |
-|----------|-------------|
+| Argument / Flag | Description |
+|-----------------|-------------|
 | `session-id` | Analyze a specific session. Omit to analyze all sessions in the current project. |
+| `--json` | Output as JSON instead of formatted text. |
+| `--detailed` | Include raw verdict text (checks, issues, fixes) — designed for LLM-powered semantic analysis via `/ironbee-analyze`. |
 
-Output includes timing breakdowns, pass/fail patterns, problematic files, and top-level recommendations.
-
----
-
-## ironbee enable-backend
-
-Opt into backend verification for a runtime.
-
-```bash
-ironbee enable-backend node
-```
-
-Writes opinionated default `verifyPatterns` under `backend.node.verifyPatterns` in the project config:
-
-```
-server/**
-pages/api/**
-**/server.{ts,js,mjs,cjs}
-```
-
-Edit `.ironbee/config.json` after running this command to customize the patterns.
+Output includes phase distribution (coding / verification / fix time), cycle counts, verification quality scores, code change stats, fix effectiveness, and three summary scores (Efficiency, Quality, Confidence).
 
 ---
 
-## ironbee disable-backend
+## ironbee import
 
-Opt out of backend verification for a runtime.
+Backfill historical AI coding sessions from disk into the IronBee Collector. Already-tracked sessions are skipped automatically.
 
 ```bash
-ironbee disable-backend node
+ironbee import [--since <duration>] [--from <date>] [--to <date>]
+               [--transcript <path>] [--projects <paths>] [--all-projects]
+               [--dry-run] [--yes] [--force] [--concurrency <N>]
 ```
 
-Sets `backend.node.verifyPatterns` to `[]` (no enforcement) but preserves any custom values for `additionalVerifyPatterns` and `alwaysRequired`. Re-enabling later restores your tuned setup.
+**Scope** (pick at most one; default is the current directory):
+
+| Flag | Description |
+|------|-------------|
+| `--transcript <path>` | Single `.jsonl` file |
+| `--projects <p1,p2,...>` | Comma-separated absolute project paths |
+| `--all-projects` | Every directory under `~/.claude/projects/` |
+
+**Time range** (pick at most one; default is no filter):
+
+| Flag | Description |
+|------|-------------|
+| `--since <duration>` | Relative duration: `30d`, `2w`, `6m`, `12h` |
+| `--from <iso-date> [--to <iso-date>]` | Explicit date window; `--to` defaults to now |
+
+**Behavior flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Print cost/event summary, make zero POSTs, exit 0 |
+| `--yes` | Skip the confirmation prompt |
+| `--force` | Re-import sessions already tracked |
+| `--concurrency <N>` | Parallel sessions (default 4, range 1–32) |
+
+**Common scenarios:**
+
+| Scenario | Command |
+|----------|---------|
+| Onboarding — current project, last 30 days | `ironbee import --since 30d` |
+| Full history for current project | `ironbee import` |
+| All projects on this machine, last 6 months | `ironbee import --all-projects --since 6m` |
+| Q1 retrospective across all projects | `ironbee import --all-projects --from 2025-01-01 --to 2025-03-31` |
+| Preview before committing | `ironbee import --since 30d --dry-run` |
+| CI / scripted (no prompt) | `ironbee import --since 60d --yes` |
+
+---
+
+## ironbee browser
+
+Manage the browser verification cycle. The browser cycle is on by default for most code file types.
+
+```bash
+ironbee browser enable
+ironbee browser disable
+```
+
+`disable` writes `browser.verifyPatterns: []` to project config, overriding the 40+ extension defaults. Use for backend-only projects where browser verification is not appropriate.
+
+`enable` removes the override so the code defaults flow back in automatically.
+
+---
+
+## ironbee node
+
+Manage the Node.js runtime debug verification cycle (V8 inspector probes via `node-devtools`). Opt-in — only meaningful for Node.js backends.
+
+```bash
+ironbee node enable
+ironbee node disable
+```
+
+`enable` writes a minimal `{ "node": {} }` block to config. Code defaults (e.g. `server/**`, `pages/api/**`) apply at runtime.
+
+`disable` drops the block if there are no customizations, or writes `verifyPatterns: []` to hard-kill the cycle while preserving your tuned settings.
+
+---
+
+## ironbee backend
+
+Manage the runtime-agnostic backend protocol verification cycle (HTTP/gRPC/GraphQL/WebSocket via `backend-devtools`). Works for any backend runtime. Opt-in.
+
+```bash
+ironbee backend enable
+ironbee backend disable
+```
+
+`enable` writes a minimal `{ "backend": {} }` block to config. Code defaults covering `server/**`, `api/**`, `routes/**`, `controllers/**`, `handlers/**`, and `services/**` apply at runtime.
+
+`disable` drops the block if there are no customizations, or writes `verifyPatterns: []` to hard-kill the cycle.
 
 ---
 
@@ -135,6 +219,62 @@ ironbee disable-verification
 Removes the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: false` in config.
 
 Takes effect on the next agent session — restart your editor after running.
+
+---
+
+## ironbee config
+
+Read and write config values from the CLI instead of hand-editing JSON.
+
+```bash
+ironbee config get <key>           # Read the effective (merged) value
+ironbee config set <key> <value>   # Write to project config
+ironbee config set <key> <value> --global   # Write to global config
+ironbee config unset <key>         # Remove a value (idempotent)
+ironbee config list                # Print merged effective config
+ironbee config list --project      # Project file only
+ironbee config list --global       # Global file only
+ironbee config path                # Print the project config file path
+```
+
+**Type coercion:** `set` parses values as JSON when possible (`true`, `42`, `[...]`, `{...}`) and falls back to a raw string. Pass `--json` to force strict JSON parsing.
+
+**Smart re-render:** when a key affects installed client artifacts (`verification`, `browser`, `node`, `backend`, `collector`, `browserDevTools`, `nodeDevTools`, `backendDevTools`), `set` and `unset` automatically re-render hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. Restart your editor after changes to artifact-affecting keys.
+
+**Examples:**
+
+```bash
+ironbee config set maxRetries 5
+ironbee config set verification.enable false
+ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
+ironbee config set collector.apiKey sk-... --global
+ironbee config get collector.url
+ironbee config unset browser.verifyPatterns
+```
+
+---
+
+## ironbee register
+
+Add the current project to the user-home inventory (`~/.ironbee/projects.json`) without writing any client artifacts.
+
+```bash
+ironbee register
+```
+
+Useful for projects set up before the inventory feature existed.
+
+---
+
+## ironbee unregister
+
+Remove the current project from the user-home inventory without touching any installed files.
+
+```bash
+ironbee unregister
+```
+
+Works even if the project directory has been deleted.
 
 ---
 

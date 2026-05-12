@@ -1,39 +1,61 @@
 ---
 title: Analysis
-description: AI-powered session analysis — what went right, what went wrong, and what to do about it.
+description: AI-powered session and project analysis — what went right, what went wrong, and what to do about it.
 ---
 
-After a session completes, IronBee automatically runs **analysis** — an LLM-powered pass over the full session data. Analysis turns raw telemetry into actionable insights without requiring you to read through every tool call.
+After a session completes, IronBee automatically runs **analysis** — an LLM-powered pass over session data. Analysis turns raw telemetry into actionable insights without requiring you to read through every tool call.
 
 ## What analysis produces
 
 Analysis generates two types of output:
 
-- **[Findings](/console/findings)** — specific problems identified during the session
-- **[Recommendations](/console/recommendations)** — concrete actions to improve quality or the verification setup
+- **[Findings](/console/findings)** — specific observations about quality, efficiency, patterns, or behavior
+- **[Recommendations](/console/recommendations)** — concrete directives the agent should follow to improve future sessions
+
+Recommendations are automatically injected into the AI agent's context on subsequent sessions, so the agent adapts its behavior based on what it learned from previous work.
+
+## Analysis types
+
+IronBee runs five analysis types, all LLM-driven:
+
+| Type | Scope | Focus |
+|------|-------|-------|
+| **Quality** | Per project | Verification thoroughness, fix effectiveness, recurring failures, behavioral patterns |
+| **Cost** | Per project | Token spend, cache hit rate, expensive sessions, cost-reduction opportunities |
+| **Account cost** | Cross-project rollup | Account-wide spend trends, cost distribution by project and user |
+| **Session insights** | Per project | Session patterns, tool usage, context pressure, interaction style, multi-session trends |
+| **Account session insights** | Cross-project rollup | Account-wide behavioral patterns across all projects |
 
 ## How analysis works
 
 1. The session completes (verdict submitted or retry limit reached)
-2. IronBee queues the session for analysis
-3. The analyzer processes activity logs, verification results, tool calls, and fix chains
-4. Findings and recommendations are written to the session record
-5. The Analysis tab in the session detail view updates with results
+2. IronBee aggregates session metrics into a structured data packet
+3. An LLM analyst processes the packet and produces findings and recommendations
+4. Results are written and the Analysis tab in the console updates
 
 Analysis typically completes within a minute of session end.
 
-## The analysis overview
+## The analysis view
 
-The Analysis tab in session detail shows:
+The Analysis tab shows findings grouped by area and type. Each analysis run supersedes the previous one — you always see the freshest view.
 
-- **Summary** — a one-paragraph description of what the agent did and the overall outcome
-- **Key metrics** — coding time, verification time, fix time, pass rate, retry count
-- **Findings** — list of issues identified (with severity)
-- **Recommendations** — list of suggested actions (with priority)
+**Quality analysis** covers:
 
-## Running analysis manually
+- Time distribution across coding, verification, and fix phases
+- First-pass success rate and retry patterns
+- Fix effectiveness (did fixes actually reduce issues?)
+- Recurring files and blockers
 
-You can also trigger analysis from the CLI at any time:
+**Session insights** covers:
+
+- Session highlight — a standout session with notable characteristics
+- At-a-glance summary (sessions, hours, cost, cache efficiency)
+- Interaction patterns, tool diversity, multi-session trends
+- Friction points and features to try
+
+## Running local analysis from the CLI
+
+You can also run a lightweight analysis locally at any time:
 
 ```bash
 ironbee analyze [session-id]
@@ -45,24 +67,17 @@ Omit the session ID to analyze all sessions in the current project:
 ironbee analyze
 ```
 
-Output is printed to stdout and also available in the console.
+Add `--detailed` to include raw verdict text (checks, issues, fixes) for LLM-powered semantic analysis — this pairs with the `/ironbee-analyze` agent command.
 
-## Project-level analysis
-
-In addition to per-session analysis, IronBee aggregates findings and recommendations across all sessions in a project. Visit the project's Analysis tab to see:
-
-- Most frequently failing files
-- Common error patterns
-- Recurring recommendations
-- Pass rate trends over time
+Output is printed to stdout. The full cloud analysis is in the Console.
 
 ## Related pages
 
 <CardGroup cols={2}>
   <Card title="Findings" icon="triangle-alert" href="/console/findings">
-    Specific issues identified during the session.
+    Specific observations identified by the analyzer.
   </Card>
   <Card title="Recommendations" icon="lightbulb" href="/console/recommendations">
-    Concrete actions to address findings and improve quality.
+    Concrete directives to improve agent behavior and quality.
   </Card>
 </CardGroup>

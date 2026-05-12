@@ -36,7 +36,7 @@ An **activity** is a discrete action within a session. Activities include:
 
 ## Verification cycle
 
-A **verification cycle** (or just "cycle") is one complete pass of testing. IronBee supports two cycle types:
+A **verification cycle** (or just "cycle") is one complete pass of testing. IronBee supports three cycle types that can run in parallel:
 
 ### Browser cycle
 
@@ -47,19 +47,25 @@ The agent uses browser devtools to:
 4. Test functionality (clicks, forms, navigation)
 5. Submit a verdict
 
-The browser cycle is **always active** for code changes that match `browser.verifyPatterns` (most file types by default).
+The browser cycle is **on by default** for code changes matching `browser.verifyPatterns` (most code file types). Disable it with `ironbee browser disable`.
 
 ### Node cycle
 
 The agent connects to a running Node.js process and:
-1. Sets tracepoints or logpoints at changed code paths
+1. Sets V8 tracepoints or logpoints at changed code paths
 2. Exercises those paths
-3. Reads back snapshots or runtime logs
+3. Reads back execution snapshots or runtime logs
 4. Submits verdict with backend evidence
 
-The Node cycle is **opt-in** — enable it with `ironbee enable-backend node`.
+The Node cycle is **opt-in** — enable it with `ironbee node enable`. Only applies to Node.js backends.
 
-A single task can require **both cycles in parallel** — the agent must provide evidence for each before completing.
+### Backend cycle
+
+The agent drives real HTTP, gRPC, GraphQL, or WebSocket calls against a running backend service and verifies the responses. Works with any backend runtime (Node, Java, Python, Go, Rust, and more).
+
+The backend cycle is **opt-in** — enable it with `ironbee backend enable`.
+
+A single task can require **multiple cycles in parallel** — the agent must provide evidence for each active cycle before completing.
 
 ---
 
@@ -104,6 +110,10 @@ When **verification is disabled** (`ironbee disable-verification`), IronBee runs
 This is useful for measuring baseline agent behavior before enabling enforcement.
 
 ---
+
+## Projects inventory
+
+`ironbee install` records every project it touches in `~/.ironbee/projects.json`. This inventory powers batch operations like `ironbee install --all` (re-install across every registered project) and `ironbee uninstall --all` (wipe IronBee from every project). Use `ironbee register` / `ironbee unregister` for manual inventory management.
 
 ## Config files
 
