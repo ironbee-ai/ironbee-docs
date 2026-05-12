@@ -10,7 +10,7 @@ An **activity** is a discrete action recorded within a session. Activities form 
 | Type | Description |
 |------|-------------|
 | `code_change` | The agent edits one or more source files |
-| `verification` | The agent runs a browser or Node verification cycle |
+| `verification` | The agent runs a browser, Node, or backend verification cycle |
 | `fix` | The agent makes corrections after a failed verification |
 | `tool_call` | A single devtools invocation (navigation, screenshot, probe, etc.) |
 
@@ -31,7 +31,7 @@ Clicking an activity opens its detail view, which varies by type:
 ### Code change detail
 - List of files modified with diff sizes
 - Whether the change triggered a verification requirement
-- Which verification cycle was activated (browser / Node)
+- Which verification cycle was activated (browser / node / backend)
 
 ### Verification detail
 - See [Verification Detail](/console/verification-detail)

@@ -134,7 +134,7 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://console.ironbee.dev"
+      "href": "https://console.ironbee.ai"
     }
   },
   "footer": {

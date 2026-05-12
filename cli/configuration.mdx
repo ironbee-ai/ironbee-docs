@@ -12,6 +12,8 @@ IronBee reads configuration from two locations. Settings are **deep-merged**, wi
 | `~/.ironbee/config.json` | Global — applies to all projects |
 | `<project>/.ironbee/config.json` | Project-level — overrides global |
 
+Use `ironbee config set` / `ironbee config get` to edit values from the CLI, or edit the JSON files directly.
+
 ---
 
 ## Full example
@@ -26,15 +28,22 @@ IronBee reads configuration from two locations. Settings are **deep-merged**, wi
     "additionalVerifyPatterns": ["*.mdx"]
   },
 
+  "node": {
+    "verifyPatterns": ["server/**/*.ts", "pages/api/**/*.ts"],
+    "additionalVerifyPatterns": ["lib/db/**/*.ts"]
+  },
+
   "backend": {
-    "node": {
-      "verifyPatterns": ["server/**/*.ts", "pages/api/**/*.ts"],
-      "additionalVerifyPatterns": ["lib/db/**/*.ts"]
-    }
+    "verifyPatterns": ["api/**/*.java", "controllers/**/*.go"],
+    "additionalVerifyPatterns": ["handlers/**/*.py"]
   },
 
   "verification": {
     "enable": true
+  },
+
+  "fileChange": {
+    "captureChangeset": true
   }
 }
 ```
@@ -47,28 +56,46 @@ IronBee reads configuration from two locations. Settings are **deep-merged**, wi
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from all verification cycles. Checked first — matching files never trigger a cycle. |
-| `maxRetries` | `number` | `3` | Maximum failed verification attempts before the agent is allowed to complete (and must report unresolved issues). Single global counter regardless of how many cycles are active. |
+| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from all verification cycles. Checked first — matching files never trigger any cycle. |
+| `maxRetries` | `number` | `3` | Maximum failed verification attempts before the agent is allowed to complete (must report unresolved issues). Single global counter regardless of how many cycles are active. |
 
 ### Browser cycle
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `browser.verifyPatterns` | `string[]` | 40+ code extensions | Glob patterns that trigger the browser cycle. **Replaces** the built-in defaults entirely when set. |
-| `browser.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns **appended** to the defaults (or to `verifyPatterns` if set). Use this to add patterns without replacing all defaults. |
+| `browser.verifyPatterns` | `string[]` | 40+ code extensions | Glob patterns that trigger the browser cycle. **Replaces** the built-in defaults entirely when set. Set to `[]` to hard-disable (same as `ironbee browser disable`). |
+| `browser.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns **appended** to the defaults (or to `verifyPatterns` if set). |
 
-### Backend cycle
+### Node cycle
+
+The Node cycle requires `ironbee node enable` to activate. It uses the V8 inspector to set debug probes on a running Node.js process.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `backend.node.verifyPatterns` | `string[]` | `[]` | Glob patterns that trigger the Node verification cycle. Empty by default — use `ironbee enable-backend node` to set opinionated defaults. |
-| `backend.node.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns appended to `backend.node.verifyPatterns`. |
+| `node.verifyPatterns` | `string[]` | `[]` | Glob patterns that trigger the Node.js V8 inspector verification cycle. Empty by default — opt in via `ironbee node enable`. |
+| `node.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns appended to `node.verifyPatterns`. |
+
+### Backend cycle
+
+The backend cycle requires `ironbee backend enable` to activate. It drives real HTTP/gRPC/GraphQL/WebSocket calls and works with any backend runtime.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `backend.verifyPatterns` | `string[]` | `[]` | Glob patterns that trigger the runtime-agnostic backend protocol cycle. Empty by default — opt in via `ironbee backend enable`. |
+| `backend.additionalVerifyPatterns` | `string[]` | `[]` | Extra patterns appended to `backend.verifyPatterns`. |
 
 ### Verification toggle
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. Set to `false` for monitoring-only mode — sessions still ship telemetry, but no verify gate is installed. Equivalent to running `ironbee disable-verification`. |
+
+### File change capture
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `fileChange.captureChangeset` | `boolean` | `false` | When `true`, every `file_change` event includes a hunks-only unified diff (`changeset`). Useful for richer analytics and historical code review. Skipped on binary content. |
+| `fileChange.maxChangesetBytes` | `number` | `65536` | Hard cap on the `changeset` string size (64 KB). Diffs over the cap are truncated with a footer noting bytes omitted. |
 
 ---
 
@@ -80,11 +107,13 @@ When `browser.verifyPatterns` is not set, IronBee matches a broad set of code fi
 
 Non-code files like `README.md`, `package.json`, and `.gitignore` are never matched by the defaults.
 
+**Patterns are not materialized into `config.json`** — they live in the CLI and update automatically with CLI upgrades. Customize with `browser.verifyPatterns` (replaces defaults) or `browser.additionalVerifyPatterns` (appends).
+
 ---
 
 ## Devtools MCP server config
 
-You can customize the MCP server entries IronBee installs for `browser-devtools` and `node-devtools`.
+IronBee installs three MCP server entries: `browser-devtools`, `node-devtools`, and `backend-devtools`. Each can be customized independently.
 
 ### Browser devtools
 
@@ -123,10 +152,22 @@ To fully replace the default server config (for example, pointing to a custom se
 }
 ```
 
+### Backend devtools
+
+```json
+{
+  "backendDevTools": {
+    "env": {
+      "BACKEND_BASE_URL": "http://localhost:8080"
+    }
+  }
+}
+```
+
 | Key | Description |
 |-----|-------------|
-| `browserDevTools.mcp` / `nodeDevTools.mcp` | Full MCP server config replacement — supports `command`+`args` (stdio) or `url` (HTTP) |
-| `browserDevTools.env` / `nodeDevTools.env` | Extra env vars merged into the default config. Only used when `mcp` is not set |
+| `browserDevTools.mcp` / `nodeDevTools.mcp` / `backendDevTools.mcp` | Full MCP server config replacement — supports `command`+`args` (stdio) or `url` (HTTP) |
+| `browserDevTools.env` / `nodeDevTools.env` / `backendDevTools.env` | Extra env vars merged into the default config. Only used when `mcp` is not set |
 
 <Note>
   IronBee always sets `TOOL_NAME_PREFIX`, `TOOL_INPUT_METADATA_ENABLE=true`, and `PLATFORM` — these cannot be overridden.
@@ -159,6 +200,24 @@ To fully replace the default server config (for example, pointing to a custom se
 }
 ```
 
+### Backend-only project (no browser cycle)
+
+```json
+{
+  "browser": {
+    "verifyPatterns": []
+  },
+  "backend": {}
+}
+```
+
+Or use the CLI:
+
+```bash
+ironbee browser disable
+ironbee backend enable
+```
+
 ### Strict mode — more retries
 
 ```json
@@ -173,6 +232,16 @@ To fully replace the default server config (for example, pointing to a custom se
 {
   "verification": {
     "enable": false
+  }
+}
+```
+
+### Capture code diffs in analytics
+
+```json
+{
+  "fileChange": {
+    "captureChangeset": true
   }
 }
 ```

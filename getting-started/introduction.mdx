@@ -31,6 +31,9 @@ Teams using agentic development today face:
   <Card title="CI/CD integration" icon="git-branch">
     The IronBee GitHub Action brings the same verification loop into your pull request workflow — automatically verifying changes, fixing issues, and posting evidence on every PR.
   </Card>
+  <Card title="Automatic recommendations" icon="sparkles">
+    After each session, analysis findings are turned into directives that are injected back into the agent's context — it learns from past mistakes automatically without manual intervention.
+  </Card>
 </CardGroup>
 
 ## How it works
@@ -46,7 +49,9 @@ IronBee intercepts completion
       │
       ├─ Browser cycle: navigate → screenshot → check console → submit verdict
       │
-      └─ Node cycle (opt-in): connect → set probes → exercise → read snapshots
+      ├─ Node cycle (opt-in): connect → set V8 probes → exercise → read snapshots
+      │
+      └─ Backend cycle (opt-in): HTTP/gRPC/GraphQL/WebSocket → verify responses
             │
             ▼
       Pass → task completes

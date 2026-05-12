@@ -18,11 +18,11 @@ Run a verification cycle for the current changes.
 **Default behavior:** focused verification — the agent reviews what changed and tests only the affected areas. This is the most common mode and the one IronBee triggers automatically at task completion.
 
 The agent will:
-1. Identify which files changed and what they affect
-2. Navigate to the relevant pages or endpoints
-3. Test the specific functionality that was modified
-4. Check for console errors and network failures
-5. Submit a verdict with evidence
+1. Identify which files changed and what cycles are active for this project
+2. Start verification and exercise every active cycle (browser, Node, or backend)
+3. Navigate pages, run probes, or make API calls as required
+4. Check for console errors, network failures, and unexpected responses
+5. Submit a single verdict with evidence for all active cycles
 
 ---
 
@@ -98,6 +98,6 @@ Output is printed inline in the agent conversation. The same analysis is also av
 
 ## When are these triggered automatically?
 
-IronBee installs a **Stop hook** that fires when the agent tries to complete a task. If code files were changed, the hook automatically triggers `/ironbee-verify` (default mode) before allowing the task to finish.
+IronBee installs a **Stop hook** that fires when the agent tries to complete a task. If code files were changed, the hook automatically triggers the verification flow (equivalent to `/ironbee-verify`) before allowing the task to finish. Every active cycle — browser, Node, backend — must pass within the same verification attempt before the task can complete.
 
 You can also invoke any of these commands manually at any time — for example, to run a quick visual check mid-task or get early analysis.

@@ -1,62 +1,58 @@
 ---
 title: Findings
-description: Specific issues and problems identified during a session or across your project.
+description: Observations and problems identified during analysis — per session and across your project.
 ---
 
-**Findings** are specific problems that IronBee's analysis identified — a browser console error that kept appearing, a failing form submission, a network request that returned 500, or a pattern of retries on the same file.
+**Findings** are observations that IronBee's analysis identified — a browser console error that kept appearing, a failing form submission, a file with a high fix-cycle rate, or a pattern of retries. Each finding is grounded in actual session data, not generic advice.
 
-## Finding types
+## Finding areas
 
-| Type | Description |
-|------|-------------|
-| `error` | A definite problem — console error, network failure, assertion failure |
-| `warning` | A potential issue — slow page load, deprecated API, unused variable |
-| `pattern` | A recurring behavior — same file failing across multiple verifications |
-| `coverage_gap` | Areas the agent skipped or did not test |
+Findings are grouped by area depending on which analysis type produced them:
+
+| Area | Question answered | Analysis type |
+|------|-------------------|---------------|
+| **quality** | Is the agent testing thoroughly enough? | Quality |
+| **efficiency** | Where is time or compute being wasted? | Quality, Cost |
+| **patterns** | Which issues and files recur across sessions? | Quality |
+| **behavior** | What working habits need adjustment? | Quality, Session Insights |
+| **cost** | Where is spend going and what should change? | Cost |
 
 ## Severity levels
 
 | Severity | Meaning |
 |----------|---------|
-| `critical` | Caused a verification failure; must be addressed |
-| `high` | Likely to cause problems; strongly recommended to fix |
-| `medium` | Worth addressing but not urgent |
-| `low` | Informational; improve when convenient |
+| `notice` | Descriptive observation — informational only, no action required |
+| `concern` | Worth watching — may generate a recommendation |
+| `critical` | Serious degradation — should generate a recommendation |
+
+Only `concern` and `critical` findings may have recommendations attached. `notice` findings are purely descriptive.
 
 ## Findings list
 
-The Findings tab shows all findings for a session, sorted by severity. Each finding includes:
+The Findings tab shows all findings for the current analysis, grouped by area and sorted by severity. Each finding includes:
 
-- **Title** — a brief description of the issue
-- **Severity** — critical / high / medium / low
-- **Type** — error / warning / pattern / coverage gap
-- **Affected file or page** — where the issue was observed
-- **Evidence** — links to the specific tool call or screenshot where the issue appeared
+- **Title** — a brief description of the observation
+- **Severity** — critical / concern / notice
+- **Area** — quality / efficiency / patterns / behavior / cost
+- **Body** — full markdown description with supporting evidence, metrics, and sometimes visualizations
+- **Linked recommendation** (if any) — the action derived from this finding
 
-## Finding detail
+## Visualizations
 
-Clicking a finding opens its detail view:
+Some findings include inline diagrams (pie charts, bar charts, Gantt, journey diagrams) rendered from the finding body. Visualizations are decorative — every fact they show is also stated in prose.
 
-- **Full description** — what was observed and why it matters
-- **Evidence** — the relevant screenshot, console log, or network response
-- **Context** — which verification cycle and activity this occurred in
-- **Related findings** — other findings from the same file or session that may be connected
+## Session insight findings
 
-## Filtering findings
+Session insight findings are rich multi-paragraph reports rather than single observations. They cover:
 
-You can filter the findings list by:
-
-- Severity
-- Type
-- Affected file
-- Session or date range (on the project-level findings view)
+- **Session highlight** — a standout session with notable characteristics
+- **At-a-glance** — four summary sub-findings (sessions, hours, cost, cache)
+- **Project areas** — patterns, friction points, interaction style
+- **What works** — validated effective behaviors
+- **Features to try** — underused capabilities relevant to the project
 
 ## Project-level findings
 
-The project's Analysis tab aggregates findings across all sessions. This view highlights:
+The project Analysis tab always shows the latest analysis run. Previous runs are retained as history — you can navigate back to compare findings over time.
 
-- Files that appear in findings most often
-- Error types that recur across sessions
-- Trends over time (are findings increasing or decreasing?)
-
-Recurring findings on the same file are a strong signal that the file needs attention — better tests, clearer logic, or a structural refactor.
+Files that appear in findings most often are strong candidates for extra attention — better tests, clearer logic, or structural refactoring.

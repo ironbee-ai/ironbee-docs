@@ -5,7 +5,7 @@ description: Install the IronBee CLI globally on your machine.
 
 ## Requirements
 
-- **Node.js 20 or later**
+- **Node.js 22 or later**
 
 Check your version:
 
@@ -70,6 +70,20 @@ To also remove IronBee configuration from a project:
 ```bash
 ironbee uninstall
 ```
+
+---
+
+---
+
+## Log in
+
+After installing, connect the CLI to your IronBee account:
+
+```bash
+ironbee login
+```
+
+This opens your browser, completes the OAuth flow, and writes your API key and collector URL to `~/.ironbee/config.json`. You only need to do this once per machine.
 
 ---
 

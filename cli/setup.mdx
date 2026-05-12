@@ -3,6 +3,18 @@ title: Project Setup
 description: Configure IronBee hooks, skills, and MCP servers in your project.
 ---
 
+## Before you start
+
+Make sure you have logged in first:
+
+```bash
+ironbee login
+```
+
+This connects the CLI to your IronBee account. If you haven't done this yet, see the [Quick Start](/getting-started/quickstart#step-3--connect-the-cli-to-your-account).
+
+---
+
 ## Run the installer
 
 From your project root:
@@ -27,6 +39,7 @@ ironbee install --client cursor   # Cursor
 | Verification rule | Enforces the verification gate |
 | `browser-devtools` MCP server | Browser mode — `bdt_` prefix tools for navigation, screenshots, console |
 | `node-devtools` MCP server | Node mode — `ndt_` prefix tools (installed but inactive until you opt in) |
+| `backend-devtools` MCP server | Backend protocol mode — `bedt_` prefix tools for HTTP/gRPC/GraphQL/WebSocket (installed but inactive until you opt in) |
 | Permissions | Grants the agent access to all devtools tools |
 
 ---
@@ -36,7 +49,7 @@ ironbee install --client cursor   # Cursor
 After running `ironbee install` in a Cursor project:
 
 1. **Restart Cursor** to load the new hooks and MCP config
-2. Go to **Settings → Tools & MCP** and confirm both `browser-devtools` and `node-devtools` are listed as enabled
+2. Go to **Settings → Tools & MCP** and confirm all three of **`browser-devtools`**, **`node-devtools`**, and **`backend-devtools`** are listed as enabled
 3. If a server shows as enabled but tools are unavailable, toggle it off and back on
 
 <Warning>
@@ -45,31 +58,51 @@ After running `ironbee install` in a Cursor project:
 
 ---
 
-## Enable backend verification (Node.js) {#backend}
+## Enable Node.js runtime verification {#backend}
 
-By default, only the browser cycle is active. To also require Node.js verification for backend file changes:
+By default, only the browser cycle is active. To also require Node.js V8 inspector verification for backend file changes:
 
 ```bash
-ironbee enable-backend node
+ironbee node enable
 ```
 
-This writes opinionated default `verifyPatterns` under `backend.node.verifyPatterns` in your project config:
-
-```
-server/**
-pages/api/**
-**/server.{ts,js,mjs,cjs}
-```
-
-You can edit these patterns in `.ironbee/config.json` after running the command.
+This writes a minimal `{ "node": {} }` block to your project config. Code defaults (e.g. `server/**`, `pages/api/**`, `**/server.{ts,js,mjs,cjs}`) apply at runtime — nothing is materialized into the file.
 
 To disable:
 
 ```bash
-ironbee disable-backend node
+ironbee node disable
 ```
 
-Disabling empties `verifyPatterns` (no enforcement) but preserves your customizations — re-enabling later restores your tuned setup.
+## Enable backend protocol verification
+
+For any backend runtime (Node, Java, Python, Go, Rust, and more), you can require the agent to exercise real HTTP, gRPC, GraphQL, or WebSocket calls before completing:
+
+```bash
+ironbee backend enable
+```
+
+This writes a minimal `{ "backend": {} }` block to your project config. Code defaults covering `server/**`, `api/**`, `routes/**`, `controllers/**`, `handlers/**`, and `services/**` apply at runtime.
+
+To disable:
+
+```bash
+ironbee backend disable
+```
+
+## Disable the browser cycle
+
+For backend-only projects where browser verification is not appropriate:
+
+```bash
+ironbee browser disable
+```
+
+To re-enable:
+
+```bash
+ironbee browser enable
+```
 
 ---
 

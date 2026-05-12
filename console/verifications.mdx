@@ -7,7 +7,7 @@ A **verification** is a complete testing cycle the agent runs to prove that its 
 
 ## Verification types
 
-IronBee supports two cycle types that can run in parallel:
+IronBee supports three cycle types that can run in parallel:
 
 ### Browser cycle
 
@@ -20,11 +20,11 @@ The agent uses browser devtools to verify frontend and full-stack changes:
 - Records a browser session video
 - Submits a verdict with evidence
 
-The browser cycle is active by default for most code file types.
+The browser cycle is active by default for most code file types. Disable it with `ironbee browser disable`.
 
 ### Node cycle
 
-The agent connects to a running Node.js process to verify backend changes:
+The agent connects to a running Node.js process to verify backend changes via V8 inspector:
 
 - Connects to the Node inspector
 - Sets tracepoints or logpoints at changed code paths
@@ -32,7 +32,13 @@ The agent connects to a running Node.js process to verify backend changes:
 - Reads back execution snapshots or runtime logs
 - Submits verdict with backend evidence
 
-The Node cycle requires opt-in — see [`ironbee enable-backend node`](/cli/setup#backend).
+The Node cycle is opt-in — enable it with [`ironbee node enable`](/cli/setup#backend).
+
+### Backend cycle
+
+The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a running backend service and verifies the responses. Works for any backend runtime (Node, Java, Python, Go, Rust, and more).
+
+The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/setup#backend).
 
 ## Verification status
 
@@ -54,7 +60,7 @@ Each retry creates a new verification cycle with fresh evidence — you can see 
 The verifications tab on a session detail page shows all cycles in order:
 
 - Cycle number (1, 2, 3…)
-- Type (browser / node / both)
+- Type (browser / node / backend / combination)
 - Status
 - Duration
 - Verdict — pass or fail with brief reasoning
