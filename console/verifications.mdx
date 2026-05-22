@@ -36,7 +36,13 @@ The Node cycle is opt-in — enable it with [`ironbee node enable`](/cli/setup#b
 
 ### Backend cycle
 
-The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a running backend service and verifies the responses. Works for any backend runtime (Node, Java, Python, Go, Rust, and more).
+The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a running backend service and verifies the responses. Works for any backend runtime (Node, Java, Python, Go, Rust, and more). The backend cycle collects evidence across three domains:
+
+| Domain | Tools | What is captured |
+|--------|-------|-----------------|
+| Protocol calls | `bedt_http_*`, `bedt_grpc_*`, `bedt_graphql_*`, `bedt_ws_*` | Request/response pairs, status codes, payloads |
+| Observability logs | `bedt_log_*` | Runtime log lines emitted by the service during the call |
+| Database queries | `bedt_db_*` | SQL or NoSQL queries executed as a side effect |
 
 The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/setup#backend).
 

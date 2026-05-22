@@ -43,13 +43,12 @@ Screenshots taken during the cycle are displayed as a gallery. Each screenshot i
 
 The verdict panel at the bottom of the view shows:
 
-- **Status** — pass or fail
-- **Pages tested** — list of URLs the agent navigated to
-- **Console errors** — count and details of any browser console errors
-- **Network failures** — any failed HTTP requests observed
-- **Node evidence** (if Node cycle was active) — backend processes connected, probes set, execution confirmed
+- **Status** — `pass` or `fail`
+- **Checks** — the list of evidence items the agent confirmed (e.g. "form submits successfully", "no console errors on /checkout")
+- **Issues** (on fail) — what went wrong, as reported by the agent
+- **Fixes** (on a passing retry after a previous failure) — what the agent changed to resolve the issues
 
-If the verdict is `fail`, the panel explains exactly which evidence check failed and why IronBee rejected the agent's claim.
+If the verdict is `fail`, the panel explains exactly which checks failed and why the gate was not satisfied.
 
 ## Trace data
 

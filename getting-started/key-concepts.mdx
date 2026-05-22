@@ -74,7 +74,9 @@ A single task can require **multiple cycles in parallel** — the agent must pro
 A **verdict** is the agent's signed assessment of whether its changes work. It includes:
 
 - `status`: `pass` or `fail`
-- Evidence fields: pages tested, console errors, network failures, backend probes (for Node cycle)
+- `checks`: evidence items the agent confirmed (e.g. "form submits successfully", "API returns 200")
+- `issues` (on fail): what went wrong
+- `fixes` (on a passing retry after a previous failure): what was changed to resolve the issues
 
 IronBee validates the verdict against the evidence. If the evidence does not support a `pass`, the gate overrides to `fail` and the agent must retry.
 
@@ -105,7 +107,7 @@ After a session completes, IronBee runs **analysis** — an LLM-powered pass ove
 
 ## Monitoring-only mode
 
-When **verification is disabled** (`ironbee disable-verification`), IronBee runs in monitoring-only mode. The enforcement hook, verification skill, and MCP servers are not installed. Sessions still record tool calls and timing data — you get full observability without slowing the agent down.
+When **verification is disabled** (`ironbee verification disable`), IronBee runs in monitoring-only mode. The enforcement hook, verification skill, and MCP servers are not installed. Sessions still record tool calls and timing data — you get full observability without slowing the agent down.
 
 This is useful for measuring baseline agent behavior before enabling enforcement.
 
@@ -117,11 +119,14 @@ This is useful for measuring baseline agent behavior before enabling enforcement
 
 ## Config files
 
-IronBee reads config from two locations, deep-merged (project takes precedence):
+IronBee reads config from three locations, deep-merged (project-local wins over project wins over global):
 
-| File | Scope |
-|------|-------|
-| `~/.ironbee/config.json` | Global — applies to all projects |
-| `<project>/.ironbee/config.json` | Project-level — overrides global |
+| File | Scope | Committed? |
+|------|-------|------------|
+| `~/.ironbee/config.json` | Global — applies to all projects | N/A |
+| `<project>/.ironbee/config.json` | Project-level — shared with team | Yes |
+| `<project>/.ironbee/config.local.json` | Project-local — machine-specific overrides | No (gitignored) |
+
+The `IRONBEE_API_KEY` environment variable overrides `collector.apiKey` from any config file.
 
 See [Configuration](/cli/configuration) for all available options.

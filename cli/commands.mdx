@@ -145,7 +145,7 @@ ironbee import [--since <duration>] [--from <date>] [--to <date>]
 | All projects on this machine, last 6 months | `ironbee import --all-projects --since 6m` |
 | Q1 retrospective across all projects | `ironbee import --all-projects --from 2025-01-01 --to 2025-03-31` |
 | Preview before committing | `ironbee import --since 30d --dry-run` |
-| CI / scripted (no prompt) | `ironbee import --since 60d --yes` |
+| CI / scripted (no prompt) | `IRONBEE_API_KEY=sk-... ironbee import --since 60d --yes` |
 
 ---
 
@@ -194,29 +194,18 @@ ironbee backend disable
 
 ---
 
-## ironbee enable-verification
+## ironbee verification
 
-Turn on enforcement (the default state).
-
-```bash
-ironbee enable-verification
-```
-
-Re-installs the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: true` in config.
-
-Takes effect on the next agent session — restart your editor after running.
-
----
-
-## ironbee disable-verification
-
-Switch to monitoring-only mode. Sessions and tool calls still ship telemetry to the Collector, but the agent is never blocked by a verify gate.
+Toggle the verification gate on or off.
 
 ```bash
-ironbee disable-verification
+ironbee verification enable
+ironbee verification disable
 ```
 
-Removes the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: false` in config.
+`enable` re-installs the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: true` in config.
+
+`disable` switches to monitoring-only mode. Sessions and tool calls still ship telemetry to the Collector, but the agent is never blocked by a verify gate. Removes the enforcement hook, verification skill, rule, and MCP servers. Equivalent to setting `verification.enable: false` in config.
 
 Takes effect on the next agent session — restart your editor after running.
 
@@ -227,15 +216,25 @@ Takes effect on the next agent session — restart your editor after running.
 Read and write config values from the CLI instead of hand-editing JSON.
 
 ```bash
-ironbee config get <key>           # Read the effective (merged) value
-ironbee config set <key> <value>   # Write to project config
+ironbee config get <key>                    # Read the effective (merged) value
+ironbee config set <key> <value>            # Write to project config
 ironbee config set <key> <value> --global   # Write to global config
-ironbee config unset <key>         # Remove a value (idempotent)
-ironbee config list                # Print merged effective config
-ironbee config list --project      # Project file only
-ironbee config list --global       # Global file only
-ironbee config path                # Print the project config file path
+ironbee config set <key> <value> --local    # Write to project-local config (gitignored)
+ironbee config unset <key>                  # Remove a value (idempotent)
+ironbee config list                         # Print merged effective config
+ironbee config list --project               # Project file only
+ironbee config list --global                # Global file only
+ironbee config list --local                 # Project-local file only
+ironbee config path                         # Print the project config file path
 ```
+
+**Three config layers** (highest precedence last → first wins):
+
+| Layer | File | Scope |
+|-------|------|-------|
+| Global | `~/.ironbee/config.json` | All projects on this machine |
+| Project | `<project>/.ironbee/config.json` | Committed — shared with team |
+| Project-local | `<project>/.ironbee/config.local.json` | Gitignored — machine-specific overrides |
 
 **Type coercion:** `set` parses values as JSON when possible (`true`, `42`, `[...]`, `{...}`) and falls back to a raw string. Pass `--json` to force strict JSON parsing.
 
@@ -248,9 +247,55 @@ ironbee config set maxRetries 5
 ironbee config set verification.enable false
 ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
 ironbee config set collector.apiKey sk-... --global
+ironbee config set collector.apiKey sk-... --local   # machine-specific, not committed
 ironbee config get collector.url
 ironbee config unset browser.verifyPatterns
 ```
+
+---
+
+## ironbee update
+
+Update the CLI to the latest version published to npm.
+
+```bash
+ironbee update
+```
+
+Equivalent to `npm update -g @ironbee-ai/cli`.
+
+---
+
+## ironbee queue
+
+Inspect and manage the internal event queue (events waiting to be delivered to the Collector).
+
+```bash
+ironbee queue status       # Show queue depth and oldest pending event
+ironbee queue drain        # Flush all pending events to the Collector now
+ironbee queue dead-letter  # List events that permanently failed delivery
+```
+
+Useful when debugging connectivity issues or verifying that all events have been shipped before taking a machine offline.
+
+---
+
+## ironbee telemetry
+
+Toggle anonymous usage analytics (PostHog) for the CLI and devtools servers.
+
+```bash
+ironbee telemetry enable
+ironbee telemetry disable
+```
+
+`disable` sets `telemetry.enable: false` in config and passes `TELEMETRY_ENABLE=false` to all devtools MCP servers so they also stop sending analytics.
+
+| Flag | Description |
+|------|-------------|
+| `-g` / `--global` | Write to global config (default) |
+| `--local` | Write to project-local config |
+| `--client <name>` | Re-render MCP entries for a specific client |
 
 ---
 
