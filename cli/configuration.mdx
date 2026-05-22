@@ -5,14 +5,28 @@ description: Customize IronBee's verification behavior with global and project-l
 
 ## Config file locations
 
-IronBee reads configuration from two locations. Settings are **deep-merged**, with the project config taking precedence over the global config.
+IronBee reads configuration from three locations. Settings are **deep-merged** in order — global first, then project, then project-local (highest precedence).
 
-| File | Scope |
-|------|-------|
-| `~/.ironbee/config.json` | Global — applies to all projects |
-| `<project>/.ironbee/config.json` | Project-level — overrides global |
+| File | Scope | Committed? |
+|------|-------|------------|
+| `~/.ironbee/config.json` | Global — applies to all projects on this machine | N/A |
+| `<project>/.ironbee/config.json` | Project-level — shared with your team | Yes |
+| `<project>/.ironbee/config.local.json` | Project-local — machine-specific overrides | No (gitignored) |
 
-Use `ironbee config set` / `ironbee config get` to edit values from the CLI, or edit the JSON files directly.
+Use `ironbee config set` / `ironbee config get` to edit values from the CLI, or edit the JSON files directly. The `--local` flag targets the project-local layer:
+
+```bash
+ironbee config set collector.apiKey sk-... --local   # stays off git
+ironbee config list --local                           # show project-local file only
+```
+
+## Environment variable override
+
+`IRONBEE_API_KEY` is read at startup and overrides `collector.apiKey` from any config file. This is the recommended way to supply credentials in CI, containers, and shared environments:
+
+```bash
+IRONBEE_API_KEY=sk-... ironbee import --all-projects
+```
 
 ---
 
@@ -88,7 +102,7 @@ The backend cycle requires `ironbee backend enable` to activate. It drives real 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `verification.enable` | `boolean` | `true` | Master enforcement switch. Set to `false` for monitoring-only mode — sessions still ship telemetry, but no verify gate is installed. Equivalent to running `ironbee disable-verification`. |
+| `verification.enable` | `boolean` | `true` | Master enforcement switch. Set to `false` for monitoring-only mode — sessions still ship telemetry, but no verify gate is installed. Equivalent to running `ironbee verification disable`. |
 
 ### File change capture
 
@@ -234,6 +248,12 @@ ironbee backend enable
     "enable": false
   }
 }
+```
+
+Or use the CLI:
+
+```bash
+ironbee verification disable
 ```
 
 ### Capture code diffs in analytics

@@ -37,10 +37,10 @@ ironbee install --client cursor   # Cursor
 | Hook configuration | Tells the client to call IronBee when the agent finishes a task |
 | Verification skill | Instructions the agent follows during verification |
 | Verification rule | Enforces the verification gate |
-| `browser-devtools` MCP server | Browser mode — `bdt_` prefix tools for navigation, screenshots, console |
-| `node-devtools` MCP server | Node mode — `ndt_` prefix tools (installed but inactive until you opt in) |
-| `backend-devtools` MCP server | Backend protocol mode — `bedt_` prefix tools for HTTP/gRPC/GraphQL/WebSocket (installed but inactive until you opt in) |
-| Permissions | Grants the agent access to all devtools tools |
+| `browser-devtools` MCP server | Browser mode — `bdt_` prefix tools for navigation, screenshots, console. Always registered. |
+| `node-devtools` MCP server | Node mode — `ndt_` prefix tools. Registered only after `ironbee node enable`. |
+| `backend-devtools` MCP server | Backend protocol mode — `bedt_` prefix tools for HTTP/gRPC/GraphQL/WebSocket. Registered only after `ironbee backend enable`. |
+| Permissions | Grants the agent access to all registered devtools tools |
 
 ---
 
@@ -49,7 +49,7 @@ ironbee install --client cursor   # Cursor
 After running `ironbee install` in a Cursor project:
 
 1. **Restart Cursor** to load the new hooks and MCP config
-2. Go to **Settings → Tools & MCP** and confirm all three of **`browser-devtools`**, **`node-devtools`**, and **`backend-devtools`** are listed as enabled
+2. Go to **Settings → Tools & MCP** and confirm the registered devtools servers are listed as enabled. Only cycles you have enabled appear: `browser-devtools` is registered by default; `node-devtools` and `backend-devtools` are added when you run `ironbee node enable` or `ironbee backend enable`
 3. If a server shows as enabled but tools are unavailable, toggle it off and back on
 
 <Warning>
@@ -111,7 +111,7 @@ ironbee browser enable
 If you want to collect session data without requiring the agent to verify:
 
 ```bash
-ironbee disable-verification
+ironbee verification disable
 ```
 
 In this mode:
@@ -122,7 +122,7 @@ In this mode:
 To re-enable enforcement:
 
 ```bash
-ironbee enable-verification
+ironbee verification enable
 ```
 
 <Note>
