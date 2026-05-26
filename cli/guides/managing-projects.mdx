@@ -1,0 +1,110 @@
+---
+title: Managing Projects
+description: Install, remove, track, and update IronBee across your projects.
+---
+
+Once the CLI is installed and you're signed in (see [Getting Started](/cli/get-started/getting-started)), these commands set IronBee up in a project, remove it, keep track of where it's installed, and keep the CLI itself current.
+
+---
+
+## Install IronBee in a project
+
+Run the installer from your project root:
+
+```bash
+ironbee install
+```
+
+IronBee detects your AI client (Claude Code or Cursor) and wires up everything it needs: the completion hook, the verification skill and rule, the devtools MCP servers, and the matching permissions. If it can't detect a client, it asks which one you use.
+
+To target a specific client explicitly:
+
+```bash
+ironbee install --client claude   # Claude Code
+ironbee install --client cursor   # Cursor
+ironbee install --client all      # both
+```
+
+<Info>
+  Restart your AI coding client after installing so it picks up the new hooks and tools.
+</Info>
+
+### Install everywhere at once
+
+IronBee keeps an inventory of every project you've installed it into (see [The project inventory](#the-project-inventory) below). To re-run install across all of them — handy after changing a global setting:
+
+```bash
+ironbee install --all
+```
+
+---
+
+## Remove IronBee from a project
+
+```bash
+ironbee uninstall
+```
+
+This removes the hooks, skill, rule, MCP server entries, and permissions IronBee added, deletes the project's `.ironbee/` directory, and drops the project from the inventory.
+
+| Option | Description |
+|--------|-------------|
+| `--client <name>` | Only remove a specific client's setup (`claude`, `cursor`, or `all`). |
+| `--all` | Remove IronBee from **every** registered project. Prompts for confirmation first. |
+| `-y`, `--yes` | Skip the confirmation prompt (required with `--all` in scripts/CI). |
+
+```bash
+ironbee uninstall --all        # asks before wiping every project
+ironbee uninstall --all --yes  # no prompt — for scripts
+```
+
+---
+
+## The project inventory
+
+IronBee tracks the projects it's installed in at `~/.ironbee/projects.json`. This inventory is what `install --all` and global config changes use to know which projects to update.
+
+You normally don't manage it by hand — `ironbee install` adds a project automatically, and `ironbee uninstall` removes it. Two commands let you adjust the inventory **without touching any installed files**:
+
+```bash
+ironbee register     # add the current project to the inventory
+ironbee unregister   # remove the current project from the inventory
+```
+
+- **`register`** — retrofit a project that was set up manually (or before the inventory existed) so it shows up for `install --all` and global-config notices. No artifacts are written.
+- **`unregister`** — drop an entry without uninstalling anything. Works even if the project directory has already been deleted.
+
+Both accept `-p, --project <dir>` to target a directory other than the current one.
+
+---
+
+## Update the CLI
+
+Check for a newer release and update in place:
+
+```bash
+ironbee update
+```
+
+The command compares your installed version against the npm registry, updates to the latest if one exists, and warns you if your shell would otherwise keep resolving an older copy on your `PATH`. You can always update manually instead:
+
+```bash
+npm install -g @ironbee-ai/cli@latest
+```
+
+<Info>
+  Restart your AI coding client after updating to use the new version.
+</Info>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
+    Choose which platforms get verified and switch between enforcement and monitoring-only.
+  </Card>
+  <Card title="Interactive mode (TUI)" icon="terminal" href="/cli/guides/interactive-mode">
+    Manage projects, platforms, and sessions from a full-screen terminal UI.
+  </Card>
+</CardGroup>

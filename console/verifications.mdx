@@ -32,7 +32,7 @@ The agent connects to a running Node.js process to verify backend changes via V8
 - Reads back execution snapshots or runtime logs
 - Submits verdict with backend evidence
 
-The Node cycle is opt-in — enable it with [`ironbee node enable`](/cli/setup#backend).
+The Node cycle is opt-in — enable it with [`ironbee node enable`](/cli/guides/verification#enable-or-disable-a-platform).
 
 ### Backend cycle
 
@@ -44,7 +44,7 @@ The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a runni
 | Observability logs | `bedt_log_*` | Runtime log lines emitted by the service during the call |
 | Database queries | `bedt_db_*` | SQL or NoSQL queries executed as a side effect |
 
-The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/setup#backend).
+The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/guides/verification#enable-or-disable-a-platform).
 
 ## Verification status
 

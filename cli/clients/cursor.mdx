@@ -1,0 +1,69 @@
+---
+title: Cursor
+description: How IronBee integrates with Cursor — slash commands, rules, hooks, tools, and MCP activation.
+---
+
+When you run `ironbee install` in a project where [Cursor](https://cursor.com) is detected, IronBee writes the hooks, rules, and tools Cursor needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code), with a few Cursor-specific details — including one manual step to activate the MCP servers.
+
+---
+
+## What gets installed
+
+| File | What it does |
+|------|--------------|
+| `.cursor/hooks.json` | Registers IronBee's lifecycle hooks |
+| `.cursor/skills/ironbee-verification.md` | The verification skill the agent follows |
+| `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
+| `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
+| `.cursor/mcp.json` | The devtools MCP servers — one entry per enabled cycle (`browser-devtools`, `node-devtools`, `backend-devtools`) |
+
+These are merged into your existing Cursor config, not overwritten.
+
+---
+
+## Activate the MCP servers
+
+<Warning>
+  Cursor sometimes doesn't pick up MCP servers added via `mcp.json` automatically. After installing, you usually need to activate them by hand.
+</Warning>
+
+After running `ironbee install`:
+
+1. **Restart Cursor** so it loads the new hooks and MCP config.
+2. Go to **Settings → Tools & MCP** and confirm the enabled servers (`browser-devtools`, and `node-devtools` / `backend-devtools` if you opted into those cycles) are listed and on.
+3. If a server shows as enabled but its tools aren't available, toggle it off and back on.
+
+This is a [known Cursor limitation](https://forum.cursor.com/t/mcp-tools-only-available-to-agent-after-manually-toggling-server-off-on-even-when-already-enabled/152859) — MCP servers added via config sometimes need a manual nudge.
+
+---
+
+## Slash commands
+
+The `/ironbee-verify` command from Claude Code is available in Cursor too:
+
+- **`/ironbee-verify`** — run a verification cycle for the current changes. Supports `full`, `visual`, and `functional` variants to widen or narrow the scope.
+
+See [Claude Code → Slash commands](/cli/clients/claude-code#slash-commands) for the full breakdown of the verify variants — they behave the same in Cursor.
+
+---
+
+## How verification is enforced
+
+Cursor's stop hook can't hard-deny completion the way Claude's can, so IronBee uses Cursor's `followup_message` mechanism: when verification fails, it auto-submits a new prompt that pushes the agent back into the verification loop, mechanically preventing the task from finishing until it passes (up to Cursor's `loop_limit`, default 5).
+
+<Info>
+  Restart Cursor after installing, and remember the MCP activation step above — without it the agent won't have the devtools tools it needs to verify.
+</Info>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
+    Choose which cycles run and how verification is enforced.
+  </Card>
+  <Card title="Claude Code" icon="bot" href="/cli/clients/claude-code">
+    The same integration for Claude Code.
+  </Card>
+</CardGroup>

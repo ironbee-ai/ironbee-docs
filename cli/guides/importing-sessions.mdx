@@ -1,0 +1,92 @@
+---
+title: Importing Sessions
+description: Backfill historical AI coding sessions into the IronBee Collector.
+---
+
+If you've been using Claude Code before installing IronBee, your past sessions live on disk but aren't in the Console yet. `ironbee import` backfills them into the IronBee Collector so your analytics include history, not just sessions from today forward.
+
+Sessions already tracked are skipped automatically, so the command is safe to re-run.
+
+---
+
+## Basic usage
+
+From a project directory, import that project's history:
+
+```bash
+ironbee import
+```
+
+By default this reads the current project's Claude Code session transcripts and ships any that aren't already in the Collector.
+
+---
+
+## Choosing what to import
+
+Pick at most one scope (the default is the current directory):
+
+| Flag | Scope |
+|------|-------|
+| *(none)* | The current project directory |
+| `--projects <p1,p2,...>` | Specific projects by absolute path, comma-separated |
+| `--all-projects` | Every project Claude Code has tracked on this machine |
+| `--transcript <path>` | A single `.jsonl` transcript file |
+
+---
+
+## Limiting the time range
+
+Pick at most one (the default is no time filter):
+
+| Flag | Range |
+|------|-------|
+| `--since <duration>` | Relative window — `30d`, `2w`, `6m`, `12h` |
+| `--from <date> [--to <date>]` | Explicit window; `--to` defaults to now |
+
+```bash
+ironbee import --since 30d
+ironbee import --from 2026-01-01 --to 2026-03-31
+```
+
+---
+
+## Preview and safety
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Print a cost/event summary and exit without sending anything |
+| `--yes` | Skip the confirmation prompt (for scripts/CI) |
+| `--force` | Re-import sessions that are already tracked |
+| `--concurrency <N>` | Parallel sessions to process (default 4, range 1–32) |
+
+Always start with a dry run if you're unsure of the volume:
+
+```bash
+ironbee import --since 30d --dry-run
+```
+
+---
+
+## Common scenarios
+
+| Goal | Command |
+|------|---------|
+| Onboard the current project, last 30 days | `ironbee import --since 30d` |
+| Full history for the current project | `ironbee import` |
+| Everything on this machine, last 6 months | `ironbee import --all-projects --since 6m` |
+| A quarter across all projects | `ironbee import --all-projects --from 2026-01-01 --to 2026-03-31` |
+| Preview before committing | `ironbee import --since 30d --dry-run` |
+| Scripted, no prompt | `ironbee import --since 60d --yes` |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Inspecting sessions" icon="search" href="/cli/advanced/inspecting-sessions">
+    Check verdicts and session state from the terminal.
+  </Card>
+  <Card title="Open the Console" icon="layout-dashboard" href="https://console.ironbee.ai">
+    Your imported sessions appear alongside live ones, with the same analytics and timelines.
+  </Card>
+</CardGroup>
