@@ -1,0 +1,59 @@
+---
+title: Telemetry & Statusline
+description: Manage anonymous CLI telemetry and the Claude Code statusline integration.
+---
+
+Two optional integrations you can toggle from the CLI: anonymous product telemetry, and the Claude Code statusline. Both map to [config keys](/cli/configuration/configuration) — these commands are the convenient way to flip them.
+
+---
+
+## Telemetry
+
+IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. This is **separate** from the IronBee Collector pipeline that ships your session data — turning telemetry off has no effect on your own analytics.
+
+```bash
+ironbee telemetry disable   # opt out
+ironbee telemetry enable    # opt back in (the default)
+```
+
+Disabling turns telemetry off in **both** the CLI and the IronBee DevTools MCP servers (it injects `TELEMETRY_ENABLE=false` into their environment), so one switch covers both sides.
+
+By default these write to the project config. Use `-g`/`--global` for all your projects or `--local` for a gitignored personal override. The underlying key is [`telemetry.enable`](/cli/configuration/configuration#telemetry).
+
+---
+
+## Statusline
+
+<Note>
+  Statusline integration is **Claude Code only**.
+</Note>
+
+IronBee can surface session status in Claude Code's statusline while preserving any statusline you already have:
+
+```bash
+ironbee statusline enable    # install the statusline wrapper
+ironbee statusline disable   # restore your original statusline
+```
+
+`enable` installs a wrapper that emits `session_status` events and chains your existing statusline; `disable` restores it and stops emitting. Same layer flags as telemetry (`-g`, `--local`).
+
+If you change your upstream statusline mid-session, re-resolve the chained wrapper for active sessions:
+
+```bash
+ironbee statusline sync
+```
+
+For statusline behavior options (rendering a default line, emit throttling, refresh interval), see the [`statusLine.*` keys](/cli/configuration/configuration#statusline-claude-code-only) in Configuration.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration">
+    The `telemetry.*` and `statusLine.*` keys in full.
+  </Card>
+  <Card title="Claude Code" icon="bot" href="/cli/clients/claude-code">
+    OAuth access, which feeds the statusline's rate-limit display.
+  </Card>
+</CardGroup>

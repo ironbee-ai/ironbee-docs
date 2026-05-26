@@ -1,0 +1,94 @@
+---
+title: Job Queue
+description: Inspect and manage the background queue that ships session data to the Collector.
+---
+
+IronBee buffers session events in a file-backed queue before sending them to the Collector. This happens automatically in the background — you rarely need to touch it. These commands are for diagnosing or recovering delivery when something stalls (e.g. you were offline and events piled up).
+
+---
+
+## Check queue status
+
+Show queued job counts per session across the project:
+
+```bash
+ironbee queue status
+```
+
+| Option | Description |
+|--------|-------------|
+| `--session <id>` | Limit to one session |
+| `--project-dir <dir>` | Target a specific project directory |
+
+---
+
+## Drain pending jobs
+
+Process queued jobs synchronously, sending them to the Collector now instead of waiting for the background flush:
+
+```bash
+ironbee queue drain
+```
+
+| Option | Description |
+|--------|-------------|
+| `--session <id>` | Drain just one session |
+| `--project-dir <dir>` | Target a specific project directory |
+
+---
+
+## Dead-letter queue
+
+Jobs that repeatedly fail to send land in a **dead-letter** queue so they don't block healthy traffic. Inspect and recover them:
+
+```bash
+ironbee queue dead-letter list                # list failed entries
+ironbee queue dead-letter stats               # histogram of failure categories
+ironbee queue dead-letter retry <job_id>      # re-queue one entry by its job id
+ironbee queue dead-letter clear               # empty the dead-letter file
+```
+
+| Command | Notable options |
+|---------|-----------------|
+| `list` | `--session <id>`, `--limit <n>` (default 50) |
+| `stats` | `--session <id>` |
+| `retry <job_id>` | `--session <id>` to force re-queue into a specific session |
+| `clear` | `--all` to also remove rotated `dead-letter-*.jsonl` archives |
+
+---
+
+## Purge
+
+Destructive cleanup of queue state — use with care:
+
+```bash
+ironbee queue purge --snapshots                      # delete all snapshot files, unprocessed
+ironbee queue purge --sessions older-than=14d        # remove queue dirs older than 14 days
+```
+
+| Option | Description |
+|--------|-------------|
+| `--snapshots` | Delete all snapshot files across sessions **without** processing them |
+| `--sessions <spec>` | Remove old `queue/` subdirs — `older-than=<duration>` (e.g. `older-than=14d`) |
+| `--project-dir <dir>` | Target a specific project directory |
+
+<Warning>
+  `purge` permanently drops queued data. `--snapshots` discards events that were never sent. Reach for `drain` first if you want to deliver pending events rather than throw them away.
+</Warning>
+
+<Note>
+  All of these commands are available interactively in the [TUI](/cli/guides/interactive-mode) Queue area.
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Runtime files" icon="folder" href="/cli/advanced/runtime-files">
+    The `queue/` directory and everything else IronBee writes per session.
+  </Card>
+  <Card title="Inspecting sessions" icon="search" href="/cli/advanced/inspecting-sessions">
+    Check verdict status and validate sessions from the terminal.
+  </Card>
+</CardGroup>

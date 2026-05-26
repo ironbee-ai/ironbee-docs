@@ -1,0 +1,43 @@
+---
+title: Inspecting Sessions
+description: Check verdict status and validate verdicts from the terminal.
+---
+
+Most of the time you'll review sessions in the [Console](https://console.ironbee.ai). But two commands let you inspect sessions straight from the terminal — useful for quick checks and debugging a session that won't pass.
+
+---
+
+## ironbee status
+
+Show the verdict status of the sessions in a project:
+
+```bash
+ironbee status [project-dir]
+```
+
+For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and — for failures — the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled.
+
+---
+
+## ironbee verify
+
+Dry-run the verdict checks for a session **without changing anything** — a read-only version of the gate that runs when the agent stops:
+
+```bash
+ironbee verify [session-id]
+```
+
+If only one session is active, the session ID is auto-detected. Use this to understand exactly why a session would pass or fail before the agent retries. Add `-p, --project-dir <dir>` to target a project other than the current directory.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Runtime files" icon="folder" href="/cli/advanced/runtime-files">
+    Where verdicts, state, and session data are stored on disk.
+  </Card>
+  <Card title="Job queue" icon="layers" href="/cli/advanced/job-queue">
+    Inspect and drain the background queue that ships session data.
+  </Card>
+</CardGroup>

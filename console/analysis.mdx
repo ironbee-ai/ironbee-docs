@@ -53,24 +53,6 @@ The Analysis tab shows findings grouped by area and type. Each analysis run supe
 - Interaction patterns, tool diversity, multi-session trends
 - Friction points and features to try
 
-## Running local analysis from the CLI
-
-You can also run a lightweight analysis locally at any time:
-
-```bash
-ironbee analyze [session-id]
-```
-
-Omit the session ID to analyze all sessions in the current project:
-
-```bash
-ironbee analyze
-```
-
-Add `--detailed` to include raw verdict text (checks, issues, fixes) for LLM-powered semantic analysis — this pairs with the `/ironbee-analyze` agent command.
-
-Output is printed to stdout. The full cloud analysis is in the Console.
-
 ## Related pages
 
 <CardGroup cols={2}>

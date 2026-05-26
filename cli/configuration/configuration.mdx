@@ -1,0 +1,335 @@
+---
+title: Configuration
+description: Tune IronBee's verification behavior with layered global, project, and local config.
+---
+
+IronBee works out of the box — most projects never need to touch config. When you do want to fine-tune *which* files get verified, change retry limits, or point at a self-hosted collector, this page is the reference.
+
+You can edit settings two ways: the `ironbee config` command (recommended — it validates and re-applies changes for you) or by editing the JSON files directly.
+
+---
+
+## Config layers
+
+Settings are read from three files and **deep-merged**. Higher layers override lower ones:
+
+| Layer | File | Use for |
+|-------|------|---------|
+| Global | `~/.ironbee/config.json` | Defaults across all your projects (e.g. your collector credentials) |
+| Project | `<project>/.ironbee/config.json` | Team settings — committed to the repo |
+| Local | `<project>/.ironbee/config.local.json` | Personal overrides — gitignored, never shared |
+
+Precedence is **local > project > global**. A key set in the local layer wins over the same key in the project layer, which wins over global.
+
+Secrets can also come from the environment: setting `IRONBEE_API_KEY` supplies the collector API key without committing it to any file.
+
+---
+
+## Editing config from the CLI
+
+```bash
+ironbee config get <key>            # read the effective (merged) value
+ironbee config set <key> <value>    # write to the project config
+ironbee config unset <key>          # remove a value (idempotent)
+ironbee config list                 # print the merged effective config
+ironbee config path                 # print the project config file path
+```
+
+**Targeting a layer** — `set`, `unset`, and the read commands accept `-g`/`--global` or `--local` to act on a specific layer (default is the project config). `list` and `get` also take `--project` to read one layer in isolation:
+
+```bash
+ironbee config set collector.apiKey sk-... --global
+ironbee config set maxRetries 5
+ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
+ironbee config list --global
+```
+
+**Type coercion** — `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
+
+**Automatic re-render** — when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project — `--apply-all` accepts without prompting, `--no-apply-all` declines.
+
+<Info>
+  Restart your editor or agent session after changing an artifact-affecting key — it takes effect on the next session.
+</Info>
+
+---
+
+## Core options
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from **all** cycles. Checked first — a match here activates no cycle, whatever else matches. |
+| `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). One global counter across all active cycles. |
+
+```json
+{
+  "ignoredVerifyPatterns": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"],
+  "maxRetries": 5
+}
+```
+
+---
+
+## Verification
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#enforcement-vs-monitoring-only). |
+
+---
+
+## Verification cycles
+
+The three cycles — `browser`, `node`, and `backend` — share the same set of keys (replace `<cycle>` with `browser`, `node`, or `backend`):
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `<cycle>.enable` | `boolean` | Explicit on/off. Written `false` by `ironbee <cycle> disable`, stripped by `ironbee <cycle> enable`. Browser is the only cycle on by default; node and backend are opt-in. |
+| `<cycle>.verifyPatterns` | `string[]` | Files that trigger the cycle. **Four states:** unset → built-in code defaults · `[]` → hard-disable · non-empty → custom patterns (replaces defaults). |
+| `<cycle>.additionalVerifyPatterns` | `string[]` | Extra patterns appended to `verifyPatterns` (or to the defaults when it's unset). Ignored when `verifyPatterns` is `[]`. |
+| `<cycle>.alwaysRequired` | `string[]` | Tools the agent must use before the cycle passes (all-of). Sensible per-cycle defaults apply. *Advanced.* |
+| `<cycle>.evidencePaths` | `json` | Alternative tool-satisfaction paths (any-of). *Advanced.* |
+
+**Defaults differ per cycle:**
+
+| Cycle | Default state | Default verify patterns |
+|-------|---------------|-------------------------|
+| `browser` | On | 40+ code/markup extensions (`.ts`, `.tsx`, `.js`, `.css`, `.html`, `.vue`, …) |
+| `node` | Opt-in | When enabled: server/api/routes code paths |
+| `backend` | Opt-in | When enabled: 13 multi-language code defaults (ts/js/py/go/java/rb/cs/rs/kt/scala/ex/php/clj) |
+
+The exact default patterns each cycle uses when `verifyPatterns` is unset:
+
+<AccordionGroup>
+  <Accordion title="Browser — default verify patterns">
+    Matches code and markup files by extension (project-wide):
+
+    ```
+    *.ts  *.tsx  *.js  *.jsx  *.mjs  *.cjs
+    *.vue  *.svelte
+    *.html  *.htm
+    *.css  *.scss  *.sass  *.less  *.styl
+    *.py  *.rb  *.erb  *.go  *.rs
+    *.java  *.kt  *.kts  *.swift
+    *.c  *.cpp  *.h  *.hpp  *.cs  *.php  *.dart
+    *.ex  *.exs  *.erl  *.lua  *.r  *.R
+    *.scala  *.clj  *.cljs  *.zig  *.nim
+    *.hbs  *.ejs  *.pug  *.jade  *.astro
+    ```
+  </Accordion>
+  <Accordion title="Node — default verify patterns">
+    Targets typical Node.js server entry points and API routes (applies once the cycle is enabled):
+
+    ```
+    server/**/*.{ts,js,mjs,cjs}
+    src/server/**/*.{ts,js,mjs,cjs}
+    backend/**/*.{ts,js,mjs,cjs}
+    api/**/*.{ts,js,mjs,cjs}
+    src/api/**/*.{ts,js,mjs,cjs}
+    pages/api/**/*.{ts,js,mjs,cjs}
+    app/api/**/*.{ts,js,mjs,cjs}
+    routes/**/*.{ts,js,mjs,cjs}
+    **/server.{ts,js,mjs,cjs}
+    ```
+  </Accordion>
+  <Accordion title="Backend — default verify patterns">
+    Multi-language coverage of common server-side directories (applies once the cycle is enabled). The `{...}` extension set is `ts,js,mjs,cjs,py,go,java,rb,cs,rs,kt,scala,ex,exs,php,clj`:
+
+    ```
+    server/**/*.{…}
+    src/server/**/*.{…}
+    backend/**/*.{…}
+    api/**/*.{…}
+    src/api/**/*.{…}
+    pages/api/**/*.{ts,js,mjs,cjs}
+    app/api/**/*.{ts,js,mjs,cjs}
+    routes/**/*.{…}
+    controllers/**/*.{…}
+    handlers/**/*.{…}
+    services/**/*.{…}
+    **/server.{…}
+    **/main.{go,py,java,rb,kt,scala}
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. There is **no** default skip list — `ignoredVerifyPatterns` is empty unless you set it; non-code files simply don't match the patterns above.
+</Note>
+
+<Note>
+  Prefer the [`ironbee browser` / `node` / `backend` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off — they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
+</Note>
+
+```json
+{
+  "browser": {
+    "additionalVerifyPatterns": ["*.mdx"]
+  },
+  "backend": {
+    "verifyPatterns": ["api/**/*.go", "controllers/**/*.java"]
+  }
+}
+```
+
+---
+
+## Collector
+
+The collector is what ships your session data to the IronBee Console. `ironbee login` fills `url` and `apiKey` for you; you'd only set these by hand to self-host.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `collector.url` | `string` | *(unset)* | Collector endpoint. Required for the collector to be active. |
+| `collector.apiKey` | `string` | *(unset)* | API key for collector auth. Required to be active. Can come from `IRONBEE_API_KEY` instead. |
+| `collector.enable` | `boolean` | implicit `true` when `url` + `apiKey` are set | Set `false` to suspend sending while keeping credentials around. |
+| `collector.batchSize` | `number` | `100` | Max events per POST. |
+| `collector.timeoutMs` | `number` | `10000` | Per-request timeout (ms), clamped to `[1000, 60000]`. |
+
+---
+
+## Telemetry
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `telemetry.enable` | `boolean` | `true` | Anonymous PostHog product analytics for the CLI itself (separate from the collector pipeline). Opt out with `false` — also turns off telemetry in the devtools MCP servers. Equivalent to `ironbee telemetry disable`. |
+
+---
+
+## File change capture
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `fileChange.captureChangeset` | `boolean` | `false` | When `true`, each `file_change` event carries a hunks-only unified diff. Off by default (events stay metadata-only). |
+| `fileChange.maxChangesetBytes` | `number` | `65536` | Hard cap (64 KB) on the diff string — larger diffs are truncated with a footer. |
+
+---
+
+## Import
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `import.concurrency` | `number` | `4` | Default parallelism for [`ironbee import`](/cli/guides/importing-sessions). The `--concurrency` flag overrides it. Clamped to `[1, 32]`. |
+
+---
+
+## Statusline (Claude Code only)
+
+Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee statusline enable` / `disable`.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `statusLine.enable` | `boolean` | implicit `true` when configured / collector set | Master switch for the statusline integration. |
+| `statusLine.renderDefault` | `boolean` | `false` | When you have no existing statusline, `true` renders a minimal model + context-% line instead of staying silent. |
+| `statusLine.emitMinIntervalSeconds` | `number` | `10` | Minimum seconds between emitted status events. `0` disables the throttle. |
+| `statusLine.refreshInterval` | `number` | *(unset)* | Claude Code's own timer-based statusline refresh, in seconds. |
+
+---
+
+## Claude OAuth access (Claude Code only)
+
+Controls whether IronBee may read your Claude Code OAuth token to fill statusline rate-limits for plans whose statusline JSON omits them (team / enterprise). Manage with `ironbee claude oauth-access enable` / `disable` / `status` — see [Claude Code → Claude OAuth access](/cli/clients/claude-code#claude-oauth-access).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `claude.oauthAccess.enable` | `boolean` | `true` | Whether IronBee may read the Claude OAuth token (macOS Keychain / `~/.claude/.credentials.json`) and call OAuth-scoped endpoints. Opt out with `false`. Claude-only. |
+| `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch — the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
+
+---
+
+## OTEL collector
+
+IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee otel`](/cli/clients/claude-code#otel-collector).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `otel.enable` | `boolean` | implicit `true` when a collector is configured | Master switch for the local OTEL pipeline. Also gates whether the OTEL env block is written to `settings.json`. |
+| `otel.port` | `number` | `15986` | Loopback port the daemon binds to (one daemon per machine). |
+| `otel.idleTimeoutSeconds` | `number` | `600` | Daemon self-reaps after this many seconds with no activity; restarted on the next session. |
+| `otel.ensureMinIntervalSeconds` | `number` | `30` | Throttle for the liveness check fired from per-tool hooks. |
+| `otel.emitMinIntervalSeconds` | `number` | `0` | Per-session `session_context` emit throttle. `0` = emit on every API request (full context-growth series). |
+
+---
+
+## Devtools MCP overrides
+
+Each cycle's MCP server can be customized independently via `browserDevTools`, `nodeDevTools`, and `backendDevTools`:
+
+| Key | Description |
+|-----|-------------|
+| `<x>DevTools.env` | Extra env vars merged into the default MCP server entry. |
+| `<x>DevTools.mcp` | Full replacement of the MCP server config — supply your own `command`+`args` (stdio) or `url` (HTTP). |
+
+```json
+{
+  "browserDevTools": {
+    "env": { "BROWSER_HEADLESS_ENABLE": "true" }
+  }
+}
+```
+
+<Note>
+  IronBee always sets its own invariants (`TOOL_NAME_PREFIX`, metadata flags, platform) last — these can't be overridden.
+</Note>
+
+---
+
+## Automatic pipeline keys
+
+These sections auto-enable when a collector is configured and rarely need manual tuning. Browse them with `ironbee config list` or the [TUI](/cli/guides/interactive-mode) Configuration area:
+
+- **`recording`** — browser session recording (`recording.enable`).
+- **`jobQueue`** — the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
+- **`analytics`** — per-session structural analytics and how often they emit (`analytics.enable`, `analytics.emitOnStop`, and per-event opt-in/opt-out flags).
+
+---
+
+## Common setups
+
+### Ignore test files
+
+```json
+{
+  "ignoredVerifyPatterns": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"]
+}
+```
+
+### Backend-only project (no browser cycle)
+
+```json
+{
+  "browser": { "enable": false },
+  "backend": { "enable": true }
+}
+```
+
+Or use the CLI: `ironbee browser disable && ironbee backend enable`.
+
+### Monitoring only (no enforcement)
+
+```json
+{
+  "verification": { "enable": false }
+}
+```
+
+### Capture code diffs in analytics
+
+```json
+{
+  "fileChange": { "captureChangeset": true }
+}
+```
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Environment variables" icon="variable" href="/cli/configuration/environment-variables">
+    Overrides that take precedence over the config files.
+  </Card>
+  <Card title="Runtime files" icon="folder" href="/cli/advanced/runtime-files">
+    Where these config files live and what else IronBee writes to disk.
+  </Card>
+</CardGroup>

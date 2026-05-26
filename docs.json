@@ -5,8 +5,8 @@
   "description": "IronBee documentation — install the CLI, configure your projects, and explore the console.",
   "colors": {
     "primary": "#747c7f",
-    "light": "#0a0b0b",
-    "dark": "#9fa1a4"
+    "light": "#9fa1a4",
+    "dark": "#0a0b0b"
   },
   "favicon": "favicon.ico",
   "logo": {
@@ -53,20 +53,53 @@
         "tab": "CLI",
         "groups": [
           {
-            "group": "Setup",
-            "icon": "download",
+            "group": "Get Started",
+            "icon": "rocket",
             "pages": [
-              "cli/installation",
-              "cli/setup",
-              "cli/configuration"
+              "cli/get-started/getting-started"
             ]
           },
           {
-            "group": "Commands",
-            "icon": "terminal",
+            "group": "Concepts",
+            "icon": "lightbulb",
             "pages": [
-              "cli/commands",
-              "cli/agent-commands"
+              "cli/concepts/how-verification-works"
+            ]
+          },
+          {
+            "group": "Guides",
+            "icon": "book-open",
+            "pages": [
+              "cli/guides/managing-projects",
+              "cli/guides/verification",
+              "cli/guides/importing-sessions",
+              "cli/guides/interactive-mode"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "icon": "settings",
+            "pages": [
+              "cli/configuration/configuration",
+              "cli/configuration/environment-variables"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "icon": "wrench",
+            "pages": [
+              "cli/advanced/inspecting-sessions",
+              "cli/advanced/job-queue",
+              "cli/advanced/telemetry-statusline",
+              "cli/advanced/runtime-files"
+            ]
+          },
+          {
+            "group": "AI Clients",
+            "icon": "bot",
+            "pages": [
+              "cli/clients/claude-code",
+              "cli/clients/cursor"
             ]
           }
         ]

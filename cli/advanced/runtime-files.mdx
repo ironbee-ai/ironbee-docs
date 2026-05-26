@@ -1,0 +1,68 @@
+---
+title: Runtime Files
+description: What IronBee writes to disk — global state, project config, and per-session runtime data.
+---
+
+IronBee stores its state in two places: a global directory in your home folder, and an `.ironbee/` directory inside each project. This page is a reference for what lives where, and what's safe to commit.
+
+---
+
+## Global — `~/.ironbee/`
+
+Machine-wide state, shared across all your projects:
+
+| File | What it holds |
+|------|---------------|
+| `config.json` | Global config — your defaults across all projects. `ironbee login` writes your collector credentials here. |
+| `projects.json` | The project inventory — the set of project paths IronBee is installed in. Powers `install --all` / `uninstall --all`. |
+| `install-snapshots.json` | Backups of any statusline config IronBee overwrote, so `uninstall` can restore your original. |
+
+---
+
+## Project — `<project>/.ironbee/`
+
+Created by `ironbee install` in each project:
+
+| Path | What it holds | Commit? |
+|------|---------------|---------|
+| `config.json` | Project config — team settings, shared with the repo | ✅ Yes |
+| `config.local.json` | Personal overrides — your machine only | ❌ Gitignored |
+| `sessions/<id>/` | Per-session runtime data (below) | ❌ Gitignored |
+| `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). | ❌ Gitignored |
+
+`ironbee install` adds `.ironbee/sessions/`, `.ironbee/otel/`, and `.ironbee/config.local.json` to your project's `.gitignore` automatically — these are machine-local runtime state and personal overrides, not something you commit. The committed `config.json` is what your teammates pick up when they run `ironbee install`.
+
+---
+
+## Per-session — `.ironbee/sessions/<id>/`
+
+Each agent task gets its own directory, keeping concurrent sessions isolated (see [How verification works](/cli/concepts/how-verification-works#session-isolation)):
+
+| File | What it holds |
+|------|---------------|
+| `actions.jsonl` | The session event log — file edits, tool calls, and verification markers. The source of truth for what happened. |
+| `state.json` | The session's current state — phase, active cycle, and verification status. |
+| `verdict.json` | The latest verdict for the session (`status`, `checks`, `issues`, `fixes`). |
+| `retries` | The current verification retry count. |
+| `analytics/` | Per-session analytics state (`state.json`) and log (`analytics.log`) used to derive session metrics. |
+| `statusline/` | Chained-statusline state (`state.json`) for the Claude statusline integration. |
+| `queue/` | Pending Collector jobs not yet shipped (and any dead-letter entries). See [Job queue](/cli/advanced/job-queue). |
+| `session.log` | Diagnostic log of the session's hook activity. |
+| `imported.json` | A marker written by [`ironbee import`](/cli/guides/importing-sessions) so a session isn't re-imported. |
+
+<Note>
+  Not every file is present in every session — `retries`, `queue/`, and `imported.json` appear only when relevant. These persist after a session ends (they aren't auto-deleted), but they're all under the gitignored `sessions/` directory. You rarely touch them directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration">
+    Every key you can set in the config files.
+  </Card>
+  <Card title="Environment variables" icon="variable" href="/cli/configuration/environment-variables">
+    Overrides that take precedence over the config files.
+  </Card>
+</CardGroup>
