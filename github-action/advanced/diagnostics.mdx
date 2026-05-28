@@ -1,0 +1,41 @@
+---
+title: Diagnostics
+description: Troubleshoot a run with verbose logging and the per-session event logs.
+---
+
+When a run doesn't behave as expected — a surprising verdict, an early exit, or missing coverage — these tools help you see what happened.
+
+---
+
+## Verbose logging
+
+Set `verbose: 'true'` to expand CI logs with the full verification prompt, tool responses, the collected artifact list, and verdict details:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verbose: 'true'
+```
+
+---
+
+## Session logs and early exits
+
+The [evidence bundle](/github-action/advanced/evidence#evidence-artifacts) includes per-session logs you can use to debug a run. Under `sessions/<id>/`, `verdict.json` holds the final verdict and `actions.jsonl` is the full event log.
+
+If a session ends abnormally — for example, hitting `max_turns` — the [PR report](/github-action/guides/running-in-ci#the-pr-report) shows an early-exit banner with a collapsible diagnostics block (turns, cost, errors, and any blocked tool calls). Raising `max_turns` or narrowing the work with `prompt` usually resolves early exits.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Evidence" icon="folder" href="/github-action/advanced/evidence">
+    Console links and the downloadable artifact bundle.
+  </Card>
+  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

@@ -1,9 +1,9 @@
 ---
-title: Trigger Modes
-description: How IronBee Action behaves on pull requests, pushes, schedules, and manual runs.
+title: Running in CI
+description: How the action behaves on each trigger — verification scope, fix strategy, and what it reports back.
 ---
 
-The IronBee Action adapts its behavior based on what triggered the workflow. Each trigger uses a different verification scope and fix strategy.
+The IronBee Action adapts to what triggered the workflow: the verification scope and fix strategy change per event, and so does how results are reported back. This guide covers each trigger and the report the action produces.
 
 ---
 
@@ -99,3 +99,38 @@ Each trigger type uses the appropriate verification scope automatically — no a
 | `push` | Diff | New fix branch | Yes |
 | `schedule` | Full | New fix branch | Yes |
 | `workflow_dispatch` | Full | New fix branch | Yes |
+
+---
+
+## The PR report
+
+On `pull_request` runs, the action posts a verification report as a PR comment. If a report comment already exists (a re-run on the same PR), it's updated in place rather than duplicated.
+
+The report contains:
+
+- **Verdict badge** — the final `pass` / `fail` / `unknown` result, with a cycle count when there was more than one.
+- **Session link** — a link to the full session in the IronBee Console.
+- **Per-cycle breakdown** — each verification cycle with its checks, issues, and fixes, plus a link straight to that verification in the Console.
+- **Early-exit banner** — if the session ended abnormally (for example, hitting `max_turns`), a banner and a collapsible diagnostics block explain why.
+- **Artifact download** — a link to the uploaded evidence bundle.
+
+For the self-host Console host override and the structure of the evidence bundle, see [Evidence](/github-action/advanced/evidence).
+
+---
+
+## Fix PRs
+
+On non-PR triggers (`push`, `workflow_dispatch`, `schedule`), there's no PR to comment on, so the same report becomes the **body of the fix PR** the action opens when verification produces changes — see the [trigger summary](#trigger-summary) above for when that happens.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verifying your application" icon="play" href="/github-action/guides/verifying-your-app">
+    Configure build, start, and app URL for verification.
+  </Card>
+  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
+    Verify through the browser, backend, and Node.js.
+  </Card>
+</CardGroup>
