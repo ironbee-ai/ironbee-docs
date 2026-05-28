@@ -63,7 +63,7 @@
             "group": "Concepts",
             "icon": "lightbulb",
             "pages": [
-              "cli/concepts/how-verification-works"
+              "cli/concepts/how-it-works"
             ]
           },
           {
@@ -143,19 +143,42 @@
         "tab": "GitHub Action",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Get Started",
             "icon": "rocket",
             "pages": [
-              "github-action/overview",
-              "github-action/getting-started"
+              "github-action/get-started/getting-started"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "icon": "lightbulb",
+            "pages": [
+              "github-action/concepts/how-it-works"
+            ]
+          },
+          {
+            "group": "Guides",
+            "icon": "book-open",
+            "pages": [
+              "github-action/guides/running-in-ci",
+              "github-action/guides/verifying-your-app",
+              "github-action/guides/verification-platforms"
             ]
           },
           {
             "group": "Configuration",
             "icon": "settings",
             "pages": [
-              "github-action/trigger-modes",
-              "github-action/configuration"
+              "github-action/configuration/configuration"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "icon": "wrench",
+            "pages": [
+              "github-action/advanced/custom-configuration",
+              "github-action/advanced/evidence",
+              "github-action/advanced/diagnostics"
             ]
           }
         ]

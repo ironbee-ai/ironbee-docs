@@ -1,0 +1,126 @@
+---
+title: Getting Started
+description: Add IronBee verification to your GitHub Actions workflow.
+---
+
+The IronBee GitHub Action brings IronBee's verification loop into CI. On every push or pull request, it has Claude Code review your changes, verify them through IronBee DevTools — a real browser by default, plus optional backend and Node.js modes — fix any issues found, and post a report on the PR.
+
+This guide gets the action running in your workflow in a couple of minutes. For the mechanics behind it, see [How it works](/github-action/concepts/how-it-works).
+
+---
+
+## Prerequisites
+
+- An [IronBee account](https://console.ironbee.ai) and an **IronBee API key** — generate one in the Console under **Settings → API keys**
+- An Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com)) or a Claude Code OAuth token
+
+---
+
+## Minimal setup
+
+Create a file at `.github/workflows/ironbee.yml`:
+
+```yaml
+name: IronBee Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ironbee-ai/ironbee-action@v1
+        with:
+          ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+Then add both keys to your repository secrets:
+
+1. Go to **Settings → Secrets and variables → Actions**
+2. Click **New repository secret**
+3. Add `IRONBEE_API_KEY` (your IronBee API key) and `ANTHROPIC_API_KEY` (your Anthropic key)
+
+That's it. The next push or pull request will trigger a verification run.
+
+---
+
+## With application build and start
+
+Verification needs your app running. Tell the action how to bring it up:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    app_install_command: 'npm ci'
+    app_build_command: 'npm run build'
+    app_start_command: 'npm run start'
+    app_url: 'http://localhost:3000'
+```
+
+<Info>
+  These inputs are optional but recommended. Without them the agent infers how to install, build, start, and reach your app from the repository — which works, but is slower and less reliable than spelling it out. See [Verifying your application](/github-action/guides/verifying-your-app) for details.
+</Info>
+
+---
+
+## Required permissions
+
+The action needs these GitHub token permissions to operate:
+
+| Permission | Purpose |
+|------------|---------|
+| `contents: write` | Commit fixes to PR branches, create fix branches |
+| `pull-requests: write` | Post verification report comments, create fix PRs |
+| `issues: write` | Update PR comments via the GitHub API |
+
+---
+
+## Authentication
+
+The action needs two credentials:
+
+**IronBee API key (always required)** — authenticates the collector so sessions are recorded and reportable. Passed as an env var, never written to disk.
+
+```yaml
+ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+```
+
+**Claude authentication (one of the two)** — either an Anthropic API key:
+
+```yaml
+anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+…or a Claude Code OAuth token:
+
+```yaml
+claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+```
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
+    How the action behaves on different events and what it reports.
+  </Card>
+  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+    Build commands, app URL, verification platforms, and more.
+  </Card>
+</CardGroup>

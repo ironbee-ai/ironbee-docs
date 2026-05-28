@@ -1,0 +1,52 @@
+---
+title: Evidence
+description: Console links and the downloadable artifact bundle each run produces.
+---
+
+Beyond the [PR report](/github-action/guides/running-in-ci#the-pr-report), each run records evidence to the IronBee Console and uploads a downloadable bundle. This page covers both.
+
+---
+
+## Console links
+
+The report links each session and verification cycle to the IronBee Console so you can replay the recording and inspect the timeline. By default these point at `console.ironbee.ai`; override the host if you self-host:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    ironbee_console_url: 'console.example.com'
+```
+
+---
+
+## Evidence artifacts
+
+Screenshots and recordings are organized by verification cycle and uploaded as a GitHub Actions artifact with 30-day retention:
+
+```
+.ironbee/artifacts/
+  cycle-1/
+    screenshots/homepage-before-fix.png
+    recordings/verification.webm
+  cycle-2/
+    screenshots/homepage-after-fix.png
+    recordings/verification.webm
+  sessions/<id>/        # verdict.json, actions.jsonl
+```
+
+The download URL is also exposed as the [`artifacts_url` output](/github-action/configuration/configuration#outputs) for use in later workflow steps.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
+    Triggers, fix behavior, and the PR report.
+  </Card>
+  <Card title="Diagnostics" icon="stethoscope" href="/github-action/advanced/diagnostics">
+    Troubleshoot a run with verbose logs and session data.
+  </Card>
+</CardGroup>

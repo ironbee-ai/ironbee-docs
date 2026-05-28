@@ -1,0 +1,62 @@
+---
+title: Custom Configuration
+description: Override any IronBee CLI setting the action doesn't expose as a dedicated input.
+---
+
+Most behavior is controlled by the action's [dedicated inputs](/github-action/configuration/configuration). For anything not exposed as an input, `ironbee_extra_config` is a raw JSON escape hatch: it's deep-merged into the generated `.ironbee/config.json`, and your keys win over the defaults.
+
+---
+
+## How it works
+
+Pass a JSON object as a string. It's merged on top of the config the action generates, so you only specify the keys you want to change:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    ironbee_extra_config: |
+      {
+        "verification": { "enable": true },
+        "browserDevTools": { "env": { "LOG_FILE": "/tmp/browser-devtools.log" } }
+      }
+```
+
+This accepts any key from the IronBee CLI config — see the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+
+---
+
+## Tuning a verification platform
+
+Each [verification platform](/github-action/guides/verification-platforms)'s MCP server is customized under `browserDevTools`, `backendDevTools`, or `nodeDevTools` — set extra environment variables or replace the server entirely:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    ironbee_extra_config: |
+      {
+        "browserDevTools": { "env": { "BROWSER_HEADLESS_ENABLE": "true" } }
+      }
+```
+
+See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the full set of keys each platform accepts.
+
+<Note>
+  IronBee always sets its own invariants (tool-name prefix, metadata flags, platform) last — these can't be overridden via `ironbee_extra_config`.
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
+    The browser, backend, and Node.js platforms you're tuning.
+  </Card>
+  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

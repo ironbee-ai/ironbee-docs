@@ -1,0 +1,89 @@
+---
+title: Verifying Your Application
+description: Tell the action how to install, build, start, and reach your app.
+---
+
+Verification needs your application running — that's true for every [verification platform](/github-action/guides/verification-platforms), not just the browser. This guide covers how to point the action at your app's lifecycle commands, work in a monorepo, and focus the agent on what matters.
+
+---
+
+## App lifecycle commands
+
+Four inputs describe how to bring your app up. The first three (`install`, `build`, `start`) run in order before verification; `app_url` tells the browser where to reach it:
+
+| Input | Purpose | Example |
+|-------|---------|---------|
+| `app_install_command` | Install dependencies | `npm ci` |
+| `app_build_command` | Build the app | `npm run build` |
+| `app_start_command` | Start the server | `npm run start` |
+| `app_url` | Where to reach it (browser mode) | `http://localhost:3000` |
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    app_install_command: 'npm ci'
+    app_build_command: 'npm run build'
+    app_start_command: 'npm run start'
+    app_url: 'http://localhost:3000'
+```
+
+<Info>
+  **All four are optional, but providing them is recommended.** If you leave them out, the agent still verifies — it just has to resolve how to install, build, start, and reach your app from the repository first. Spelling the commands out skips that guesswork, so runs are faster and more reliable. Omit only the steps that don't apply (e.g. `app_build_command` when there's no build).
+</Info>
+
+---
+
+## Monorepos
+
+Point the action at a subdirectory with `working_directory`. All commands, config, and verification run relative to it:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    working_directory: 'packages/web-app'
+    app_install_command: 'npm ci'
+    app_start_command: 'npm run dev'
+    app_url: 'http://localhost:3000'
+```
+
+---
+
+## Focusing the agent
+
+By default the agent decides what to verify from the diff. Steer it when you want specific coverage:
+
+| Input | Effect |
+|-------|--------|
+| `prompt` | Extra instructions appended to the verification prompt |
+| `max_turns` | Cap on Claude Code conversation turns (default `100`) |
+| `model` | Override the Claude model |
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    prompt: 'Focus on the checkout flow and payment form validation'
+    max_turns: '30'
+```
+
+<Note>
+  Give the job enough headroom — verification, fixes, and re-verification can take a while. Set a generous `timeout-minutes` on the job (the examples use `45`).
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
+    Verify through the browser, backend, and Node.js.
+  </Card>
+  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

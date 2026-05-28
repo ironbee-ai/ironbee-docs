@@ -1,0 +1,84 @@
+---
+title: Configuration
+description: All inputs and outputs for the IronBee Action, with defaults.
+---
+
+The complete input and output reference. For task-oriented walkthroughs, see the guides: [Running in CI](/github-action/guides/running-in-ci), [Verifying your application](/github-action/guides/verifying-your-app), [Verification platforms](/github-action/guides/verification-platforms), [Evidence](/github-action/advanced/evidence), [Diagnostics](/github-action/advanced/diagnostics), and [Custom configuration](/github-action/advanced/custom-configuration).
+
+The only required input is `ironbee_api_key`, plus one form of Claude authentication (`anthropic_api_key` or `claude_code_oauth_token`).
+
+---
+
+## Inputs
+
+### IronBee — auth & reporting
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `ironbee_api_key` | Yes | | IronBee API key used to authenticate the collector. Passed as an env var — never written to disk. |
+| `ironbee_collector_url` | No | `https://collector.service.ironbee.ai` | IronBee collector endpoint URL. |
+| `ironbee_console_url` | No | `console.ironbee.ai` | IronBee Console hostname (no scheme) used to build session links in the PR report. |
+
+### IronBee — DevTools modes
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `ironbee_browser_devtools` | No | `true` | Enable browser DevTools verification (browser MCP). |
+| `ironbee_backend_devtools` | No | `false` | Enable backend DevTools verification (backend MCP). |
+| `ironbee_node_devtools` | No | `false` | Enable Node.js DevTools verification (node MCP). |
+
+### IronBee — install & config
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `ironbee_cli_version` | No | `latest` | IronBee CLI version to install (e.g. `0.4.1`). |
+| `ironbee_exclude_files` | No | `false` | Set `true` to keep IronBee config files (`.ironbee/`, `.claude/`, `.mcp.json`) out of commits. |
+| `ironbee_extra_config` | No | | Raw IronBee config as a JSON string, deep-merged into the generated `.ironbee/config.json` (your keys win). |
+
+### Claude Code
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `anthropic_api_key` | Yes* | | Anthropic API key for Claude Code. |
+| `claude_code_oauth_token` | No* | | Claude Code OAuth token (alternative to the API key). |
+| `claude_code_cli_version` | No | `latest` | Claude Code CLI version to install. |
+| `model` | No | | Claude model override (e.g. `claude-sonnet-4-5-20250514`). |
+| `max_turns` | No | `100` | Maximum conversation turns for Claude Code. |
+| `prompt` | No | | Additional instructions for the verification agent. |
+| `claude_args` | No | | Additional Claude Code CLI arguments. |
+
+### Application under test
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `app_install_command` | No | | Command to install dependencies (e.g. `npm ci`). |
+| `app_build_command` | No | | Command to build the application (e.g. `npm run build`). |
+| `app_start_command` | No | | Command to start the application (e.g. `npm run dev`). |
+| `app_url` | No | | Application URL for browser verification (e.g. `http://localhost:3000`). |
+
+### GitHub & general
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `github_token` | No | `${{ github.token }}` | GitHub token for PR operations. |
+| `working_directory` | No | `.` | Working directory for verification. |
+| `verbose` | No | `false` | Enable verbose CI logging (tool responses, prompt, artifact list, verdict details). |
+
+<Info>
+  *One of `anthropic_api_key` or `claude_code_oauth_token` is required. `ironbee_api_key` is always required.
+</Info>
+
+---
+
+## Outputs
+
+| Output | Description |
+|--------|-------------|
+| `verdict` | Final verification result: `pass`, `fail`, or `unknown`. |
+| `artifacts_url` | Download URL for verification evidence (screenshots, recordings). |
+
+---
+
+## Caching
+
+Playwright Chromium binaries (~200 MB) are cached using `actions/cache` to speed up subsequent runs. The cache key is based on the runner OS. Browser downloads during `npm install` are skipped (`PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true`) and installed separately with system dependencies.
