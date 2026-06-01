@@ -4,6 +4,7 @@ description: Event timeline, video playback, verdict, and traces for a single ve
 ---
 
 The verification detail panel opens when you click a verification interval in the [Session Timeline](/console/session-timeline). It shows everything that happened during the cycle — the event sequence, video recording, verdict, and traces.
+<img src="/images/console/project/verification-detail-dark.png" alt="IronBee Console — Verification Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 ## Header
 
@@ -24,6 +25,7 @@ When a browser session recording is available, the playback section shows a vide
 - Speed toggle — 1× and 2×
 - Picture-in-Picture button
 - Fullscreen button
+<img src="/images/console/project/playback-dark.png" alt="IronBee Console — Video Playback" style={{borderRadius:'8px',width:'100%'}} />
 
 **Keyboard shortcuts:**
 
@@ -58,6 +60,7 @@ Each row shows:
 - Absolute timestamp
 - Status chips — error indicator, duration, MCP server name, tool type badge
 - **View JSON** button — tool events split into Input / Output with byte sizes; other events show a full view
+<img src="/images/console/project/view-json-dark.png" alt="IronBee Console — View Json" style={{borderRadius:'8px',width:'100%'}} />
 
 Images captured by tool calls appear inline within the event row. Click an image to open it in a lightbox.
 
@@ -71,6 +74,7 @@ The verdict section at the bottom of the event timeline shows the final assessme
 - **Checks** — evidence items the agent confirmed (green)
 - **Issues** — what went wrong, if the verdict is `fail` (red)
 - **Fixes** — what was changed to resolve issues on a passing retry (orange)
+<img src="/images/console/project/verdict-detail-dark.png" alt="IronBee Console — Verdict Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 ---
 
@@ -81,5 +85,10 @@ Click **Traces** in the header to open the trace panel alongside the event timel
 - **Filters** — by span kind (Internal / Client / Server / Producer / Consumer) and status (OK / Error / Unset)
 - **Text search** — filter spans by name or service name
 - **View toggle** — Fit (panel-width) or Wide (horizontal scroll for dense traces)
+<img src="/images/console/project/trace-panel-dark.png" alt="IronBee Console — Trace Panel" style={{borderRadius:'8px',width:'100%'}} />
 
 Click any span bar to open a JSON modal with the raw span data.
+<img src="/images/console/project/span-detail-dark.png" alt="IronBee Console — Span Detail" style={{borderRadius:'8px',width:'100%'}} />
+
+
+
