@@ -2,8 +2,8 @@
 title: Session Timeline
 description: An interactive horizontal chart of every activity, verification, and fix in a session.
 ---
-
 The Timeline tab renders the session as a horizontal time-series chart. Use the **Zoom slider** to control how much time each pixel represents — zoom in to inspect a short verification cycle, zoom out to see the full session arc.
+<img src="/images/console/project/session-timeline-dark.png" alt="IronBee Console — Session Timeline" style={{borderRadius:'8px',width:'100%'}} />
 
 ## Chart layout
 
@@ -28,7 +28,7 @@ Scrollable horizontally. Each row in the labels column has a corresponding color
 Clicking an interval opens one of four panels depending on what was clicked:
 
 ### Verification panel
-
+<img src="/images/console/project/verification-detail-dark.png" alt="IronBee Console — Verification Detail" style={{borderRadius:'8px',width:'100%'}} />
 Opens when a verification interval is clicked. Shows:
 - Verdict (pass or fail)
 - Checks the agent confirmed
@@ -36,16 +36,17 @@ Opens when a verification interval is clicked. Shows:
 - Fixes applied (on a passing retry)
 - Trace data for the cycle
 
-### Fix panel
 
+### Fix panel
+<img src="/images/console/project/fix-detail-dark.png" alt="IronBee Console — Fix Detail" style={{borderRadius:'8px',width:'100%'}} />
 Opens when a fix interval is clicked. Shows the fix details and the code diff.
 
 ### Activity panel
-
+<img src="/images/console/project/activity-detail-dark.png" alt="IronBee Console — Activity Detail" style={{borderRadius:'8px',width:'100%'}} />
 Opens when an activity interval bar is clicked directly (without selecting a child). Shows metadata for that activity.
 
 ### Other panel
-
+<img src="/images/console/project/other-detail-dark.png" alt="IronBee Console — Other Detail" style={{borderRadius:'8px',width:'100%'}} />
 Opens when an unaccounted interval is clicked. Shows context about time within an activity that was neither a verification nor a fix — idle time, thinking, or tool calls not captured in a named cycle.
 
 Click anywhere outside a panel to close it.
