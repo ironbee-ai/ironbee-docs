@@ -111,7 +111,7 @@
         "tab": "Console",
         "groups": [
           {
-            "group": "Projects & Sessions",
+            "group": "Projects",
             "icon": "layers",
             "pages": [
               "console/projects",

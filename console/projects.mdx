@@ -2,6 +2,7 @@
 title: Projects
 description: Organize your codebases and track verification health at a glance.
 ---
+<img src="/images/console/main-dark.png" alt="IronBee Console — Projects page" style={{borderRadius:'8px',width:'100%'}} />
 
 A **project** in IronBee maps to a codebase. When you run `ironbee install` in a directory, that directory is associated with a project and all session data flows there automatically.
 
@@ -19,19 +20,26 @@ Toggle between **Card view** and **List view** using the toolbar controls. Your 
 
 ### Card view
 
-Each project card shows:
 
-- **Project name**
-- **Last active** date
-- **Pass rate donut chart** — center label shows the percentage of verifications that passed; hover for a passed/failed count breakdown
-- **KPI stack** — Sessions, Verifications, Fixes counts
-- **Time breakdown** — Total activity time split into Coding, Verification, and Fix phases with percentages
-- **Findings tiles** — Critical, Concern, and Notice finding counts (click to go directly to the filtered Findings page)
-- **Recommendations button** — shows count of active recommendations (click to open the Recommendations page)
+<CardGroup cols={2}>
+    <Card title="Each project card shows:">
+        - **Project name**
+        - **Last active date**
+        - **Pass rate donut chart**, center label shows the percentage of verifications that passed; hover for a passed/failed count breakdown
+        - **KPI stack**, Sessions, Verifications, Fixes counts
+        - **Time breakdown**: Total activity time split into Coding, Verification, and Fix phases with percentages
+        - **Findings tiles**, Critical, Concern, and Notice finding counts (click to go directly to the filtered Findings page)
+        - **Recommendations button**, shows count of active recommendations (click to open the Recommendations page)
+    </Card>
+    <Card title="IronBee Projects — Card View">
+        <img src="/images/console/project/project-card-dark.png" alt="IronBee Projects — Card View" style={{borderRadius:'8px',width:'100%'}}/>
+    </Card>
+</CardGroup>
 
 ### List view
 
 The table has the following columns (all sortable by clicking the header):
+<img src="/images/console/project/project-list-dark.png" alt="IronBee Projects — List View" style={{borderRadius:'8px',width:'100%'}}/>
 
 | Column | Description |
 |--------|-------------|
