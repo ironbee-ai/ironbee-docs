@@ -132,11 +132,21 @@
             "icon": "sparkles",
             "pages": [
               "console/analysis",
-              "console/analysis-account-cost",
-              "console/analysis-account-session-insights",
-              "console/analysis-project-cost",
-              "console/analysis-project-session-insights",
-              "console/analysis-quality"
+              {
+                "group": "Account",
+                "pages": [
+                  "console/analysis-account-cost",
+                  "console/analysis-account-session-insights"
+                ]
+              },
+              {
+                "group": "Project",
+                "pages": [
+                  "console/analysis-project-cost",
+                  "console/analysis-project-session-insights",
+                  "console/analysis-quality"
+                ]
+              }
             ]
           },
           {
