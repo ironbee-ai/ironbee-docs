@@ -26,10 +26,10 @@ description: Sign up, install the CLI, connect to your account, and run your fir
     `ironbee install` — auto-detects your AI client (Claude Code or Cursor) and wires up hooks, MCP servers, and the verification skill.
   </Step>
   <Step title="Start your app and let the agent work">
-    Run your dev server, then give the agent a task. IronBee intercepts task completion and requires the agent to verify its changes before finishing.
+    Run your dev server, give the agent a task, and IronBee requires the agent to verify its changes before the task can complete.
   </Step>
   <Step title="View results in the Console">
-    Every session — tool calls, screenshots, verdicts, timing breakdowns — appears in the IronBee Console in real time.
+    Every session — tool calls, screenshots, verdicts, timing breakdowns — appears in the Console in real time.
   </Step>
 </Steps>
 
@@ -106,19 +106,15 @@ IronBee auto-detects your AI client and writes:
 
 ---
 
-## Step 5 — Start your application
+## Step 5 — Start your app and let the agent work
 
-IronBee needs a running application to verify against. Start your dev server as usual:
+Start your dev server, then open Claude Code or Cursor and give the agent a task:
 
 ```bash
 npm run dev
 ```
 
----
-
-## Step 6 — Let your agent work
-
-Open Claude Code or Cursor and give the agent a task. When it finishes editing code, IronBee intercepts the completion and requires verification:
+When the agent finishes editing code, IronBee intercepts the completion and requires verification:
 
 1. The agent navigates to the affected pages in a real browser
 2. It takes screenshots, checks the console, and tests functionality
@@ -129,7 +125,7 @@ You will see the session appear in the [IronBee Console](https://console.ironbee
 
 ---
 
-## Step 7 — View your results
+## Step 6 — View your results
 
 Open the [IronBee Console](https://console.ironbee.ai) and navigate to your project. You will find:
 

@@ -26,13 +26,16 @@ Teams using agentic development today face:
     Every coding session is recorded — time spent coding vs. fixing, pass/fail rates per file, retry counts, and tool usage. The console turns raw session data into actionable insights.
   </Card>
   <Card title="AI-powered analysis" icon="sparkles">
-    After each session, IronBee runs semantic analysis to surface findings and recommendations — what went wrong, what patterns keep appearing, and what to do next.
+    After each session, IronBee runs an LLM analysis pass to surface findings and recommendations — what went wrong, what patterns keep appearing, and what to do next.
+  </Card>
+  <Card title="Automatic recommendations" icon="wand-2">
+    Findings are turned into directives that are automatically injected into the agent's context on future sessions — it learns from past mistakes without manual intervention.
   </Card>
   <Card title="CI/CD integration" icon="git-branch">
     The IronBee GitHub Action brings the same verification loop into your pull request workflow — automatically verifying changes, fixing issues, and posting evidence on every PR.
   </Card>
-  <Card title="Automatic recommendations" icon="sparkles">
-    After each session, analysis findings are turned into directives that are injected back into the agent's context — it learns from past mistakes automatically without manual intervention.
+  <Card title="Full observability" icon="eye">
+    Every tool call, verification cycle, fix attempt, and verdict is captured and available in the Console — with traces, timelines, and cost breakdowns.
   </Card>
 </CardGroup>
 
@@ -58,7 +61,7 @@ IronBee intercepts completion
       Fail → agent must fix and re-verify
 ```
 
-All session data — tool calls, verifications, verdicts, timing — is sent to the IronBee Collector and made available in the [Console](/console/projects).
+All session data — tool calls, verifications, verdicts, timing — is captured and made available in the [Console](/console/projects).
 
 ## Supported AI clients
 
@@ -66,7 +69,6 @@ All session data — tool calls, verifications, verdicts, timing — is sent to 
 |--------|--------|
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Supported |
 | [Cursor](https://cursor.com) | Supported |
-| Codex | Planned |
 | OpenCode | Planned |
 
 ## Next steps
