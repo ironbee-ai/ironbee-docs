@@ -114,27 +114,59 @@
               "console/projects",
               "console/sessions",
               "console/session-details",
-              "console/activities"
-            ]
-          },
-          {
-            "group": "Verification & Fixes",
-            "icon": "shield-check",
-            "pages": [
+              "console/session-timeline",
+              "console/session-analytics",
+              "console/activities",
               "console/verifications",
               "console/verification-detail",
               "console/fixes",
-              "console/fix-detail"
+              "console/fix-detail",
+              "console/other"
             ]
           },
           {
-            "group": "Traces & Analysis",
+            "group": "Analysis",
+            "icon": "sparkles",
+            "pages": [
+              "console/analysis",
+              "console/analysis-account-cost",
+              "console/analysis-account-session-insights",
+              "console/analysis-project-cost",
+              "console/analysis-project-session-insights",
+              "console/analysis-quality"
+            ]
+          },
+          {
+            "group": "Findings",
+            "icon": "triangle-alert",
+            "pages": [
+              "console/findings-account",
+              "console/findings-project"
+            ]
+          },
+          {
+            "group": "Recommendations",
+            "icon": "lightbulb",
+            "pages": [
+              "console/recommendations-account",
+              "console/recommendations-project"
+            ]
+          },
+          {
+            "group": "Traces",
             "icon": "chart-bar",
             "pages": [
-              "console/traces",
-              "console/analysis",
-              "console/findings",
-              "console/recommendations"
+              "console/traces"
+            ]
+          },
+          {
+            "group": "Account & Team",
+            "icon": "users",
+            "pages": [
+              "console/profile",
+              "console/account",
+              "console/team",
+              "console/settings"
             ]
           }
         ]

@@ -1,0 +1,74 @@
+---
+title: Account Recommendations
+description: Recommendations across all projects on the account.
+---
+
+**Recommendations** are directives generated from findings — specific actions IronBee suggests to improve agent behavior, reduce cost, or increase verification effectiveness. Account-level recommendations are produced by the Account Cost and Account Session Insights analysis runs and span the entire account.
+
+Recommendations are automatically injected into the agent's context at the start of future sessions. There is no UI indicator when this happens — injection is handled server-side.
+
+## Recommendation statuses
+
+| Status | Meaning |
+|--------|---------|
+| `active` | Visible and being injected into agent context |
+| `dismissed` | Hidden from the list (no UI toggle to view) |
+| `superseded` | Replaced by a newer recommendation — hidden |
+
+Only `active` recommendations appear in the list. Dismissed and superseded recommendations are not shown.
+
+---
+
+## Briefing panel
+
+Shown above the recommendations list on each visit. Reports changes in active recommendation count since your last visit:
+
+- **First visit** — starts tracking from this point; come back to see deltas
+- **No changes** — nothing new since your last visit (shows timestamp)
+- **Changes detected** — new and resolved recommendations summarized
+
+Dismiss with the × button. Can be toggled in [Settings](/console/settings).
+
+---
+
+## Filters
+
+| Filter | Options |
+|--------|---------|
+| Action search | Free text (min 3 characters) |
+
+Active filters appear as chips. Pinned filters (Finding ID, Analysis ID) are cleared individually.
+
+There are no severity or area filters on the recommendations page.
+
+---
+
+## Recommendations table
+
+Three columns, all sortable:
+
+| Column | Description |
+|--------|-------------|
+| Project | Project the recommendation applies to, or "Account" for account-scoped recommendations |
+| Action | The recommended directive |
+| Created | How long ago the recommendation was generated |
+
+Default sort: Created, newest first. Page sizes: 20, 50, or 100 rows.
+
+---
+
+## Recommendation detail drawer
+
+Click any row to open the detail drawer:
+
+- **Status badge** — `active` or `dismissed`, shown in the header
+- **Metadata line** — scope (account or project name), created date, dismissed time (if applicable)
+- **Action** — full markdown description of the recommended directive
+- **Causal chain strip** — three-step provenance trail:
+  1. **Recommendation** — this recommendation
+  2. **Source Finding** — the finding that triggered it, with severity badge
+  3. **Source Analysis** — the analysis run that produced the finding
+
+### Dismiss button
+
+A **Dismiss** button is present in the drawer but is currently disabled ("Dismiss (coming soon)"). Dismissal support is not yet available.

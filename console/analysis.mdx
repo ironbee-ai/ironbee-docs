@@ -1,65 +1,49 @@
 ---
 title: Analysis
-description: AI-powered session and project analysis — what went right, what went wrong, and what to do about it.
+description: AI-powered analysis of your sessions — quality, cost, and behavioral patterns.
 ---
 
-After a session completes, IronBee automatically runs **analysis** — an LLM-powered pass over session data. Analysis turns raw telemetry into actionable insights without requiring you to read through every tool call.
-
-## What analysis produces
-
-Analysis generates two types of output:
-
-- **[Findings](/console/findings)** — specific observations about quality, efficiency, patterns, or behavior
-- **[Recommendations](/console/recommendations)** — concrete directives the agent should follow to improve future sessions
-
-Recommendations are automatically injected into the AI agent's context on subsequent sessions, so the agent adapts its behavior based on what it learned from previous work.
+After sessions complete, IronBee automatically runs **analysis** — an LLM-powered pass over session data that turns raw telemetry into actionable insights.
 
 ## Analysis types
 
-IronBee runs five analysis types, all LLM-driven:
+IronBee produces five analysis types across two scopes:
 
-| Type | Scope | Focus |
-|------|-------|-------|
-| **Quality** | Per project | Verification thoroughness, fix effectiveness, recurring failures, behavioral patterns |
-| **Cost** | Per project | Token spend, cache hit rate, expensive sessions, cost-reduction opportunities |
-| **Account cost** | Cross-project rollup | Account-wide spend trends, cost distribution by project and user |
-| **Session insights** | Per project | Session patterns, tool usage, context pressure, interaction style, multi-session trends |
-| **Account session insights** | Cross-project rollup | Account-wide behavioral patterns across all projects |
+| Type | Scope | What it covers |
+|------|-------|----------------|
+| [Project Quality Analysis](/console/analysis-quality) | Project | Verification thoroughness, fix effectiveness, retry patterns, hot files |
+| [Project Cost Analysis](/console/analysis-project-cost) | Project | Token spend, cache efficiency, cost per session, top billed sessions |
+| [Project Session Insights](/console/analysis-project-session-insights) | Project | Session patterns, tool usage, context pressure, languages, activity categories |
+| [Account Cost Analysis](/console/analysis-account-cost) | Account | Account-wide spend across all projects and users |
+| [Account Session Insights](/console/analysis-account-session-insights) | Account | Account-wide behavioral patterns across all projects |
+
+## The analyses list
+
+The Analyses page shows a card grid of recent analysis runs. Use the **Account / Project** scope tabs to switch between account-wide and project-scoped analyses. When viewing Project scope, use the project picker to select a project.
+
+Each card shows:
+- Analysis type and timestamp
+- A hero metric with a mini trend chart
+- Five secondary metrics at a glance
+
+Click a card to open the full analysis detail view.
 
 ## How analysis works
 
-1. The session completes (verdict submitted or retry limit reached)
+1. A session completes (verdict submitted or retry limit reached)
 2. IronBee aggregates session metrics into a structured data packet
 3. An LLM analyst processes the packet and produces findings and recommendations
-4. Results are written and the Analysis tab in the console updates
+4. The analysis appears in the Analyses page and the Findings and Recommendations pages update
 
 Analysis typically completes within a minute of session end.
-
-## The analysis view
-
-The Analysis tab shows findings grouped by area and type. Each analysis run supersedes the previous one — you always see the freshest view.
-
-**Quality analysis** covers:
-
-- Time distribution across coding, verification, and fix phases
-- First-pass success rate and retry patterns
-- Fix effectiveness (did fixes actually reduce issues?)
-- Recurring files and blockers
-
-**Session insights** covers:
-
-- Session highlight — a standout session with notable characteristics
-- At-a-glance summary (sessions, hours, cost, cache efficiency)
-- Interaction patterns, tool diversity, multi-session trends
-- Friction points and features to try
 
 ## Related pages
 
 <CardGroup cols={2}>
   <Card title="Findings" icon="triangle-alert" href="/console/findings">
-    Specific observations identified by the analyzer.
+    Specific observations surfaced by the analyzer.
   </Card>
   <Card title="Recommendations" icon="lightbulb" href="/console/recommendations">
-    Concrete directives to improve agent behavior and quality.
+    Directives injected into the agent's context on future sessions.
   </Card>
 </CardGroup>

@@ -3,41 +3,37 @@ title: Fixes
 description: Code changes the agent makes to resolve failed verifications.
 ---
 
-A **fix** is a targeted code change made by the agent in response to a failed verification. After each fix, the agent re-verifies. IronBee tracks every fix separately so you have a complete record of what changed, why, and whether it worked.
+A **fix** is a set of code changes the agent makes in response to a failed verification. After a fix, the agent re-verifies — if it passes, the session continues; if it fails again, another fix cycle begins.
 
-## What triggers a fix
+Fixes are accessed through the [Session Timeline](/console/session-timeline) — they appear as labeled intervals (Fix 1, Fix 2, …) nested inside activity bars. Click a fix interval to open the [Fix Detail](/console/fix-detail) panel.
 
-A fix occurs when:
+---
 
-1. The agent runs a verification cycle
-2. The cycle fails (console errors, broken interactions, backend errors)
-3. The agent analyzes the failure and edits code to address it
-4. The agent re-verifies with the fix applied
+## Fix lifecycle
 
-If the re-verification passes, the session completes. If it fails again, the agent makes another fix and tries again — up to the `maxRetries` limit.
+1. A verification fails — the agent reports issues
+2. The agent edits one or more files to address the issues
+3. A new verification cycle runs
+4. If it passes, the session continues to completion; if it fails, the cycle repeats up to `maxRetries`
 
-## The fixes list
+All fix cycles are recorded in the timeline so you can trace exactly what the agent changed and whether each change helped.
 
-The fixes tab on a session detail page shows all fixes in order. Each row shows:
-
-| Column | Description |
-|--------|-------------|
-| Fix number | Sequential index within the session |
-| Files changed | How many files were modified |
-| Preceding failure | Link to the verification cycle that triggered this fix |
-| Re-verification | Link to the verification cycle that followed this fix |
-| Outcome | Whether the subsequent verification passed or failed |
-
-## Fix detail
-
-Clicking a fix opens its detail view — see [Fix Detail](/console/fix-detail).
+---
 
 ## Interpreting fixes
 
-The number of fixes in a session is a signal of difficulty:
+The number of fix cycles in a session is a signal of difficulty:
 
-- **0 fixes** — the agent got it right the first time
-- **1–2 fixes** — normal for moderately complex changes
-- **3+ fixes** — the agent struggled; worth reviewing the findings and recommendations
+| Fix count | Interpretation |
+|-----------|---------------|
+| 0 | The agent verified successfully on the first attempt |
+| 1–2 | Normal for moderately complex changes |
+| 3+ | The agent struggled — worth reviewing [Quality Analysis](/console/analysis-quality) findings |
 
-Fixes clustered on the same files across many sessions suggest those files are error-prone and may benefit from better test coverage or clearer code.
+Fixes clustered on the same files across many sessions suggest those files are error-prone and may benefit from clearer code or better test coverage.
+
+---
+
+## Relationship to verification quality
+
+Fix count, fix effectiveness (did the fix actually resolve the issue?), and backfiring fixes (fixes that introduced new problems) are all surfaced as metrics in [Quality Analysis](/console/analysis-quality).

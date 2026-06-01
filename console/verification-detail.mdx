@@ -1,55 +1,85 @@
 ---
 title: Verification Detail
-description: Screenshots, video playback, event timeline, and trace data for a single verification cycle.
+description: Event timeline, video playback, verdict, and traces for a single verification cycle.
 ---
 
-The verification detail view shows everything that happened during a single verification cycle — the browser session video, tool call timeline, screenshots, and the final verdict with evidence.
+The verification detail panel opens when you click a verification interval in the [Session Timeline](/console/session-timeline). It shows everything that happened during the cycle — the event sequence, video recording, verdict, and traces.
 
-## Video player
+## Header
 
-The video player replays the browser session recorded during verification. You can:
+The panel header shows the verification ID and a status chip: **Pass**, **Fail**, **In progress**, or **Unknown**. Two buttons sit alongside it:
 
-- **Play / pause** the recording
-- **Seek** to any point in the session
-- Use the **event timeline** below the player to jump to specific interactions
+- **Traces** — toggles the [trace panel](#trace-panel)
+- **Play** — arms video playback (visible when a recording exists)
 
-The video is synchronized with the event timeline — as the video plays, the timeline highlights the corresponding tool call.
+---
+
+## Video playback
+
+When a browser session recording is available, the playback section shows a video player with:
+
+- Play / pause button
+- Scrub track with drag support
+- Current time and total duration
+- Speed toggle — 1× and 2×
+- Picture-in-Picture button
+- Fullscreen button
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|-----|--------|
+| `Space` / `k` | Play / pause |
+| `←` / `→` | Seek ±1 second |
+| `j` / `l` | Seek ±10 seconds |
+
+While playing, the event timeline below highlights the event corresponding to the current video time.
+
+---
 
 ## Event timeline
 
-The event timeline shows every browser interaction in the order it occurred:
+A chronological list of every event recorded during the verification cycle. Each row is clickable to expand its details.
 
-| Event type | Description |
-|------------|-------------|
-| Navigation | The agent went to a URL |
-| Screenshot | A screenshot was captured |
-| Click | The agent clicked an element |
-| Fill | The agent typed into an input |
-| Scroll | The agent scrolled the page |
-| Console check | Browser console was read |
-| Network check | HTTP requests were examined |
+### Event types
 
-Clicking a row in the timeline seeks the video to that moment.
+| Event | What it shows |
+|-------|--------------|
+| **Verification started** | User email and session ID |
+| **Tool call** | Tool name, MCP server (if applicable), type badge (mcp / skill / sub-agent), duration, input size, response size, any error, inline images or videos captured |
+| **Verification ended** | Status, duration, and reason |
+| **Verdict** | Final pass or fail, with the full **Checks**, **Issues**, and **Fixes** lists |
 
-## Screenshots
+### Per-event details
 
-Screenshots taken during the cycle are displayed as a gallery. Each screenshot is labeled with:
+Each row shows:
+- A color-coded icon by tool domain (file, search, exec, web, UI, diagnostic, flow)
+- Time offset from the start of the cycle (e.g., `+1m 23s`)
+- Absolute timestamp
+- Status chips — error indicator, duration, MCP server name, tool type badge
+- **View JSON** button — tool events split into Input / Output with byte sizes; other events show a full view
 
-- The URL at the time of capture
-- A timestamp
-- The action that preceded it (e.g., "after clicking Submit")
+Images captured by tool calls appear inline within the event row. Click an image to open it in a lightbox.
 
-## Verdict and evidence
+---
 
-The verdict panel at the bottom of the view shows:
+## Verdict
+
+The verdict section at the bottom of the event timeline shows the final assessment:
 
 - **Status** — `pass` or `fail`
-- **Checks** — the list of evidence items the agent confirmed (e.g. "form submits successfully", "no console errors on /checkout")
-- **Issues** (on fail) — what went wrong, as reported by the agent
-- **Fixes** (on a passing retry after a previous failure) — what the agent changed to resolve the issues
+- **Checks** — evidence items the agent confirmed (green)
+- **Issues** — what went wrong, if the verdict is `fail` (red)
+- **Fixes** — what was changed to resolve issues on a passing retry (orange)
 
-If the verdict is `fail`, the panel explains exactly which checks failed and why the gate was not satisfied.
+---
 
-## Trace data
+## Trace panel
 
-The verification detail view includes a link to the full [trace waterfall](/console/traces) for this cycle, showing timing for every tool call.
+Click **Traces** in the header to open the trace panel alongside the event timeline. The panel shows a span waterfall chart for the cycle with:
+
+- **Filters** — by span kind (Internal / Client / Server / Producer / Consumer) and status (OK / Error / Unset)
+- **Text search** — filter spans by name or service name
+- **View toggle** — Fit (panel-width) or Wide (horizontal scroll for dense traces)
+
+Click any span bar to open a JSON modal with the raw span data.

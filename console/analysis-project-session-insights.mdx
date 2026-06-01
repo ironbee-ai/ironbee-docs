@@ -1,0 +1,82 @@
+---
+title: Project Session Insights
+description: Session patterns, tool usage, context pressure, and behavioral trends for a single project.
+---
+
+The **Project Session Insights** analysis gives a behavioral view of how the agent works in a single project — activity patterns, tool usage, context pressure, and code change trends.
+
+## Session overview
+
+Hero card with five metrics (sparklines + week-over-week deltas):
+
+| Metric | Description |
+|--------|-------------|
+| Sessions | Total session count (with billed/shadow note) |
+| Active time | Hours of active agent work |
+| User messages | Total user turns |
+| User interruptions | Times the user interrupted the agent mid-task |
+| Tool errors | Total tool call failures |
+
+## Activity heartbeat
+
+Three cards showing temporal patterns:
+
+- **Messages per day** — 30-day honeycomb grid with weekends toggle
+- **Hour-of-day usage** — polar bar chart of message count by hour (UTC)
+- **Standout sessions** — highlights the longest session, biggest context peak, most files changed, widest tool usage, and most efficient session
+
+## Time & code activity
+
+- **Time split** — total wall-clock, active time (with share %), idle time (with share %)
+- **Code changes** — net line change visualization with added/removed breakdown and percentages
+
+## Response time
+
+Bar histogram of response time distribution across buckets: `<1s`, 1–2s, 2–10s, 10–30s, 30s–1m, 1–2m, 2–5m, 5–15m, `>15m`.
+
+## Context pressure
+
+Line chart of average peak context tokens by conversation length (turn buckets: 1–3, 4–10, 11–25, 26–50, 51–100, 100+). Summary stats: avg peak, max, avg at session end, high-pressure session count.
+
+## Models
+
+Donut chart showing session distribution across Claude models used in the project.
+
+## Languages
+
+Radar chart of lines changed across the top 8 programming languages.
+
+## Adoption signals
+
+Indicators showing whether the project's sessions are using advanced features: MCP servers, sub-agents, skills, web search, web fetch.
+
+## Hot files
+
+Top files by edit frequency — toggle between list view and treemap (hierarchical codebase map sized by change count). Up to 10 files.
+
+## Session types
+
+Sankey diagram from session type to activity category — shows what kinds of sessions the agent runs and what activities those sessions spend time on.
+
+## Activity categories
+
+Horizontal bar chart of assistant turns by activity category (coding, debugging, refactoring, testing, documentation, analysis).
+
+## Tool error categories
+
+Horizontal bar chart of tool errors by category (command failed, edit failed, file not found, file too large, user rejected, other).
+
+## Tool leaderboards
+
+- **Top tools** — name, call count, error count, error %, session count
+- **MCP servers / Shell binaries** — toggled view of MCP server vs shell binary usage (same columns)
+- **Skills** — custom slash commands invoked, with call counts
+- **Sub-agents** — background agents spawned, with call counts
+
+## Shell command flow
+
+Sankey diagram of shell binary → subcommand invocations with total invocation count.
+
+## Tool metrics
+
+Table of all tools with call count, error rate, and speed metrics.

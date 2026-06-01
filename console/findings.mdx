@@ -1,58 +1,37 @@
 ---
 title: Findings
-description: Observations and problems identified during analysis — per session and across your project.
+description: Observations and problems identified during analysis — per project and across your account.
 ---
 
-**Findings** are observations that IronBee's analysis identified — a browser console error that kept appearing, a failing form submission, a file with a high fix-cycle rate, or a pattern of retries. Each finding is grounded in actual session data, not generic advice.
+**Findings** are observations that IronBee's analysis identified — a file with a high fix-cycle rate, a pattern of retries, excessive token spend, or a behavioral habit worth changing. Each finding is grounded in actual session data.
 
 ## Finding areas
 
-Findings are grouped by area depending on which analysis type produced them:
-
-| Area | Question answered | Analysis type |
-|------|-------------------|---------------|
-| **quality** | Is the agent testing thoroughly enough? | Quality |
-| **efficiency** | Where is time or compute being wasted? | Quality, Cost |
-| **patterns** | Which issues and files recur across sessions? | Quality |
-| **behavior** | What working habits need adjustment? | Quality, Session Insights |
-| **cost** | Where is spend going and what should change? | Cost |
+| Area | What it covers |
+|------|---------------|
+| **Quality** | Verification thoroughness, fix effectiveness, recurring failures |
+| **Efficiency** | Time and compute waste, rework rate, slow sessions |
+| **Patterns** | Files and issues that recur across sessions |
+| **Behavior** | Agent working habits and interaction style |
+| **Cost** | Token spend, cache efficiency, expensive sessions |
 
 ## Severity levels
 
 | Severity | Meaning |
 |----------|---------|
-| `notice` | Descriptive observation — informational only, no action required |
-| `concern` | Worth watching — may generate a recommendation |
-| `critical` | Serious degradation — should generate a recommendation |
+| `notice` (Information) | Descriptive observation — informational, no action required |
+| `concern` | Worth watching — may have a linked recommendation |
+| `critical` | Serious degradation — should have a linked recommendation |
 
-Only `concern` and `critical` findings may have recommendations attached. `notice` findings are purely descriptive.
+Only `concern` and `critical` findings can have recommendations attached.
 
-## Findings list
+## Scopes
 
-The Findings tab shows all findings for the current analysis, grouped by area and sorted by severity. Each finding includes:
-
-- **Title** — a brief description of the observation
-- **Severity** — critical / concern / notice
-- **Area** — quality / efficiency / patterns / behavior / cost
-- **Body** — full markdown description with supporting evidence, metrics, and sometimes visualizations
-- **Linked recommendation** (if any) — the action derived from this finding
-
-## Visualizations
-
-Some findings include inline diagrams (pie charts, bar charts, Gantt, journey diagrams) rendered from the finding body. Visualizations are decorative — every fact they show is also stated in prose.
-
-## Session insight findings
-
-Session insight findings are rich multi-paragraph reports rather than single observations. They cover:
-
-- **Session highlight** — a standout session with notable characteristics
-- **At-a-glance** — four summary sub-findings (sessions, hours, cost, cache)
-- **Project areas** — patterns, friction points, interaction style
-- **What works** — validated effective behaviors
-- **Features to try** — underused capabilities relevant to the project
-
-## Project-level findings
-
-The project Analysis tab always shows the latest analysis run. Previous runs are retained as history — you can navigate back to compare findings over time.
-
-Files that appear in findings most often are strong candidates for extra attention — better tests, clearer logic, or structural refactoring.
+<CardGroup cols={2}>
+  <Card title="Account Findings" icon="building-2" href="/console/findings-account">
+    Findings across all projects on the account.
+  </Card>
+  <Card title="Project Findings" icon="folder" href="/console/findings-project">
+    Findings scoped to a single project.
+  </Card>
+</CardGroup>

@@ -1,65 +1,105 @@
 ---
-title: Traces & Span Chart
-description: A structured record of every tool call during verification, visualized as a waterfall chart.
+title: Traces
+description: OpenTelemetry span waterfall for a verification cycle — see exactly what the agent tested and how long each tool call took.
 ---
 
-IronBee records a **trace** for each verification cycle — a detailed, timestamped log of every tool the agent used. Within a trace, each individual tool invocation is a **span**. The **span chart** visualizes these as an interactive waterfall diagram.
+IronBee records a **trace** for each verification cycle — an OpenTelemetry-compatible log of every tool call the agent made, organized as a hierarchy of **spans**. The trace is visualized as an interactive waterfall chart inside the verification detail panel.
 
-## What is a trace?
+## How to access traces
 
-A trace captures the full execution path of a verification cycle:
+Traces are embedded in the [Verification Detail](/console/verification-detail) panel — they are not a standalone page.
 
-- Which browser tools were invoked and in what order
-- How long each tool call took
-- The inputs and outputs of each call
-- Where time was spent waiting (network, page load, DOM updates)
+1. Open a session and go to the **Timeline** tab
+2. Click a verification event in the timeline to open the Verification panel
+3. Click the **Traces** button in the verification header
 
-Traces give you an exact picture of what the agent tested — not what it claimed to test.
+The panel opens to the right. The URL updates with `tracesOpen=true` so you can link directly to it.
 
-## The span waterfall chart
+---
 
-The span chart renders the trace as a horizontal waterfall, with time on the X axis and individual spans stacked vertically. Each bar represents one tool call.
+## Traces panel
 
-### Reading the chart
+The panel header shows a **count badge** — for example `5 / 12` means 5 spans match the current filters out of 12 total.
 
-- **Width** — duration of the span (wider = took longer)
-- **Color** — tool category (navigation, screenshot, interaction, console/network check, probe)
-- **Indentation** — nesting (a screenshot span may be a child of a navigation span)
+### View toggle
 
-### Interacting with the chart
+| Mode | Behavior |
+|------|----------|
+| **Fit** | Compresses chart to fit the panel width — no horizontal scroll |
+| **Wide** | Adaptive density: the longest span fills ~25% of visible width; allows horizontal scrolling for long recordings |
 
-- **Hover** over a span to see the tool name, duration, and a summary of inputs/outputs
-- **Click** a span to open the span detail panel
-- **Zoom** in on a time range by dragging across the chart
-- **Filter** by tool type using the toolbar — show only navigation, only screenshots, etc.
+---
 
-## Span detail panel
+## Waterfall chart
 
-Clicking a span opens its detail panel on the right side of the chart:
+The chart has two columns:
 
-| Field | Description |
-|-------|-------------|
-| Tool | Name of the devtools tool invoked |
-| Started at | Timestamp within the session |
-| Duration | Milliseconds |
-| Input | Arguments passed to the tool (URL, selector, etc.) |
-| Output | Tool response summary |
-| Parent span | Link to the parent span if nested |
+**Left — label panel (frozen)**
+- Span name
+- Service name (color-coded)
+- OpenTelemetry span kind icon
+- Collapse / expand chevron for parent spans
 
-## What to look for
+**Right — chart area**
+- Horizontal bars representing span duration
+- Time axis (in seconds) pinned to the bottom
+- Bars colored by status
 
-**Long spans** on navigation or screenshot tools may indicate a slow page load — a potential performance issue in the application.
+### Span status colors
 
-**Many short spans** clustered together suggest the agent was doing a thorough job of testing many interactions.
+| Color | Status |
+|-------|--------|
+| Green | OK |
+| Red | ERROR |
+| Gray | Unset |
 
-**Tool call gaps** (large empty spaces in the waterfall) indicate the agent was thinking or waiting — not actively testing.
+Each unique service name also gets a stable color from a 24-color palette.
 
-**Probe spans** (Node cycle) show where backend tracepoints or logpoints were set and read back.
+### Span kind icons
 
-## Traces vs activities
+Kinds follow OpenTelemetry conventions: `INTERNAL`, `CLIENT`, `SERVER`, `PRODUCER`, `CONSUMER`.
 
-| | Trace | Activity |
-|--|-------|---------|
-| Granularity | Individual tool calls (millisecond precision) | Grouped actions (seconds to minutes) |
-| Purpose | Debugging verification timing | Understanding session flow |
-| Where | Traces tab in session detail | Activities tab in session detail |
+---
+
+## Filters
+
+| Filter | Description |
+|--------|-------------|
+| Text search | Filter by span name or service name |
+| Kind | All · Internal · Client · Server · Producer · Consumer |
+| Status | All · OK · Error · Unset |
+
+Active filter chips appear below the toolbar. The count badge updates as you filter.
+
+---
+
+## Interacting with the chart
+
+**Navigate:**
+- **Vertical scroll** — browse rows
+- **Horizontal drag** — pan left/right within the chart area (click and drag on the background)
+
+**Explore spans:**
+- **Hover** a bar — tooltip shows span name, service, kind, duration, status
+- **Click** a bar — opens the span JSON modal
+- **Click** a label — scrolls the chart horizontally to bring that span's bar into view
+- **Chevron** — collapse or expand a span's children
+
+**Playback mode** (when the verification video is playing):
+- A vertical **playhead** line tracks the current video position
+- The active span is highlighted in gold
+- Parent and sibling spans in the call chain are also highlighted
+- The chart auto-scrolls to keep the active span visible
+- **Seek button** on each bar — click to jump the video to that span's start time
+
+---
+
+## Span JSON modal
+
+Click any span bar to open its detail modal:
+
+- **Header:** service name · span name, Copy JSON button
+- **Metadata row:** `span_id`, `trace_id`, `parent_span_id`, `kind`, `status`, `duration`
+- **Data section:** full key-value view of the span payload, including any custom data fields
+
+The Copy button copies the complete span as formatted JSON.

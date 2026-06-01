@@ -7,46 +7,58 @@ A **session** represents a single continuous working period for an AI agent — 
 
 ## The sessions list
 
-The sessions page shows all sessions for a project in reverse chronological order. Each row displays:
+The sessions page shows all sessions for a project. Use the **date filter** in the page header to scope the list to a specific time window.
+
+Each row displays:
 
 | Column | Description |
 |--------|-------------|
-| Status | `running`, `passed`, `failed`, or `incomplete` |
-| Started | When the session began |
+| Session ID | Truncated ID with copy button — hover for the full value |
+| Email | The user account that ran the session |
+| Start Time | When the session began (sortable, default newest first) |
 | Duration | Total elapsed time |
-| Activities | Count of distinct actions (code changes, verifications, fixes) — a quick proxy for session complexity |
-| Verifications | Count of verification cycles and their outcomes |
-| Verdict | Final pass/fail result |
+| Client | AI client used — Claude Code or Cursor |
+| Status | `in-progress`, `completed`, or `stopped` |
+| Activities | Number of discrete actions recorded |
+| Verifications | Number of verification cycles run |
+| Fixes | Number of fix attempts after failed verifications |
+| Issues | Number of issues reported across all verdicts |
+| Files | Number of files changed during the session |
+| Efficiency | Score reflecting how directly the agent reached a passing verdict |
+
+All columns are sortable by clicking the header. In-progress sessions are not clickable.
 
 ## Session status
 
 | Status | Meaning |
 |--------|---------|
-| `running` | The agent is still active in this session |
-| `passed` | All verifications completed with a passing verdict |
-| `failed` | One or more verifications failed and the retry limit was reached |
-| `incomplete` | The session ended before a verdict was submitted |
+| `in-progress` | The agent is still active in this session |
+| `completed` | The session finished — agent submitted a verdict |
+| `stopped` | The session ended before a verdict was submitted (agent interrupted or timed out) |
 
 ## Filtering sessions
 
-Use the filter bar at the top of the sessions list to narrow results:
+Click the **Filter** button to stack multiple filters. Available filter fields:
 
-- **Status** — show only passed, failed, or running sessions
-- **Date range** — filter by when sessions started
-- **Duration** — show sessions longer or shorter than a threshold
-- **Verdict** — filter by final pass/fail outcome
+| Field | Type | Operators |
+|-------|------|-----------|
+| Status | Dropdown | equals |
+| Client | Text | contains |
+| Efficiency % | Slider (0–100) | gt, gte, lt, lte, eq |
+| Verifications | Number | gt, gte, lt, lte, eq |
+| Fixes | Number | gt, gte, lt, lte, eq |
+| Issues | Number | gt, gte, lt, lte, eq |
+| Files Changed | Number | gt, gte, lt, lte, eq |
+| Duration (ms) | Number | gt, gte, lt, lte, eq |
 
-## What a session contains
+Active filters appear as chips below the filter button. Click a chip to edit it or remove it.
 
-Clicking a session row opens the [Session Details](/console/session-details) page, which shows:
-- A full timeline of all activities
-- Every verification cycle with evidence
-- All fixes the agent made
-- Trace data and span charts
-- Analysis findings and recommendations
+## Pagination
+
+Use the **Show Items** dropdown to display 10, 25, 50, or 100 rows per page. The page info strip shows total results and current page.
 
 ## Next steps
 
 <Card title="Session details" icon="layout-panel-left" href="/console/session-details">
-  Explore the timeline, verifications, fixes, and traces for a single session.
+  Explore the timeline, analytics, verifications, and fixes for a single session.
 </Card>
