@@ -215,7 +215,7 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 
 ## Statusline (Claude Code only)
 
-Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee statusline enable` / `disable`.
+Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee claude statusline enable` / `disable`.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -239,7 +239,7 @@ Controls whether IronBee may read your Claude Code OAuth token to fill statuslin
 
 ## OTEL collector
 
-IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee otel`](/cli/clients/claude-code#otel-collector).
+IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee claude otel`](/cli/clients/claude-code#otel-collector).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|

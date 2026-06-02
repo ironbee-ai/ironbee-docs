@@ -9,7 +9,7 @@ IronBee's core idea is simple: **code isn't done until it's verified.** This pag
 
 ## The completion gate
 
-When you run `ironbee install`, IronBee registers a **completion hook** with your AI client (the `Stop` hook in Claude Code, the `stop` hook in Cursor). It fires when the agent tries to finish a task.
+When you run `ironbee install`, IronBee registers a **completion hook** with your AI client (the `Stop` hook in Claude Code and Codex, the `stop` hook in Cursor). It fires when the agent tries to finish a task.
 
 If the agent changed code files, the hook runs verification before letting the task complete:
 
