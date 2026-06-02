@@ -15,14 +15,15 @@ Run the installer from your project root:
 ironbee install
 ```
 
-IronBee detects your AI client (Claude Code or Cursor) and wires up everything it needs: the completion hook, the verification skill and rule, the devtools MCP servers, and the matching permissions. If it can't detect a client, it asks which one you use.
+IronBee detects your AI client (Claude Code, Cursor, or Codex) and wires up everything it needs: the completion hook, the verification skill and rule, the devtools MCP servers, and the matching permissions. If it can't detect a client, it asks which one you use.
 
 To target a specific client explicitly:
 
 ```bash
 ironbee install --client claude   # Claude Code
 ironbee install --client cursor   # Cursor
-ironbee install --client all      # both
+ironbee install --client codex    # Codex CLI
+ironbee install --client all      # every detected client
 ```
 
 <Info>
@@ -49,7 +50,7 @@ This removes the hooks, skill, rule, MCP server entries, and permissions IronBee
 
 | Option | Description |
 |--------|-------------|
-| `--client <name>` | Only remove a specific client's setup (`claude`, `cursor`, or `all`). |
+| `--client <name>` | Only remove a specific client's setup (`claude`, `cursor`, `codex`, or `all`). |
 | `--all` | Remove IronBee from **every** registered project. Prompts for confirmation first. |
 | `-y`, `--yes` | Skip the confirmation prompt (required with `--all` in scripts/CI). |
 

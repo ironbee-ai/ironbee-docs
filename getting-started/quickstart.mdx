@@ -6,7 +6,7 @@ description: Sign up, install the CLI, connect to your account, and run your fir
 ## Prerequisites
 
 - **Node.js 22 or later** — check with `node --version`
-- An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Cursor](https://cursor.com)
+- An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Codex CLI](https://github.com/openai/codex)
 
 ---
 
@@ -23,7 +23,7 @@ description: Sign up, install the CLI, connect to your account, and run your fir
     `ironbee login` — opens your browser, completes the OAuth flow, and writes your API key to `~/.ironbee/config.json` automatically. One-time per machine.
   </Step>
   <Step title="Set up your project">
-    `ironbee install` — auto-detects your AI client (Claude Code or Cursor) and wires up hooks, MCP servers, and the verification skill.
+    `ironbee install` — auto-detects your AI client (Claude Code, Cursor, or Codex) and wires up hooks, MCP servers, and the verification skill.
   </Step>
   <Step title="Start your app and let the agent work">
     Run your dev server, then give the agent a task. IronBee intercepts task completion and requires the agent to verify its changes before finishing.
@@ -118,7 +118,7 @@ npm run dev
 
 ## Step 6 — Let your agent work
 
-Open Claude Code or Cursor and give the agent a task. When it finishes editing code, IronBee intercepts the completion and requires verification:
+Open Claude Code, Cursor, or Codex and give the agent a task. When it finishes editing code, IronBee intercepts the completion and requires verification:
 
 1. The agent navigates to the affected pages in a real browser
 2. It takes screenshots, checks the console, and tests functionality

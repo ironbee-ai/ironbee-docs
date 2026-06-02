@@ -73,10 +73,10 @@ On macOS, `enable` reads the token right away so the Keychain permission prompt 
 To derive context-usage metrics, IronBee runs a small **local OTEL collector daemon** that receives Claude Code's OTLP export and turns it into `session_context` events. One daemon serves every session on the machine, and it starts and reaps itself automatically — you rarely touch it. When you need to:
 
 ```bash
-ironbee otel status   # query the daemon's /health
-ironbee otel stop     # graceful shutdown
-ironbee otel retry    # re-process bodies that piled up during an outage (starts the daemon if needed)
-ironbee otel run      # run in the foreground (mainly an internal spawn target)
+ironbee claude otel status   # query the daemon's /health
+ironbee claude otel stop     # graceful shutdown
+ironbee claude otel retry    # re-process bodies that piled up during an outage (starts the daemon if needed)
+ironbee claude otel run      # run in the foreground (mainly an internal spawn target)
 ```
 
 All accept `--port` (default `15986`) and `-p, --project`. Tuning lives under [`otel.*`](/cli/configuration/configuration#otel-collector).

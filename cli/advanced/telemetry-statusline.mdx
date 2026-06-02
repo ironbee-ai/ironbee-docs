@@ -31,8 +31,8 @@ By default these write to the project config. Use `-g`/`--global` for all your p
 IronBee can surface session status in Claude Code's statusline while preserving any statusline you already have:
 
 ```bash
-ironbee statusline enable    # install the statusline wrapper
-ironbee statusline disable   # restore your original statusline
+ironbee claude statusline enable    # install the statusline wrapper
+ironbee claude statusline disable   # restore your original statusline
 ```
 
 `enable` installs a wrapper that emits `session_status` events and chains your existing statusline; `disable` restores it and stops emitting. Same layer flags as telemetry (`-g`, `--local`).
@@ -40,7 +40,7 @@ ironbee statusline disable   # restore your original statusline
 If you change your upstream statusline mid-session, re-resolve the chained wrapper for active sessions:
 
 ```bash
-ironbee statusline sync
+ironbee claude statusline sync
 ```
 
 For statusline behavior options (rendering a default line, emit throttling, refresh interval), see the [`statusLine.*` keys](/cli/configuration/configuration#statusline-claude-code-only) in Configuration.
