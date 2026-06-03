@@ -15,7 +15,7 @@ Show the verdict status of the sessions in a project:
 ironbee status [project-dir]
 ```
 
-For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and — for failures — the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled.
+For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and — for failures — the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#switching-to-assist-mode) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
 
 ---
 

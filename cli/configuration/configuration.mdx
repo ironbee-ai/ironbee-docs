@@ -74,7 +74,8 @@ ironbee config list --global
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#enforcement-vs-monitoring-only). |
+| `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
+| `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced — no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
 
 ---
 
@@ -215,7 +216,7 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 
 ## Statusline (Claude Code only)
 
-Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee statusline enable` / `disable`.
+Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee claude statusline enable` / `disable`.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -239,7 +240,7 @@ Controls whether IronBee may read your Claude Code OAuth token to fill statuslin
 
 ## OTEL collector
 
-IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee otel`](/cli/clients/claude-code#otel-collector).
+IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee claude otel`](/cli/clients/claude-code#otel-collector).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -312,6 +313,16 @@ Or use the CLI: `ironbee browser disable && ironbee backend enable`.
   "verification": { "enable": false }
 }
 ```
+
+### Assist mode (verify on demand, never gated)
+
+```json
+{
+  "verification": { "auto": false }
+}
+```
+
+Or use the CLI: `ironbee verification auto disable`.
 
 ### Capture code diffs in analytics
 

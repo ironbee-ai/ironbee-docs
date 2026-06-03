@@ -3,7 +3,7 @@ title: Importing Sessions
 description: Backfill historical AI coding sessions into the IronBee Collector.
 ---
 
-If you've been using Claude Code before installing IronBee, your past sessions live on disk but aren't in the Console yet. `ironbee import` backfills them into the IronBee Collector so your analytics include history, not just sessions from today forward.
+If you've been using Claude Code or Codex before installing IronBee, your past sessions live on disk but aren't in the Console yet. `ironbee import` backfills them into the IronBee Collector so your analytics include history, not just sessions from today forward. Discovery scans both stores (`~/.claude/projects/` and `~/.codex/sessions/`) and routes each session through the right importer automatically — no client flag needed.
 
 Sessions already tracked are skipped automatically, so the command is safe to re-run.
 
@@ -17,7 +17,7 @@ From a project directory, import that project's history:
 ironbee import
 ```
 
-By default this reads the current project's Claude Code session transcripts and ships any that aren't already in the Collector.
+By default this reads the current project's Claude Code and Codex session transcripts and ships any that aren't already in the Collector.
 
 ---
 
@@ -29,7 +29,7 @@ Pick at most one scope (the default is the current directory):
 |------|-------|
 | *(none)* | The current project directory |
 | `--projects <p1,p2,...>` | Specific projects by absolute path, comma-separated |
-| `--all-projects` | Every project Claude Code has tracked on this machine |
+| `--all-projects` | Every project Claude Code or Codex has tracked on this machine |
 | `--transcript <path>` | A single `.jsonl` transcript file |
 
 ---
