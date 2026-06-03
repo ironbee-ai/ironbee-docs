@@ -3,7 +3,7 @@ title: What is IronBee?
 description: The verification and intelligence layer for agentic development.
 ---
 
-IronBee ensures that AI coding agents **verify their changes before completing a task**. When an agent edits code, it cannot finish until it exercises the affected paths through real tools — navigating pages in a browser for frontend changes, or connecting to a running process for backend changes — and submits a passing verdict.
+IronBee ensures that AI coding agents **verify their changes before completing a task**. When an agent edits code, it cannot finish until it exercises the affected paths through real tools navigating pages in a browser for frontend changes, or connecting to a running Node process for backend changes and submits a passing verdict.
 
 No more "it should work" every change is tested.
 
@@ -44,16 +44,32 @@ Teams using agentic development today face:
 
 ## How it works
 
+
 ```mermaid
-flowchart TD
-    A[Agent edits code] --> B[Agent tries to finish]
-    B --> C{IronBee completion gate}
-    C -->|all active cycles pass| D([Task completes])
-    C -->|any cycle fails| E[Agent fixes the issues]
-    E --> B
+stateDiagram-v2
+    [*] --> AgentEditsCode
+    AgentEditsCode: Agent edits code
+
+    AgentEditsCode --> AgentTriesToFinish
+    AgentTriesToFinish: Agent tries to finish
+
+    AgentTriesToFinish --> CompletionGate
+    CompletionGate: IronBee completion gate
+
+    CompletionGate --> AgentFixesIssues: Any verification cycle fails
+    AgentFixesIssues: Agent fixes the issues
+
+    AgentFixesIssues --> AgentTriesToFinish
+
+    CompletionGate --> TaskCompletes: All active verification cycles pass
+    TaskCompletes: Task completes
+
+    TaskCompletes --> [*]
 ```
 
-If no code files changed (docs, config, etc.), the gate doesn't trigger.
+
+
+All session data — tool calls, verifications, verdicts, timing — is captured and made available in the [Console](/console/projects).
 
 ---
 
