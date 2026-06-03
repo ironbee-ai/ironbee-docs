@@ -8,30 +8,6 @@ description: Sign up, install the CLI, connect to your account, and run your fir
 - **Node.js 22 or later** — check with `node --version`
 - An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Codex CLI](https://github.com/openai/codex)
 
----
-
-## How it works
-
-<Steps>
-  <Step title="Sign up at console.ironbee.ai">
-    Create your account. This gives you access to the dashboard and generates the API key the CLI needs.
-  </Step>
-  <Step title="Install the CLI">
-    `npm install -g @ironbee-ai/cli` — installs the `ironbee` command globally.
-  </Step>
-  <Step title="Log in">
-    `ironbee login` — opens your browser, completes the OAuth flow, and writes your API key to `~/.ironbee/config.json` automatically. One-time per machine.
-  </Step>
-  <Step title="Set up your project">
-    `ironbee install` — auto-detects your AI client (Claude Code, Cursor, or Codex) and wires up hooks, MCP servers, and the verification skill.
-  </Step>
-  <Step title="Start your app and let the agent work">
-    Run your dev server, then give the agent a task. IronBee intercepts task completion and requires the agent to verify its changes before finishing.
-  </Step>
-  <Step title="View results in the Console">
-    Every session — tool calls, screenshots, verdicts, timing breakdowns — appears in the IronBee Console in real time.
-  </Step>
-</Steps>
 
 ---
 
@@ -106,13 +82,10 @@ IronBee auto-detects your AI client and writes:
 
 ---
 
-## Step 5 — Start your app and let the agent work
+## Step 5 — Let the agent work
 
-Start your dev server, then open Claude Code, Cursor, or Codex and give the agent a task:
+Open Claude Code, Cursor, or Codex and give the agent a task:
 
-```bash
-npm run dev
-```
 
 When the agent finishes editing code, IronBee intercepts the completion and requires verification:
 
@@ -120,8 +93,6 @@ When the agent finishes editing code, IronBee intercepts the completion and requ
 2. It takes screenshots, checks the console, and tests functionality
 3. It submits a verdict — pass or fail
 4. If it fails, the agent fixes the issues and re-verifies
-
-You will see the session appear in the [IronBee Console](https://console.ironbee.ai) in real time.
 
 ---
 
