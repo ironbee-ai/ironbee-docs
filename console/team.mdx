@@ -1,0 +1,44 @@
+---
+title: Team
+description: Manage team members and pending invitations.
+---
+
+The Team page is accessible to Owners and Admins. It shows all current members and pending invitations for the account.
+<img src="/images/console/account/team-dark.png" alt="IronBee Console — Team Page" style={{borderRadius:'8px',width:'100%'}} />
+
+## Members
+
+A searchable, sortable table of everyone on the account:
+
+| Column | Description |
+|--------|-------------|
+| User | Avatar, name, and email |
+| Role | Owner, Admin, Member, or Billing Admin |
+| Invited by | Who sent the invitation |
+| Invited at | When the invitation was sent |
+| Accepted at | When the member joined |
+| Last login | Most recent login timestamp |
+| Actions | Remove member (if you have permission) |
+
+Click any column header to sort. Members with no data for a field sort to the bottom.
+
+**Permission rules:**
+- Owners can manage anyone
+- Admins can manage Members and Billing Admins only
+- You cannot remove yourself
+
+## Invitations
+
+A table of pending and past invitations:
+
+| Column | Description |
+|--------|-------------|
+| Email | The invited address |
+| Role | The role they will receive on joining |
+| Status | `pending`, `accepted`, or `expired` |
+| Expires | Expiry date of the invitation link |
+| Actions | Revoke (pending) or Resend (expired) |
+
+## Inviting a new member
+
+Click **Invite** to open the invite dialog. Enter the email address and select a role. The invitee receives an email with a link to accept and create their account.

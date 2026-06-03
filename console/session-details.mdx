@@ -1,61 +1,33 @@
 ---
 title: Session Details
-description: A deep view into a single agent session — timeline, verifications, fixes, traces, and analysis.
+description: Overview of the session detail view — timeline and analytics.
 ---
 
-The session details page is the central view for understanding what happened in a single agent working session. It combines timeline, evidence, and analysis into one place.
+Clicking a session row opens the session detail page. The page header shows the session ID and a breadcrumb trail (Projects → Project Name → Session ID). Two tabs organize the content:
 
-## Overview panel
+| Tab | What it shows |
+|-----|--------------|
+| [Timeline](/console/session-timeline) | The full activity sequence as an interactive horizontal chart — code changes, verifications, fixes, and idle time |
+| [Analytics](/console/session-analytics) | A metrics dashboard with context window usage, cost, token breakdown, tool usage, session shape, and more |
 
-At the top of the page, the overview panel shows:
+## Meta row
 
-- **Session ID** — unique identifier for the session
-- **Status** — running, passed, failed, or incomplete
-- **Started / ended** — timestamps
-- **Total duration** — overall session length
-- **Coding time** — time spent editing files
-- **Verification time** — time spent in verification cycles
-- **Fix time** — time spent fixing issues after failed verifications
-- **Retries** — number of failed verification attempts
+Both tabs share a summary strip at the top of the page:
 
-## Session timeline
-
-The timeline visualizes the entire session as a horizontal flow. Each activity appears as a block, color-coded by type:
-
-| Color | Activity type |
-|-------|--------------|
-| Blue | Code change |
-| Green | Verification (passed) |
-| Red | Verification (failed) |
-| Orange | Fix |
-
-Clicking any block in the timeline jumps to that activity's detail section.
-
-## Navigation tabs
-
-The session detail page is organized into tabs:
-
-| Tab | Contents |
-|-----|----------|
-| **Activities** | All agent actions in order — click any file-change activity to view the exact lines changed |
-| **Verifications** | Each verification cycle with evidence and verdict |
-| **Fixes** | Code changes made to resolve failed verifications |
-| **Traces** | Tool call traces with the span waterfall chart |
-| **Analysis** | AI-generated findings and recommendations |
-
-## Related pages
+| Field | Description |
+|-------|-------------|
+| Duration | Total elapsed session time |
+| Status | `in-progress`, `completed`, or `stopped` |
+| Activities | Total activity count |
+| Verifications | Total verification cycle count |
+| Fixes | Total fix count |
+| Started | Absolute start timestamp |
 
 <CardGroup cols={2}>
-  <Card title="Activities" icon="list" href="/console/activities">
-    Individual agent actions within the session.
+  <Card title="Timeline" icon="chart-gantt" href="/console/session-timeline">
+    Interactive timeline of every activity, verification, and fix.
   </Card>
-  <Card title="Verifications" icon="shield-check" href="/console/verifications">
-    Browser and Node verification cycles with evidence.
-  </Card>
-  <Card title="Fixes" icon="wrench" href="/console/fixes">
-    Code changes made to resolve failures.
-  </Card>
-  <Card title="Traces" icon="bar-chart" href="/console/traces">
-    Tool call traces and the span waterfall chart.
+  <Card title="Analytics" icon="chart-bar" href="/console/session-analytics">
+    Context window, cost, token usage, session shape, and more.
   </Card>
 </CardGroup>

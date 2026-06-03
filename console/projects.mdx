@@ -2,39 +2,65 @@
 title: Projects
 description: Organize your codebases and track verification health at a glance.
 ---
-
 A **project** in IronBee maps to a codebase. When you run `ironbee install` in a directory, that directory is associated with a project and all session data flows there automatically.
+<img src="/images/console/main-dark.png" alt="IronBee Console — Projects page" style={{borderRadius:'8px',width:'100%'}} />
 
 ## The projects page
 
-The projects page is the home screen of the IronBee Console. It shows every project your account has access to with a summary of recent activity.
+The projects page is the home screen of the IronBee Console. It shows every project your account has access to. Use the **date filter** in the page header to scope all metrics to a specific time range.
 
-For each project you can see:
-- Total sessions and recent session count
-- Overall pass rate across all verifications
-- Last active timestamp
-- Quick links to the latest sessions
+## Quick Search
+<img src="/images/console/project/search-dark.png" alt="IronBee Console — Search" style={{borderRadius:'8px',width:'100%'}} />
+Use the search bar at the top of the console to jump directly to any project, session, or finding by ID or keyword. Quick Search returns results across all projects your account has access to.
+
+## View modes
+
+Toggle between **Card view** and **List view** using the toolbar controls. Your preference is saved automatically.
+
+### Card view
+
+
+<CardGroup cols={2}>
+    <Card title="Each project card shows:">
+        - **Project name**
+        - **Last active date**
+        - **Pass rate donut chart**, center label shows the percentage of verifications that passed; hover for a passed/failed count breakdown
+        - **KPI stack**, Sessions, Verifications, Fixes counts
+        - **Time breakdown**: Total activity time split into Coding, Verification, and Fix phases with percentages
+        - **Findings tiles**, Critical, Concern, and Notice finding counts (click to go directly to the filtered Findings page)
+        - **Recommendations button**, shows count of active recommendations (click to open the Recommendations page)
+    </Card>
+    <Card title="Card View">
+        <img src="/images/console/project/project-card-dark.png" alt="Card View" style={{borderRadius:'8px',width:'100%'}}/>
+    </Card>
+</CardGroup>
+
+### List view
+
+The table has the following columns (all sortable by clicking the header):
+<img src="/images/console/project/project-list-dark.png" alt="IronBee Projects — List View" style={{borderRadius:'8px',width:'100%'}}/>
+
+| Column | Description |
+|--------|-------------|
+| Project | Project name |
+| Sessions | Total session count |
+| Verifications | Total verification cycle count |
+| Success Rate | Percentage of verifications that passed, with a bar chart |
+| Fixes | Total fix attempts |
+| Total Time | Combined coding + verification + fix time (hover for breakdown) |
+| Verif. Time | Time spent in verification cycles |
+| Fix Time | Time spent on fixes |
+| Analyze | Critical / Concern / Notice finding counts (clickable) |
+| Recs | Active recommendations count (clickable) |
+| Activity | Last and first activity dates |
+
+## Sorting
+
+In card view, use the **Sort dropdown** in the toolbar to sort by: Project Name, Sessions, Verifications, Success Rate, Fixes, Total Time, Verif. Time, Fix Time, or Last Activity. In list view, click any column header to sort.
 
 ## Creating a project
 
 Projects are created automatically the first time a session is started in a directory that has IronBee installed. No manual setup is required in the console.
-
-You can also rename a project or update its settings from the project detail page.
-
-## Project settings
-
-From the project detail page, you can:
-- Rename the project
-- Set the default application URL used for verification
-- Manage which team members have access
-
-## Quick Search
-
-Use the search bar at the top of the console to jump directly to any project, session, or finding by ID or keyword. Quick Search returns results across all projects your account has access to, making it easy to locate a specific session without navigating the full project tree.
-
-## Navigating into a project
-
-Clicking a project opens its detail view, which defaults to the [Sessions](/console/sessions) tab. From there you can explore all sessions, verifications, and analysis for that codebase.
 
 ## Next steps
 

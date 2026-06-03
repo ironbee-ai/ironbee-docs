@@ -1,60 +1,71 @@
 ---
 title: Fix Detail
-description: The specific code changes an agent made to resolve a verification failure.
+description: The event timeline and code diffs for a single fix cycle.
 ---
 
-The fix detail view shows exactly what the agent changed in response to a failed verification — including the diff, the failure it was responding to, and whether the subsequent re-verification passed.
+The fix detail panel opens when you click a fix interval in the [Session Timeline](/console/session-timeline). It shows a chronological timeline of everything that happened during the fix — which files changed, what the operations were, and the exact code diffs.
+<img src="/images/console/project/fix-detail-dark.png" alt="IronBee Console — Fix Detail" style={{borderRadius:'8px',width:'100%'}} />
 
-## Fix context
+---
 
-At the top of the fix detail view:
+## Header
 
-- **Fix number** — which fix this is within the session (Fix 1, Fix 2, etc.)
-- **Triggered by** — link to the verification cycle that failed and prompted this fix
-- **Timestamp** — when the fix was applied
-- **Duration** — how long the agent spent making the change
+The panel header shows the fix ID. If the fix is still running, an **In progress** badge appears alongside it.
 
-## Changed files
+---
 
-A list of every file modified in this fix, with:
+## Stats
 
-- File path
-- Change type (modified / created / deleted)
-- Lines added / removed
+Four metrics shown as chips below the header:
 
-## Diff view
+| Field | Description |
+|-------|-------------|
+| Duration | Total elapsed time for this fix |
+| Files | Number of unique files modified |
+| Changes | Total number of file change events |
+| Started | Absolute timestamp when the fix began |
 
-The diff view shows the exact code changes, file by file, in a side-by-side or unified format. Lines added are highlighted in green, lines removed in red.
+---
 
-For each file, you can see:
+## Event timeline
 
-- The specific lines that changed
-- Context lines around the change (3 lines by default)
-- The agent's reasoning for the change (from the conversation transcript)
+A vertical chronological list of every event recorded during the fix:
 
-## Re-verification result
+### Fix started
 
-After a fix, the agent immediately re-verifies. The fix detail view shows:
+- User email that initiated the fix
+- Session ID
 
-- **Outcome** — did the re-verification pass or fail?
-- **Link** — jump directly to the verification cycle that followed this fix
+### File change
 
-If the re-verification failed, there will be another fix after this one — navigate through the fixes list to follow the full chain.
+Each file edit appears as its own event:
 
-## Reading the fix chain
+- **File path** — directory (muted) and filename (bold), full path on hover
+- **Operation chip** — `create`, `update`, or `delete`
+- **Diff stats** — lines added (green) and lines removed (red)
+- **View code** button — opens the [Diff Dialog](#diff-dialog) (only shown when changeset data is available)
+- **Tool chip** — the tool that made the change
 
-A typical fix chain looks like:
+### Fix ended
 
-```
-Verification 1 → FAILED (console error in form.tsx)
-     ↓
-Fix 1 → Updated form validation logic in form.tsx
-     ↓
-Verification 2 → FAILED (new error in submit handler)
-     ↓
-Fix 2 → Fixed submit handler in form.tsx
-     ↓
-Verification 3 → PASSED
-```
+- Total fix duration
+- Reason the fix concluded (if provided)
 
-Understanding this chain helps you see what the agent tried, what it missed on the first attempt, and how it arrived at the final working solution.
+---
+
+## Diff Dialog
+
+Clicking **View code** on a file change event opens a modal showing the full unified diff for that file:
+
+- **File path** and diff stats (lines added / removed) in the header
+- **Copy** button — copies the entire changeset to the clipboard
+- **Diff table** — four columns: old line number, new line number, sign (`+` / `−`), content
+  - Added lines: green background
+  - Removed lines: red background
+  - Hunk headers (`@@ -start,count +start,count @@`): blue background
+  - Meta lines (e.g., `\ No newline at end of file`): italic, muted
+
+The diff is displayed in unified format only.
+
+<img src="/images/console/project/diff-dialog-dark.png" alt="IronBee Console — Diff Dialog" style={{borderRadius:'8px',width:'100%'}} />
+

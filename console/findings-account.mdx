@@ -1,0 +1,92 @@
+---
+title: Account Findings
+description: Findings across all projects on the account.
+---
+
+**Findings** are observations that IronBee's analysis identified — patterns and problems grounded in actual session data. Account-level findings span the entire account and are produced by the Account Cost and Account Session Insights analysis runs.
+<img src="/images/console/finding/finding-account-dark.png" alt="IronBee Console — Account Findings" style={{borderRadius:'8px',width:'100%'}} />
+
+
+## Finding areas
+
+| Area | What it covers |
+|------|---------------|
+| **Quality** | Verification thoroughness, fix effectiveness, recurring failures |
+| **Efficiency** | Time and compute waste, rework rate, slow sessions |
+| **Patterns** | Files and issues that recur across sessions |
+| **Behavior** | Agent working habits and interaction style |
+| **Cost** | Token spend, cache efficiency, expensive sessions |
+
+## Severity levels
+
+| Severity | Meaning |
+|----------|---------|
+| `notice` (Information) | Descriptive observation — informational, no action required |
+| `concern` | Worth watching — may have a linked recommendation |
+| `critical` | Serious degradation — should have a linked recommendation |
+
+Only `concern` and `critical` findings can have recommendations attached.
+
+---
+
+## KPI strip
+
+Four tiles at the top of the page show the current finding counts:
+
+| Tile | Description |
+|------|-------------|
+| Critical | Count of critical findings |
+| Concern | Count of concern findings |
+| Information | Count of notice findings |
+| Total findings | Sum of all active findings |
+
+---
+
+## Briefing panel
+
+Shown above the KPI strip on each visit. Reports what changed since your last visit:
+
+- **First visit** — starts tracking from this point; come back to see deltas
+- **No changes** — nothing new since your last visit (shows timestamp)
+- **Changes detected** — "New **X** critical findings. Resolved **Y** concerns." in severity-colored text
+
+Dismiss with the × button. Can be toggled in [Settings](/console/settings).
+
+---
+
+## Filters
+
+| Filter | Options |
+|--------|---------|
+| Severity | All severities · Critical · Concern · Information |
+| Area | All areas · Quality · Efficiency · Patterns · Behavior · Cost |
+| Title search | Free text (min 3 characters) |
+
+Active filters appear as chips. **Clear filters** removes severity, area, and title — pinned filters (Finding ID, Analysis ID) are cleared individually.
+
+---
+
+## Findings table
+
+Five columns, all sortable:
+
+| Column | Description |
+|--------|-------------|
+| Severity | Badge with icon — Critical (flame), Concern (test tube), Information (sparkle) |
+| Project | Project the finding belongs to, or "Account" for account-scoped findings |
+| Title | Brief description of the observation |
+| Area | Quality · Efficiency · Patterns · Behavior · Cost |
+| Created | How long ago the finding was generated |
+
+Default sort: Created, newest first. Page sizes: 20, 50, or 100 rows.
+
+---
+
+## Finding detail drawer
+
+Click any row to open the detail drawer:
+
+- **Severity badge** and area, project, and created date in the header
+- **Title** — the finding headline
+- **Body** — full markdown description with supporting evidence, metrics, and inline visualizations where applicable
+- **View linked recommendation** button — shown for `critical` and `concern` findings; navigates to the Recommendations page filtered to this finding

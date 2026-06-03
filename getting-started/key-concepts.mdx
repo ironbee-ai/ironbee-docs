@@ -2,16 +2,28 @@
 title: Key Concepts
 description: Core terminology you will encounter throughout IronBee.
 ---
+<img
+    className="block dark:hidden"
+    src="/images/console/keyconcepts-light.png"
+    alt="IronBee Console — Key Concepts"
+    style={{borderRadius:'8px',width:'100%'}}
+/>
+<img
+    className="hidden dark:block"
+    src="/images/console/keyconcepts-dark.png"
+    alt="IronBee Console — Key Concepts"
+    style={{borderRadius:'8px',width:'100%'}}
+/>
 
 ## Project
 
-A **project** maps to a codebase. When you run `ironbee install` in a directory, that directory is associated with a project in the console. All sessions, verifications, and analysis for that codebase are grouped under its project.
+A **project** maps to a codebase — in practice, usually a single git repository. When you run `ironbee install` in a directory, that directory is associated with a project in the console. All sessions, verifications, and analysis for that codebase are grouped under its project.
 
 ---
 
 ## Session
 
-A **session** is a single continuous working period for an AI agent — from when it starts editing to when it completes (or is interrupted). Every agent task creates a session.
+A **session** is a single continuous working period for an AI agent from when it starts editing to when it completes (or is interrupted). Every agent task creates a session.
 
 Sessions record:
 - All activities performed by the agent
@@ -25,12 +37,10 @@ Sessions record:
 
 An **activity** is a discrete action within a session. Activities include:
 
-| Type | Description |
-|------|-------------|
-| `code_change` | The agent edits one or more files |
-| `verification` | The agent runs a verification cycle |
-| `fix` | The agent makes corrections after a failed verification |
-| `tool_call` | A single tool invocation (browser navigation, screenshot, etc.) |
+- Code edits the agent makes to files
+- Verification cycles the agent runs to test its changes
+- Fixes the agent applies after a failed verification
+- Individual tool calls (browser navigation, screenshots, API requests, console checks, etc.)
 
 ---
 
@@ -57,15 +67,15 @@ The agent connects to a running Node.js process and:
 3. Reads back execution snapshots or runtime logs
 4. Submits verdict with backend evidence
 
-The Node cycle is **opt-in** — enable it with `ironbee node enable`. Only applies to Node.js backends.
+The Node cycle is **opt-in** enable it with `ironbee node enable`. Only applies to Node.js backends.
 
 ### Backend cycle
 
 The agent drives real HTTP, gRPC, GraphQL, or WebSocket calls against a running backend service and verifies the responses. Works with any backend runtime (Node, Java, Python, Go, Rust, and more).
 
-The backend cycle is **opt-in** — enable it with `ironbee backend enable`.
+The backend cycle is **opt-in** enable it with `ironbee backend enable`.
 
-A single task can require **multiple cycles in parallel** — the agent must provide evidence for each active cycle before completing.
+A single task can require **multiple cycles in parallel** the agent must provide evidence for each active cycle before completing.
 
 ---
 
@@ -92,22 +102,36 @@ A **fix** is a code change made by the agent in response to a failed verificatio
 
 IronBee records **traces** for each verification cycle — a structured log of every tool call, with timing. Within a trace, each individual tool invocation is a **span**.
 
-The **span chart** in the console visualizes these as a waterfall diagram, making it easy to see what the agent tested, in what order, and how long each step took.
+The **waterfall chart** in the console visualizes these as a timeline, making it easy to see what the agent tested, in what order, and how long each step took.
 
 ---
 
 ## Analysis
 
-After a session completes, IronBee runs **analysis** — an LLM-powered pass over the session data. Analysis produces:
+After a session completes, IronBee runs **analysis** an LLM-powered pass over the session data. Analysis produces:
 
 - **Findings** — specific problems identified (errors, failures, inconsistencies)
 - **Recommendations** — concrete suggestions for improving code quality or the verification setup
 
+Analysis runs at two scopes: **project level** (focused on a single codebase) and **account level** (aggregated across all your projects, surfacing broader patterns).
+
 ---
 
-## Monitoring-only mode
+## Operation modes
 
-When **verification is disabled** (`ironbee verification disable`), IronBee runs in monitoring-only mode. The enforcement hook, verification skill, and MCP servers are not installed. Sessions still record tool calls and timing data — you get full observability without slowing the agent down.
+IronBee supports three operation modes:
+
+### Auto mode (default)
+
+Verification is fully enforced. When the agent tries to complete a task, the completion gate triggers automatically and the agent cannot finish until all active verification cycles pass. This is the default after `ironbee install`.
+
+### Assist mode
+
+Verification is enabled the devtools, verification skill, and MCP servers are all available but the completion gate does not automatically block the agent. The agent can run verifications and the results are recorded, but it is not required to pass before completing. Useful when you want the tooling available without strict enforcement.
+
+### Monitoring-only mode
+
+When **verification is disabled** (`ironbee verification disable`), IronBee runs in monitoring-only mode. The enforcement hook, verification skill, and MCP servers are not installed. Sessions still record tool calls and timing data and you get full observability without slowing the agent down.
 
 This is useful for measuring baseline agent behavior before enabling enforcement.
 
@@ -115,7 +139,10 @@ This is useful for measuring baseline agent behavior before enabling enforcement
 
 ## Projects inventory
 
+
 `ironbee install` records every project it touches in `~/.ironbee/projects.json`. This inventory powers batch operations like `ironbee install --all` (re-install across every registered project) and `ironbee uninstall --all` (wipe IronBee from every project). Use `ironbee register` / `ironbee unregister` for manual inventory management.
+
+---
 
 ## Config files
 
@@ -123,9 +150,9 @@ IronBee reads config from three locations, deep-merged (project-local wins over 
 
 | File | Scope | Committed? |
 |------|-------|------------|
-| `~/.ironbee/config.json` | Global — applies to all projects | N/A |
-| `<project>/.ironbee/config.json` | Project-level — shared with team | Yes |
-| `<project>/.ironbee/config.local.json` | Project-local — machine-specific overrides | No (gitignored) |
+| `~/.ironbee/config.json` | Global, applies to all projects | N/A |
+| `<project>/.ironbee/config.json` | Project-level, shared with team | Yes |
+| `<project>/.ironbee/config.local.json` | Project-local, machine-specific overrides | No (gitignored) |
 
 The `IRONBEE_API_KEY` environment variable overrides `collector.apiKey` from any config file.
 

@@ -1,0 +1,40 @@
+---
+title: Account
+description: Account name, API key, and your role within the account.
+---
+
+The Account page shows your IronBee account details and credentials. Access it from the bottom of the sidebar.
+<img src="/images/console/account/account-dark.png" alt="IronBee Console — Account Page" style={{borderRadius:'8px',width:'100%'}} />
+
+
+## Account name
+
+Displays the current account name. Account owners can click **Change Name** to edit it (letters, numbers, and spaces — max 50 characters).
+
+## Owner
+
+The email address of the account owner. Read-only.
+
+## Your role
+
+Your role within this account: Owner, Admin, Member, or Billing Admin.
+
+## API key
+
+Your account API key — used by the CLI to authenticate with the IronBee Collector.
+
+- The key is masked by default (first 8 + last 4 characters visible)
+- Click the **eye icon** to reveal the full key
+- Click **Copy** to copy it to the clipboard
+
+To set this key in the CLI:
+
+```bash
+ironbee config set collector.apiKey <your-key> --global
+```
+
+Or set it as an environment variable (takes precedence over config):
+
+```bash
+export IRONBEE_API_KEY=<your-key>
+```
