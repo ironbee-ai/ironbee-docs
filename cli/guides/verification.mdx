@@ -47,18 +47,39 @@ By default these write to the project config (`<project>/.ironbee/config.json`).
 
 ---
 
-## Enforcement vs monitoring-only
+## Verification modes
 
-The master switch decides whether verification is **enforced** or whether IronBee just **watches**:
+IronBee runs in one of **three modes**, set by two switches: the master toggle (`verification enable` / `disable`) and the automatic-enforcement sub-toggle (`verification auto enable` / `disable`).
+
+| Mode | How to set it | What happens |
+|------|---------------|--------------|
+| **Enforce** *(default)* | `ironbee verification enable` | The agent must pass every active cycle before it can mark a task complete. Blocking verify gate + skill, rule, `/ironbee-verify` command, and devtools MCP servers all installed. |
+| **Assist** | `ironbee verification auto disable` | The machinery stays installed — `/ironbee-verify` command, MCP servers, and permissions — so the agent (or you) can verify **manually**, but nothing is enforced. No verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. |
+| **Monitoring-only** | `ironbee verification disable` | The agent is never blocked. No enforcement hook, skill, rule, command, or MCP servers — but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works. |
+
+### Switching to enforce or monitoring-only
 
 ```bash
 ironbee verification enable    # enforce — the default
 ironbee verification disable   # monitoring-only
 ```
 
-**Enforced** (default) — the agent must pass every active cycle before it can mark a task complete. The verification skill, rule, slash command, and devtools MCP servers are all installed.
+### Switching to assist mode
 
-**Monitoring-only** — the agent is never blocked by a verify gate. The enforcement hook, skill, rule, and MCP servers are not installed, but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works.
+Assist mode keeps verification *available* but never *required*:
+
+```bash
+ironbee verification auto disable   # assist — manual /ironbee-verify only, nothing enforced
+ironbee verification auto enable    # back to full enforce mode
+```
+
+Use assist when you want the agent to be able to verify on demand (and have every manual cycle recorded to the Collector) without a gate that blocks task completion.
+
+<Note>
+  `auto` only matters while verification is enabled. If `verification.enable` is `false` (monitoring-only), the mode is monitoring regardless of `auto`, and `ironbee verification auto …` warns that it has no effect until you re-enable verification.
+</Note>
+
+The `auto` sub-toggle accepts the same target flags as everything else (`-g`/`--global`, `--local`; default is the project config) and, like `verification enable`/`disable`, warns when a higher-priority layer is shadowing the layer you wrote to.
 
 <Info>
   Restart your editor or agent session after toggling — the change takes effect on the next session.

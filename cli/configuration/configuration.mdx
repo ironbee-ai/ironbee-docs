@@ -74,7 +74,8 @@ ironbee config list --global
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#enforcement-vs-monitoring-only). |
+| `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
+| `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced — no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
 
 ---
 
@@ -312,6 +313,16 @@ Or use the CLI: `ironbee browser disable && ironbee backend enable`.
   "verification": { "enable": false }
 }
 ```
+
+### Assist mode (verify on demand, never gated)
+
+```json
+{
+  "verification": { "auto": false }
+}
+```
+
+Or use the CLI: `ironbee verification auto disable`.
 
 ### Capture code diffs in analytics
 

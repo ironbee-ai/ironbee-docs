@@ -50,7 +50,7 @@ IronBee installs a **Stop hook** that fires when the agent tries to finish a tas
 
 ## Permissions
 
-The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#enforcement-vs-monitoring-only) removes all IronBee permissions entirely.
+The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions entirely. [Assist mode](/cli/guides/verification#switching-to-assist-mode) keeps the permissions and MCP servers (so manual verification still works) but drops the always-on skill and rule.
 
 ---
 
