@@ -175,6 +175,27 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
 ---
 
+## Verification context
+
+Controls the [path-scoped verification guidance](/cli/guides/verification-context) IronBee injects from `.ironbee/VERIFICATION.md` files. On by default; these keys are **read live** at verification time, so changes take effect on the next session without re-rendering artifacts.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `verificationContext.enable` | `boolean` | `true` | Master switch. When the first verification tool call of a cycle fires, the relevant `.ironbee/VERIFICATION.md` files for the changed paths are injected into the agent's context. Advisory only — never gates. Opt out with `false`. |
+| `verificationContext.source` | `string` | `"git"` | Where the changed-path set comes from. `"git"` = working tree (staged + unstaged + untracked) ∪ the last `commitDepth` commits, with an `actions.jsonl` fallback when the project isn't a git repo. `"actions"` = IronBee's own `file_change` events only (no git subprocess). |
+| `verificationContext.commitDepth` | `number` | `1` | How many recent commits join the working tree for the `git` source. `0` = uncommitted work only. Ignored when `source` is `"actions"`. |
+| `verificationContext.maxBytes` | `number` | `65536` | Aggregate cap (64 KB) on the injected text. Past the cap, the least-specific (root-side) guidance is dropped first, keeping area-specific docs. |
+
+```json
+{
+  "verificationContext": {
+    "commitDepth": 0
+  }
+}
+```
+
+---
+
 ## Collector
 
 The collector is what ships your session data to the IronBee Console. `ironbee login` fills `url` and `apiKey` for you; you'd only set these by hand to self-host.
