@@ -75,6 +75,7 @@
             "pages": [
               "cli/guides/managing-projects",
               "cli/guides/verification",
+              "cli/guides/verification-context",
               "cli/guides/importing-sessions",
               "cli/guides/interactive-mode"
             ]

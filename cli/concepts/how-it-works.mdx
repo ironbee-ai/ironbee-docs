@@ -78,6 +78,12 @@ Enforcement is one of three [verification modes](/cli/guides/verification#verifi
 
 ---
 
+## Area-specific guidance
+
+Teams can steer *how* the agent verifies a given part of the codebase by committing [`.ironbee/VERIFICATION.md`](/cli/guides/verification-context) files. When a change touches that area, IronBee injects the matching guidance into the agent's context as it starts verifying — advisory instructions layered on top of the standard flow, resolved hierarchically from the changed paths.
+
+---
+
 ## Session isolation
 
 Every agent task runs as its own **session**, tracked independently in `.ironbee/sessions/<id>/`. Concurrent sessions — even in the same project — keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
