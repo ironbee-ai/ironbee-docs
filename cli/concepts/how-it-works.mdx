@@ -69,9 +69,12 @@ By default the gate runs **focused** verification — the agent tests only the a
 
 ---
 
-## Monitoring-only mode
+## Beyond enforce mode
 
-If verification is [disabled](/cli/guides/verification#enforcement-vs-monitoring-only) (`ironbee verification disable`), the gate is never installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector — you get the observability without the enforcement. Useful for measuring baseline behavior before turning enforcement on.
+Enforcement is one of three [verification modes](/cli/guides/verification#verification-modes):
+
+- **Monitoring-only** (`ironbee verification disable`) — the gate is never installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning enforcement on.
+- **Assist** (`ironbee verification auto disable`) — the `/ironbee-verify` command and devtools MCP servers stay installed so the agent can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector.
 
 ---
 
