@@ -45,6 +45,7 @@
             "group": "Introduction",
             "icon": "rocket",
             "pages": [
+              "getting-started/introduction",
               "getting-started/quickstart"
             ]
           },
@@ -199,6 +200,7 @@
             "group": "Findings",
             "icon": "triangle-alert",
             "pages": [
+              "console/findings",
               "console/findings-account",
               "console/findings-project"
             ]
@@ -212,6 +214,7 @@
             "group": "Recommendations",
             "icon": "lightbulb",
             "pages": [
+              "console/recommendations",
               "console/recommendations-account",
               "console/recommendations-project"
             ]
