@@ -1,0 +1,101 @@
+---
+title: Privacy Mode
+description: Redact tool detail, screenshots, and recordings from the data the DevTools MCP servers ship to the Collector.
+---
+
+Privacy mode is a single cross-cutting switch that controls how much detail leaves your machine. When it's on, the [IronBee DevTools MCP servers](/cli/configuration/configuration#devtools-mcp-overrides) stop shipping potentially sensitive payloads — tool input/output detail, screenshots, and recordings — to the [Collector](/cli/configuration/configuration#collector), across **every** verification cycle at once.
+
+It's **opt-in and off by default**: a fresh install ships full detail so your Console sessions are as rich as possible. Turn it on when your code or browser sessions touch data you'd rather keep local.
+
+---
+
+## Enable or disable
+
+```bash
+ironbee privacy enable    # redact — stop shipping detail/artifacts
+ironbee privacy disable   # back to the default (full detail)
+```
+
+By default these write to the project config (committed, so the whole team inherits it). Use `-g`/`--global` to apply it across all your projects, or `--local` for a gitignored personal override that nobody else sees.
+
+```bash
+ironbee privacy enable --global    # redact everywhere on this machine
+ironbee privacy enable --local     # just you, not committed
+```
+
+Both commands re-render your installed client artifacts so the change lands in the DevTools MCP env. Narrow that re-render to one client with `--client <name>` (or `--client all`); by default it applies to the clients detected in the project.
+
+<Warning>
+  Restart your editor or agent session after toggling privacy mode. The DevTools MCP servers read their config at session start, so the change takes effect on the **next** Claude Code / Cursor / Codex session — not the running one.
+</Warning>
+
+---
+
+## What gets redacted
+
+Enabling privacy mode injects two flags into every DevTools MCP server's environment:
+
+| Flag | Effect when privacy is on |
+|------|---------------------------|
+| `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` | Drops tool **input/output detail** from the events the DevTools send to the Collector. |
+| `COLLECTOR_ARTIFACTS_ENABLE=false` | Drops **screenshots and recordings** (browser artifacts). |
+
+You still get the structural signal — which tools ran, verdicts, timing, and the session lifecycle all keep flowing — but the heavy, potentially-sensitive payloads stay on your machine. Disabling privacy mode removes both flags, so the DevTools resume their default reporting.
+
+<Note>
+  This is a **DevTools-side** switch. The CLI's own event pipeline already whitelists tool input and strips tool responses before sending, so privacy mode is specifically about the extra detail and artifacts the DevTools MCP servers contribute.
+</Note>
+
+---
+
+## How it relates to telemetry and the collector
+
+These three are independent knobs — privacy mode doesn't touch the other two:
+
+| Control | Governs | Default |
+|---------|---------|---------|
+| **Privacy** (`privacy.enable`) | How much detail the DevTools send to *your* Collector | Off (full detail) |
+| [**Telemetry**](/cli/advanced/telemetry-statusline#telemetry) (`telemetry.enable`) | Anonymous PostHog product analytics for the CLI itself | On |
+| [**Collector**](/cli/configuration/configuration#collector) (`collector.enable`) | Whether session data is sent to the Console at all | On when credentials are set |
+
+To stop sending your session data entirely, suspend the Collector (`collector.enable: false`) rather than reaching for privacy mode — privacy mode trims *what* is sent, not *whether* anything is sent.
+
+---
+
+## Config equivalent
+
+The command is a convenience wrapper around one [config key](/cli/configuration/configuration#privacy):
+
+```bash
+ironbee config set privacy.enable true     # same as: ironbee privacy enable
+```
+
+Both paths write the same `privacy.enable` value and re-render artifacts. The key is read from disk when the DevTools env is built, so the layer that wins (local > project > global) is the one that takes effect.
+
+### Gate only one channel
+
+Privacy mode flips both flags together. If you want, say, recordings off but tool detail on, set the per-cycle [DevTools env override](/cli/configuration/configuration#devtools-mcp-overrides) — your `*DevTools.env` values are applied *after* the privacy flags, so they win:
+
+```json
+{
+  "privacy": { "enable": true },
+  "browserDevTools": {
+    "env": { "COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE": "true" }
+  }
+}
+```
+
+Here screenshots and recordings stay redacted (privacy mode), but browser tool detail is allowed back through.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Telemetry & Statusline" icon="chart-line" href="/cli/advanced/telemetry-statusline">
+    The other data toggle — anonymous CLI telemetry.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#privacy">
+    The `privacy.enable` key and the DevTools env overrides in full.
+  </Card>
+</CardGroup>

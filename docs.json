@@ -94,6 +94,7 @@
             "pages": [
               "cli/advanced/inspecting-sessions",
               "cli/advanced/job-queue",
+              "cli/advanced/privacy",
               "cli/advanced/telemetry-statusline",
               "cli/advanced/runtime-files"
             ]
