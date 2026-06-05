@@ -20,6 +20,10 @@ Disabling turns telemetry off in **both** the CLI and the IronBee DevTools MCP s
 
 By default these write to the project config. Use `-g`/`--global` for all your projects or `--local` for a gitignored personal override. The underlying key is [`telemetry.enable`](/cli/configuration/configuration#telemetry).
 
+<Note>
+  Telemetry is about the CLI's own *anonymous* product analytics. To control how much of *your* session detail (tool input/output, screenshots, recordings) reaches the Collector, see [Privacy mode](/cli/advanced/privacy).
+</Note>
+
 ---
 
 ## Statusline

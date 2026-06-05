@@ -218,6 +218,16 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 
 ---
 
+## Privacy
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `privacy.enable` | `boolean` | `false` | [Privacy mode](/cli/advanced/privacy) — a single cross-cutting switch (all cycles) that redacts sensitive payloads from what the devtools MCP servers ship to the collector. **Opt-in, default off.** When `true`, injects `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` (tool input/output detail) and `COLLECTOR_ARTIFACTS_ENABLE=false` (screenshots, recordings) into every devtools MCP env. Devtools-side only and orthogonal to `telemetry` and `collector`. Equivalent to `ironbee privacy enable`. |
+
+Per-cycle [DevTools env overrides](#devtools-mcp-overrides) are applied *after* the privacy flags, so set `<x>DevTools.env.COLLECTOR_ARTIFACTS_ENABLE` / `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE` back to `"true"` to let one channel through while privacy mode is on.
+
+---
+
 ## File change capture
 
 | Key | Type | Default | Description |
