@@ -75,7 +75,7 @@ ironbee config list --global
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
-| `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced — no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
+| `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced and no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
 
 ---
 
@@ -222,7 +222,7 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `privacy.enable` | `boolean` | `false` | [Privacy mode](/cli/advanced/privacy) — a single cross-cutting switch (all cycles) that redacts sensitive payloads from what the devtools MCP servers ship to the collector. **Opt-in, default off.** When `true`, injects `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` (tool input/output detail) and `COLLECTOR_ARTIFACTS_ENABLE=false` (screenshots, recordings) into every devtools MCP env. Devtools-side only and orthogonal to `telemetry` and `collector`. Equivalent to `ironbee privacy enable`. |
+| `privacy.enable` | `boolean` | `false` | [Privacy mode](/cli/advanced/privacy) is a single cross-cutting switch (all cycles) that redacts sensitive payloads from what the devtools MCP servers ship to the collector. **Opt-in, default off.** When `true`, injects `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` (tool input/output detail) and `COLLECTOR_ARTIFACTS_ENABLE=false` (screenshots, recordings) into every devtools MCP env. Devtools-side only and orthogonal to `telemetry` and `collector`. Equivalent to `ironbee privacy enable`. |
 
 Per-cycle [DevTools env overrides](#devtools-mcp-overrides) are applied *after* the privacy flags, so set `<x>DevTools.env.COLLECTOR_ARTIFACTS_ENABLE` / `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE` back to `"true"` to let one channel through while privacy mode is on.
 
