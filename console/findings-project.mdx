@@ -3,7 +3,7 @@ title: Project Findings
 description: Findings scoped to a single project.
 ---
 
-**Findings** are observations that IronBee's analysis identified — patterns and problems grounded in actual session data. Project-level findings are produced by the Project Quality, Project Cost, and Project Session Insights analysis runs and reflect what's happening in a specific codebase.
+**Findings** are observations that IronBee's analysis identified patterns and problems grounded in actual session data. Project-level findings are produced by the Project Quality, Project Cost, and Project Session Insights analysis runs and reflect what's happening in a specific codebase.
 <img src="/images/console/finding/finding-project-dark.png" alt="IronBee Console — Project Findings" style={{borderRadius:'8px',width:'100%'}} />
 
 Select a project from the project picker to view its findings.
@@ -22,9 +22,9 @@ Select a project from the project picker to view its findings.
 
 | Severity | Meaning |
 |----------|---------|
-| `notice` (Information) | Descriptive observation — informational, no action required |
-| `concern` | Worth watching — may have a linked recommendation |
-| `critical` | Serious degradation — should have a linked recommendation |
+| `notice` (Information) | Descriptive observation, informational, no action required |
+| `concern` | Worth watching, may have a linked recommendation |
+| `critical` | Serious degradation, should have a linked recommendation |
 
 Only `concern` and `critical` findings can have recommendations attached.
 
@@ -47,9 +47,9 @@ Four tiles show counts pulled directly from the project's stats:
 
 Reports changes since your last visit to this project's findings:
 
-- **First visit** — starts tracking from this point
-- **No changes** — nothing new since your last visit (shows timestamp)
-- **Changes detected** — new and resolved findings summarized in severity-colored text
+- **First visit:** starts tracking from this point
+- **No changes:** nothing new since your last visit (shows timestamp)
+- **Changes detected:** new and resolved findings summarized in severity-colored text
 
 Dismiss with the × button. Can be toggled in [Settings](/console/settings).
 
@@ -69,11 +69,11 @@ Active filters appear as chips. **Clear filters** removes severity, area, and ti
 
 ## Findings table
 
-Four columns, all sortable (no Project column — scope is already fixed to the selected project):
+Four columns, all sortable (no Project column, scope is already fixed to the selected project):
 
 | Column | Description |
 |--------|-------------|
-| Severity | Badge with icon — Critical (flame), Concern (test tube), Information (sparkle) |
+| Severity | Badge with icon, Critical (flame), Concern (test tube), Information (sparkle) |
 | Title | Brief description of the observation |
 | Area | Quality · Efficiency · Patterns · Behavior · Cost |
 | Created | How long ago the finding was generated |
@@ -87,6 +87,6 @@ Default sort: Created, newest first. Page sizes: 20, 50, or 100 rows.
 Click any row to open the detail drawer:
 
 - **Severity badge** and area, project, and created date in the header
-- **Title** — the finding headline
-- **Body** — full markdown description with supporting evidence, metrics, and inline visualizations where applicable
-- **View linked recommendation** button — shown for `critical` and `concern` findings; navigates to the Recommendations page filtered to this finding
+- **Title:** the finding headline
+- **Body:** full markdown description with supporting evidence, metrics, and inline visualizations where applicable
+- **View linked recommendation** button shown for `critical` and `concern` findings; navigates to the Recommendations page filtered to this finding

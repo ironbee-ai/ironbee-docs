@@ -1,6 +1,6 @@
 ---
 title: Running in CI
-description: How the action behaves on each trigger — verification scope, fix strategy, and what it reports back.
+description: How the action behaves on each trigger: verification scope, fix strategy, and what it reports back.
 ---
 
 The IronBee Action adapts to what triggered the workflow: the verification scope and fix strategy change per event, and so does how results are reported back. This guide covers each trigger and the report the action produces.
@@ -15,7 +15,7 @@ on:
     types: [opened, synchronize]
 ```
 
-**Verification scope:** Diff-based — reviews changed files and verifies affected pages only.
+**Verification scope:** Diff-based reviews changed files and verifies affected pages only.
 
 **Fix behavior:** Fixes are committed directly to the PR branch. The agent re-verifies after each fix.
 
@@ -33,7 +33,7 @@ on:
     branches: [main]
 ```
 
-**Verification scope:** Diff-based — reviews the commit diff and verifies affected pages.
+**Verification scope:** Diff-based reviews the commit diff and verifies affected pages.
 
 **Fix behavior:** If issues are found, the action creates a new branch with fixes and opens a pull request targeting `main`.
 
@@ -49,11 +49,11 @@ on:
     - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
 ```
 
-**Verification scope:** Full — tests the entire application, not just changed files.
+**Verification scope:** Full tests the entire application, not just changed files.
 
 **Fix behavior:** Creates a fix PR if issues are found.
 
-Use this for regular regression checks or to catch drift between releases. The full scope means no change is required — the agent tests every meaningful page and flow it can find.
+Use this for regular regression checks or to catch drift between releases. The full scope means no change is required, the agent tests every meaningful page and flow it can find.
 
 ---
 
@@ -64,7 +64,7 @@ on:
   workflow_dispatch:
 ```
 
-**Verification scope:** Full — tests the entire application.
+**Verification scope:** Full tests the entire application.
 
 **Fix behavior:** Creates a fix PR if issues are found.
 
@@ -87,7 +87,7 @@ on:
   workflow_dispatch:
 ```
 
-Each trigger type uses the appropriate verification scope automatically — no additional configuration required.
+Each trigger type uses the appropriate verification scope automatically, no additional configuration required.
 
 ---
 
@@ -108,11 +108,11 @@ On `pull_request` runs, the action posts a verification report as a PR comment. 
 
 The report contains:
 
-- **Verdict badge** — the final `pass` / `fail` / `unknown` result, with a cycle count when there was more than one.
-- **Session link** — a link to the full session in the IronBee Console.
-- **Per-cycle breakdown** — each verification cycle with its checks, issues, and fixes, plus a link straight to that verification in the Console.
-- **Early-exit banner** — if the session ended abnormally (for example, hitting `max_turns`), a banner and a collapsible diagnostics block explain why.
-- **Artifact download** — a link to the uploaded evidence bundle.
+- **Verdict badge:** the final `pass` / `fail` / `unknown` result, with a cycle count when there was more than one.
+- **Session link:** a link to the full session in the IronBee Console.
+- **Per-cycle breakdown:** each verification cycle with its checks, issues, and fixes, plus a link straight to that verification in the Console.
+- **Early-exit banner:** if the session ended abnormally (for example, hitting `max_turns`), a banner and a collapsible diagnostics block explain why.
+- **Artifact download:** a link to the uploaded evidence bundle.
 
 For the self-host Console host override and the structure of the evidence bundle, see [Evidence](/github-action/advanced/evidence).
 
@@ -120,7 +120,7 @@ For the self-host Console host override and the structure of the evidence bundle
 
 ## Fix PRs
 
-On non-PR triggers (`push`, `workflow_dispatch`, `schedule`), there's no PR to comment on, so the same report becomes the **body of the fix PR** the action opens when verification produces changes — see the [trigger summary](#trigger-summary) above for when that happens.
+On non-PR triggers (`push`, `workflow_dispatch`, `schedule`), there's no PR to comment on, so the same report becomes the **body of the fix PR** the action opens when verification produces changes, see the [trigger summary](#trigger-summary) above for when that happens.
 
 ---
 

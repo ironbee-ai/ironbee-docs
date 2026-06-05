@@ -1,6 +1,6 @@
 ---
 title: Environment Variables
-description: Environment variables IronBee reads — for CI, secrets, debugging, and project resolution.
+description: Environment variables IronBee reads for CI, secrets, debugging, and project resolution.
 ---
 
 Most configuration lives in [config files](/cli/configuration/configuration), but a few settings can be supplied via environment variables, handy for CI runners, ephemeral shells, and secrets you don't want to commit.
@@ -12,7 +12,7 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 | Variable | Effect |
 |----------|--------|
 | `IRONBEE_API_KEY` | Supplies `collector.apiKey` without committing it. **Takes precedence over every config layer.** Combine with a file-set `collector.url` for a complete config. Ideal for CI. |
-| `IRONBEE_TELEMETRY` | Set to `false` to turn off anonymous CLI telemetry for this shell/run — a per-session alternative to the [`telemetry.enable`](/cli/advanced/telemetry-statusline#telemetry) config key. |
+| `IRONBEE_TELEMETRY` | Set to `false` to turn off anonymous CLI telemetry for this shell/run, a per-session alternative to the [`telemetry.enable`](/cli/advanced/telemetry-statusline#telemetry) config key. |
 | `IRONBEE_LOG_LEVEL` | Logging verbosity. Set to `debug` to see detailed output when troubleshooting. |
 
 ```bash
@@ -31,8 +31,8 @@ ironbee import --since 30d --yes
 
 When a hook or command needs to know which project it's acting on, IronBee resolves the directory in this order:
 
-1. The client's own variable — `CLAUDE_PROJECT_DIR` (Claude Code) or `CURSOR_PROJECT_DIR` (Cursor), set automatically by the host
-2. `IRONBEE_PROJECT_DIR` — an explicit override you can set
+1. The client's own variable `CLAUDE_PROJECT_DIR` (Claude Code) or `CURSOR_PROJECT_DIR` (Cursor), set automatically by the host
+2. `IRONBEE_PROJECT_DIR`, an explicit override you can set
 3. The current working directory
 
 You normally don't set these yourself; the AI client provides them. `IRONBEE_PROJECT_DIR` is the escape hatch for scripted or non-standard setups.

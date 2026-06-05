@@ -54,10 +54,10 @@ Collects: payment/stripe/.ironbee/VERIFICATION.md   (if present)
           .ironbee/VERIFICATION.md                  (repo-wide default, if present)
 ```
 
-- **Nearest-parent hierarchy** — a change picks up its own area's guidance plus everything above it. Directories without a file are simply skipped.
-- **Merged general → specific** — the repo-wide default reads first, area-specific guidance after it.
-- **Deduplicated** — if ten files under `payment/` changed, `payment/.ironbee/VERIFICATION.md` is included once.
-- **No match → nothing injected** — areas with no file add no noise.
+- **Nearest-parent hierarchy:** a change picks up its own area's guidance plus everything above it. Directories without a file are simply skipped.
+- **Merged general → specific:** the repo-wide default reads first, area-specific guidance after it.
+- **Deduplicated:** if ten files under `payment/` changed, `payment/.ironbee/VERIFICATION.md` is included once.
+- **No match → nothing injected:** areas with no file add no noise.
 
 ---
 
@@ -78,8 +78,8 @@ The guidance is injected on the **first verification tool call of each cycle** (
 | Mode | Injects? |
 |------|----------|
 | **Enforce** *(default)* | Yes |
-| **Assist** | Yes — manual `/ironbee-verify` cycles get the guidance too |
-| **Monitoring-only** | No — monitoring installs no verification hooks |
+| **Assist** | Yes, manual `/ironbee-verify` cycles get the guidance too |
+| **Monitoring-only** | No, monitoring installs no verification hooks |
 
 It is **advisory in this release**: the agent must follow the guidance as part of its verification, but the content itself never gates completion. (Machine-checkable per-area rules are planned separately.)
 

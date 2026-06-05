@@ -1,11 +1,11 @@
 ---
 title: Verifications
-description: Browser, Node, and backend verification cycles — how the agent tests its changes before completing.
+description: Browser, Node, and backend verification cycles how the agent tests its changes before completing.
 ---
 
 A **verification** is a complete testing cycle the agent runs to prove that its code changes work. Before any task can complete, every affected code path must be exercised with real tools.
 
-Verifications are accessed through the [Session Timeline](/console/session-timeline) — they appear as labeled intervals (Verification 1, Verification 2, …) nested inside activity bars. Click a verification interval to open the [Verification Detail](/console/verification-detail) panel.
+Verifications are accessed through the [Session Timeline](/console/session-timeline) and they appear as labeled intervals (Verification 1, Verification 2, …) nested inside activity bars. Click a verification interval to open the [Verification Detail](/console/verification-detail) panel.
 
 ---
 
@@ -36,7 +36,7 @@ The agent connects to a running Node.js process to verify backend changes via V8
 - Reads back execution snapshots or runtime logs
 - Submits verdict with backend evidence
 
-The Node cycle is opt-in — enable it with [`ironbee node enable`](/cli/guides/verification#enable-or-disable-a-platform).
+The Node cycle is opt-in and enable it with [`ironbee node enable`](/cli/guides/verification#enable-or-disable-a-platform).
 
 ### Backend cycle
 
@@ -48,7 +48,7 @@ The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a runni
 | Observability logs | `bedt_log_*` | Runtime log lines emitted by the service during the call |
 | Database queries | `bedt_db_*` | SQL or NoSQL queries executed as a side effect |
 
-The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/guides/verification#enable-or-disable-a-platform).
+The backend cycle is opt-in and enable it with [`ironbee backend enable`](/cli/guides/verification#enable-or-disable-a-platform).
 
 ---
 
@@ -67,4 +67,4 @@ The backend cycle is opt-in — enable it with [`ironbee backend enable`](/cli/g
 
 If a verification fails, the agent must fix the issues and re-verify. By default, it gets 3 attempts (`maxRetries`). After the limit is reached, the session can complete but must report unresolved issues.
 
-Each retry creates a new verification cycle — you can see the full history in the timeline.
+Each retry creates a new verification cycle, you can see the full history in the timeline.

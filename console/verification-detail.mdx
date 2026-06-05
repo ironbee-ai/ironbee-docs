@@ -3,15 +3,15 @@ title: Verification Detail
 description: Event timeline, video playback, verdict, and traces for a single verification cycle.
 ---
 
-The verification detail panel opens when you click a verification interval in the [Session Timeline](/console/session-timeline). It shows everything that happened during the cycle — the event sequence, video recording, verdict, and traces.
+The verification detail panel opens when you click a verification interval in the [Session Timeline](/console/session-timeline). It shows everything that happened during the cycle: the event sequence, video recording, verdict, and traces.
 <img src="/images/console/project/verification-detail-dark.png" alt="IronBee Console — Verification Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 ## Header
 
 The panel header shows the verification ID and a status chip: **Pass**, **Fail**, **In progress**, or **Unknown**. Two buttons sit alongside it:
 
-- **Traces** — toggles the [trace panel](#trace-panel)
-- **Play** — arms video playback (visible when a recording exists)
+- **Traces** toggles the [trace panel](#trace-panel)
+- **Play** arms video playback (visible when a recording exists)
 
 ---
 
@@ -58,8 +58,8 @@ Each row shows:
 - A color-coded icon by tool domain (file, search, exec, web, UI, diagnostic, flow)
 - Time offset from the start of the cycle (e.g., `+1m 23s`)
 - Absolute timestamp
-- Status chips — error indicator, duration, MCP server name, tool type badge
-- **View JSON** button — tool events split into Input / Output with byte sizes; other events show a full view
+- Status chips. error indicator, duration, MCP server name, tool type badge
+- **View JSON** button tool events split into Input / Output with byte sizes; other events show a full view
 <img src="/images/console/project/view-json-dark.png" alt="IronBee Console — View Json" style={{borderRadius:'8px',width:'100%'}} />
 
 Images captured by tool calls appear inline within the event row. Click an image to open it in a lightbox.
@@ -70,10 +70,10 @@ Images captured by tool calls appear inline within the event row. Click an image
 
 The verdict section at the bottom of the event timeline shows the final assessment:
 
-- **Status** — `pass` or `fail`
-- **Checks** — evidence items the agent confirmed (green)
-- **Issues** — what went wrong, if the verdict is `fail` (red)
-- **Fixes** — what was changed to resolve issues on a passing retry (orange)
+- **Status:** `pass` or `fail`
+- **Checks:** evidence items the agent confirmed (green)
+- **Issues:** what went wrong, if the verdict is `fail` (red)
+- **Fixes:** what was changed to resolve issues on a passing retry (orange)
 <img src="/images/console/project/verdict-detail-dark.png" alt="IronBee Console — Verdict Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 ---
@@ -82,9 +82,9 @@ The verdict section at the bottom of the event timeline shows the final assessme
 
 Click **Traces** in the header to open the trace panel alongside the event timeline. The panel shows a span waterfall chart for the cycle with:
 
-- **Filters** — by span kind (Internal / Client / Server / Producer / Consumer) and status (OK / Error / Unset)
-- **Text search** — filter spans by name or service name
-- **View toggle** — Fit (panel-width) or Wide (horizontal scroll for dense traces)
+- **Filters:** by span kind (Internal / Client / Server / Producer / Consumer) and status (OK / Error / Unset)
+- **Text search:** filter spans by name or service name
+- **View toggle;** Fit (panel-width) or Wide (horizontal scroll for dense traces)
 <img src="/images/console/project/trace-panel-dark.png" alt="IronBee Console — Trace Panel" style={{borderRadius:'8px',width:'100%'}} />
 
 Click any span bar to open a JSON modal with the raw span data.

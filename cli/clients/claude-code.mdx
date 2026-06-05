@@ -1,6 +1,6 @@
 ---
 title: Claude Code
-description: How IronBee integrates with Claude Code — slash commands, rules, hooks, tools, OAuth access, and the OTEL collector.
+description: How IronBee integrates with Claude Code: slash commands, rules, hooks, tools, OAuth access, and the OTEL collector.
 ---
 
 When you run `ironbee install` in a project where [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is detected, IronBee writes everything Claude needs to verify your agent's work. This page covers what gets installed and the agent-facing commands.
@@ -29,16 +29,16 @@ These are merged into your existing Claude settings, not overwritten.
 
 IronBee installs the `/ironbee-verify` slash command, which the agent (or you) can invoke directly in Claude Code:
 
-### /ironbee-verify
+### ironbee-verify
 
 Run a verification cycle for the current changes. By default it does a **focused** check, verifying only the areas affected by what changed. Variants narrow or widen the scope:
 
 | Command | Scope |
 |---------|-------|
-| `/ironbee-verify` | Focused — verify the areas affected by the change (the default) |
-| `/ironbee-verify full` | Everything — full checklist regardless of what changed |
-| `/ironbee-verify visual` | Visual only — appearance, layout, theming |
-| `/ironbee-verify functional` | Functional only — behavior, interactions, data flow |
+| `/ironbee-verify` | Focused, verify the areas affected by the change (the default) |
+| `/ironbee-verify full` | Everything full checklist regardless of what changed |
+| `/ironbee-verify visual` | Visual only appearance, layout, theming |
+| `/ironbee-verify functional` | Functional only behavior, interactions, data flow |
 
 ---
 

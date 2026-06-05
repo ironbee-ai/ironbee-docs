@@ -16,8 +16,8 @@ Settings are read from three files and **deep-merged**. Higher layers override l
 | Layer | File | Use for |
 |-------|------|---------|
 | Global | `~/.ironbee/config.json` | Defaults across all your projects (e.g. your collector credentials) |
-| Project | `<project>/.ironbee/config.json` | Team settings — committed to the repo |
-| Local | `<project>/.ironbee/config.local.json` | Personal overrides — gitignored, never shared |
+| Project | `<project>/.ironbee/config.json` | Team settings committed to the repo |
+| Local | `<project>/.ironbee/config.local.json` | Personal overrides, gitignored, never shared |
 
 Precedence is **local > project > global**. A key set in the local layer wins over the same key in the project layer, which wins over global.
 
@@ -35,7 +35,7 @@ ironbee config list                 # print the merged effective config
 ironbee config path                 # print the project config file path
 ```
 
-**Targeting a layer** — `set`, `unset`, and the read commands accept `-g`/`--global` or `--local` to act on a specific layer (default is the project config). `list` and `get` also take `--project` to read one layer in isolation:
+**Targeting a layer:**  `set`, `unset`, and the read commands accept `-g`/`--global` or `--local` to act on a specific layer (default is the project config). `list` and `get` also take `--project` to read one layer in isolation:
 
 ```bash
 ironbee config set collector.apiKey sk-... --global
@@ -44,9 +44,9 @@ ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
 ironbee config list --global
 ```
 
-**Type coercion** — `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
+**Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render** — when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -58,7 +58,7 @@ ironbee config list --global
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from **all** cycles. Checked first — a match here activates no cycle, whatever else matches. |
+| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. |
 | `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). One global counter across all active cycles. |
 
 ```json
@@ -81,7 +81,7 @@ ironbee config list --global
 
 ## Verification cycles
 
-The three cycles — `browser`, `node`, and `backend` — share the same set of keys (replace `<cycle>` with `browser`, `node`, or `backend`):
+The three cycles: `browser`, `node`, and `backend`, share the same set of keys (replace `<cycle>` with `browser`, `node`, or `backend`):
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -102,7 +102,7 @@ The three cycles — `browser`, `node`, and `backend` — share the same set of 
 The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
 <AccordionGroup>
-  <Accordion title="Browser — default verify patterns">
+  <Accordion title="Browser default verify patterns">
     Matches code and markup files by extension (project-wide):
 
     ```
@@ -118,7 +118,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     *.hbs  *.ejs  *.pug  *.jade  *.astro
     ```
   </Accordion>
-  <Accordion title="Node — default verify patterns">
+  <Accordion title="Node default verify patterns">
     Targets typical Node.js server entry points and API routes (applies once the cycle is enabled):
 
     ```
@@ -133,7 +133,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     **/server.{ts,js,mjs,cjs}
     ```
   </Accordion>
-  <Accordion title="Backend — default verify patterns">
+  <Accordion title="Backend default verify patterns">
     Multi-language coverage of common server-side directories (applies once the cycle is enabled). The `{...}` extension set is `ts,js,mjs,cjs,py,go,java,rb,cs,rs,kt,scala,ex,exs,php,clj`:
 
     ```
@@ -181,7 +181,7 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `verificationContext.enable` | `boolean` | `true` | Master switch. When the first verification tool call of a cycle fires, the relevant `.ironbee/VERIFICATION.md` files for the changed paths are injected into the agent's context. Advisory only — never gates. Opt out with `false`. |
+| `verificationContext.enable` | `boolean` | `true` | Master switch. When the first verification tool call of a cycle fires, the relevant `.ironbee/VERIFICATION.md` files for the changed paths are injected into the agent's context. Advisory only, never gates. Opt out with `false`. |
 | `verificationContext.source` | `string` | `"git"` | Where the changed-path set comes from. `"git"` = working tree (staged + unstaged + untracked) ∪ the last `commitDepth` commits, with an `actions.jsonl` fallback when the project isn't a git repo. `"actions"` = IronBee's own `file_change` events only (no git subprocess). |
 | `verificationContext.commitDepth` | `number` | `1` | How many recent commits join the working tree for the `git` source. `0` = uncommitted work only. Ignored when `source` is `"actions"`. |
 | `verificationContext.maxBytes` | `number` | `65536` | Aggregate cap (64 KB) on the injected text. Past the cap, the least-specific (root-side) guidance is dropped first, keeping area-specific docs. |
@@ -214,7 +214,7 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `telemetry.enable` | `boolean` | `true` | Anonymous PostHog product analytics for the CLI itself (separate from the collector pipeline). Opt out with `false` — also turns off telemetry in the devtools MCP servers. Equivalent to `ironbee telemetry disable`. |
+| `telemetry.enable` | `boolean` | `true` | Anonymous PostHog product analytics for the CLI itself (separate from the collector pipeline). Opt out with `false`, also turns off telemetry in the devtools MCP servers. Equivalent to `ironbee telemetry disable`. |
 
 ---
 
@@ -223,7 +223,7 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `fileChange.captureChangeset` | `boolean` | `false` | When `true`, each `file_change` event carries a hunks-only unified diff. Off by default (events stay metadata-only). |
-| `fileChange.maxChangesetBytes` | `number` | `65536` | Hard cap (64 KB) on the diff string — larger diffs are truncated with a footer. |
+| `fileChange.maxChangesetBytes` | `number` | `65536` | Hard cap (64 KB) on the diff string, larger diffs are truncated with a footer. |
 
 ---
 
@@ -255,7 +255,7 @@ Controls whether IronBee may read your Claude Code OAuth token to fill statuslin
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `claude.oauthAccess.enable` | `boolean` | `true` | Whether IronBee may read the Claude OAuth token (macOS Keychain / `~/.claude/.credentials.json`) and call OAuth-scoped endpoints. Opt out with `false`. Claude-only. |
-| `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch — the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
+| `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch, the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
 
 ---
 
@@ -280,7 +280,7 @@ Each cycle's MCP server can be customized independently via `browserDevTools`, `
 | Key | Description |
 |-----|-------------|
 | `<x>DevTools.env` | Extra env vars merged into the default MCP server entry. |
-| `<x>DevTools.mcp` | Full replacement of the MCP server config — supply your own `command`+`args` (stdio) or `url` (HTTP). |
+| `<x>DevTools.mcp` | Full replacement of the MCP server config, supply your own `command`+`args` (stdio) or `url` (HTTP). |
 
 ```json
 {
@@ -300,9 +300,9 @@ Each cycle's MCP server can be customized independently via `browserDevTools`, `
 
 These sections auto-enable when a collector is configured and rarely need manual tuning. Browse them with `ironbee config list` or the [TUI](/cli/guides/interactive-mode) Configuration area:
 
-- **`recording`** — browser session recording (`recording.enable`).
-- **`jobQueue`** — the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
-- **`analytics`** — per-session structural analytics and how often they emit (`analytics.enable`, `analytics.emitOnStop`, and per-event opt-in/opt-out flags).
+- **`recording:`** browser session recording (`recording.enable`).
+- **`jobQueue:`** the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
+- **`analytics:`** per-session structural analytics and how often they emit (`analytics.enable`, `analytics.emitOnStop`, and per-event opt-in/opt-out flags).
 
 ---
 

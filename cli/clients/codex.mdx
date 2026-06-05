@@ -1,6 +1,6 @@
 ---
 title: Codex
-description: How IronBee integrates with OpenAI Codex CLI — guidance files, hooks, the $ironbee-verify skill, MCP servers, and Codex-specific behavior.
+description: How IronBee integrates with OpenAI Codex CLI: guidance files, hooks, the $ironbee-verify skill, MCP servers, and Codex-specific behavior.
 ---
 
 When you run `ironbee install` in a project where [Codex CLI](https://github.com/openai/codex) is detected, IronBee wires up the hooks, guidance, and tools Codex needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code) and [Cursor](/cli/clients/cursor), with a few Codex-specific details covered below.
@@ -18,7 +18,7 @@ Codex reads its hook and MCP configuration from **user-level** files (`~/.codex/
 | File | What it does |
 |------|--------------|
 | `~/.codex/hooks.json` | Registers IronBee's lifecycle hooks (user-level) |
-| `~/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`) and registers the devtools MCP servers — one `[mcp_servers.<name>]` block per enabled cycle |
+| `~/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`) and registers the devtools MCP servers, one `[mcp_servers.<name>]` block per enabled cycle |
 | `<project>/AGENTS.md` | The always-applied verification rule, written into an IronBee-delimited block (`<!-- ironbee:start -->` … `<!-- ironbee:end -->`) |
 | `<project>/.agents/skills/ironbee-verification/SKILL.md` | The verification skill the agent follows |
 | `<project>/.agents/skills/ironbee-verify/SKILL.md` | The `$ironbee-verify` skill you can invoke by hand |
@@ -37,10 +37,10 @@ Codex has no user-defined slash commands, so IronBee's manual verification trigg
 
 | Mention | Scope |
 |---------|-------|
-| `$ironbee-verify` | Focused — verify the areas affected by the change (the default) |
-| `$ironbee-verify full` | Everything — full checklist regardless of what changed |
-| `$ironbee-verify visual` | Visual only — appearance, layout, theming |
-| `$ironbee-verify functional` | Functional only — behavior, interactions, data flow |
+| `$ironbee-verify` | Focused, verify the areas affected by the change (the default) |
+| `$ironbee-verify full` | Everything full checklist regardless of what changed |
+| `$ironbee-verify visual` | Visual only appearance, layout, theming |
+| `$ironbee-verify functional` | Functional only behavior, interactions, data flow |
 
 The variants behave the same as the [`/ironbee-verify` command in Claude Code](/cli/clients/claude-code#slash-commands); only the invocation syntax differs.
 

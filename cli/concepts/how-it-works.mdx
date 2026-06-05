@@ -1,6 +1,6 @@
 ---
 title: How Verification Works
-description: The completion gate, verification cycles, verdicts, and retries — what happens when your agent finishes a task.
+description: The completion gate, verification cycles, verdicts, and retries what happens when your agent finishes a task.
 ---
 
 IronBee's core idea is simple: **code isn't done until it's verified.** This page explains the mechanism behind that: how IronBee intercepts task completion, what the agent has to do to pass, and what happens when it doesn't.
@@ -32,9 +32,9 @@ A **cycle** is one pass of testing against a real surface. IronBee has three, an
 
 | Cycle | Exercises the change through… |
 |-------|-------------------------------|
-| Browser | A real browser — navigation, screenshots, console, accessibility |
-| Node | The Node.js V8 inspector — probes and runtime snapshots |
-| Backend | Real protocol calls — HTTP, gRPC, GraphQL, WebSocket |
+| Browser | A real browser, navigation, screenshots, console, accessibility |
+| Node | The Node.js V8 inspector, probes and runtime snapshots |
+| Backend | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
 
 When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt**. They run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
 
@@ -73,8 +73,8 @@ By default the gate runs **focused** verification: the agent tests only the area
 
 Enforcement is one of three [verification modes](/cli/guides/verification#verification-modes):
 
-- **Monitoring-only** (`ironbee verification disable`) — the gate is never installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning enforcement on.
-- **Assist** (`ironbee verification auto disable`) — the `/ironbee-verify` command and devtools MCP servers stay installed so the agent can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector.
+- **Monitoring-only** (`ironbee verification disable`) - the gate is never installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning enforcement on.
+- **Assist** (`ironbee verification auto disable`) - the `/ironbee-verify` command and devtools MCP servers stay installed so the agent can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector.
 
 ---
 
@@ -86,7 +86,7 @@ Teams can steer *how* the agent verifies a given part of the codebase by committ
 
 ## Session isolation
 
-Every agent task runs as its own **session**, tracked independently in `.ironbee/sessions/<id>/`. Concurrent sessions — even in the same project — keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
+Every agent task runs as its own **session**, tracked independently in `.ironbee/sessions/<id>/`. Concurrent sessions, even in the same project, keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
 
 ---
 

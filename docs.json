@@ -252,7 +252,8 @@
   "footer": {
     "socials": {
       "x": "https://x.com/ironbee_ai",
-      "linkedin": "https://www.linkedin.com/company/ironbee-ai"
+      "linkedin": "https://www.linkedin.com/company/ironbee-ai",
+      "github": "https://github.com/ironbee-ai/"
     }
   }
 }

@@ -3,7 +3,7 @@ title: Fix Detail
 description: The event timeline and code diffs for a single fix cycle.
 ---
 
-The fix detail panel opens when you click a fix interval in the [Session Timeline](/console/session-timeline). It shows a chronological timeline of everything that happened during the fix — which files changed, what the operations were, and the exact code diffs.
+The fix detail panel opens when you click a fix interval in the [Session Timeline](/console/session-timeline). It shows a chronological timeline of everything that happened during the fix which files changed, what the operations were, and the exact code diffs.
 <img src="/images/console/project/fix-detail-dark.png" alt="IronBee Console — Fix Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 ---
@@ -40,11 +40,11 @@ A vertical chronological list of every event recorded during the fix:
 
 Each file edit appears as its own event:
 
-- **File path** — directory (muted) and filename (bold), full path on hover
-- **Operation chip** — `create`, `update`, or `delete`
-- **Diff stats** — lines added (green) and lines removed (red)
-- **View code** button — opens the [Diff Dialog](#diff-dialog) (only shown when changeset data is available)
-- **Tool chip** — the tool that made the change
+- **File path:** directory (muted) and filename (bold), full path on hover
+- **Operation chip:** `create`, `update`, or `delete`
+- **Diff stats:** lines added (green) and lines removed (red)
+- **View code:** button opens the [Diff Dialog](#diff-dialog) (only shown when changeset data is available)
+- **Tool chip:** the tool that made the change
 
 ### Fix ended
 
@@ -58,8 +58,8 @@ Each file edit appears as its own event:
 Clicking **View code** on a file change event opens a modal showing the full unified diff for that file:
 
 - **File path** and diff stats (lines added / removed) in the header
-- **Copy** button — copies the entire changeset to the clipboard
-- **Diff table** — four columns: old line number, new line number, sign (`+` / `−`), content
+- **Copy** button copies the entire changeset to the clipboard
+- **Diff table** has columns: old line number, new line number, sign (`+` / `−`), content
   - Added lines: green background
   - Removed lines: red background
   - Hunk headers (`@@ -start,count +start,count @@`): blue background

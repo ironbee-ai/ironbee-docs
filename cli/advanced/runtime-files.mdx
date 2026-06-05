@@ -1,32 +1,32 @@
 ---
 title: Runtime Files
-description: What IronBee writes to disk — global state, project config, and per-session runtime data.
+description: What IronBee writes to disk which are global state, project config, and per-session runtime data.
 ---
 
 IronBee stores its state in two places: a global directory in your home folder, and an `.ironbee/` directory inside each project. This page is a reference for what lives where, and what's safe to commit.
 
 ---
 
-## Global — `~/.ironbee/`
+## Global (`~/.ironbee/`)
 
 Machine-wide state, shared across all your projects:
 
 | File | What it holds |
 |------|---------------|
-| `config.json` | Global config — your defaults across all projects. `ironbee login` writes your collector credentials here. |
-| `projects.json` | The project inventory — the set of project paths IronBee is installed in. Powers `install --all` / `uninstall --all`. |
+| `config.json` | Global config for your defaults across all projects. `ironbee login` writes your collector credentials here. |
+| `projects.json` | The project inventory, the set of project paths IronBee is installed in. Powers `install --all` / `uninstall --all`. |
 | `install-snapshots.json` | Backups of any statusline config IronBee overwrote, so `uninstall` can restore your original. |
 
 ---
 
-## Project — `<project>/.ironbee/`
+## Project (`<project>/.ironbee/`)
 
 Created by `ironbee install` in each project:
 
 | Path | What it holds | Commit? |
 |------|---------------|---------|
-| `config.json` | Project config — team settings, shared with the repo | ✅ Yes |
-| `config.local.json` | Personal overrides — your machine only | ❌ Gitignored |
+| `config.json` | Project config, team settings, shared with the repo | ✅ Yes |
+| `config.local.json` | Personal overrides, your machine only | ❌ Gitignored |
 | `sessions/<id>/` | Per-session runtime data (below) | ❌ Gitignored |
 | `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). | ❌ Gitignored |
 
@@ -34,14 +34,14 @@ Created by `ironbee install` in each project:
 
 ---
 
-## Per-session — `.ironbee/sessions/<id>/`
+## Per-session (`.ironbee/sessions/<id>/`)
 
 Each agent task gets its own directory, keeping concurrent sessions isolated (see [How verification works](/cli/concepts/how-it-works#session-isolation)):
 
 | File | What it holds |
 |------|---------------|
-| `actions.jsonl` | The session event log — file edits, tool calls, and verification markers. The source of truth for what happened. |
-| `state.json` | The session's current state — phase, active cycle, and verification status. |
+| `actions.jsonl` | The session event log: file edits, tool calls, and verification markers. The source of truth for what happened. |
+| `state.json` | The session's current state: phase, active cycle, and verification status. |
 | `verdict.json` | The latest verdict for the session (`status`, `checks`, `issues`, `fixes`). |
 | `retries` | The current verification retry count. |
 | `analytics/` | Per-session analytics state (`state.json`) and log (`analytics.log`) used to derive session metrics. |
