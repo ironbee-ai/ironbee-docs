@@ -31,7 +31,7 @@ ironbee backend enable    # turn on backend protocol verification
 ironbee browser disable   # turn off the browser cycle (e.g. backend-only projects)
 ```
 
-Re-enabling is the inverse — `ironbee browser enable`, `ironbee node disable`, and so on. Changes are written to the project config and your client's hooks/tools are re-rendered automatically.
+Re-enabling is the inverse: `ironbee browser enable`, `ironbee node disable`, and so on. Changes are written to the project config and your client's hooks/tools are re-rendered automatically.
 
 By default these write to the project config (`<project>/.ironbee/config.json`). To target a different layer:
 
@@ -42,7 +42,7 @@ By default these write to the project config (`<project>/.ironbee/config.json`).
 | `--local` | `<project>/.ironbee/config.local.json` — gitignored, just for you |
 
 <Note>
-  Enabling a platform applies sensible built-in file patterns automatically — you don't have to list which files to verify. To fine-tune *which* files trigger each cycle (custom verify patterns, ignored paths, devtools settings), see [Configuration](/cli/configuration/configuration#verification-cycles).
+  Enabling a platform applies sensible built-in file patterns automatically; you don't have to list which files to verify. To fine-tune *which* files trigger each cycle (custom verify patterns, ignored paths, devtools settings), see [Configuration](/cli/configuration/configuration#verification-cycles).
 </Note>
 
 ---
@@ -82,7 +82,7 @@ Use assist when you want the agent to be able to verify on demand (and have ever
 The `auto` sub-toggle accepts the same target flags as everything else (`-g`/`--global`, `--local`; default is the project config) and, like `verification enable`/`disable`, warns when a higher-priority layer is shadowing the layer you wrote to.
 
 <Info>
-  Restart your editor or agent session after toggling — the change takes effect on the next session.
+  Restart your editor or agent session after toggling; the change takes effect on the next session.
 </Info>
 
 ---

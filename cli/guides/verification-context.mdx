@@ -3,7 +3,7 @@ title: Verification Context
 description: Give your agent area-specific verification instructions by dropping .ironbee/VERIFICATION.md files in your repo.
 ---
 
-Different parts of a codebase need different things checked. A payments module wants the 3DS challenge exercised; an auth module wants session-fixation verified; the frontend wants an accessibility pass. **Verification context** lets your team author that guidance once, in the repo, and have IronBee surface *only the parts relevant to what changed* — injected straight into the agent's context the moment it starts verifying.
+Different parts of a codebase need different things checked. A payments module wants the 3DS challenge exercised; an auth module wants session-fixation verified; the frontend wants an accessibility pass. **Verification context** lets your team author that guidance once, in the repo, and have IronBee surface *only the parts relevant to what changed*, injecting them straight into the agent's context the moment it starts verifying.
 
 It's advisory: the guidance reaches the agent as a first-class reminder alongside the standard verification flow, but it never blocks completion on its own.
 
@@ -27,7 +27,7 @@ my-app/
         └── VERIFICATION.md       # frontend-area guidance
 ```
 
-The file is plain prose — write whatever you'd tell a teammate before they verify a change in that area:
+The file is plain prose. Write whatever you'd tell a teammate before they verify a change in that area:
 
 ```markdown
 # Payment verification
@@ -38,7 +38,7 @@ The file is plain prose — write whatever you'd tell a teammate before they ver
 ```
 
 <Note>
-  The file name is the fixed convention `.ironbee/VERIFICATION.md` — it isn't configurable. The `.ironbee/` folder is the same namespace that holds the project's `config.json` at the repo root, so area guidance lives alongside it consistently. These files are meant to be **committed** and reviewed in PRs — only `sessions/` and `config.local.json` are gitignored.
+  The file name is the fixed convention `.ironbee/VERIFICATION.md`; it isn't configurable. The `.ironbee/` folder is the same namespace that holds the project's `config.json` at the repo root, so area guidance lives alongside it consistently. These files are meant to be **committed** and reviewed in PRs; only `sessions/` and `config.local.json` are gitignored.
 </Note>
 
 ---
@@ -63,17 +63,17 @@ Collects: payment/stripe/.ironbee/VERIFICATION.md   (if present)
 
 ## What counts as "changed"
 
-By default the changed set comes from **git**: your uncommitted work (working tree — staged, unstaged, and untracked files) plus the last commit. In a non-git project, IronBee falls back to its own `file_change` events for the current cycle.
+By default the changed set comes from **git**: your uncommitted work (working tree: staged, unstaged, and untracked files) plus the last commit. In a non-git project, IronBee falls back to its own `file_change` events for the current cycle.
 
 - Your [`ignoredVerifyPatterns`](/cli/configuration/configuration#core-options) filter the set, so test/build/docs churn doesn't pull in guidance.
 - IronBee's own `.ironbee/` tree is always excluded.
-- `commitDepth` controls how many recent commits join the working tree — `1` (default) covers in-flight work plus the latest commit; `0` is uncommitted-only; raise it for teams that commit per logical step.
+- `commitDepth` controls how many recent commits join the working tree: `1` (default) covers in-flight work plus the latest commit, `0` is uncommitted-only, and you can raise it for teams that commit per logical step.
 
 ---
 
 ## When it's injected
 
-The guidance is injected on the **first verification tool call of each cycle** — exactly when the agent starts verifying — and once per cycle (re-verifying after a fix gets a fresh read of what changed). It arrives through each client's native context channel, so the agent treats it as a binding reminder, not incidental output.
+The guidance is injected on the **first verification tool call of each cycle** (exactly when the agent starts verifying) and once per cycle (re-verifying after a fix gets a fresh read of what changed). It arrives through each client's native context channel, so the agent treats it as a binding reminder, not incidental output.
 
 | Mode | Injects? |
 |------|----------|
@@ -87,7 +87,7 @@ It is **advisory in this release**: the agent must follow the guidance as part o
 
 ## Configuration
 
-The feature is on by default. Tune it under the `verificationContext` key — see [Configuration → Verification context](/cli/configuration/configuration#verification-context) for the full table. The common knobs:
+The feature is on by default. Tune it under the `verificationContext` key. See [Configuration → Verification context](/cli/configuration/configuration#verification-context) for the full table. The common knobs:
 
 ```bash
 ironbee config set verificationContext.enable false      # turn it off entirely
@@ -98,7 +98,7 @@ ironbee config set verificationContext.source actions    # skip git, use IronBee
 These keys are read live at verification time, so a change takes effect on the next session without re-rendering client artifacts.
 
 <Note>
-  `.ironbee/VERIFICATION.md` is repo content at the same trust level as `CLAUDE.md` or `AGENTS.md` — the agent follows whatever it says. Review changes to these files in PRs as you would any other instruction your agent reads.
+  `.ironbee/VERIFICATION.md` is repo content at the same trust level as `CLAUDE.md` or `AGENTS.md`; the agent follows whatever it says. Review changes to these files in PRs as you would any other instruction your agent reads.
 </Note>
 
 ---

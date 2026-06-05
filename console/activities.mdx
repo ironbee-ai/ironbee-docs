@@ -3,9 +3,9 @@ title: Activities
 description: The individual actions an AI agent takes within a session.
 ---
 
-An **activity** is a discrete working period within a session. Activities form the chronological record of everything the agent did — each one contains a mix of verifications, fixes, and other tool calls.
+An **activity** is a discrete working period within a session. Activities form the chronological record of everything the agent did, and each one contains a mix of verifications, fixes, and other tool calls.
 
-Activities are accessible through the [Session Timeline](/console/session-timeline) — click any activity bar to select it, or expand it to see the child intervals (verifications, fixes, and other events) nested inside.
+Activities are accessible through the [Session Timeline](/console/session-timeline). Click any activity bar to select it, or expand it to see the child intervals (verifications, fixes, and other events) nested inside.
 
 ---
 
@@ -69,7 +69,7 @@ Below the stats, a chronological event list shows each step of the fix:
 
 ### Other panel
 
-Shows when you click an "other" interval — events that occurred outside a named verification or fix:
+Shows when you click an "other" interval, for events that occurred outside a named verification or fix:
 
 | Field | Description |
 |-------|-------------|
@@ -95,4 +95,4 @@ An activity with issues might look like:
 2. **Fix** → agent corrects the code
 3. **Verification** (passed) → task completes
 
-Multiple failed verifications and fixes within one activity signal that the agent struggled with a particular change — a useful signal when reviewing [Quality Analysis](/console/analysis-quality).
+Multiple failed verifications and fixes within one activity signal that the agent struggled with a particular change, a useful signal when reviewing [Quality Analysis](/console/analysis-quality).
