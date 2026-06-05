@@ -5,19 +5,19 @@ description: Sign up, install the CLI, connect to your account, and run your fir
 
 ## Prerequisites
 
-- **Node.js 22 or later** — check with `node --version`
+- **Node.js 22 or later** check with `node --version`
 - An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Codex CLI](https://github.com/openai/codex)
 
 
 ---
 
-## Step 1 — Create your account
+## Step 1 - Create your account
 
 Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up. Your account gives you access to the dashboard and generates the API key the CLI needs to ship session data.
 
 ---
 
-## Step 2 — Install the CLI
+## Step 2 - Install the CLI
 
 ```bash
 npm install -g @ironbee-ai/cli
@@ -31,7 +31,7 @@ ironbee --version
 
 ---
 
-## Step 3 — Connect the CLI to your account
+## Step 3 - Connect the CLI to your account
 
 Run `ironbee login` from any directory. It opens your browser at `console.ironbee.ai`, asks you to confirm, and writes your API key and collector URL to `~/.ironbee/config.json` automatically.
 
@@ -60,7 +60,7 @@ The browser opens, you confirm, and the terminal prints:
 
 ---
 
-## Step 4 — Set up your project
+## Step 4 - Set up your project
 
 Navigate to your project directory and run:
 
@@ -82,7 +82,7 @@ IronBee auto-detects your AI client and writes:
 
 ---
 
-## Step 5 — Let the agent work
+## Step 5 - Let the agent work
 
 Open Claude Code, Cursor, or Codex and give the agent a task:
 
@@ -96,7 +96,7 @@ When the agent finishes editing code, IronBee intercepts the completion and requ
 
 ---
 
-## Step 6 — View your results
+## Step 6 - View your results
 
 Open the [IronBee Console](https://console.ironbee.ai) and navigate to your project. You will find:
 
