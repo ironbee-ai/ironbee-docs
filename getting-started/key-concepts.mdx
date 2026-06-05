@@ -17,7 +17,7 @@ description: Core terminology you will encounter throughout IronBee.
 
 ## Project
 
-A **project** maps to a codebase — in practice, usually a single git repository. When you run `ironbee install` in a directory, that directory is associated with a project in the console. All sessions, verifications, and analysis for that codebase are grouped under its project.
+A **project** maps to a codebase, in practice usually a single git repository. When you run `ironbee install` in a directory, that directory is associated with a project in the console. All sessions, verifications, and analysis for that codebase are grouped under its project.
 
 ---
 
@@ -100,7 +100,7 @@ A **fix** is a code change made by the agent in response to a failed verificatio
 
 ## Trace & span
 
-IronBee records **traces** for each verification cycle — a structured log of every tool call, with timing. Within a trace, each individual tool invocation is a **span**.
+IronBee records **traces** for each verification cycle, a structured log of every tool call, with timing. Within a trace, each individual tool invocation is a **span**.
 
 The **waterfall chart** in the console visualizes these as a timeline, making it easy to see what the agent tested, in what order, and how long each step took.
 

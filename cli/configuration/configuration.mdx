@@ -3,9 +3,9 @@ title: Configuration
 description: Tune IronBee's verification behavior with layered global, project, and local config.
 ---
 
-IronBee works out of the box — most projects never need to touch config. When you do want to fine-tune *which* files get verified, change retry limits, or point at a self-hosted collector, this page is the reference.
+IronBee works out of the box, and most projects never need to touch config. When you do want to fine-tune *which* files get verified, change retry limits, or point at a self-hosted collector, this page is the reference.
 
-You can edit settings two ways: the `ironbee config` command (recommended — it validates and re-applies changes for you) or by editing the JSON files directly.
+You can edit settings two ways: the `ironbee config` command (recommended, since it validates and re-applies changes for you) or by editing the JSON files directly.
 
 ---
 
@@ -46,10 +46,10 @@ ironbee config list --global
 
 **Type coercion** — `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render** — when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project — `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render** — when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
-  Restart your editor or agent session after changing an artifact-affecting key — it takes effect on the next session.
+  Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
 </Info>
 
 ---
@@ -155,11 +155,11 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
 </AccordionGroup>
 
 <Note>
-  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. There is **no** default skip list — `ignoredVerifyPatterns` is empty unless you set it; non-code files simply don't match the patterns above.
+  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. There is **no** default skip list: `ignoredVerifyPatterns` is empty unless you set it, and non-code files simply don't match the patterns above.
 </Note>
 
 <Note>
-  Prefer the [`ironbee browser` / `node` / `backend` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off — they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
+  Prefer the [`ironbee browser` / `node` / `backend` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off; they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
 </Note>
 
 ```json
@@ -250,7 +250,7 @@ Integrates session status into Claude Code's statusline while preserving any sta
 
 ## Claude OAuth access (Claude Code only)
 
-Controls whether IronBee may read your Claude Code OAuth token to fill statusline rate-limits for plans whose statusline JSON omits them (team / enterprise). Manage with `ironbee claude oauth-access enable` / `disable` / `status` — see [Claude Code → Claude OAuth access](/cli/clients/claude-code#claude-oauth-access).
+Controls whether IronBee may read your Claude Code OAuth token to fill statusline rate-limits for plans whose statusline JSON omits them (team / enterprise). Manage with `ironbee claude oauth-access enable` / `disable` / `status`. See [Claude Code → Claude OAuth access](/cli/clients/claude-code#claude-oauth-access).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -291,7 +291,7 @@ Each cycle's MCP server can be customized independently via `browserDevTools`, `
 ```
 
 <Note>
-  IronBee always sets its own invariants (`TOOL_NAME_PREFIX`, metadata flags, platform) last — these can't be overridden.
+  IronBee always sets its own invariants (`TOOL_NAME_PREFIX`, metadata flags, platform) last; these can't be overridden.
 </Note>
 
 ---

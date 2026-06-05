@@ -5,3 +5,6 @@
 # IronBee runtime artifacts
 .ironbee/sessions/
 .ironbee/config.local.json
+
+.claude
+.codex

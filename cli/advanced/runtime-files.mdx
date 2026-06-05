@@ -30,7 +30,7 @@ Created by `ironbee install` in each project:
 | `sessions/<id>/` | Per-session runtime data (below) | ❌ Gitignored |
 | `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). | ❌ Gitignored |
 
-`ironbee install` adds `.ironbee/sessions/`, `.ironbee/otel/`, and `.ironbee/config.local.json` to your project's `.gitignore` automatically — these are machine-local runtime state and personal overrides, not something you commit. The committed `config.json` is what your teammates pick up when they run `ironbee install`.
+`ironbee install` adds `.ironbee/sessions/`, `.ironbee/otel/`, and `.ironbee/config.local.json` to your project's `.gitignore` automatically. These are machine-local runtime state and personal overrides, not something you commit. The committed `config.json` is what your teammates pick up when they run `ironbee install`.
 
 ---
 
@@ -51,7 +51,7 @@ Each agent task gets its own directory, keeping concurrent sessions isolated (se
 | `imported.json` | A marker written by [`ironbee import`](/cli/guides/importing-sessions) so a session isn't re-imported. |
 
 <Note>
-  Not every file is present in every session — `retries`, `queue/`, and `imported.json` appear only when relevant. These persist after a session ends (they aren't auto-deleted), but they're all under the gitignored `sessions/` directory. You rarely touch them directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
+  Not every file is present in every session: `retries`, `queue/`, and `imported.json` appear only when relevant. These persist after a session ends (they aren't auto-deleted), but they're all under the gitignored `sessions/` directory. You rarely touch them directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
 </Note>
 
 ---

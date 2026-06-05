@@ -3,7 +3,7 @@ title: Environment Variables
 description: Environment variables IronBee reads — for CI, secrets, debugging, and project resolution.
 ---
 
-Most configuration lives in [config files](/cli/configuration/configuration), but a few settings can be supplied via environment variables — handy for CI runners, ephemeral shells, and secrets you don't want to commit.
+Most configuration lives in [config files](/cli/configuration/configuration), but a few settings can be supplied via environment variables, handy for CI runners, ephemeral shells, and secrets you don't want to commit.
 
 ---
 
@@ -35,13 +35,13 @@ When a hook or command needs to know which project it's acting on, IronBee resol
 2. `IRONBEE_PROJECT_DIR` — an explicit override you can set
 3. The current working directory
 
-You normally don't set these yourself — the AI client provides them. `IRONBEE_PROJECT_DIR` is the escape hatch for scripted or non-standard setups.
+You normally don't set these yourself; the AI client provides them. `IRONBEE_PROJECT_DIR` is the escape hatch for scripted or non-standard setups.
 
 ---
 
 ## Advanced
 
-Rarely needed — mostly for internal wiring and test harnesses:
+Rarely needed, mostly for internal wiring and test harnesses:
 
 | Variable | Effect |
 |----------|--------|
@@ -55,7 +55,7 @@ Rarely needed — mostly for internal wiring and test harnesses:
 
 <CardGroup cols={2}>
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration">
-    The full config-key reference — the file-based equivalents of these overrides.
+    The full config-key reference, the file-based equivalents of these overrides.
   </Card>
   <Card title="Runtime files" icon="folder" href="/cli/advanced/runtime-files">
     Where config and credentials are stored on disk.

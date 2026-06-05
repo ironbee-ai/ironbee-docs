@@ -31,7 +31,7 @@ IronBee installs the `/ironbee-verify` slash command, which the agent (or you) c
 
 ### /ironbee-verify
 
-Run a verification cycle for the current changes. By default it does a **focused** check — verifying only the areas affected by what changed. Variants narrow or widen the scope:
+Run a verification cycle for the current changes. By default it does a **focused** check, verifying only the areas affected by what changed. Variants narrow or widen the scope:
 
 | Command | Scope |
 |---------|-------|
@@ -56,7 +56,7 @@ The permissions IronBee writes are scoped to what's actually active. Each enable
 
 ## Claude OAuth access
 
-IronBee can read your Claude Code OAuth token (macOS Keychain or `~/.claude/.credentials.json`) to fill in statusline rate-limits for plans whose statusline JSON omits them — **team and enterprise**. It's **on by default** and Claude-only.
+IronBee can read your Claude Code OAuth token (macOS Keychain or `~/.claude/.credentials.json`) to fill in statusline rate-limits for plans whose statusline JSON omits them, namely **team and enterprise**. It's **on by default** and Claude-only.
 
 ```bash
 ironbee claude oauth-access status    # capability flag, token readability + expiry, live plan / rate-limit probe
@@ -64,13 +64,13 @@ ironbee claude oauth-access disable   # stop reading the token
 ironbee claude oauth-access enable    # re-enable (and prime the macOS Keychain permission)
 ```
 
-On macOS, `enable` reads the token right away so the Keychain permission prompt appears in your terminal — choose **Always Allow** so later background reads don't re-prompt. Writes to the global config by default; `--project` / `--local` target other layers. Underlying keys: [`claude.oauthAccess.*`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
+On macOS, `enable` reads the token right away so the Keychain permission prompt appears in your terminal. Choose **Always Allow** so later background reads don't re-prompt. Writes to the global config by default; `--project` / `--local` target other layers. Underlying keys: [`claude.oauthAccess.*`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
 
 ---
 
 ## OTEL collector
 
-To derive context-usage metrics, IronBee runs a small **local OTEL collector daemon** that receives Claude Code's OTLP export and turns it into `session_context` events. One daemon serves every session on the machine, and it starts and reaps itself automatically — you rarely touch it. When you need to:
+To derive context-usage metrics, IronBee runs a small **local OTEL collector daemon** that receives Claude Code's OTLP export and turns it into `session_context` events. One daemon serves every session on the machine, and it starts and reaps itself automatically, so you rarely touch it. When you need to:
 
 ```bash
 ironbee claude otel status   # query the daemon's /health

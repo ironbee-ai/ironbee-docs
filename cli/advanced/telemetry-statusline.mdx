@@ -3,13 +3,13 @@ title: Telemetry & Statusline
 description: Manage anonymous CLI telemetry and the Claude Code statusline integration.
 ---
 
-Two optional integrations you can toggle from the CLI: anonymous product telemetry, and the Claude Code statusline. Both map to [config keys](/cli/configuration/configuration) — these commands are the convenient way to flip them.
+Two optional integrations you can toggle from the CLI: anonymous product telemetry, and the Claude Code statusline. Both map to [config keys](/cli/configuration/configuration), and these commands are the convenient way to flip them.
 
 ---
 
 ## Telemetry
 
-IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. This is **separate** from the IronBee Collector pipeline that ships your session data — turning telemetry off has no effect on your own analytics.
+IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. This is **separate** from the IronBee Collector pipeline that ships your session data. Turning telemetry off has no effect on your own analytics.
 
 ```bash
 ironbee telemetry disable   # opt out

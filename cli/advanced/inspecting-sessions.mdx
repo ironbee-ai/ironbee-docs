@@ -3,7 +3,7 @@ title: Inspecting Sessions
 description: Check verdict status and validate verdicts from the terminal.
 ---
 
-Most of the time you'll review sessions in the [Console](https://console.ironbee.ai). But two commands let you inspect sessions straight from the terminal — useful for quick checks and debugging a session that won't pass.
+Most of the time you'll review sessions in the [Console](https://console.ironbee.ai). But two commands let you inspect sessions straight from the terminal, useful for quick checks and debugging a session that won't pass.
 
 ---
 
@@ -15,13 +15,13 @@ Show the verdict status of the sessions in a project:
 ironbee status [project-dir]
 ```
 
-For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and — for failures — the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#switching-to-assist-mode) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
+For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and, for failures, the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#switching-to-assist-mode) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
 
 ---
 
 ## ironbee verify
 
-Dry-run the verdict checks for a session **without changing anything** — a read-only version of the gate that runs when the agent stops:
+Dry-run the verdict checks for a session **without changing anything**, a read-only version of the gate that runs when the agent stops:
 
 ```bash
 ironbee verify [session-id]

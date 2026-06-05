@@ -3,7 +3,7 @@ title: Job Queue
 description: Inspect and manage the background queue that ships session data to the Collector.
 ---
 
-IronBee buffers session events in a file-backed queue before sending them to the Collector. This happens automatically in the background — you rarely need to touch it. These commands are for diagnosing or recovering delivery when something stalls (e.g. you were offline and events piled up).
+IronBee buffers session events in a file-backed queue before sending them to the Collector. This happens automatically in the background and you rarely need to touch it. These commands are for diagnosing or recovering delivery when something stalls (e.g. you were offline and events piled up).
 
 ---
 
@@ -59,7 +59,7 @@ ironbee queue dead-letter clear               # empty the dead-letter file
 
 ## Purge
 
-Destructive cleanup of queue state — use with care:
+Destructive cleanup of queue state. Use with care:
 
 ```bash
 ironbee queue purge --snapshots                      # delete all snapshot files, unprocessed

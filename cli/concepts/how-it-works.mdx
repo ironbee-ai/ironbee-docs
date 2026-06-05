@@ -3,7 +3,7 @@ title: How Verification Works
 description: The completion gate, verification cycles, verdicts, and retries — what happens when your agent finishes a task.
 ---
 
-IronBee's core idea is simple: **code isn't done until it's verified.** This page explains the mechanism behind that — how IronBee intercepts task completion, what the agent has to do to pass, and what happens when it doesn't.
+IronBee's core idea is simple: **code isn't done until it's verified.** This page explains the mechanism behind that: how IronBee intercepts task completion, what the agent has to do to pass, and what happens when it doesn't.
 
 ---
 
@@ -36,13 +36,13 @@ A **cycle** is one pass of testing against a real surface. IronBee has three, an
 | Node | The Node.js V8 inspector — probes and runtime snapshots |
 | Backend | Real protocol calls — HTTP, gRPC, GraphQL, WebSocket |
 
-When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt** — they run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
+When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt**. They run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
 
 ---
 
 ## The verdict
 
-To pass a cycle, the agent exercises the affected paths with that cycle's tools and submits a **verdict** — its assessment of whether the change works:
+To pass a cycle, the agent exercises the affected paths with that cycle's tools and submits a **verdict**, its assessment of whether the change works:
 
 ```json
 {
@@ -53,7 +53,7 @@ To pass a cycle, the agent exercises the affected paths with that cycle's tools 
 }
 ```
 
-IronBee doesn't take `status: "pass"` at face value. Each cycle defines the tools that must appear on the wire before a pass counts — required tools (all-of) and alternative evidence paths (any-of). If the agent claims success without actually using the tools, the gate overrides the verdict to **fail**. This is what stops an agent from declaring "it works" without testing.
+IronBee doesn't take `status: "pass"` at face value. Each cycle defines the tools that must appear on the wire before a pass counts: required tools (all-of) and alternative evidence paths (any-of). If the agent claims success without actually using the tools, the gate overrides the verdict to **fail**. This is what stops an agent from declaring "it works" without testing.
 
 ---
 
@@ -65,7 +65,7 @@ A failed verdict sends the agent back to fix the issues and verify again. The [`
 
 ## Focused vs full verification
 
-By default the gate runs **focused** verification — the agent tests only the areas affected by what changed. The agent (or you) can widen or narrow this with the [`/ironbee-verify` variants](/cli/clients/claude-code#slash-commands): `full`, `visual`, or `functional`.
+By default the gate runs **focused** verification: the agent tests only the areas affected by what changed. The agent (or you) can widen or narrow this with the [`/ironbee-verify` variants](/cli/clients/claude-code#slash-commands): `full`, `visual`, or `functional`.
 
 ---
 
@@ -80,7 +80,7 @@ Enforcement is one of three [verification modes](/cli/guides/verification#verifi
 
 ## Area-specific guidance
 
-Teams can steer *how* the agent verifies a given part of the codebase by committing [`.ironbee/VERIFICATION.md`](/cli/guides/verification-context) files. When a change touches that area, IronBee injects the matching guidance into the agent's context as it starts verifying — advisory instructions layered on top of the standard flow, resolved hierarchically from the changed paths.
+Teams can steer *how* the agent verifies a given part of the codebase by committing [`.ironbee/VERIFICATION.md`](/cli/guides/verification-context) files. When a change touches that area, IronBee injects the matching guidance into the agent's context as it starts verifying: advisory instructions layered on top of the standard flow, resolved hierarchically from the changed paths.
 
 ---
 
