@@ -239,8 +239,12 @@
   "navbar": {
     "links": [
       {
-        "label": "Twitter",
-        "href": "https://x.com/ironbee_ai"
+        "label": "Slack",
+        "href": "https://ironbeeai-community.slack.com/"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/xqBJy53dyJ"
       },
       {
         "label": "Website",
