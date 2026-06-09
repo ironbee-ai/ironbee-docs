@@ -3,7 +3,7 @@ title: Other Activity
 description: Tool calls and agentic interactions outside of verification and fix cycles.
 ---
 
-Not everything an agent does falls inside a verification or fix cycle. **Other** intervals capture the tool calls and agentic interactions that happen between named cycles — setup work, general exploration, file reads, web searches, shell commands, sub-agent spawns, and anything else the agent does before or after verifying.
+Not everything an agent does falls inside a verification or fix cycle. **Other** intervals capture the tool calls and agentic interactions that happen between named cycles: setup work, general exploration, file reads, web searches, shell commands, sub-agent spawns, and anything else the agent does before or after verifying.
 
 These intervals appear in the [Session Timeline](/console/session-timeline) as **Other** bars nested inside activity rows. Click one to open the Other detail panel.
 
@@ -26,16 +26,16 @@ Four metrics shown at the top of the panel:
 
 A chronological list of every tool call and agentic event in the interval. Each row shows:
 
-- **Tool name** — the tool invoked, with any prefix stripped for readability
-- **MCP server** — if the tool belongs to an MCP server, the server name is shown as a chip
-- **Tool type** — `mcp`, `skill`, or `sub_agent` where applicable
-- **Time offset** — relative to the start of the interval (e.g., `+4s 210ms`)
+- **Tool name:** the tool invoked, with any prefix stripped for readability
+- **MCP server:** if the tool belongs to an MCP server, the server name is shown as a chip
+- **Tool type:** `mcp`, `skill`, or `sub_agent` where applicable
+- **Time offset:** relative to the start of the interval (e.g., `+4s 210ms`)
 - **Absolute timestamp**
-- **Duration** — how long the tool call took
-- **Input size** — bytes of input passed to the tool
-- **Response size** — bytes returned by the tool
-- **Error** — error message if the call failed
-- **View input** button — opens the full tool input as JSON
+- **Duration:** how long the tool call took
+- **Input size:** bytes of input passed to the tool
+- **Response size:** bytes returned by the tool
+- **Error:** error message if the call failed
+- **View input:** button opens the full tool input as JSON
 
 Tool icons are color-coded by domain:
 
@@ -52,13 +52,13 @@ Tool icons are color-coded by domain:
 
 ## What you'll typically see here
 
-Other intervals contain the bulk of an agent's day-to-day work — the parts that aren't about proving a change is correct:
+Other intervals contain the bulk of an agent's day-to-day work, the parts that aren't about proving a change is correct:
 
-- **Reading and exploring** — file reads, directory listings, grep searches
-- **Planning and reasoning** — turns where the agent thinks without calling tools, or uses TodoWrite / task tracking
-- **Web activity** — WebFetch, WebSearch, or MCP-based HTTP calls made during research
-- **Shell commands** — Bash invocations for building, running tests, installing dependencies
-- **Sub-agent interactions** — spawning and waiting on background agents
-- **MCP tool calls** — any tool from a connected MCP server not tied to a verification cycle
+- **Reading and exploring:** file reads, directory listings, grep searches
+- **Planning and reasoning:** turns where the agent thinks without calling tools, or uses TodoWrite / task tracking
+- **Web activity:** WebFetch, WebSearch, or MCP-based HTTP calls made during research
+- **Shell commands:** Bash invocations for building, running tests, installing dependencies
+- **Sub-agent interactions:** spawning and waiting on background agents
+- **MCP tool calls:** any tool from a connected MCP server not tied to a verification cycle
 
-Long Other intervals between verifications can indicate the agent spent significant time exploring or debugging before it felt confident enough to verify — a useful signal alongside the [Session Shape](/console/session-analytics#session-shape) card in Analytics.
+Long Other intervals between verifications can indicate the agent spent significant time exploring or debugging before it felt confident enough to verify a useful signal alongside the [Session Shape](/console/session-analytics#session-shape) card in Analytics.

@@ -11,15 +11,15 @@ The only required input is `ironbee_api_key`, plus one form of Claude authentica
 
 ## Inputs
 
-### IronBee — auth & reporting
+### IronBee - Auth & Reporting
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `ironbee_api_key` | Yes | | IronBee API key used to authenticate the collector. Passed as an env var — never written to disk. |
+| `ironbee_api_key` | Yes | | IronBee API key used to authenticate the collector. Passed as an env var, never written to disk. |
 | `ironbee_collector_url` | No | `https://collector.service.ironbee.ai` | IronBee collector endpoint URL. |
 | `ironbee_console_url` | No | `console.ironbee.ai` | IronBee Console hostname (no scheme) used to build session links in the PR report. |
 
-### IronBee — DevTools modes
+### IronBee - DevTools Modes
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
@@ -27,7 +27,7 @@ The only required input is `ironbee_api_key`, plus one form of Claude authentica
 | `ironbee_backend_devtools` | No | `false` | Enable backend DevTools verification (backend MCP). |
 | `ironbee_node_devtools` | No | `false` | Enable Node.js DevTools verification (node MCP). |
 
-### IronBee — install & config
+### IronBee - Install & Config
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
@@ -47,7 +47,7 @@ The only required input is `ironbee_api_key`, plus one form of Claude authentica
 | `prompt` | No | | Additional instructions for the verification agent. |
 | `claude_args` | No | | Additional Claude Code CLI arguments. |
 
-### Application under test
+### Application Under Test
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
@@ -56,7 +56,7 @@ The only required input is `ironbee_api_key`, plus one form of Claude authentica
 | `app_start_command` | No | | Command to start the application (e.g. `npm run dev`). |
 | `app_url` | No | | Application URL for browser verification (e.g. `http://localhost:3000`). |
 
-### GitHub & general
+### GitHub & General
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|

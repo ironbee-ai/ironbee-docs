@@ -32,7 +32,7 @@ ironbee install --client all      # every detected client
 
 ### Install everywhere at once
 
-IronBee keeps an inventory of every project you've installed it into (see [The project inventory](#the-project-inventory) below). To re-run install across all of them — handy after changing a global setting:
+IronBee keeps an inventory of every project you've installed it into (see [The project inventory](#the-project-inventory) below). To re-run install across all of them (handy after changing a global setting):
 
 ```bash
 ironbee install --all
@@ -65,15 +65,15 @@ ironbee uninstall --all --yes  # no prompt — for scripts
 
 IronBee tracks the projects it's installed in at `~/.ironbee/projects.json`. This inventory is what `install --all` and global config changes use to know which projects to update.
 
-You normally don't manage it by hand — `ironbee install` adds a project automatically, and `ironbee uninstall` removes it. Two commands let you adjust the inventory **without touching any installed files**:
+You normally don't manage it by hand; `ironbee install` adds a project automatically, and `ironbee uninstall` removes it. Two commands let you adjust the inventory **without touching any installed files**:
 
 ```bash
 ironbee register     # add the current project to the inventory
 ironbee unregister   # remove the current project from the inventory
 ```
 
-- **`register`** — retrofit a project that was set up manually (or before the inventory existed) so it shows up for `install --all` and global-config notices. No artifacts are written.
-- **`unregister`** — drop an entry without uninstalling anything. Works even if the project directory has already been deleted.
+- **`register`** - retrofit a project that was set up manually (or before the inventory existed) so it shows up for `install --all` and global-config notices. No artifacts are written.
+- **`unregister`** - drop an entry without uninstalling anything. Works even if the project directory has already been deleted.
 
 Both accept `-p, --project <dir>` to target a directory other than the current one.
 

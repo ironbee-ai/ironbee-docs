@@ -3,9 +3,9 @@ title: Activities
 description: The individual actions an AI agent takes within a session.
 ---
 
-An **activity** is a discrete working period within a session. Activities form the chronological record of everything the agent did — each one contains a mix of verifications, fixes, and other tool calls.
+An **activity** is a discrete working period within a session. Activities form the chronological record of everything the agent did, and each one contains a mix of verifications, fixes, and other tool calls.
 
-Activities are accessible through the [Session Timeline](/console/session-timeline) — click any activity bar to select it, or expand it to see the child intervals (verifications, fixes, and other events) nested inside.
+Activities are accessible through the [Session Timeline](/console/session-timeline). Click any activity bar to select it, or expand it to see the child intervals (verifications, fixes, and other events) nested inside.
 
 ---
 
@@ -13,10 +13,10 @@ Activities are accessible through the [Session Timeline](/console/session-timeli
 
 | Type | Description |
 |------|-------------|
-| `activity` | The parent working period — contains verifications, fixes, and other events |
+| `activity` | The parent working period contains verifications, fixes, and other events |
 | `verification` | A verification cycle run by the agent |
 | `fix` | A fix attempt made after a failed verification |
-| `other` | Tool calls and events that don't belong to a verification or fix — idle time, setup, general tool use |
+| `other` | Tool calls and events that don't belong to a verification or fix which are idle time, setup, general tool use |
 
 ---
 
@@ -41,10 +41,10 @@ Shows when you click an activity bar directly (without selecting a child):
 
 Shows when you click a verification interval:
 
-- **Status badge** — passed, failed, or abandoned
-- **Video playback** — browser session recording if available (space/K to play, arrows to seek, J/L for ±10s)
-- **Event timeline** — every tool call and assertion in order, with timestamps, input/output sizes, and expandable JSON details
-- **Image artifacts** — screenshots shown inline with lightbox
+- **Status badge:** passed, failed, or abandoned
+- **Video playback:** browser session recording if available (space/K to play, arrows to seek, J/L for ±10s)
+- **Event timeline:** every tool call and assertion in order, with timestamps, input/output sizes, and expandable JSON details
+- **Image artifacts:** screenshots shown inline with lightbox
 <img src="/images/console/project/verification-detail-dark.png" alt="IronBee Console — Verification Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 
@@ -61,15 +61,15 @@ Shows when you click a fix interval:
 
 Below the stats, a chronological event list shows each step of the fix:
 
-- **fix_start** — user and session that initiated the fix
-- **file_change** — file path, operation (create / update / delete), lines added/removed, tool that made the change, and a **View code** button that opens a diff dialog showing the full changeset
-- **fix_end** — total duration and reason the fix concluded
+- **fix_start:** user and session that initiated the fix
+- **file_change:** file path, operation (create / update / delete), lines added/removed, tool that made the change, and a **View code** button that opens a diff dialog showing the full changeset
+- **fix_end:** total duration and reason the fix concluded
 <img src="/images/console/project/fix-detail-dark.png" alt="IronBee Console — Fix Detail" style={{borderRadius:'8px',width:'100%'}} />
 
 
 ### Other panel
 
-Shows when you click an "other" interval — events that occurred outside a named verification or fix:
+Shows when you click an "other" interval, for events that occurred outside a named verification or fix:
 
 | Field | Description |
 |-------|-------------|
@@ -95,4 +95,4 @@ An activity with issues might look like:
 2. **Fix** → agent corrects the code
 3. **Verification** (passed) → task completes
 
-Multiple failed verifications and fixes within one activity signal that the agent struggled with a particular change — a useful signal when reviewing [Quality Analysis](/console/analysis-quality).
+Multiple failed verifications and fixes within one activity signal that the agent struggled with a particular change, a useful signal when reviewing [Quality Analysis](/console/analysis-quality).

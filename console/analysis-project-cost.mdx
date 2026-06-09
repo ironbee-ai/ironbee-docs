@@ -3,7 +3,7 @@ title: Cost Analysis
 description: Token spend, cache efficiency, cost per session, and top billed sessions for a single project.
 ---
 
-The **Project Cost** analysis breaks down API spend for a single project — real (billed) cost vs subscription-served (shadow) value, token usage patterns, and which sessions drove the most cost.
+The **Project Cost** analysis breaks down API spend for a single project: real (billed) cost vs subscription-served (shadow) value, token usage patterns, and which sessions drove the most cost.
 <img src="/images/console/analysis/project-cost-dark.png" alt="IronBee Console — Project Cost Analysis" style={{borderRadius:'8px',width:'100%'}} />
 
 ## Shadow / Billed cost
@@ -22,9 +22,9 @@ The hero card shows five metrics with sparklines and week-over-week deltas:
 
 Three 30-day honeycomb grids (cell intensity = value). Each has a weekends toggle:
 
-- **Requests** — daily request count
-- **Input / Output tokens** — toggle between input and output token counts
-- **Cache-read / Cache-creation tokens** — toggle between read and creation; footer shows cache hit %
+- **Requests:** daily request count
+- **Input / Output tokens:** toggle between input and output token counts
+- **Cache-read / Cache-creation tokens:** toggle between read and creation; footer shows cache hit %
 
 ## Cost summary
 
@@ -32,7 +32,7 @@ Four aggregate stats: API calls, average real spend per session, average subscri
 
 ## Daily cost chart
 
-Two-way bar chart showing billed cost (up) vs shadow value (down) per day — makes it easy to see the ratio of API spend to subscription benefit over time.
+Two-way bar chart showing billed cost (up) vs shadow value (down) per day. Makes it easy to see the ratio of API spend to subscription benefit over time.
 
 ## Cost over time
 
@@ -40,7 +40,7 @@ Stacked area chart of daily billed + shadow cost across the analysis window.
 
 ## Cost per session
 
-Grouped bar chart showing average, p50, p90, and p99 cost per session — both billed and shadow. Useful for spotting outlier sessions that are pulling the average up.
+Grouped bar chart showing average, p50, p90, and p99 cost per session, both billed and shadow. Useful for spotting outlier sessions that are pulling the average up.
 
 ## By model
 
@@ -48,7 +48,7 @@ Stacked bar chart broken down by model. Metric toggle: Cost, Tokens, Cache, Requ
 
 ## Top billed sessions / Top shadow sessions
 
-Two ranked lists of up to 10 sessions each — the sessions with the highest real spend and the highest shadow value respectively.
+Two ranked lists of up to 10 sessions each: the sessions with the highest real spend and the highest shadow value respectively.
 
 ## Tool metrics
 

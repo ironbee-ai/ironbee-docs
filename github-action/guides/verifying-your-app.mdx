@@ -3,7 +3,7 @@ title: Verifying Your Application
 description: Tell the action how to install, build, start, and reach your app.
 ---
 
-Verification needs your application running — that's true for every [verification platform](/github-action/guides/verification-platforms), not just the browser. This guide covers how to point the action at your app's lifecycle commands, work in a monorepo, and focus the agent on what matters.
+Verification needs your application running, that's true for every [verification platform](/github-action/guides/verification-platforms), not just the browser. This guide covers how to point the action at your app's lifecycle commands, work in a monorepo, and focus the agent on what matters.
 
 ---
 
@@ -30,7 +30,7 @@ Four inputs describe how to bring your app up. The first three (`install`, `buil
 ```
 
 <Info>
-  **All four are optional, but providing them is recommended.** If you leave them out, the agent still verifies — it just has to resolve how to install, build, start, and reach your app from the repository first. Spelling the commands out skips that guesswork, so runs are faster and more reliable. Omit only the steps that don't apply (e.g. `app_build_command` when there's no build).
+  **All four are optional, but providing them is recommended.** If you leave them out, the agent still verifies, it just has to resolve how to install, build, start, and reach your app from the repository first. Spelling the commands out skips that guesswork, so runs are faster and more reliable. Omit only the steps that don't apply (e.g. `app_build_command` when there's no build).
 </Info>
 
 ---

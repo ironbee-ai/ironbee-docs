@@ -13,9 +13,9 @@ Each platform is a separate cycle with its own tools. IronBee installs all three
 
 | Platform | Default | What it verifies | Tools |
 |----------|---------|------------------|-------|
-| **Browser** | On | Frontend changes — navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
-| **Node** | Opt-in | Node.js backends — attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
-| **Backend** | Opt-in | Any backend runtime — drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
+| **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
+| **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
+| **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
 
 The browser cycle covers most frontend work out of the box. The Node and backend cycles are off until you opt in, so backend changes aren't gated until you ask for it.
 
@@ -31,18 +31,18 @@ ironbee backend enable    # turn on backend protocol verification
 ironbee browser disable   # turn off the browser cycle (e.g. backend-only projects)
 ```
 
-Re-enabling is the inverse — `ironbee browser enable`, `ironbee node disable`, and so on. Changes are written to the project config and your client's hooks/tools are re-rendered automatically.
+Re-enabling is the inverse: `ironbee browser enable`, `ironbee node disable`, and so on. Changes are written to the project config and your client's hooks/tools are re-rendered automatically.
 
 By default these write to the project config (`<project>/.ironbee/config.json`). To target a different layer:
 
 | Flag | Writes to |
 |------|-----------|
-| *(none)* | Project config — committed, shared with your team |
-| `-g`, `--global` | `~/.ironbee/config.json` — applies to all your projects |
-| `--local` | `<project>/.ironbee/config.local.json` — gitignored, just for you |
+| *(none)* | Project config committed, shared with your team |
+| `-g`, `--global` | `~/.ironbee/config.json` applies to all your projects |
+| `--local` | `<project>/.ironbee/config.local.json` gitignored, just for you |
 
 <Note>
-  Enabling a platform applies sensible built-in file patterns automatically — you don't have to list which files to verify. To fine-tune *which* files trigger each cycle (custom verify patterns, ignored paths, devtools settings), see [Configuration](/cli/configuration/configuration#verification-cycles).
+  Enabling a platform applies sensible built-in file patterns automatically; you don't have to list which files to verify. To fine-tune *which* files trigger each cycle (custom verify patterns, ignored paths, devtools settings), see [Configuration](/cli/configuration/configuration#verification-cycles).
 </Note>
 
 ---
@@ -54,8 +54,8 @@ IronBee runs in one of **three modes**, set by two switches: the master toggle (
 | Mode | How to set it | What happens |
 |------|---------------|--------------|
 | **Enforce** *(default)* | `ironbee verification enable` | The agent must pass every active cycle before it can mark a task complete. Blocking verify gate + skill, rule, `/ironbee-verify` command, and devtools MCP servers all installed. |
-| **Assist** | `ironbee verification auto disable` | The machinery stays installed — `/ironbee-verify` command, MCP servers, and permissions — so the agent (or you) can verify **manually**, but nothing is enforced. No verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. |
-| **Monitoring-only** | `ironbee verification disable` | The agent is never blocked. No enforcement hook, skill, rule, command, or MCP servers — but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works. |
+| **Assist** | `ironbee verification auto disable` | The machinery stays installed `/ironbee-verify` command, MCP servers, and permissions so the agent (or you) can verify **manually**, but nothing is enforced. No verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. |
+| **Monitoring-only** | `ironbee verification disable` | The agent is never blocked. No enforcement hook, skill, rule, command, or MCP servers but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works. |
 
 ### Switching to enforce or monitoring-only
 
@@ -82,7 +82,7 @@ Use assist when you want the agent to be able to verify on demand (and have ever
 The `auto` sub-toggle accepts the same target flags as everything else (`-g`/`--global`, `--local`; default is the project config) and, like `verification enable`/`disable`, warns when a higher-priority layer is shadowing the layer you wrote to.
 
 <Info>
-  Restart your editor or agent session after toggling — the change takes effect on the next session.
+  Restart your editor or agent session after toggling; the change takes effect on the next session.
 </Info>
 
 ---

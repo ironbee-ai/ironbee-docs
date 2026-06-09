@@ -23,13 +23,13 @@ Pass a JSON object as a string. It's merged on top of the config the action gene
       }
 ```
 
-This accepts any key from the IronBee CLI config — see the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+This accepts any key from the IronBee CLI config, see the [CLI configuration reference](/cli/configuration/configuration) for the full set.
 
 ---
 
 ## Tuning a verification platform
 
-Each [verification platform](/github-action/guides/verification-platforms)'s MCP server is customized under `browserDevTools`, `backendDevTools`, or `nodeDevTools` — set extra environment variables or replace the server entirely:
+Each [verification platform](/github-action/guides/verification-platforms)'s MCP server is customized under `browserDevTools`, `backendDevTools`, or `nodeDevTools`. Set extra environment variables or replace the server entirely:
 
 ```yaml
 - uses: ironbee-ai/ironbee-action@v1
@@ -45,7 +45,7 @@ Each [verification platform](/github-action/guides/verification-platforms)'s MCP
 See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the full set of keys each platform accepts.
 
 <Note>
-  IronBee always sets its own invariants (tool-name prefix, metadata flags, platform) last — these can't be overridden via `ironbee_extra_config`.
+  IronBee always sets its own invariants (tool-name prefix, metadata flags, platform) last, these can't be overridden via `ironbee_extra_config`.
 </Note>
 
 ---

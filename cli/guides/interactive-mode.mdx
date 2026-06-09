@@ -3,11 +3,11 @@ title: Interactive Mode (TUI)
 description: Manage IronBee from a full-screen terminal UI instead of individual commands.
 ---
 
-`ironbee tui` opens a full-screen interactive terminal UI — a single place to browse your projects, toggle platforms, edit config, and inspect sessions without remembering individual commands.
+`ironbee tui` opens a full-screen interactive terminal UI, a single place to browse your projects, toggle platforms, edit config, and inspect sessions without remembering individual commands.
 
 It mirrors the CLI: anything you do in the TUI runs the same underlying logic as the matching command.
 
-<Frame caption="The IronBee TUI home menu — pick an area to dive into.">
+<Frame caption="The IronBee TUI home menu, pick an area to dive into.">
   <img src="/images/cli/tui-home.png" alt="IronBee TUI home menu showing the Configuration, Platforms, Projects, Sessions, Queue, and Import areas with a help bar at the bottom" />
 </Frame>
 
@@ -43,7 +43,7 @@ ironbee tui projects -p /path/to/project
 |------|-----------------|
 | **Configuration** | Browse and edit config keys across the global, project, and local layers; see the effective merged value and where it comes from |
 | **Platforms** | Toggle the browser, Node, and backend cycles per layer |
-| **Projects** | Install, uninstall, register, or unregister — for the current directory or any project in your inventory; switch which project is active |
+| **Projects** | Install, uninstall, register, or unregister for the current directory or any project in your inventory; switch which project is active |
 | **Sessions** | Browse sessions with their phase, verdict, and retry counts; run a read-only verdict check |
 | **Queue** | Inspect and drain the background job queue; manage dead-letter entries |
 | **Import** | Backfill historical sessions with a live dry-run estimate before you commit |
@@ -59,7 +59,7 @@ ironbee tui projects -p /path/to/project
 | `Esc` | Back to the home menu |
 | `q` / `Ctrl-C` | Quit |
 
-The breadcrumb at the top always shows the **active project**. In the Projects area you can switch which project is active, and every project-scoped area (Configuration, Platforms, Sessions, Queue) retargets to it — so you can launch in one repo and inspect or edit another without changing directories.
+The breadcrumb at the top always shows the **active project**. In the Projects area you can switch which project is active, and every project-scoped area (Configuration, Platforms, Sessions, Queue) retargets to it, so you can launch in one repo and inspect or edit another without changing directories.
 
 ---
 
@@ -69,7 +69,7 @@ The breadcrumb at the top always shows the **active project**. In the Projects a
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration">
     The keys behind the Config area, in full.
   </Card>
-  <Card title="Inspecting sessions" icon="search" href="/cli/advanced/inspecting-sessions">
+  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
     The commands behind the Sessions area.
   </Card>
 </CardGroup>

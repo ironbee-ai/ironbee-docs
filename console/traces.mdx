@@ -1,15 +1,15 @@
 ---
 title: Traces
-description: OpenTelemetry span waterfall for a verification cycle — see exactly what the agent tested and how long each tool call took.
+description: OpenTelemetry span waterfall for a verification cycle, see exactly what the agent tested and how long each tool call took.
 ---
 
-IronBee records a **trace** for each verification cycle — an OpenTelemetry-compatible log of every tool call the agent made, organized as a hierarchy of **spans**. The trace is visualized as an interactive waterfall chart inside the verification detail panel.
+IronBee records a **trace** for each verification cycle, an OpenTelemetry-compatible log of every tool call the agent made, organized as a hierarchy of **spans**. The trace is visualized as an interactive waterfall chart inside the verification detail panel.
 <img src="/images/console/traces/traces-dark.png" alt="IronBee Console — Traces" style={{borderRadius:'8px',width:'100%'}} />
 
 
 ## How to access traces
 
-Traces are embedded in the [Verification Detail](/console/verification-detail) panel — they are not a standalone page.
+Traces are embedded in the [Verification Detail](/console/verification-detail) panel, they are not a standalone page.
 
 1. Open a session and go to the **Timeline** tab
 2. Click a verification event in the timeline to open the Verification panel
@@ -21,13 +21,13 @@ The panel opens to the right. The URL updates with `tracesOpen=true` so you can 
 
 ## Traces panel
 
-The panel header shows a **count badge** — for example `5 / 12` means 5 spans match the current filters out of 12 total.
+The panel header shows a **count badge**, for example `5 / 12` means 5 spans match the current filters out of 12 total.
 
 ### View toggle
 
 | Mode | Behavior |
 |------|----------|
-| **Fit** | Compresses chart to fit the panel width — no horizontal scroll |
+| **Fit** | Compresses chart to fit the panel width, no horizontal scroll |
 | **Wide** | Adaptive density: the longest span fills ~25% of visible width; allows horizontal scrolling for long recordings |
 
 ---
@@ -36,13 +36,13 @@ The panel header shows a **count badge** — for example `5 / 12` means 5 spans 
 
 The chart has two columns:
 
-**Left — label panel (frozen)**
+**Left label panel (frozen)**
 - Span name
 - Service name (color-coded)
 - OpenTelemetry span kind icon
 - Collapse / expand chevron for parent spans
 
-**Right — chart area**
+**Right chart area**
 - Horizontal bars representing span duration
 - Time axis (in seconds) pinned to the bottom
 - Bars colored by status
@@ -78,21 +78,21 @@ Active filter chips appear below the toolbar. The count badge updates as you fil
 ## Interacting with the chart
 
 **Navigate:**
-- **Vertical scroll** — browse rows
-- **Horizontal drag** — pan left/right within the chart area (click and drag on the background)
+- **Vertical scroll** browse rows
+- **Horizontal drag** pan left/right within the chart area (click and drag on the background)
 
 **Explore spans:**
-- **Hover** a bar — tooltip shows span name, service, kind, duration, status
-- **Click** a bar — opens the span JSON modal
-- **Click** a label — scrolls the chart horizontally to bring that span's bar into view
-- **Chevron** — collapse or expand a span's children
+- **Hover** a bar tooltip shows span name, service, kind, duration, status
+- **Click** a bar opens the span JSON modal
+- **Click** a label scrolls the chart horizontally to bring that span's bar into view
+- **Chevron** collapse or expand a span's children
 
 **Playback mode** (when the verification video is playing):
 - A vertical **playhead** line tracks the current video position
 - The active span is highlighted in gold
 - Parent and sibling spans in the call chain are also highlighted
 - The chart auto-scrolls to keep the active span visible
-- **Seek button** on each bar — click to jump the video to that span's start time
+- **Seek button** on each bar click to jump the video to that span's start time
 
 ---
 

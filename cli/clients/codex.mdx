@@ -1,12 +1,12 @@
 ---
 title: Codex
-description: How IronBee integrates with OpenAI Codex CLI — guidance files, hooks, the $ironbee-verify skill, MCP servers, and Codex-specific behavior.
+description: How IronBee integrates with OpenAI Codex CLI - guidance files, hooks, the $ironbee-verify skill, MCP servers, and Codex-specific behavior.
 ---
 
 When you run `ironbee install` in a project where [Codex CLI](https://github.com/openai/codex) is detected, IronBee wires up the hooks, guidance, and tools Codex needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code) and [Cursor](/cli/clients/cursor), with a few Codex-specific details covered below.
 
 <Note>
-  IronBee supports the **interactive Codex CLI** (the TUI you get from running `codex`). The non-interactive `codex exec` mode is out of scope — Codex [doesn't fire hooks there](https://github.com/openai/codex/issues/24211), so there's nothing for IronBee to gate on.
+  IronBee supports the **interactive Codex CLI** (the TUI you get from running `codex`). The non-interactive `codex exec` mode is out of scope. Codex [doesn't fire hooks there](https://github.com/openai/codex/issues/24211), so there's nothing for IronBee to gate on.
 </Note>
 
 ---
@@ -18,15 +18,15 @@ Codex reads its hook and MCP configuration from **user-level** files (`~/.codex/
 | File | What it does |
 |------|--------------|
 | `~/.codex/hooks.json` | Registers IronBee's lifecycle hooks (user-level) |
-| `~/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`) and registers the devtools MCP servers — one `[mcp_servers.<name>]` block per enabled cycle |
+| `~/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`) and registers the devtools MCP servers, one `[mcp_servers.<name>]` block per enabled cycle |
 | `<project>/AGENTS.md` | The always-applied verification rule, written into an IronBee-delimited block (`<!-- ironbee:start -->` … `<!-- ironbee:end -->`) |
 | `<project>/.agents/skills/ironbee-verification/SKILL.md` | The verification skill the agent follows |
 | `<project>/.agents/skills/ironbee-verify/SKILL.md` | The `$ironbee-verify` skill you can invoke by hand |
 
-IronBee's entries are **merged** into your existing Codex config and `AGENTS.md` — your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed.
+IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`. Your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed.
 
 <Info>
-  Restart Codex after installing so it picks up the new hooks, guidance, and MCP servers. IronBee writes `[features] hooks = true` for you — without it Codex parses hooks but never dispatches them.
+  Restart Codex after installing so it picks up the new hooks, guidance, and MCP servers. IronBee writes `[features] hooks = true` for you; without it Codex parses hooks but never dispatches them.
 </Info>
 
 ---
@@ -37,20 +37,20 @@ Codex has no user-defined slash commands, so IronBee's manual verification trigg
 
 | Mention | Scope |
 |---------|-------|
-| `$ironbee-verify` | Focused — verify the areas affected by the change (the default) |
-| `$ironbee-verify full` | Everything — full checklist regardless of what changed |
-| `$ironbee-verify visual` | Visual only — appearance, layout, theming |
-| `$ironbee-verify functional` | Functional only — behavior, interactions, data flow |
+| `$ironbee-verify` | Focused, verify the areas affected by the change (the default) |
+| `$ironbee-verify full` | Everything full checklist regardless of what changed |
+| `$ironbee-verify visual` | Visual only appearance, layout, theming |
+| `$ironbee-verify functional` | Functional only behavior, interactions, data flow |
 
-The variants behave the same as the [`/ironbee-verify` command in Claude Code](/cli/clients/claude-code#slash-commands) — only the invocation syntax differs.
+The variants behave the same as the [`/ironbee-verify` command in Claude Code](/cli/clients/claude-code#slash-commands); only the invocation syntax differs.
 
 ---
 
 ## How verification is enforced
 
-IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes — the agent navigates the affected paths, submits a verdict, and on failure fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit.
+IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes. The agent navigates the affected paths, submits a verdict, and on failure fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit.
 
-Codex's Stop hook returns a `decision: "block"` with a continuation reason, which pushes the agent back into the verification loop — the same enforcement semantics as Claude Code.
+Codex's Stop hook returns a `decision: "block"` with a continuation reason, which pushes the agent back into the verification loop, the same enforcement semantics as Claude Code.
 
 Codex exposes file edits through its single `apply_patch` tool, so IronBee gates edits on that instead of `Write`/`Edit`. File changes are recorded per patch, with the operation (create / update / delete) read from the patch body.
 
@@ -62,7 +62,7 @@ A few details differ from the other clients, all handled automatically:
 
 - **No `SessionEnd` hook.** Codex doesn't expose one, so IronBee treats every Stop as a checkpoint and writes a session-end snapshot there (the Collector keeps the latest). Quitting Codex with `/quit` fires no hooks.
 - **Interrupt recovery.** Pressing **Esc** to interrupt the agent doesn't fire a Stop hook in Codex ([#22858](https://github.com/openai/codex/issues/22858)). IronBee reconciles the interrupted activity on your next prompt, so the session timeline stays accurate.
-- **MCP config is user-level.** The devtools servers live in `~/.codex/config.toml` under `[mcp_servers.<name>]`, gated per enabled cycle — `browser-devtools` is on by default; `node-devtools` and `backend-devtools` are added when you enable those cycles.
+- **MCP config is user-level.** The devtools servers live in `~/.codex/config.toml` under `[mcp_servers.<name>]`, gated per enabled cycle. `browser-devtools` is on by default; `node-devtools` and `backend-devtools` are added when you enable those cycles.
 
 <Note>
   The Claude-only integrations — the **statusline**, **OAuth access**, and the local **OTEL collector** — don't apply to Codex. Session lifecycle, tool calls, verdicts, and analytics still flow to the Collector.
@@ -73,10 +73,10 @@ A few details differ from the other clients, all handled automatically:
 ## What's next?
 
 <CardGroup cols={2}>
-  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
-    Choose which cycles run and how verification is enforced.
-  </Card>
   <Card title="Claude Code" icon="bot" href="/cli/clients/claude-code">
     The same integration for Claude Code.
   </Card>
+    <Card title="Cursor" icon="bot" href="/cli/clients/cursor">
+        The same integration for Cursor.
+    </Card>
 </CardGroup>

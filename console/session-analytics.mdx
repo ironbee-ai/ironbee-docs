@@ -12,10 +12,10 @@ The Analytics tab is a scrollable dashboard of metric cards. Cards with no data 
 
 Headline numbers for the session at a glance.
 
-- **Hero stats** — Duration, Cost (USD), User turns, Files modified, Peak context, Tool errors
-- **Session type** — A characterization of the session: Quick question, Exploration, Iterative refinement, Multi-task, Focused single task, or Mixed
-- **Capabilities used** — Chips for MCP, Skills, Sub-agents, WebSearch, WebFetch — filled if used at least once in the session
-- **Session window** — Start and end timestamps with total duration in minutes
+- **Hero stats:** Duration, Cost (USD), User turns, Files modified, Peak context, Tool errors
+- **Session type:** A characterization of the session: Quick question, Exploration, Iterative refinement, Multi-task, Focused single task, or Mixed
+- **Capabilities used:** Chips for MCP, Skills, Sub-agents, WebSearch, WebFetch — filled if used at least once in the session
+- **Session window:** Start and end timestamps with total duration in minutes
 
 ---
 
@@ -41,8 +41,8 @@ User prompt count, prompt size in bytes, approximate prompt tokens, and user int
 
 Context occupancy over time. Two views:
 
-- **Total** — area chart of total context tokens vs the model's maximum context window
-- **Breakdown** — stacked chart of context by message type (Cache Read, Cache Write, Input, Output)
+- **Total** area chart of total context tokens vs the model's maximum context window
+- **Breakdown** stacked chart of context by message type (Cache Read, Cache Write, Input, Output)
 
 Summary stats: Peak tokens, Latest tokens, Peak %. Click **Open breakdown** to open the [Context Breakdown Drawer](#context-breakdown-drawer).
 
@@ -84,8 +84,8 @@ Four related tables:
 
 | Card | Contents |
 |------|----------|
-| **Top tools** | All tools sorted by invocation count — with error count, error %, input tokens, output tokens |
-| **MCP servers / Shell binaries** | Toggled view: MCP server usage or shell binary (Bash) usage — same columns |
+| **Top tools** | All tools sorted by invocation count with error count, error %, input tokens, output tokens |
+| **MCP servers / Shell binaries** | Toggled view: MCP server usage or shell binary (Bash) usage same columns |
 | **Skills** | Custom slash commands invoked during the session |
 | **Sub-agents** | Background agents spawned during the session |
 
@@ -102,7 +102,7 @@ Visible when the session has the relevant data:
 | **Response time** | Horizontal bar chart by time bucket (2–10s, 10–30s, 30s–1m, 1–2m, 2–5m, 5–15m, `>15m`) |
 | **Shell command flow** | Sankey diagram of shell binary → subcommand invocations |
 | **Languages** | Radar chart of lines of code per programming language |
-| **Hot files** | Top 5 most-edited files — toggle between list and treemap view |
+| **Hot files** | Top 5 most-edited files, toggle between list and treemap view |
 | **Tool errors** | Error count by category (command failed, edit failed, file not found, etc.) |
 | **By weekday** | Horizontal bar chart of message count by day of week |
 
@@ -118,16 +118,16 @@ Snapshot of the latest query: query number, model, query source, input tokens, i
 
 ### Context growth
 
-Area chart showing token count by category across the full query sequence — traces how context filled up turn by turn. Visible when the session has more than one query.
+Area chart showing token count by category across the full query sequence, traces how context filled up turn by turn. Visible when the session has more than one query.
 
 ### Breakdown
 
 What occupies the context window in the latest query:
 
-- **Composition** tab — treemap of 11 categories: system prompt, built-in tools, MCP tools, rules, memory, skills, system messages, user messages, assistant messages, tool results, others
-- **Detail** tab — drill-down tables showing token counts per MCP server, per rules file, per skill, and per tool result
+- **Composition** tab has a treemap of 11 categories: system prompt, built-in tools, MCP tools, rules, memory, skills, system messages, user messages, assistant messages, tool results, others
+- **Detail** tab has a drill-down tables showing token counts per MCP server, per rules file, per skill, and per tool result
 
 ### Counts
 
-- **Tools** — donut chart of built-in vs MCP tool count
-- **Messages** — pie chart of user, assistant, tool result, and system message counts
+- **Tools:** donut chart of built-in vs MCP tool count
+- **Messages:** pie chart of user, assistant, tool result, and system message counts

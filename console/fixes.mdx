@@ -3,15 +3,15 @@ title: Fixes
 description: Code changes the agent makes to resolve failed verifications.
 ---
 
-A **fix** is a set of code changes the agent makes in response to a failed verification. After a fix, the agent re-verifies — if it passes, the session continues; if it fails again, another fix cycle begins.
+A **fix** is a set of code changes the agent makes in response to a failed verification. After a fix, the agent re-verifies, if it passes, the session continues; if it fails again, another fix cycle begins.
 
-Fixes are accessed through the [Session Timeline](/console/session-timeline) — they appear as labeled intervals (Fix 1, Fix 2, …) nested inside activity bars. Click a fix interval to open the [Fix Detail](/console/fix-detail) panel.
+Fixes are accessed through the [Session Timeline](/console/session-timeline), they appear as labeled intervals (Fix 1, Fix 2, …) nested inside activity bars. Click a fix interval to open the [Fix Detail](/console/fix-detail) panel.
 
 ---
 
 ## Fix lifecycle
 
-1. A verification fails — the agent reports issues
+1. A verification fails, the agent reports issues
 2. The agent edits one or more files to address the issues
 3. A new verification cycle runs
 4. If it passes, the session continues to completion; if it fails, the cycle repeats up to `maxRetries`
@@ -28,7 +28,7 @@ The number of fix cycles in a session is a signal of difficulty:
 |-----------|---------------|
 | 0 | The agent verified successfully on the first attempt |
 | 1–2 | Normal for moderately complex changes |
-| 3+ | The agent struggled — worth reviewing [Quality Analysis](/console/analysis-quality) findings |
+| 3+ | The agent struggled, worth reviewing [Quality Analysis](/console/analysis-quality) findings |
 
 Fixes clustered on the same files across many sessions suggest those files are error-prone and may benefit from clearer code or better test coverage.
 

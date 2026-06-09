@@ -1,12 +1,12 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "almond",
+  "theme": "mint",
   "name": "IronBee",
   "description": "IronBee documentation — install the CLI, configure your projects, and explore the console.",
   "colors": {
-    "primary": "#747c7f",
-    "light": "#9fa1a4",
-    "dark": "#0a0b0b"
+    "primary": "#0a0b0b",
+    "light": "#f5f5f5",
+    "dark": "#4a5159"
   },
   "favicon": {
     "light": "/favicon-light.svg",
@@ -39,79 +39,114 @@
     "directory": "card",
     "tabs": [
       {
-        "tab": "Getting Started",
+        "tab": "Overview",
         "groups": [
           {
             "group": "Introduction",
             "icon": "rocket",
             "pages": [
               "getting-started/introduction",
-              "getting-started/quickstart",
-              "getting-started/key-concepts"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "CLI",
-        "groups": [
-          {
-            "group": "Get Started",
-            "icon": "rocket",
-            "pages": [
-              "cli/get-started/getting-started"
+              "getting-started/quickstart"
             ]
           },
           {
             "group": "Concepts",
             "icon": "lightbulb",
             "pages": [
-              "cli/concepts/how-it-works"
+              "getting-started/key-concepts"
             ]
           },
           {
-            "group": "Guides",
-            "icon": "book-open",
+            "group": "CLI",
+            "icon": "terminal",
             "pages": [
-              "cli/guides/managing-projects",
-              "cli/guides/verification",
-              "cli/guides/verification-context",
-              "cli/guides/importing-sessions",
-              "cli/guides/interactive-mode"
+              "cli/get-started/getting-started",
+              {
+                "group": "Guides",
+                "pages": [
+                  "cli/concepts/how-it-works",
+                  "cli/guides/managing-projects",
+                  "cli/guides/verification",
+                  "cli/guides/verification-context",
+                  "cli/guides/importing-sessions",
+                  "cli/guides/interactive-mode"
+                ]
+              },
+              {
+                "group": "Configuration",
+                "pages": [
+                  "cli/configuration/configuration",
+                  "cli/configuration/environment-variables"
+                ]
+              },
+              {
+                "group": "Advanced",
+                "pages": [
+                  "cli/advanced/inspecting-sessions",
+                  "cli/advanced/job-queue",
+                  "cli/advanced/privacy",
+                  "cli/advanced/telemetry-statusline",
+                  "cli/advanced/runtime-files"
+                ]
+              },
+              {
+                "group": "AI Clients",
+                "pages": [
+                  "cli/clients/claude-code",
+                  "cli/clients/cursor",
+                  "cli/clients/codex"
+                ]
+              }
             ]
           },
           {
-            "group": "Configuration",
-            "icon": "settings",
+            "group": "GitHub Action",
+            "icon": "github",
             "pages": [
-              "cli/configuration/configuration",
-              "cli/configuration/environment-variables"
+              "github-action/get-started/getting-started",
+              "github-action/concepts/how-it-works",
+              {
+                "group": "Guides",
+                "pages": [
+                  "github-action/guides/running-in-ci",
+                  "github-action/guides/verifying-your-app",
+                  "github-action/guides/verification-platforms"
+                ]
+              },
+              "github-action/configuration/configuration",
+              {
+                "group": "Advanced",
+                "pages": [
+                  "github-action/advanced/custom-configuration",
+                  "github-action/advanced/evidence",
+                  "github-action/advanced/diagnostics"
+                ]
+              }
             ]
           },
           {
-            "group": "Advanced",
-            "icon": "wrench",
+            "group": "Help",
+            "icon": "life-buoy",
             "pages": [
-              "cli/advanced/inspecting-sessions",
-              "cli/advanced/job-queue",
-              "cli/advanced/privacy",
-              "cli/advanced/telemetry-statusline",
-              "cli/advanced/runtime-files"
-            ]
-          },
-          {
-            "group": "AI Clients",
-            "icon": "bot",
-            "pages": [
-              "cli/clients/claude-code",
-              "cli/clients/cursor",
-              "cli/clients/codex"
+              {
+                "group": "Account & Team",
+                "pages": [
+                  "console/profile",
+                  "console/account",
+                  "console/team",
+                  "console/settings"
+                ]
+              },
+              "help/contact-us",
+              "help/support",
+              "help/legal",
+              "help/compliance"
             ]
           }
         ]
       },
       {
-        "tab": "Console",
+        "tab": "Projects",
         "groups": [
           {
             "group": "Projects",
@@ -127,23 +162,29 @@
               "console/verification-detail",
               "console/fixes",
               "console/fix-detail",
-              "console/other"
+              "console/other",
+              "console/traces"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Analysis",
+        "groups": [
           {
             "group": "Analysis",
             "icon": "sparkles",
             "pages": [
               "console/analysis",
               {
-                "group": "Account",
+                "group": "Account Level",
                 "pages": [
                   "console/analysis-account-cost",
                   "console/analysis-account-session-insights"
                 ]
               },
               {
-                "group": "Project",
+                "group": "Project Level",
                 "pages": [
                   "console/analysis-project-cost",
                   "console/analysis-project-session-insights",
@@ -151,82 +192,33 @@
                 ]
               }
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Findings",
+        "groups": [
           {
             "group": "Findings",
             "icon": "triangle-alert",
             "pages": [
+              "console/findings",
               "console/findings-account",
               "console/findings-project"
-            ]
-          },
-          {
-            "group": "Recommendations",
-            "icon": "lightbulb",
-            "pages": [
-              "console/recommendations-account",
-              "console/recommendations-project"
-            ]
-          },
-          {
-            "group": "Traces",
-            "icon": "chart-bar",
-            "pages": [
-              "console/traces"
-            ]
-          },
-          {
-            "group": "Account & Team",
-            "icon": "users",
-            "pages": [
-              "console/profile",
-              "console/account",
-              "console/team",
-              "console/settings"
             ]
           }
         ]
       },
       {
-        "tab": "GitHub Action",
+        "tab": "Recommendations",
         "groups": [
           {
-            "group": "Get Started",
-            "icon": "rocket",
-            "pages": [
-              "github-action/get-started/getting-started"
-            ]
-          },
-          {
-            "group": "Concepts",
+            "group": "Recommendations",
             "icon": "lightbulb",
             "pages": [
-              "github-action/concepts/how-it-works"
-            ]
-          },
-          {
-            "group": "Guides",
-            "icon": "book-open",
-            "pages": [
-              "github-action/guides/running-in-ci",
-              "github-action/guides/verifying-your-app",
-              "github-action/guides/verification-platforms"
-            ]
-          },
-          {
-            "group": "Configuration",
-            "icon": "settings",
-            "pages": [
-              "github-action/configuration/configuration"
-            ]
-          },
-          {
-            "group": "Advanced",
-            "icon": "wrench",
-            "pages": [
-              "github-action/advanced/custom-configuration",
-              "github-action/advanced/evidence",
-              "github-action/advanced/diagnostics"
+              "console/recommendations",
+              "console/recommendations-account",
+              "console/recommendations-project"
             ]
           }
         ]
@@ -234,17 +226,32 @@
     ]
   },
   "navbar": {
-    "links": [],
+    "links": [
+      {
+        "label": "Slack",
+        "href": "https://ironbeeai-community.slack.com/"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/xqBJy53dyJ"
+      },
+      {
+        "label": "Website",
+        "href": "https://ironbee.ai/"
+      }
+    ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
+      "label": "Console",
       "href": "https://console.ironbee.ai"
     }
   },
   "footer": {
     "socials": {
       "x": "https://x.com/ironbee_ai",
-      "linkedin": "https://www.linkedin.com/company/ironbee-ai"
+      "linkedin": "https://www.linkedin.com/company/ironbee-ai",
+      "github": "https://github.com/ironbee-ai/"
     }
   }
 }
+

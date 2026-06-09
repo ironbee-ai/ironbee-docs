@@ -5,11 +5,11 @@ description: Sign up, install the IronBee CLI, and set it up in your first proje
 
 The IronBee CLI connects your AI coding agent to IronBee. Once installed in a project, it wires up the hooks and tools your agent needs so that every code change gets verified before a task is marked complete.
 
-This guide covers the basics: create an account, install the CLI, sign in, and set up your first project. That's all you need to get going — deeper configuration comes later.
+This guide covers the basics: create an account, install the CLI, sign in, and set up your first project. That's all you need to get going; deeper configuration comes later.
 
 ## Prerequisites
 
-- **Node.js 22 or later** — check with `node --version`
+- **Node.js 22 or later** - check with `node --version`
 - An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Codex CLI](https://github.com/openai/codex)
 
 ---
@@ -21,10 +21,10 @@ This guide covers the basics: create an account, install the CLI, sign in, and s
     Sign up at [console.ironbee.ai](https://console.ironbee.ai).
   </Step>
   <Step title="Install the CLI">
-    `npm install -g @ironbee-ai/cli` — installs the `ironbee` command globally.
+    `npm install -g @ironbee-ai/cli` - installs the `ironbee` command globally.
   </Step>
   <Step title="Sign in">
-    `ironbee login` — connects the CLI to your account. One time per machine.
+    `ironbee login` - connects the CLI to your account. One time per machine.
   </Step>
   <Step title="Set up your project">
     `cd` into your project and run `ironbee install` to wire up your AI client.
@@ -33,7 +33,7 @@ This guide covers the basics: create an account, install the CLI, sign in, and s
 
 ---
 
-## Step 1 — Create your account
+## Step 1 - Create your account
 
 Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up. If you already have an account, just sign in.
 
@@ -41,7 +41,7 @@ Your account gives you access to the dashboard and is what the CLI connects to i
 
 ---
 
-## Step 2 — Install the CLI
+## Step 2 - Install the CLI
 
 Install the CLI globally with npm:
 
@@ -57,7 +57,7 @@ ironbee --version
 
 ---
 
-## Step 3 — Sign in
+## Step 3 - Sign in
 
 From any directory, run:
 
@@ -65,7 +65,7 @@ From any directory, run:
 ironbee login
 ```
 
-This opens [console.ironbee.ai](https://console.ironbee.ai) in your browser. Confirm in the browser, and the CLI stores your credentials locally — you only need to do this once per machine.
+This opens [console.ironbee.ai](https://console.ironbee.ai) in your browser. Confirm in the browser, and the CLI stores your credentials locally. You only need to do this once per machine.
 
 When it completes, the terminal prints a confirmation:
 
@@ -82,7 +82,7 @@ When it completes, the terminal prints a confirmation:
 
 ---
 
-## Step 4 — Set up your project
+## Step 4 - Set up your project
 
 Navigate to the project you want to use IronBee with, then run the installer:
 
@@ -93,7 +93,7 @@ ironbee install
 
 IronBee detects your AI client (Claude Code, Cursor, or Codex) and sets it up automatically. If it can't detect one, it asks which client you use.
 
-That's it — your project is now connected to IronBee.
+That's it. Your project is now connected to IronBee.
 
 <Info>
   Restart your AI coding client after installing so it picks up the new setup.
@@ -103,7 +103,7 @@ That's it — your project is now connected to IronBee.
 
 ## What's next?
 
-Give your agent a task as you normally would. When it finishes editing code, IronBee steps in and has it verify the changes before the task can complete — and every session shows up in the [Console](https://console.ironbee.ai).
+Give your agent a task as you normally would. When it finishes editing code, IronBee steps in and has it verify the changes before the task can complete, and every session shows up in the [Console](https://console.ironbee.ai).
 
 <CardGroup cols={2}>
   <Card title="How verification works" icon="shield-check" href="/cli/concepts/how-it-works">

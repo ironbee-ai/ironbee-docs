@@ -1,20 +1,20 @@
 ---
 title: Recommendations
-description: Concrete directives generated from findings — injected into the AI agent's context automatically.
+description: Concrete directives generated from findings, injected into the AI agent's context automatically.
 ---
 
 **Recommendations** are actionable directives generated from findings. Every recommendation is tied to a specific finding (`concern` or `critical` severity) and grounded in observed session data.
 
 ## What makes recommendations different
 
-Recommendations are not generic advice — they are imperative instructions written specifically for the AI coding agent. They are automatically injected into the agent's system prompt on the next session, so the agent adjusts its behavior without you needing to manually relay the feedback.
+Recommendations are not generic advice, they are imperative instructions written specifically for the AI coding agent. They are automatically injected into the agent's system prompt on the next session, so the agent adjusts its behavior without you needing to manually relay the feedback.
 
 Example recommendations:
 
 - *"Always check contrast ratio, form validation, and error states before writing a verdict."* (quality finding)
-- *"After a fix, re-run all checks — not just the failing one."* (efficiency finding)
-- *"Button.tsx has a 70% fail rate — take extra care when modifying this file."* (patterns finding)
-- *"Prefer prompts with stable cached prefixes when working in src/auth/ — current cache hit rate is below 30%."* (cost finding)
+- *"After a fix, re-run all checks, not just the failing one."* (efficiency finding)
+- *"Button.tsx has a 70% fail rate, take extra care when modifying this file."* (patterns finding)
+- *"Prefer prompts with stable cached prefixes when working in src/auth/ and current cache hit rate is below 30%."* (cost finding)
 
 ## Recommendation scope
 
@@ -29,15 +29,15 @@ Project-scoped recommendations come from Quality, Cost, and Session Insights ana
 
 The Recommendations tab shows all active recommendations, linked to their source findings. Each recommendation includes:
 
-- **Action** — what the agent should do, written as a clear directive
-- **Source finding** — the observation that generated it (title, area, severity)
-- **Status** — active or dismissed
+- **Action:** what the agent should do, written as a clear directive
+- **Source finding:** the observation that generated it (title, area, severity)
+- **Status:** active or dismissed
 
 ## Dismissing recommendations
 
 You can dismiss a recommendation if it is not relevant to your current work. Dismissed recommendations are not injected into the agent and are preserved separately from active recommendations.
 
-When a new analysis run supersedes the current one, previously-dismissed recommendations are preserved — they are not re-activated.
+When a new analysis run supersedes the current one, previously-dismissed recommendations are preserved, they are not re-activated.
 
 ## Feedback
 

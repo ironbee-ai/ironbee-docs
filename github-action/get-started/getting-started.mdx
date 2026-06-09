@@ -3,7 +3,7 @@ title: Getting Started
 description: Add IronBee verification to your GitHub Actions workflow.
 ---
 
-The IronBee GitHub Action brings IronBee's verification loop into CI. On every push or pull request, it has Claude Code review your changes, verify them through IronBee DevTools — a real browser by default, plus optional backend and Node.js modes — fix any issues found, and post a report on the PR.
+The IronBee GitHub Action brings IronBee's verification loop into CI. On every push or pull request, it has Claude Code review your changes, verify them through IronBee DevTools, a real browser by default, plus optional backend and Node.js modes, fix any issues found, and post a report on the PR.
 
 This guide gets the action running in your workflow in a couple of minutes. For the mechanics behind it, see [How it works](/github-action/concepts/how-it-works).
 
@@ -11,7 +11,7 @@ This guide gets the action running in your workflow in a couple of minutes. For 
 
 ## Prerequisites
 
-- An [IronBee account](https://console.ironbee.ai) and an **IronBee API key** — generate one in the Console under **Settings → API keys**
+- An [IronBee account](https://console.ironbee.ai) and an **IronBee API key**, generate one in the Console under **Settings → API keys**
 - An Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com)) or a Claude Code OAuth token
 
 ---
@@ -73,7 +73,7 @@ Verification needs your app running. Tell the action how to bring it up:
 ```
 
 <Info>
-  These inputs are optional but recommended. Without them the agent infers how to install, build, start, and reach your app from the repository — which works, but is slower and less reliable than spelling it out. See [Verifying your application](/github-action/guides/verifying-your-app) for details.
+  These inputs are optional but recommended. Without them the agent infers how to install, build, start, and reach your app from the repository which works, but is slower and less reliable than spelling it out. See [Verifying your application](/github-action/guides/verifying-your-app) for details.
 </Info>
 
 ---
@@ -94,13 +94,13 @@ The action needs these GitHub token permissions to operate:
 
 The action needs two credentials:
 
-**IronBee API key (always required)** — authenticates the collector so sessions are recorded and reportable. Passed as an env var, never written to disk.
+**IronBee API key (always required)** authenticates the collector so sessions are recorded and reportable. Passed as an env var, never written to disk.
 
 ```yaml
 ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
 ```
 
-**Claude authentication (one of the two)** — either an Anthropic API key:
+**Claude authentication (one of the two)** either an Anthropic API key:
 
 ```yaml
 anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
