@@ -48,6 +48,10 @@ ironbee tui projects -p /path/to/project
 | **Queue** | Inspect and drain the background job queue; manage dead-letter entries |
 | **Import** | Backfill historical sessions with a live dry-run estimate before you commit |
 
+<Note>
+  Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **platform multi-select** (pre-checked from the project's current config) to choose which cycles to enable — the equivalent of `ironbee install --platforms`.
+</Note>
+
 ---
 
 ## Navigating

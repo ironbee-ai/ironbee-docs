@@ -26,6 +26,30 @@ ironbee install --client codex    # Codex CLI
 ironbee install --client all      # every detected client
 ```
 
+When more than one client is detected and you don't pass `--client`, install shows an **arrow-key picker** to choose.
+
+### Choosing which platforms to verify
+
+After resolving the client, install asks **which verification platforms** (cycles) to enable. In an interactive terminal it shows an arrow-key multi-select, pre-checked from the project's current config (so re-installing keeps your choices; a fresh project defaults to browser-only):
+
+```
+Which platforms should require verification?
+  ↑/↓ move · space toggle · a all · enter confirm
+
+  [x] browser   web UI · DOM · console · a11y · screenshots · recording
+  [ ] node      Node.js runtime · tracepoints · logpoints · exceptions · variables · logs
+  [ ] backend   HTTP · gRPC · GraphQL · WebSocket · DB · logs
+```
+
+Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,backend`):
+
+```bash
+ironbee install --platforms browser,node   # enable just these two
+ironbee install --platforms ""             # disable all cycles (incl. the default-on browser)
+```
+
+The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `backend`](/cli/guides/verification#enable-or-disable-a-platform) toggles. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode), the platform config is left untouched.
+
 <Info>
   Restart your AI coding client after installing so it picks up the new hooks and tools.
 </Info>

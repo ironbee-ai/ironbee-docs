@@ -12,12 +12,16 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | File | What it does |
 |------|--------------|
 | `.claude/settings.json` | Registers IronBee's hooks and the permissions the agent needs |
-| `.claude/skills/ironbee-verification.md` | The verification skill the agent follows |
-| `.claude/rules/ironbee-verification.md` | The verification rule that enforces the gate |
+| `.claude/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
+| `.claude/rules/ironbee-verification.md` | The always-on verification rule that enforces the gate (enforce mode) |
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
-| `.mcp.json` | The devtools MCP servers — one entry per enabled cycle (`browser-devtools`, `node-devtools`, `backend-devtools`) |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent |
 
 These are merged into your existing Claude settings, not overwritten.
+
+<Note>
+  The devtools MCP servers live inside the verifier sub-agent (above), not in a top-level `.mcp.json`. See [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent) below.
+</Note>
 
 <Info>
   Restart Claude Code after installing so it picks up the new hooks, commands, and MCP servers.
@@ -31,26 +35,48 @@ IronBee installs the `/ironbee-verify` slash command, which the agent (or you) c
 
 ### ironbee-verify
 
-Run a verification cycle for the current changes. By default it does a **focused** check, verifying only the areas affected by what changed. Variants narrow or widen the scope:
+Run a verification cycle for the current changes. By default it exercises the areas affected by what changed. You can also pass a **custom scenario** describing exactly what to verify — either inline or as a path to a file:
 
-| Command | Scope |
-|---------|-------|
-| `/ironbee-verify` | Focused, verify the areas affected by the change (the default) |
-| `/ironbee-verify full` | Everything full checklist regardless of what changed |
-| `/ironbee-verify visual` | Visual only appearance, layout, theming |
-| `/ironbee-verify functional` | Functional only behavior, interactions, data flow |
+```bash
+/ironbee-verify                                    # default — exercise the changed pages/endpoints
+/ironbee-verify log in as admin, open /billing,    # inline scenario — verify exactly this flow
+  and confirm the invoice total updates
+/ironbee-verify ./scenarios/checkout.md            # a scenario file (any location, any format)
+```
+
+When a scenario is supplied it is **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time, so you can keep reusable test scripts in your repo. The completion gate is unchanged — every active cycle's required tools must still run for a `pass`.
+
+<Note>
+  `/ironbee-verify` **delegates to the `ironbee-verifier` sub-agent** rather than verifying in the main conversation — see [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent).
+</Note>
+
+---
+
+## Verification runs in a sub-agent
+
+On Claude Code, the main agent does **not** drive the devtools tools itself. The devtools MCP servers are scoped to a dedicated `ironbee-verifier` sub-agent (their schemas are rendered inline into `.claude/agents/ironbee-verifier.md`). When verification is needed — automatically at the gate, or manually via `/ironbee-verify` — the main agent **spawns the verifier**, which runs every active cycle's tools and submits the verdict, then hands back a short summary.
+
+This keeps the heavy devtools output (DOM snapshots, console logs, screenshots) in the sub-agent's context instead of flooding the main conversation. The sub-agent shares the parent session, so its verification events, tool calls, and verdict all land in the same session timeline, and its token/tool usage is folded back into the session analytics.
+
+By default the verifier runs on the **same model as the main conversation**. To pin it to a specific (e.g. cheaper or faster) model, set [`verification.model`](/cli/configuration/configuration#verification) — for example `ironbee verification model sonnet --client claude`. See [Verification → Picking the verifier's model](/cli/guides/verification#picking-the-verifier-model).
+
+<Note>
+  Codex delegates the same way (a per-project verifier agent). **Cursor** keeps the main agent driving the tools directly — its sub-agents can't share a session, so there's no verifier sub-agent there.
+</Note>
 
 ---
 
 ## How verification is enforced
 
-IronBee installs a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically (the equivalent of `/ironbee-verify`) and blocks completion until every active cycle passes. The agent navigates pages, exercises the affected paths, and submits a verdict; on failure it fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit.
+IronBee installs a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically (spawning the verifier sub-agent, the equivalent of `/ironbee-verify`) and blocks completion until every active cycle passes. The verifier navigates pages, exercises the affected paths, and submits a verdict; on failure the main agent fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit.
+
+When the agent fixes something after a failed verdict, it can record what it repaired with `ironbee hook record-fix` so the next passing verdict describes the fix. If it doesn't, IronBee fills in the `fixes` from the files that changed since the failure — so a delegated verifier that didn't author the edit never blocks on a missing fix description.
 
 ---
 
 ## Permissions
 
-The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions entirely. [Assist mode](/cli/guides/verification#switching-to-assist-mode) keeps the permissions and MCP servers (so manual verification still works) but drops the always-on skill and rule.
+The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#switching-to-assist-mode) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
 
 ---
 

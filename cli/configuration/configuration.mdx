@@ -76,6 +76,7 @@ ironbee config list --global
 |-----|------|---------|-------------|
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
 | `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced and no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
+| `verification.model` | `string` \| `object` | *(unset — inherit the session model)* | Model the [delegated verifier sub-agent](/cli/guides/verification#picking-the-verifier-model) runs on (Claude Code and Codex). Unset means the verifier inherits the main conversation's model. Set a **string** (e.g. `"sonnet"`, `"gpt-5.5"`) to apply to every client, or a **per-client object** `{ "claude": "sonnet", "codex": "gpt-5.5" }` when a project uses both. Cursor has no verifier sub-agent, so it's a no-op there. Equivalent to [`ironbee verification model <value>`](/cli/guides/verification#picking-the-verifier-model). |
 
 ---
 

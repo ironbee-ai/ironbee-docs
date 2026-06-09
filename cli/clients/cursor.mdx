@@ -16,8 +16,13 @@ When you run `ironbee install` in a project where [Cursor](https://cursor.com) i
 | `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
 | `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
 | `.cursor/mcp.json` | The devtools MCP servers — one entry per enabled cycle (`browser-devtools`, `node-devtools`, `backend-devtools`) |
+| `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (`<server>:*` per enabled cycle + `ironbee` in the terminal allowlist) |
 
 These are merged into your existing Cursor config, not overwritten.
+
+<Note>
+  Unlike Claude Code and Codex, Cursor **doesn't use a verifier sub-agent** — the main agent drives the devtools tools directly. (Cursor's sub-agents run in a separate conversation that can't share the verification session, so there's nowhere to delegate to.) The [`verification.model`](/cli/configuration/configuration#verification) setting is therefore a no-op for Cursor.
+</Note>
 
 ---
 
@@ -41,9 +46,9 @@ After running `ironbee install`:
 
 The `/ironbee-verify` command from Claude Code is available in Cursor too:
 
-- **`/ironbee-verify`** run a verification cycle for the current changes. Supports `full`, `visual`, and `functional` variants to widen or narrow the scope.
+- **`/ironbee-verify`** run a verification cycle for the current changes. You can pass a **custom scenario** — inline text or a path to a scenario file — that defines exactly what to verify; when supplied it replaces the default "exercise the changed paths" flow.
 
-See [Claude Code → Slash commands](/cli/clients/claude-code#slash-commands) for the full breakdown of the verify variants; they behave the same in Cursor.
+See [Claude Code → Slash commands](/cli/clients/claude-code#slash-commands) for the full breakdown; it behaves the same in Cursor, except Cursor's main agent runs the verification itself rather than delegating to a sub-agent.
 
 ---
 

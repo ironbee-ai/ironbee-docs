@@ -53,9 +53,9 @@ IronBee runs in one of **three modes**, set by two switches: the master toggle (
 
 | Mode | How to set it | What happens |
 |------|---------------|--------------|
-| **Enforce** *(default)* | `ironbee verification enable` | The agent must pass every active cycle before it can mark a task complete. Blocking verify gate + skill, rule, `/ironbee-verify` command, and devtools MCP servers all installed. |
-| **Assist** | `ironbee verification auto disable` | The machinery stays installed `/ironbee-verify` command, MCP servers, and permissions so the agent (or you) can verify **manually**, but nothing is enforced. No verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. |
-| **Monitoring-only** | `ironbee verification disable` | The agent is never blocked. No enforcement hook, skill, rule, command, or MCP servers but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works. |
+| **Enforce** *(default)* | `ironbee verification enable` | The agent must pass every active cycle before it can mark a task complete. Blocking verify gate + skill, rule, `/ironbee-verify` command, the verifier sub-agent, and devtools MCP servers all installed. |
+| **Assist** | `ironbee verification auto disable` | The machinery stays installed `/ironbee-verify` command, the verifier sub-agent, MCP servers, and permissions so the agent (or you) can verify **manually**, but nothing is enforced. No verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. |
+| **Monitoring-only** | `ironbee verification disable` | The agent is never blocked. No enforcement hook, skill, rule, command, verifier sub-agent, or MCP servers but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works. |
 
 ### Switching to enforce or monitoring-only
 
@@ -84,6 +84,53 @@ The `auto` sub-toggle accepts the same target flags as everything else (`-g`/`--
 <Info>
   Restart your editor or agent session after toggling; the change takes effect on the next session.
 </Info>
+
+---
+
+## How verification runs (the verifier sub-agent)
+
+On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools, and the main agent **delegates** the verification cycle to it — automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
+
+The point is to keep the heavy devtools output (DOM snapshots, console logs, screenshots) inside the sub-agent's context instead of the main conversation. The sub-agent shares the session, so its events still flow to the Collector and its token/tool usage is folded into the session analytics.
+
+<Note>
+  **Cursor** has no verifier sub-agent — its main agent runs the verification itself, because Cursor's sub-agents can't share the verification session.
+</Note>
+
+### Picking the verifier model
+
+By default the verifier runs on the **same model as the main conversation**. Pin it to a specific model — for example to verify on something cheaper or faster than your main coding model — with `ironbee verification model`:
+
+```bash
+ironbee verification model sonnet --client claude   # pin Claude's verifier
+ironbee verification model gpt-5.5 --client codex    # pin Codex's verifier
+ironbee verification model sonnet                    # apply to every client (bare string)
+```
+
+`--client` is **optional when exactly one verifier-capable client is installed** and **required when there are two** (Claude + Codex), since one model name rarely works for both. To go back to inheriting the session model:
+
+```bash
+ironbee config unset verification.model
+```
+
+The setting accepts the usual `-g`/`--global` and `--local` target flags and re-renders the verifier artifact when it changes. It maps to the [`verification.model`](/cli/configuration/configuration#verification) config key. Cursor is a no-op.
+
+<Note>
+  On **Codex** the verifier needs *some* resolvable model. It inherits your `~/.codex/config.toml` `model`; if you haven't set one there, pin `verification.model` so the sub-agent can spawn.
+</Note>
+
+---
+
+## Custom verification scenarios
+
+By default the agent verifies the areas affected by what changed. To tell it **exactly** what to exercise, pass a custom scenario to `/ironbee-verify` (or `$ironbee-verify` on Codex) — either inline or as a path to a file:
+
+```bash
+/ironbee-verify log in as admin, open /billing, confirm the invoice total updates
+/ironbee-verify ./scenarios/checkout.md
+```
+
+When a scenario is supplied it's **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time (any location, any format), so you can keep reusable test scripts in your repo and point at them. The completion gate is unchanged — every active cycle's required tools still have to run for a pass.
 
 ---
 
