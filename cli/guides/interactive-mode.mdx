@@ -49,7 +49,7 @@ ironbee tui projects -p /path/to/project
 | **Import** | Backfill historical sessions with a live dry-run estimate before you commit |
 
 <Note>
-  Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **platform multi-select** (pre-checked from the project's current config) to choose which cycles to enable — the equivalent of `ironbee install --platforms`.
+  Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **mode single-select** (`enforce` / `assist` / `monitor` — the equivalent of `ironbee install --mode`) and, unless you pick `monitor`, a **platform multi-select** (pre-checked from the project's current config — the equivalent of `ironbee install --platforms`) to choose which cycles to enable.
 </Note>
 
 ---

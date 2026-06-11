@@ -48,6 +48,8 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_CLIENT` | Tells a hook runner which client it's acting as (the `--client` flag overrides it). Set by the installed hook config. |
 | `IRONBEE_BIN` | Overrides the path to the `ironbee` binary used when spawning background workers. |
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
+| `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
+| `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render — belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
 
 ---
 
