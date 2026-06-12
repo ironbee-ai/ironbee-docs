@@ -21,10 +21,10 @@ This guide covers the basics: create an account, install the CLI, sign in, and s
     Sign up at [console.ironbee.ai](https://console.ironbee.ai).
   </Step>
   <Step title="Install the CLI">
-    `npm install -g @ironbee-ai/cli` - installs the `ironbee` command globally.
+    `npm install -g @ironbee-ai/cli` installs the `ironbee` command globally.
   </Step>
   <Step title="Sign in">
-    `ironbee login` - connects the CLI to your account. One time per machine.
+    `ironbee login` connects the CLI to your account. One time per machine.
   </Step>
   <Step title="Set up your project">
     `cd` into your project and run `ironbee install` to wire up your AI client.
@@ -65,7 +65,7 @@ From any directory, run:
 ironbee login
 ```
 
-This opens [console.ironbee.ai](https://console.ironbee.ai) in your browser. Confirm in the browser, and the CLI stores your credentials locally. You only need to do this once per machine.
+This opens [console.ironbee.ai](https://console.ironbee.ai) in your browser. Authorize the CLI, and it stores a personal OAuth access token locally. You only need to do this once per machine.
 
 When it completes, the terminal prints a confirmation:
 
@@ -73,11 +73,12 @@ When it completes, the terminal prints a confirmation:
 ✓ Logged in successfully!
   Console   https://console.ironbee.ai
   Collector https://collector.service.ironbee.ai
+  Token     personal (my-laptop)
   Config    ~/.ironbee/config.json
 ```
 
 <Info>
-  If the browser doesn't open automatically, the CLI prints a URL you can paste in manually.
+  If the browser doesn't open automatically, the CLI prints a URL you can paste in manually. Running in CI with no browser? Use an account API key instead, see [Authentication](/cli/guides/authentication).
 </Info>
 
 ---

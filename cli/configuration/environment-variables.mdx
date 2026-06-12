@@ -11,7 +11,8 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 
 | Variable | Effect |
 |----------|--------|
-| `IRONBEE_API_KEY` | Supplies `collector.apiKey` without committing it. **Takes precedence over every config layer.** Combine with a file-set `collector.url` for a complete config. Ideal for CI. |
+| `IRONBEE_API_KEY` | Supplies `collector.apiKey` without committing it. **Takes precedence over every config layer.** Combine with a file-set `collector.url` for a complete config. The credential of choice for CI and the [GitHub Action](/github-action/get-started/getting-started). |
+| `IRONBEE_OAUTH_TOKEN` | Supplies `collector.oauthToken` (the personal token from [`ironbee login`](/cli/guides/authentication)) without committing it. **Takes precedence over every config layer.** When both this and `IRONBEE_API_KEY` are set, the OAuth token wins. |
 | `IRONBEE_TELEMETRY` | Set to `false` to turn off anonymous CLI telemetry for this shell/run, a per-session alternative to the [`telemetry.enable`](/cli/advanced/telemetry-statusline#telemetry) config key. |
 | `IRONBEE_LOG_LEVEL` | Logging verbosity. Set to `debug` to see detailed output when troubleshooting. |
 
