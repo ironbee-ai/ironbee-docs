@@ -15,7 +15,7 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
 | `.claude/rules/ironbee-verification.md` | The always-on verification rule that enforces the gate (enforce mode) |
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
-| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`, `android-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent |
 
 These are merged into your existing Claude settings, not overwritten.
 
@@ -45,6 +45,8 @@ Run a verification cycle for the current changes. By default it exercises the ar
 ```
 
 When a scenario is supplied it is **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time, so you can keep reusable test scripts in your repo. The completion gate is unchanged — every active cycle's required tools must still run for a `pass`.
+
+An optional leading word picks what happens on a fail: the default is **verify-only** (report the verdict and stop), while a leading `fix` makes the agent fix the issues and re-verify until it passes — `/ironbee-verify fix`. See [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode).
 
 <Note>
   `/ironbee-verify` **delegates to the `ironbee-verifier` sub-agent** rather than verifying in the main conversation — see [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent).

@@ -38,7 +38,7 @@ Enabling privacy mode injects two flags into every DevTools MCP server's environ
 | Flag | Effect when privacy is on |
 |------|---------------------------|
 | `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` | Drops tool **input/output detail** from the events the DevTools send to the Collector. |
-| `COLLECTOR_ARTIFACTS_ENABLE=false` | Drops **screenshots and recordings** (browser artifacts). |
+| `COLLECTOR_ARTIFACTS_ENABLE=false` | Drops **screenshots and recordings** (browser and Android artifacts). |
 
 You still get the structural signal which tools ran, verdicts, timing, and the session lifecycle all keep flowing but the heavy, potentially-sensitive payloads stay on your machine. Disabling privacy mode removes both flags, so the DevTools resume their default reporting.
 

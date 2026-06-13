@@ -9,15 +9,16 @@ When your agent finishes editing code, IronBee runs **verification cycles** to c
 
 ## Verification platforms
 
-Each platform is a separate cycle with its own tools. IronBee installs all three, but only some are active by default:
+Each platform is a separate cycle with its own tools. IronBee installs all four, but only some are active by default:
 
 | Platform | Default | What it verifies | Tools |
 |----------|---------|------------------|-------|
 | **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
 | **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
 | **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
+| **Android** | Opt-in | Android app changes drives a real device or emulator over ADB launches the app, taps and swipes, takes screenshots and UI snapshots, and reads Logcat | `android-devtools` (`adt_*`) |
 
-The browser cycle covers most frontend work out of the box. The Node and backend cycles are off until you opt in, so backend changes aren't gated until you ask for it.
+The browser cycle covers most frontend work out of the box. The Node, backend, and Android cycles are off until you opt in, so those changes aren't gated until you ask for it.
 
 ---
 
@@ -28,6 +29,7 @@ Each platform has an `enable` / `disable` subcommand:
 ```bash
 ironbee node enable       # turn on Node.js runtime verification
 ironbee backend enable    # turn on backend protocol verification
+ironbee android enable    # turn on Android device/emulator verification
 ironbee browser disable   # turn off the browser cycle (e.g. backend-only projects)
 ```
 
@@ -117,6 +119,29 @@ The setting accepts the usual `-g`/`--global` and `--local` target flags and re-
 
 <Note>
   On **Codex** the verifier needs *some* resolvable model. It inherits your `~/.codex/config.toml` `model`; if you haven't set one there, pin `verification.model` so the sub-agent can spawn.
+</Note>
+
+---
+
+## Verify-only vs. fix mode
+
+When you trigger `/ironbee-verify` by hand (or `$ironbee-verify` on Codex), an optional leading word picks what happens on a **fail** verdict:
+
+```bash
+/ironbee-verify              # verify-only (default) — report the verdict and stop
+/ironbee-verify fix          # fix-and-re-verify — on a fail, fix the issues and loop until it passes
+/ironbee-verify fix log in as admin, open /billing   # fix mode + a custom scenario
+```
+
+| Mode | Leading word | On a fail verdict |
+|------|--------------|-------------------|
+| **Verify-only** *(default)* | *(none)* or `report` | Runs the cycle, submits the verdict, reports it, and **stops**. It never edits your code, even when the verdict is a fail — use it to check the current state. |
+| **Fix** | `fix` | On a fail, the agent fixes the reported issues and re-verifies, looping until it passes (or hits [`maxRetries`](/cli/configuration/configuration#core-options)). |
+
+In **enforce mode** the choice is enforced mechanically, not just suggested: a `fix` run won't let the agent stop on a fail without addressing it, while a verify-only run is allowed to report a fail and end the turn. A custom scenario can follow the mode word.
+
+<Note>
+  This only changes the **manual** command's behavior. The automatic completion gate is unaffected — when the agent edits code and tries to finish, it must still pass every active cycle. In [assist mode](#switching-to-assist-mode) nothing blocks the agent, so `fix` there is advisory; in monitoring-only mode the command isn't installed.
 </Note>
 
 ---
