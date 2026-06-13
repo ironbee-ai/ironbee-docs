@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `android`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -82,11 +82,11 @@ ironbee config list --global
 
 ## Verification cycles
 
-The three cycles: `browser`, `node`, and `backend`, share the same set of keys (replace `<cycle>` with `browser`, `node`, or `backend`):
+The four cycles: `browser`, `node`, `backend`, and `android`, share the same set of keys (replace `<cycle>` with `browser`, `node`, `backend`, or `android`):
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `<cycle>.enable` | `boolean` | Explicit on/off. Written `false` by `ironbee <cycle> disable`, stripped by `ironbee <cycle> enable`. Browser is the only cycle on by default; node and backend are opt-in. |
+| `<cycle>.enable` | `boolean` | Explicit on/off. Written `false` by `ironbee <cycle> disable`, stripped by `ironbee <cycle> enable`. Browser is the only cycle on by default; node, backend, and android are opt-in. |
 | `<cycle>.verifyPatterns` | `string[]` | Files that trigger the cycle. **Four states:** unset → built-in code defaults · `[]` → hard-disable · non-empty → custom patterns (replaces defaults). |
 | `<cycle>.additionalVerifyPatterns` | `string[]` | Extra patterns appended to `verifyPatterns` (or to the defaults when it's unset). Ignored when `verifyPatterns` is `[]`. |
 | `<cycle>.alwaysRequired` | `string[]` | Tools the agent must use before the cycle passes (all-of). Sensible per-cycle defaults apply. *Advanced.* |
@@ -99,6 +99,7 @@ The three cycles: `browser`, `node`, and `backend`, share the same set of keys (
 | `browser` | On | 40+ code/markup extensions (`.ts`, `.tsx`, `.js`, `.css`, `.html`, `.vue`, …) |
 | `node` | Opt-in | When enabled: server/api/routes code paths |
 | `backend` | Opt-in | When enabled: 13 multi-language code defaults (ts/js/py/go/java/rb/cs/rs/kt/scala/ex/php/clj) |
+| `android` | Opt-in | When enabled: standard Android project layouts (Gradle, Kotlin/Java source trees, resources) |
 
 The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
@@ -153,6 +154,20 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     **/main.{go,py,java,rb,kt,scala}
     ```
   </Accordion>
+  <Accordion title="Android default verify patterns">
+    Covers standard Android project layouts Gradle modules, Kotlin/Java source trees, and resources (applies once the cycle is enabled):
+
+    ```
+    android/**/*.{kt,java}
+    app/src/**/*.{kt,java}
+    mobile/**/*.{kt,java}
+    src/main/kotlin/**/*.kt
+    src/main/java/**/*.java
+    **/*.{kt,java}
+    **/res/**/*.xml
+    **/AndroidManifest.xml
+    ```
+  </Accordion>
 </AccordionGroup>
 
 <Note>
@@ -160,7 +175,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
 </Note>
 
 <Note>
-  Prefer the [`ironbee browser` / `node` / `backend` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off; they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
+  Prefer the [`ironbee browser` / `node` / `backend` / `android` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off; they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
 </Note>
 
 ```json
@@ -287,7 +302,7 @@ IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export 
 
 ## Devtools MCP overrides
 
-Each cycle's MCP server can be customized independently via `browserDevTools`, `nodeDevTools`, and `backendDevTools`:
+Each cycle's MCP server can be customized independently via `browserDevTools`, `nodeDevTools`, `backendDevTools`, and `androidDevTools`:
 
 | Key | Description |
 |-----|-------------|
@@ -312,7 +327,7 @@ Each cycle's MCP server can be customized independently via `browserDevTools`, `
 
 These sections auto-enable when a collector is configured and rarely need manual tuning. Browse them with `ironbee config list` or the [TUI](/cli/guides/interactive-mode) Configuration area:
 
-- **`recording:`** browser session recording (`recording.enable`).
+- **`recording:`** session recording for the browser and Android cycles (`recording.enable`); node and backend cycles never trigger it.
 - **`jobQueue:`** the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
 - **`analytics:`** per-session structural analytics and how often they emit (`analytics.enable`, `analytics.emitOnStop`, and per-event opt-in/opt-out flags).
 

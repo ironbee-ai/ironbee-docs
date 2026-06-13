@@ -43,7 +43,7 @@ $ironbee-verify check that the cart total    # inline scenario
 $ironbee-verify ./scenarios/checkout.md      # a scenario file
 ```
 
-When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. Only the invocation syntax differs from Claude Code.
+When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) — see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
 
 ---
 
@@ -63,7 +63,7 @@ A few details differ from the other clients, all handled automatically:
 
 - **No `SessionEnd` hook.** Codex doesn't expose one, so IronBee treats every Stop as a checkpoint and writes a session-end snapshot there (the Collector keeps the latest). Quitting Codex with `/quit` fires no hooks.
 - **Interrupt recovery.** Pressing **Esc** to interrupt the agent doesn't fire a Stop hook in Codex ([#22858](https://github.com/openai/codex/issues/22858)). IronBee reconciles the interrupted activity on your next prompt, so the session timeline stays accurate.
-- **Config is project-level.** Hooks, MCP servers, and the verifier are written per project (`<project>/.codex/`), so each repo gets its own setup and there's no machine-global conflict. The devtools servers live inside the verifier agent (`<project>/.codex/agents/ironbee-verifier.toml`) under `[mcp_servers.<name>]`, gated per enabled cycle — `browser-devtools` on by default, `node-devtools` / `backend-devtools` added when you enable those cycles. A model must be resolvable for the verifier sub-agent: it inherits your `~/.codex/config.toml` `model` unless you pin [`verification.model`](/cli/guides/verification#picking-the-verifier-model); if neither supplies one, install warns you.
+- **Config is project-level.** Hooks, MCP servers, and the verifier are written per project (`<project>/.codex/`), so each repo gets its own setup and there's no machine-global conflict. The devtools servers live inside the verifier agent (`<project>/.codex/agents/ironbee-verifier.toml`) under `[mcp_servers.<name>]`, gated per enabled cycle — `browser-devtools` on by default, `node-devtools` / `backend-devtools` / `android-devtools` added when you enable those cycles. A model must be resolvable for the verifier sub-agent: it inherits your `~/.codex/config.toml` `model` unless you pin [`verification.model`](/cli/guides/verification#picking-the-verifier-model); if neither supplies one, install warns you.
 
 <Note>
   The Claude-only integrations — the **statusline**, **OAuth access**, and the local **OTEL collector** — don't apply to Codex. Session lifecycle, tool calls, verdicts, and analytics still flow to the Collector.
