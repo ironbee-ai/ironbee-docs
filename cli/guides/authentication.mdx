@@ -1,0 +1,89 @@
+---
+title: Authentication
+description: How the CLI authenticates with IronBee with OAuth tokens for interactive use, API keys for CI and automation.
+---
+
+IronBee accepts two kinds of credentials, and the CLI picks the right one for you:
+
+- **OAuth access token:** the default for interactive use. `ironbee login` mints a personal token tied to your user and account. Each token is individually named and revocable.
+- **API key:** an account-scoped key for machine-to-machine (M2M) use, such as the [GitHub Action](/github-action/get-started/getting-started) or any CI pipeline where no browser is available.
+
+Both are first-class and supported. The difference is who they identify: an OAuth token is *you*, an API key is *the account*.
+
+---
+
+## OAuth tokens (default)
+
+Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens your browser, asks you to authorize the CLI, and writes a personal access token to `~/.ironbee/config.json` under `collector.oauthToken`. From then on the CLI authenticates as you.
+
+```bash
+ironbee login
+```
+
+The login flow waits up to five minutes for you to confirm in the browser; press `Ctrl+C` to cancel. By default the token is named after your machine's hostname so you can recognize it later in the Console and pass `--name` to set your own label:
+
+```bash
+ironbee login --name "work-laptop"
+```
+
+Each token appears on the [API Tokens page](/console/access-tokens) in the Console, where you can see when it was created, when it expires, and revoke it. CLI-minted tokens default to a 90-day lifetime.
+
+### Token limit
+
+You can hold at most **10 OAuth access tokens** per account at a time. This count includes expired tokens that you have not yet removed.
+
+If you are already at the limit, `ironbee login` cannot mint a new one and prints:
+
+```
+You already have the maximum of 10 access tokens, so a new one could not be issued for the CLI. Revoke one on the IronBee Console's API Tokens page, then run "ironbee login" again
+```
+
+To free a slot, open the [API Tokens page](/console/access-tokens), revoke a token you no longer use, then run `ironbee login` again.
+
+---
+
+## API keys (CI and automation)
+
+For automation that runs without a browser; the GitHub Action, scheduled jobs, scripts, use an account API key instead. Supply it through the `IRONBEE_API_KEY` environment variable so it never lands in a committed file:
+
+```bash
+export IRONBEE_API_KEY=<your-account-api-key>
+```
+
+The CLI reads it into `collector.apiKey`. You can also set it on disk with `ironbee config set collector.apiKey <key> --global`, but the environment variable is preferred for CI because it [overrides every config layer](/cli/configuration/environment-variables).
+
+Find and manage the account API key on the [Account page](/console/account) in the Console. Owners and admins can view, copy, and rotate it.
+
+### Rotation and the grace window
+
+Rotating the API key on the [Account page](/console/account) generates a fresh key and keeps the **previous key valid for 24 hours** for a grace window so your CI and integrations keep working while you roll the new key out. Only one grace key exists at a time:
+
+- Rotating again while a grace key is still active permanently disables the earlier grace key (the Console asks you to confirm first).
+- Use **Deactivate now** on the Account page to end the grace window immediately.
+
+---
+
+## Which credential the CLI uses
+
+If both are present, the OAuth token takes priority on the wire. In practice:
+
+| Situation | Credential | How to set it |
+|-----------|-----------|---------------|
+| You, working locally | OAuth token | `ironbee login` |
+| GitHub Action / CI | API key | `IRONBEE_API_KEY` secret |
+| Scripted or headless machine | API key | `IRONBEE_API_KEY` or `collector.apiKey` |
+
+Both `IRONBEE_OAUTH_TOKEN` and `IRONBEE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="API Tokens in the Console" icon="key" href="/console/access-tokens">
+    Create, name, and revoke your personal OAuth access tokens.
+  </Card>
+  <Card title="Account API key" icon="building" href="/console/account">
+    View and rotate the shared account key used for CI.
+  </Card>
+</CardGroup>

@@ -1,0 +1,40 @@
+---
+title: API Tokens
+description: Create, name, and revoke the personal OAuth access tokens the CLI uses to send data on your behalf.
+---
+
+The **API Tokens** page lists your personal access tokens, the OAuth credentials [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) creates so the CLI can send session data as you. Each token is tied to your user and account, and you manage them independently of the shared [account API key](/console/account).
+
+## What you see
+
+Each token in the list shows:
+
+- **Name**: the label set at creation (the CLI defaults this to your machine's hostname)
+- **Prefix**: the first characters of the token, followed by `…`; the full value is never shown again after creation
+- **Created**: when the token was issued
+- **Expires**: the expiry date, or "Never expires" for non-expiring tokens
+
+## Create a token
+
+Click **Create token**, give it a name, and choose an expiry (30, 60, 90, 180, or 365 days, or no expiration). The full token is shown **once** on the next screen, copy it somewhere safe, because it cannot be retrieved later.
+
+Most people never create tokens here by hand; `ironbee login` mints one for you. Create one manually when you need a token for a specific tool or a custom expiry.
+
+## Revoke a token
+
+Click **Revoke** next to any token to disable it immediately. Anything still using that token can no longer authenticate.
+
+<Note>
+  You can hold at most **10 access tokens** at a time, including expired ones you have not removed. If you hit the limit, revoke one here before creating or minting another. This is also what frees up `ironbee login` when it reports the limit.
+</Note>
+
+## Tokens vs the account API key
+
+| | API token | Account API key |
+|--|-----------|-----------------|
+| Identifies | You | The account |
+| Created by | `ironbee login` or this page | Generated with the account |
+| Used for | Interactive CLI use | CI and machine-to-machine, like the [GitHub Action](/github-action/get-started/getting-started) |
+| Managed on | This page | The [Account page](/console/account) |
+
+See [Authentication](/cli/guides/authentication) for how the CLI chooses between them.

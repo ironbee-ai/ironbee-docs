@@ -33,7 +33,7 @@ ironbee --version
 
 ## Step 3 - Connect the CLI to your account
 
-Run `ironbee login` from any directory. It opens your browser at `console.ironbee.ai`, asks you to confirm, and writes your API key and collector URL to `~/.ironbee/config.json` automatically.
+Run `ironbee login` from any directory. It opens your browser at `console.ironbee.ai`, asks you to authorize the CLI, and writes a personal OAuth access token and collector URL to `~/.ironbee/config.json` automatically.
 
 ```bash
 ironbee login
@@ -45,17 +45,20 @@ The browser opens, you confirm, and the terminal prints:
 ✓ Logged in successfully!
   Console   https://console.ironbee.ai
   Collector https://collector.service.ironbee.ai
+  Token     personal (my-laptop)
   Config    ~/.ironbee/config.json
 ```
 
-<Accordion title="Prefer to set the API key manually?">
-  You can skip `ironbee login` and set your credentials by hand instead. Copy your API key from **Console → Settings → API Keys**, then run:
+The token is named after your machine by default and shows up on the [API Tokens page](/console/access-tokens) in the Console, where you can revoke it anytime.
+
+<Accordion title="Running in CI instead?">
+  For automation that has no browser, the [GitHub Action](/github-action/get-started/getting-started) or any CI pipeline and use an account API key instead of `ironbee login`. Supply it through the environment:
 
   ```bash
-  ironbee config set collector.apiKey <your-api-key> --global
+  export IRONBEE_API_KEY=<your-account-api-key>
   ```
 
-  The collector URL defaults to `https://collector.service.ironbee.ai`. There is no need to set it unless you are self-hosting.
+  Find the account API key on the [Account page](/console/account) in the Console. See [Authentication](/cli/guides/authentication) for when to use each credential.
 </Accordion>
 
 ---

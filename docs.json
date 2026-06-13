@@ -65,6 +65,7 @@
                 "group": "Guides",
                 "pages": [
                   "cli/concepts/how-it-works",
+                  "cli/guides/authentication",
                   "cli/guides/managing-projects",
                   "cli/guides/verification",
                   "cli/guides/verification-context",
@@ -133,6 +134,7 @@
                 "pages": [
                   "console/profile",
                   "console/account",
+                  "console/access-tokens",
                   "console/team",
                   "console/settings"
                 ]

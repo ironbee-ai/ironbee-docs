@@ -199,13 +199,14 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 
 ## Collector
 
-The collector is what ships your session data to the IronBee Console. `ironbee login` fills `url` and `apiKey` for you; you'd only set these by hand to self-host.
+The collector is what ships your session data to the IronBee Console. `ironbee login` fills `url` and `oauthToken` for you; you'd only set these by hand to self-host or to run in CI with an API key. See [Authentication](/cli/guides/authentication) for the difference between the two credentials.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `collector.url` | `string` | *(unset)* | Collector endpoint. Required for the collector to be active. |
-| `collector.apiKey` | `string` | *(unset)* | API key for collector auth. Required to be active. Can come from `IRONBEE_API_KEY` instead. |
-| `collector.enable` | `boolean` | implicit `true` when `url` + `apiKey` are set | Set `false` to suspend sending while keeping credentials around. |
+| `collector.oauthToken` | `string` | *(unset)* | Personal OAuth access token written by `ironbee login`. The CLI's default credential. Can come from `IRONBEE_OAUTH_TOKEN` instead. |
+| `collector.apiKey` | `string` | *(unset)* | Account API key for collector auth, used for CI and machine-to-machine. Can come from `IRONBEE_API_KEY` instead. When both this and `oauthToken` are set, the OAuth token is used. |
+| `collector.enable` | `boolean` | implicit `true` when `url` + a credential are set | Set `false` to suspend sending while keeping credentials around. |
 | `collector.batchSize` | `number` | `100` | Max events per POST. |
 | `collector.timeoutMs` | `number` | `10000` | Per-request timeout (ms), clamped to `[1000, 60000]`. |
 
