@@ -35,7 +35,7 @@ A **cycle** is one pass of testing against a real surface. IronBee has four, and
 | Browser | A real browser, navigation, screenshots, console, accessibility |
 | Node | The Node.js V8 inspector, probes and runtime snapshots |
 | Backend | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
-| Android | A real device or emulator over ADB taps, swipes, screenshots, UI snapshots, Logcat |
+| Android | An emulator over ADB taps, swipes, screenshots, UI snapshots, Logcat |
 
 When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt**. They run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
 

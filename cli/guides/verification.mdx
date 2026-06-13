@@ -16,7 +16,7 @@ Each platform is a separate cycle with its own tools. IronBee installs all four,
 | **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
 | **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
 | **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
-| **Android** | Opt-in | Android app changes drives a real device or emulator over ADB launches the app, taps and swipes, takes screenshots and UI snapshots, and reads Logcat | `android-devtools` (`adt_*`) |
+| **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, and read Logcat | `android-devtools` (`adt_*`) |
 
 The browser cycle covers most frontend work out of the box. The Node, backend, and Android cycles are off until you opt in, so those changes aren't gated until you ask for it.
 
