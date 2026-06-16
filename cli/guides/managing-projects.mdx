@@ -51,7 +51,7 @@ ironbee install --mode assist     # tools installed, manual /ironbee-verify only
 ironbee install --mode monitor    # monitoring-only — no enforcement, no platform picker
 ```
 
-The choice is written explicitly to the committed project config (`verification.enable` / `verification.auto`), so it's equivalent to the [`ironbee verification` toggles](/cli/guides/verification#verification-modes). Any existing [`verification.model`](/cli/guides/verification#picking-the-verifier-model) is preserved. The picker default reads the project's **own** committed/local config (the machine-global config is ignored), so a fresh project defaults to `enforce` even on a machine running monitoring-only globally. In a non-interactive shell with no `--mode` flag, the verification config is left untouched.
+The choice is written explicitly to the committed project config (`verification.enable` / `verification.auto`), so it's equivalent to the [`ironbee verification` toggles](/cli/guides/verification#verification-modes). For `enforce` and `assist`, install also records [`verification.strict`](/cli/guides/verification#strict-mode) at its default `false` (a strict choice you already made is kept). Any existing [`verification.model`](/cli/guides/verification#picking-the-verifier-model) is preserved. The picker default reads the project's **own** committed/local config (the machine-global config is ignored), so a fresh project defaults to `enforce` even on a machine running monitoring-only globally. In a non-interactive shell with no `--mode` flag, the verification config is left untouched.
 
 ### Choosing which platforms to verify
 

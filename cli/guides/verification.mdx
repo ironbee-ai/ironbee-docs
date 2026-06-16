@@ -91,7 +91,7 @@ The `auto` sub-toggle accepts the same target flags as everything else (`-g`/`--
 
 ## How verification runs (the verifier sub-agent)
 
-On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools, and the main agent **delegates** the verification cycle to it — automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
+On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools (plus read-only `Read` / `Grep` / `Glob` so it can understand the change it's verifying — but **no edit tools**), and the main agent **delegates** the verification cycle to it — automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
 
 The point is to keep the heavy devtools output (DOM snapshots, console logs, screenshots) inside the sub-agent's context instead of the main conversation. The sub-agent shares the session, so its events still flow to the Collector and its token/tool usage is folded into the session analytics.
 
@@ -142,6 +142,32 @@ In **enforce mode** the choice is enforced mechanically, not just suggested: a `
 
 <Note>
   This only changes the **manual** command's behavior. The automatic completion gate is unaffected — when the agent edits code and tries to finish, it must still pass every active cycle. In [assist mode](#switching-to-assist-mode) nothing blocks the agent, so `fix` there is advisory; in monitoring-only mode the command isn't installed.
+</Note>
+
+---
+
+## When a change has nothing to verify (N/A verdicts)
+
+Some edits match a cycle's file patterns but have **no runtime surface** to exercise — a type-only change, a behavior-neutral refactor, a config or docs tweak. Rather than fake screenshots or HTTP calls to satisfy the gate, the verifier can submit a **not-applicable (N/A) verdict**, declaring there's nothing to verify and explaining why:
+
+- **Global N/A** — no active cycle applies to the change. The verifier reports `status: not_applicable` with a short reason, and the gate lets the task complete without any tool evidence.
+- **Per-platform N/A** — some cycles apply and some don't. The verifier verifies the ones that do (a normal `pass`/`fail`) and exempts the rest by name, with a reason for each exemption.
+
+N/A verdicts are **recorded and observable** — they show up in the session's verdict like any pass or fail, with the exempted cycles and reasons attached, so you can see *why* a change wasn't exercised. To guard against abuse, the gate **refuses an N/A after a previous fail** on the same change (an agent can't downgrade a real failure to "not applicable" to escape the gate).
+
+### Strict mode
+
+If you'd rather **never** accept an N/A and always demand real tool evidence for every active cycle, turn on **strict mode**:
+
+```bash
+ironbee verification strict enable    # reject all N/A verdicts — every active cycle needs real evidence
+ironbee verification strict disable    # back to the default — N/A verdicts accepted (and recorded)
+```
+
+With strict on, a verdict that tries to mark a cycle not-applicable is **blocked**, and the agent has to produce the cycle's required tools. Strict only matters in **enforce mode** (in assist and monitoring-only there's no gate to enforce it). It's read live by the gate, so it takes effect on the next session without re-rendering artifacts. Strict maps to the [`verification.strict`](/cli/configuration/configuration#verification) config key and accepts the usual `-g`/`--global` and `--local` target flags.
+
+<Note>
+  N/A is **off-limits after a fail and under strict mode** — it's an escape hatch for changes that genuinely have no runtime behavior, not a way around a real verification.
 </Note>
 
 ---
