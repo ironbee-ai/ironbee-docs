@@ -58,15 +58,19 @@ ironbee config list --global
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ignoredVerifyPatterns` | `string[]` | `[]` | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. |
+| `ignoredVerifyPatterns` | `string[]` | `[]` *(plus always-on test-file defaults)* | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. Your patterns are **unioned on top of** a built-in default set that always excludes test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`), so a test-only edit never triggers a runtime-verification cycle even if you set nothing. |
 | `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). One global counter across all active cycles. |
 
 ```json
 {
-  "ignoredVerifyPatterns": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"],
+  "ignoredVerifyPatterns": ["**/generated/**", "**/*.gen.ts"],
   "maxRetries": 5
 }
 ```
+
+<Note>
+  Test files are already excluded out of the box — `ignoredVerifyPatterns` is only for *additional* paths you want to skip on top of that built-in default.
+</Note>
 
 ---
 
@@ -77,6 +81,7 @@ ironbee config list --global
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
 | `verification.auto` | `boolean` | `true` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). `false` = [assist mode](/cli/guides/verification#switching-to-assist-mode): the `/ironbee-verify` command, MCP servers, and permissions stay installed for manual verification, but nothing is enforced and no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Equivalent to [`ironbee verification auto disable`](/cli/guides/verification#switching-to-assist-mode). |
 | `verification.model` | `string` \| `object` | *(unset — inherit the session model)* | Model the [delegated verifier sub-agent](/cli/guides/verification#picking-the-verifier-model) runs on (Claude Code and Codex). Unset means the verifier inherits the main conversation's model. Set a **string** (e.g. `"sonnet"`, `"gpt-5.5"`) to apply to every client, or a **per-client object** `{ "claude": "sonnet", "codex": "gpt-5.5" }` when a project uses both. Cursor has no verifier sub-agent, so it's a no-op there. Equivalent to [`ironbee verification model <value>`](/cli/guides/verification#picking-the-verifier-model). |
+| `verification.strict` | `boolean` | `false` | [Strict mode](/cli/guides/verification#strict-mode). When `true`, the verify gate **rejects all [N/A verdicts](/cli/guides/verification#when-a-change-has-nothing-to-verify-na-verdicts)** — the agent must produce real tool evidence for every active cycle. Default `false` accepts N/A (recorded and observable). Only meaningful in enforce mode (no gate runs in assist/monitoring). Read live by the gate. Equivalent to [`ironbee verification strict <enable\|disable>`](/cli/guides/verification#strict-mode). |
 
 ---
 
@@ -171,7 +176,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
 </AccordionGroup>
 
 <Note>
-  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. There is **no** default skip list: `ignoredVerifyPatterns` is empty unless you set it, and non-code files simply don't match the patterns above.
+  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. The only built-in **skip** list is the always-on test-file exclusion baked into [`ignoredVerifyPatterns`](#core-options) (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`); anything you add to `ignoredVerifyPatterns` is unioned on top. Non-code files simply don't match the patterns above.
 </Note>
 
 <Note>
@@ -283,6 +288,7 @@ Controls whether IronBee may read your Claude Code OAuth token to fill statuslin
 |-----|------|---------|-------------|
 | `claude.oauthAccess.enable` | `boolean` | `true` | Whether IronBee may read the Claude OAuth token (macOS Keychain / `~/.claude/.credentials.json`) and call OAuth-scoped endpoints. Opt out with `false`. Claude-only. |
 | `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch, the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
+| `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` — takes effect on the next `ironbee install`. Claude-only. |
 
 ---
 
@@ -335,11 +341,13 @@ These sections auto-enable when a collector is configured and rarely need manual
 
 ## Common setups
 
-### Ignore test files
+### Ignore extra files
+
+Test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`) are **excluded by default** — you don't need to list them. Add `ignoredVerifyPatterns` only to skip *more* paths (e.g. generated code, fixtures); your entries are unioned with the built-in test-file defaults:
 
 ```json
 {
-  "ignoredVerifyPatterns": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"]
+  "ignoredVerifyPatterns": ["**/generated/**", "**/*.gen.ts", "fixtures/**"]
 }
 ```
 
