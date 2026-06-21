@@ -121,13 +121,13 @@ Analysis runs at two scopes: **project level** (focused on a single codebase) an
 
 IronBee supports three operation modes:
 
-### Auto mode (default)
+### Assist mode (default)
 
-Verification is fully enforced. When the agent tries to complete a task, the completion gate triggers automatically and the agent cannot finish until all active verification cycles pass. This is the default after `ironbee install`.
+Verification is enabled the devtools, the verifier, the `/ironbee-verify` command, and MCP servers are all installed but the completion gate does **not** automatically block the agent. The agent (or you) can run verifications on demand and the results are recorded, but a pass isn't required before completing. This is the default after `ironbee install` — the tooling is available without strict enforcement.
 
-### Assist mode
+### Enforce mode
 
-Verification is enabled the devtools, verification skill, and MCP servers are all available but the completion gate does not automatically block the agent. The agent can run verifications and the results are recorded, but it is not required to pass before completing. Useful when you want the tooling available without strict enforcement.
+Verification is fully enforced. When the agent tries to complete a task, the completion gate triggers automatically and the agent cannot finish until all active verification cycles pass. Opt in with `ironbee verification auto enable` (or pick `enforce` at install time).
 
 ### Monitoring-only mode
 

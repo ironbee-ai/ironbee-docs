@@ -26,6 +26,10 @@ IronBee writes Codex's active config **per project** (under `<project>/.codex/`)
 
 IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`. Your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed. Your user-level `~/.codex/config.toml` still applies — for example its top-level `model`.
 
+<Note>
+  The layout above is the default **`sub-agent`** delivery mode. In **`main-agent`** mode there's no `ironbee-verifier.toml` — the devtools MCP servers are registered at the session level in `config.toml` and the skill/rule/command are inlined instead of delegating. See [How verification is delivered](#how-verification-is-delivered).
+</Note>
+
 <Info>
   Restart Codex after installing so it picks up the new hooks, guidance, and MCP servers. The first time, Codex shows a one-time **"hooks need review"** prompt (its safety gate for project-level hooks) — run `/hooks` to approve. IronBee writes `[features] hooks = true` for you; without it Codex parses hooks but never dispatches them.
 </Info>
@@ -49,11 +53,33 @@ When a scenario is supplied it is authoritative and replaces the default "exerci
 
 ## How verification is enforced
 
-IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes. Like Claude Code, Codex **delegates verification to the `ironbee-verifier` sub-agent** — the devtools tools are scoped to that agent (in `<project>/.codex/agents/ironbee-verifier.toml`), so the main conversation never carries the heavy devtools output. The verifier navigates the affected paths and submits a verdict; on failure the main agent fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit. You can pin the verifier's model with [`verification.model`](/cli/guides/verification#picking-the-verifier-model).
+IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes. By default, like Claude Code, Codex **delegates verification to the `ironbee-verifier` sub-agent** — the devtools tools are scoped to that agent (in `<project>/.codex/agents/ironbee-verifier.toml`), so the main conversation never carries the heavy devtools output. The verifier navigates the affected paths and submits a verdict; on failure the main agent fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit. You can pin the verifier's model with [`verification.model`](/cli/guides/verification#picking-the-verifier-model).
+
+<Note>
+  Enforcement only blocks task completion in [enforce mode](/cli/guides/verification#enforce-mode) (`ironbee verification auto enable`). In the default **assist** mode the verifier and `$ironbee-verify` are installed but nothing gates completion — see [Verification modes](/cli/guides/verification#verification-modes).
+</Note>
 
 Codex's Stop hook returns a `decision: "block"` with a continuation reason, which pushes the agent back into the verification loop, the same enforcement semantics as Claude Code.
 
 Codex exposes file edits through its single `apply_patch` tool, so IronBee gates edits on that instead of `Write`/`Edit`. File changes are recorded per patch, with the operation (create / update / delete) read from the patch body.
+
+---
+
+## How verification is delivered
+
+By default Codex runs the cycle in the **`ironbee-verifier` sub-agent** (the `sub-agent` delivery mode), exactly like Claude Code — the devtools MCP servers are scoped to that agent and the heavy output stays out of the main conversation. If Codex's sub-agent machinery regresses, you can fall back to driving the tools from the **main agent** instead:
+
+```bash
+ironbee codex verifier mode main-agent   # main agent drives the devtools tools directly
+ironbee codex verifier mode sub-agent    # back to the default delegated verifier
+```
+
+| Mode | What changes |
+|------|--------------|
+| **`sub-agent`** *(default)* | The `ironbee-verifier` custom agent owns the devtools tools (per-agent MCP in `ironbee-verifier.toml`); a slim delegation skill/rule/command tell the main agent to hand off. Heavy devtools output stays in the sub-agent. |
+| **`main-agent`** | No verifier sub-agent. The devtools MCP servers are registered at the **session** level (`[mcp_servers.*]` in `config.toml`) and the main agent drives them itself, with an inline (non-delegating) skill/rule/command — the same shape Cursor uses. |
+
+Switching re-renders the Codex client. The choice maps to the [`codex.verifier.mode`](/cli/configuration/configuration#codex-codex-cli-only) config key; `verification.model` still applies in `sub-agent` mode and is a no-op in `main-agent` mode (there's no sub-agent to spawn).
 
 ---
 

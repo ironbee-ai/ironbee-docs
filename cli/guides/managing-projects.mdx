@@ -32,26 +32,26 @@ The interactive flow then asks two more questions in order — **mode**, then **
 
 ### Choosing the verification mode
 
-After resolving the client, install asks **which verification mode** to run. In an interactive terminal it shows an arrow-key single-select, pre-selecting the project's current mode (so re-installing keeps your choice; a fresh project defaults to `enforce`):
+After resolving the client, install asks **which verification mode** to run. In an interactive terminal it shows an arrow-key single-select, pre-selecting the project's current mode (so re-installing keeps your choice; a fresh project defaults to `assist`):
 
 ```
 Which verification mode?
   ↑/↓ move · enter confirm
 
-  > auto verify (enforce)   block task completion until changes are verified — full enforcement (default)
-    assist                  tools installed but not enforced — the agent verifies manually via /ironbee-verify
+    auto verify (enforce)   block task completion until changes are verified — full enforcement
+  > assist                  tools installed but not enforced — the agent verifies manually via /ironbee-verify (default)
     monitor only            no enforcement — only track sessions / activity / tools for analytics
 ```
 
 Skip the prompt with `--mode`:
 
 ```bash
-ironbee install --mode enforce    # full enforcement (default)
-ironbee install --mode assist     # tools installed, manual /ironbee-verify only
+ironbee install --mode assist     # tools installed, manual /ironbee-verify only (default)
+ironbee install --mode enforce    # full enforcement — block completion until verified
 ironbee install --mode monitor    # monitoring-only — no enforcement, no platform picker
 ```
 
-The choice is written explicitly to the committed project config (`verification.enable` / `verification.auto`), so it's equivalent to the [`ironbee verification` toggles](/cli/guides/verification#verification-modes). For `enforce` and `assist`, install also records [`verification.strict`](/cli/guides/verification#strict-mode) at its default `false` (a strict choice you already made is kept). Any existing [`verification.model`](/cli/guides/verification#picking-the-verifier-model) is preserved. The picker default reads the project's **own** committed/local config (the machine-global config is ignored), so a fresh project defaults to `enforce` even on a machine running monitoring-only globally. In a non-interactive shell with no `--mode` flag, the verification config is left untouched.
+The choice is written explicitly to the committed project config (`verification.enable` / `verification.auto`), so it's equivalent to the [`ironbee verification` toggles](/cli/guides/verification#verification-modes). For `assist` and `enforce`, install also records [`verification.strict`](/cli/guides/verification#strict-mode) at its default `false` (a strict choice you already made is kept). Any existing [`verification.model`](/cli/guides/verification#picking-the-verifier-model) is preserved. The picker default reads the project's **own** committed/local config (the machine-global config is ignored), so a fresh project defaults to `assist` even on a machine running monitoring-only globally. In a non-interactive shell with no `--mode` flag, the verification config is left untouched.
 
 ### Choosing which platforms to verify
 

@@ -93,7 +93,19 @@ ironbee install
 ```
 
 IronBee detects your AI client (Claude Code, Cursor, or Codex) and sets it up automatically. If it can't detect one, it asks which client you use.
-Then it walks you through two quick arrow-key pickers: **which verification mode** to run — `enforce` (the default: changes must pass before a task completes), `assist` (tools installed but nothing enforced), or `monitor` (analytics only) — and, unless you chose `monitor`, **which platforms to verify** (browser is on by default; add Node, backend, or Android if you want those gated too). You can change both anytime later (see [Verification](/cli/guides/verification)).
+
+Then it walks you through two quick arrow-key pickers. First, **which verification mode** to run:
+
+- **`assist`** *(default)* the verifier and `/ironbee-verify` are installed so the agent can verify on demand, but nothing blocks task completion.
+- **`enforce`** changes must pass every active cycle before a task can complete.
+- **`monitor`** analytics only; no verification machinery is installed.
+
+Then, unless you chose `monitor`, **which platforms to verify**:
+
+- **Browser** on by default covers most frontend work.
+- **Node**, **Backend**, and **Android** opt-in; enable any you want gated.
+
+You can change both anytime later (see [Verification](/cli/guides/verification)).
 
 That's it. Your project is now connected to IronBee.
 
