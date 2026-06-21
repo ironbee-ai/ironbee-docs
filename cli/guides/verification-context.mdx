@@ -77,8 +77,8 @@ The guidance is injected on the **first verification tool call of each cycle** (
 
 | Mode | Injects? |
 |------|----------|
-| **Enforce** *(default)* | Yes |
-| **Assist** | Yes, manual `/ironbee-verify` cycles get the guidance too |
+| **Assist** *(default)* | Yes, manual `/ironbee-verify` cycles get the guidance too |
+| **Enforce** | Yes |
 | **Monitoring-only** | No, monitoring installs no verification hooks |
 
 It is **advisory in this release**: the agent must follow the guidance as part of its verification, but the content itself never gates completion. (Machine-checkable per-area rules are planned separately.)

@@ -79,7 +79,7 @@ When the agent fixes something after a failed verdict, it can record what it rep
 
 ## Permissions
 
-The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#switching-to-assist-mode) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
+The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#assist-mode-default) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
 
 ---
 
