@@ -1,21 +1,22 @@
 ---
 title: Verification Platforms
-description: Verify through the browser, backend, and Node.js and tune each platform.
+description: Verify through the browser, backend, Node.js, and Android and tune each platform.
 ---
 
-The action verifies through IronBee DevTools modes: the browser, backend, and Node.js platforms, the same cycles the [CLI uses](/cli/concepts/how-it-works#verification-cycles). Each enabled platform registers its MCP server so the agent can exercise the change through that surface.
+The action verifies through IronBee DevTools modes: the browser, backend, Node.js, and Android platforms, the same cycles the [CLI uses](/cli/concepts/how-it-works#verification-cycles). Each enabled platform registers its MCP server so the agent can exercise the change through that surface.
 
 ---
 
-## The three platforms
+## The four platforms
 
 | Platform | Input | Default | Verifies through… |
 |----------|-------|---------|-------------------|
 | Browser | `ironbee_browser_devtools` | `true` | A real Chromium browser navigation, screenshots, console, accessibility |
 | Backend | `ironbee_backend_devtools` | `false` | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
 | Node.js | `ironbee_node_devtools` | `false` | The Node.js V8 inspector probes and runtime snapshots |
+| Android | `ironbee_android_devtools` | `false` | A real emulator over ADB app launch, taps, swipes, screenshots, UI snapshots, Logcat |
 
-Only the browser runs by default. Opt into backend or Node.js verification by setting the corresponding input to `true`.
+Only the browser runs by default. Opt into backend, Node.js, or Android verification by setting the corresponding input to `true`.
 
 ```yaml
 - uses: ironbee-ai/ironbee-action@v1
@@ -25,6 +26,7 @@ Only the browser runs by default. Opt into backend or Node.js verification by se
     ironbee_browser_devtools: 'true'
     ironbee_backend_devtools: 'true'
     ironbee_node_devtools: 'false'
+    ironbee_android_devtools: 'false'
 ```
 
 <Info>
