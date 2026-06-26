@@ -76,12 +76,12 @@ By default the gate verifies only the areas affected by what changed. You (or th
 
 ---
 
-## Beyond enforce mode
+## Enforce, assist, and monitoring-only
 
-Enforcement is one of three [verification modes](/cli/guides/verification#verification-modes):
+The blocking gate described above is **enforce mode**. It's one of three [verification modes](/cli/guides/verification#verification-modes), and it's **opt-in** — a fresh install defaults to **assist**:
 
-- **Monitoring-only** (`ironbee verification disable`) - the gate is never installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning enforcement on.
-- **Assist** (`ironbee verification auto disable`) - the `/ironbee-verify` command, the verifier sub-agent, and devtools MCP servers stay installed so the agent can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector.
+- **Assist** *(default)* (`ironbee verification auto disable`) - the `/ironbee-verify` command, the verifier sub-agent, and devtools MCP servers stay installed so the agent (or you) can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector. Turn on full enforcement with `ironbee verification auto enable`.
+- **Monitoring-only** (`ironbee verification disable`) - none of the machinery is installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning verification on.
 
 ---
 

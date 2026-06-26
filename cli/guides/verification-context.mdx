@@ -57,7 +57,7 @@ Collects: payment/stripe/.ironbee/VERIFICATION.md   (if present)
 - **Nearest-parent hierarchy:** a change picks up its own area's guidance plus everything above it. Directories without a file are simply skipped.
 - **Merged general → specific:** the repo-wide default reads first, area-specific guidance after it.
 - **Deduplicated:** if ten files under `payment/` changed, `payment/.ironbee/VERIFICATION.md` is included once.
-- **No match → nothing injected:** areas with no file add no noise.
+- **Always includes the changed-path list:** even when *no* `.ironbee/VERIFICATION.md` matches, IronBee still injects the list of paths that changed this cycle (capped at 100, with a `+N more` for the rest). This gives the delegated verifier a head start on *what* to exercise instead of discovering it from scratch. Authored guidance, when present, is appended on top.
 
 ---
 
@@ -65,7 +65,7 @@ Collects: payment/stripe/.ironbee/VERIFICATION.md   (if present)
 
 By default the changed set comes from **git**: your uncommitted work (working tree: staged, unstaged, and untracked files) plus the last commit. In a non-git project, IronBee falls back to its own `file_change` events for the current cycle.
 
-- Your [`ignoredVerifyPatterns`](/cli/configuration/configuration#core-options) filter the set, so test/build/docs churn doesn't pull in guidance.
+- [`ignoredVerifyPatterns`](/cli/configuration/configuration#core-options) filter the set — test files are excluded by default, and anything you add filters out build/docs churn too, so it doesn't pull in guidance.
 - IronBee's own `.ironbee/` tree is always excluded.
 - `commitDepth` controls how many recent commits join the working tree: `1` (default) covers in-flight work plus the latest commit, `0` is uncommitted-only, and you can raise it for teams that commit per logical step.
 
@@ -77,8 +77,8 @@ The guidance is injected on the **first verification tool call of each cycle** (
 
 | Mode | Injects? |
 |------|----------|
-| **Enforce** *(default)* | Yes |
-| **Assist** | Yes, manual `/ironbee-verify` cycles get the guidance too |
+| **Assist** *(default)* | Yes, manual `/ironbee-verify` cycles get the guidance too |
+| **Enforce** | Yes |
 | **Monitoring-only** | No, monitoring installs no verification hooks |
 
 It is **advisory in this release**: the agent must follow the guidance as part of its verification, but the content itself never gates completion. (Machine-checkable per-area rules are planned separately.)

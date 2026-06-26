@@ -15,7 +15,8 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
 | `.claude/rules/ironbee-verification.md` | The always-on verification rule that enforces the gate (enforce mode) |
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
-| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`, `android-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`, `android-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
+| `.claude/settings.local.json` | The [auto-mode allowlist carve-out](#auto-mode-and-the-verifier) for the verifier — written only when verification is active and `claude.autoModeAllowlist.enable` isn't `false`. Merged into any existing local settings |
 
 These are merged into your existing Claude settings, not overwritten.
 
@@ -78,7 +79,19 @@ When the agent fixes something after a failed verdict, it can record what it rep
 
 ## Permissions
 
-The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#switching-to-assist-mode) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
+The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#assist-mode-default) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
+
+---
+
+## Auto mode and the verifier
+
+Recent Claude Code releases (2.1.176+) ship an **auto mode** with a host-side "Content Integrity" classifier that inspects sub-agent hand-offs and prepends a security warning to ones it judges fabricated. It **false-positives** on IronBee's legitimate verdicts: the verifier's devtools calls happen earlier in the cycle and aren't re-shown in the hand-off summary the classifier reviews, so a real, evidence-backed verdict can look made-up to it.
+
+To keep verification working under auto mode, IronBee writes **one narrow allowlist rule** into `.claude/settings.local.json`, keyed to the exact verdict-submission command. It relaxes **only** the Content Integrity check for that command — every other auto-mode protection (data exfiltration, production reads, self-modification, …) stays fully in force, and IronBee's own completion gate still independently confirms the required tools actually ran.
+
+- Written **only** when verification is active (enforce or assist), and it's **inert** unless the host is actually in auto mode.
+- Lives in `settings.local.json` (the local layer, gitignored), merges safely alongside anything else there, and is removed on uninstall or when you switch to monitoring-only.
+- Opt out with `ironbee config set claude.autoModeAllowlist.enable false` (takes effect on your next `ironbee install`). See [`claude.autoModeAllowlist.enable`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
 
 ---
 
