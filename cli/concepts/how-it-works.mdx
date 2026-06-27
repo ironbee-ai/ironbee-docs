@@ -28,14 +28,15 @@ If no code files changed (docs, config, etc.), the gate doesn't trigger.
 
 ## Verification cycles
 
-A **cycle** is one pass of testing against a real surface. IronBee has four, and any combination can be active for a project:
+A **cycle** is one pass of testing against a real surface. IronBee has five, and any combination can be active for a project:
 
 | Cycle | Exercises the change through… |
 |-------|-------------------------------|
 | Browser | A real browser, navigation, screenshots, console, accessibility |
 | Node | The Node.js V8 inspector, probes and runtime snapshots |
 | Backend | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
-| Android | An emulator over ADB taps, swipes, screenshots, UI snapshots, Logcat |
+| Android | An emulator over ADB taps, swipes, screenshots, UI snapshots, Logcat, HTTP capture |
+| Terminal | A pseudo-terminal (PTY) spawn the CLI / REPL / TUI, send input, capture output and exit codes |
 
 When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt**. They run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
 
@@ -93,7 +94,7 @@ Teams can steer *how* the agent verifies a given part of the codebase by committ
 
 ## Session isolation
 
-Every agent task runs as its own **session**, tracked independently in `.ironbee/sessions/<id>/`. Concurrent sessions, even in the same project, keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
+Every agent task runs as its own **session**, tracked independently in a per-session `sessions/<id>/` directory (by default under `~/.ironbee/projects/<token>/`, outside the project tree — see [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives)). Concurrent sessions, even in the same project, keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
 
 ---
 

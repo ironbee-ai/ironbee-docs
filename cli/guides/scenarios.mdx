@@ -1,0 +1,138 @@
+---
+title: Scenarios
+description: Author, search, and re-run reusable verification scenarios so the agent verifies the right flows the same way every time.
+---
+
+A **scenario** is a reusable, saved verification script — "log in as admin, open billing, confirm the invoice total updates" — captured once and replayed on demand. Instead of re-describing what to verify (or letting the agent re-discover it) on every run, you build up a small library of scenarios the verifier can run directly. Scenarios are **committed to the repo**, so your whole team (and CI) shares them.
+
+Each scenario belongs to one [verification cycle](/cli/guides/verification#verification-platforms) — a browser scenario drives the browser, an Android scenario drives the device, and so on — and is stored as a script the matching devtools server can run in a single call.
+
+<Note>
+  Saved scenarios are installed in **enforce** and **assist** modes (the same gating as the verifier). In **monitoring-only** mode the scenario commands and sub-agent aren't installed.
+</Note>
+
+---
+
+## The commands
+
+Three agent-invoked slash commands manage scenarios. On Claude Code and Cursor they're `/`-prefixed; on Codex use the `$` mention syntax (`$ironbee-manage-scenario`).
+
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-manage-scenario` | **Add, update, or delete** a scenario. By default it authors the script against your **running app**, then saves it. |
+| `/ironbee-search-scenario` | **Find** saved scenarios by name, description, or metadata (e.g. a covered path). Read-only. |
+| `/ironbee-sync-scenario` | **Re-validate and repair** saved scenarios that have drifted as the code changed. |
+
+Like the verifier, on Claude Code and Codex these **delegate to a dedicated `ironbee-scenario` sub-agent** that owns the scenario tools (and, like the verifier, can't edit your code — the scenario store is written server-side). On Cursor (and Codex in `main-agent` mode) the main agent drives the tools directly.
+
+### Author a scenario
+
+```bash
+/ironbee-manage-scenario log in as admin, open /billing, confirm the invoice total updates
+/ironbee-manage-scenario ./scenarios/checkout.md          # author from a file's contents
+/ironbee-manage-scenario draft a smoke test of the home page   # `draft` = author from source only
+```
+
+By default authoring is **live**: the agent drives your running app to understand it (navigate, log in, click, snapshot — the same way a verification run does), writes the script from what it actually observes, validates it by running once, and tears down anything it started. If the app can't be started it falls back to a **source-only draft**, and a leading `draft` token forces source-only authoring up front.
+
+The sub-agent decides add-vs-update (it checks for an existing same-name scenario first), picks the right cycle, and stamps metadata such as the parameters a scenario takes. A delete or a fuzzy-matched update asks you to confirm the matched scenario first.
+
+### Search scenarios
+
+```bash
+/ironbee-search-scenario checkout                      # fuzzy over name + description
+/ironbee-search-scenario covers src/billing/invoice.ts # metadata match (e.g. a covered path)
+```
+
+It searches every enabled cycle's store and returns the matches (name, description, cycle, and a relevance score for fuzzy searches).
+
+---
+
+## Verify with a saved scenario
+
+Once a scenario exists, point `/ironbee-verify` at it with a `scenario:` reference instead of re-typing the flow — the verifier resolves it and runs it in one call, with no re-discovery:
+
+```bash
+/ironbee-verify scenario:checkout flow              # run a saved scenario by name or description
+/ironbee-verify fix scenario:the full purchase flow # fix mode + a saved scenario
+```
+
+The reference can be an exact name or a semantic description (the verifier picks the best match, asks if it's ambiguous, and falls back to normal discovery if nothing matches). This is the third scenario form `/ironbee-verify` accepts, alongside [inline text and file paths](/cli/guides/verification#custom-verification-scenarios).
+
+---
+
+## Where scenarios are stored
+
+Saved scenarios are committed under `.ironbee/scenarios/<prefix>/`, one folder per cycle:
+
+| Cycle | Folder |
+|-------|--------|
+| Browser | `.ironbee/scenarios/bdt/` |
+| Node | `.ironbee/scenarios/ndt/` |
+| Backend | `.ironbee/scenarios/bedt/` |
+| Android | `.ironbee/scenarios/adt/` |
+| Terminal | `.ironbee/scenarios/tdt/` |
+
+Unlike the per-session `sessions/` data, the scenario store is **not gitignored** — scenarios are repo content meant to be reviewed in PRs and shared with the team, the same trust level as `.ironbee/VERIFICATION.md`. The store is committed and client-agnostic (it isn't per-client), and one scenario maps to one cycle.
+
+---
+
+## Keep scenarios fresh
+
+Saved scenarios rot as the code they cover evolves. Two **pure-code** commands (no LLM, no app run) tell you where things stand — useful both at the terminal and as CI gates:
+
+### `ironbee scenario status`
+
+Reports the freshness of every saved scenario against the current code by git-diffing each scenario's covered paths since the commit it was authored at:
+
+```bash
+ironbee scenario status            # fresh / stale / unknown per scenario
+ironbee scenario status --stale    # only stale ones; exits non-zero if any exist (CI gate)
+ironbee scenario status --json     # machine-readable
+```
+
+- **fresh** — no covered file changed since the scenario was authored.
+- **stale** — covered files changed since then (or it was saved as an unvalidated draft).
+- **unknown** — can't tell (not a git repo, or the scenario has no covered-path / commit baseline).
+
+### `ironbee scenario coverage`
+
+The inverse: changed code that **no** saved scenario covers — i.e. where you might want to author a new one. It resolves the current change set (working tree ∪ the last [`verification.context.commitDepth`](/cli/configuration/configuration#verification) commits), filters it to verification-relevant files (the same patterns the gate uses, so docs, lockfiles, and test files drop out), and lists the ones no scenario's covered paths match.
+
+```bash
+ironbee scenario coverage                    # changed, verification-relevant files with no scenario
+ironbee scenario coverage --commit-depth 0   # working tree only
+ironbee scenario coverage --json
+```
+
+Coverage is **advisory** (covered paths are author-declared, so a gap can be a false positive) — most changes legitimately need no scenario, so it has no exit gate.
+
+### Repair drift with `/ironbee-sync-scenario`
+
+`scenario status` only *detects* staleness; repairing it is the agent-driven `/ironbee-sync-scenario`, which re-runs the target scenario against the live app and fixes drift:
+
+```bash
+/ironbee-sync-scenario all          # re-run + repair stale scenarios, stamp them current
+/ironbee-sync-scenario check all    # dry-run — report drift, change nothing
+/ironbee-sync-scenario force all    # re-validate every scenario, not just stale ones
+/ironbee-sync-scenario checkout     # a single scenario by name or description
+```
+
+Sync repairs **mechanical** drift only — the way the flow is driven (a renamed selector, a moved route) — and **never** changes *what* a scenario asserts (that would mask a regression). When it hits a real defect it stops and reports instead of editing the scenario; when an expectation genuinely changed it asks you. A leading `check` token makes it a dry-run; `force` re-validates everything rather than just the stale set. It's not a verification cycle — it submits no verdict and doesn't gate completion.
+
+<Note>
+  Browse freshness without running anything from the [TUI](/cli/guides/interactive-mode) **Scenarios** area — a read-only fresh/stale/unknown view of every saved scenario. Repair is still the agent's `/ironbee-sync-scenario`.
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
+    Choose which platforms get verified and switch between enforce, assist, and monitoring.
+  </Card>
+  <Card title="Verification context" icon="file-text" href="/cli/guides/verification-context">
+    Give the agent area-specific instructions with `.ironbee/VERIFICATION.md` files.
+  </Card>
+</CardGroup>

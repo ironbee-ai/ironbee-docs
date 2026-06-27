@@ -63,16 +63,17 @@ The master and `auto` toggles accept the same target flags as everything else (`
 
 ## Verification platforms
 
-Each platform is a separate cycle with its own tools. IronBee installs all four, but only some are active by default:
+Each platform is a separate cycle with its own tools. IronBee installs all five, but only some are active by default:
 
 | Platform | Default | What it verifies | Tools |
 |----------|---------|------------------|-------|
 | **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
 | **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
 | **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
-| **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, and read Logcat | `android-devtools` (`adt_*`) |
+| **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, read Logcat, and capture HTTP traffic | `android-devtools` (`adt_*`) |
+| **Terminal** | Opt-in | CLI / REPL / TUI changes spawns the program in a pseudo-terminal (PTY), sends input, and reads the output the same way `tmux` drives a pane | `terminal-devtools` (`tdt_*`) |
 
-The browser cycle covers most frontend work out of the box. The Node, backend, and Android cycles are off until you opt in, so those changes aren't gated until you ask for it. At install time each platform is a row in the multi-select; space toggles it on.
+The browser cycle covers most frontend work out of the box. The Node, backend, Android, and terminal cycles are off until you opt in, so those changes aren't gated until you ask for it. At install time each platform is a row in the multi-select; space toggles it on.
 
 **Node** — Node.js runtime (tracepoints, logpoints, exceptions, variables, logs):
 
@@ -82,9 +83,13 @@ The browser cycle covers most frontend work out of the box. The Node, backend, a
 
 <img src="/images/cli/platform-selection_backend.png" alt="Platform multi-select with backend checked and the cursor on the backend row" style={{borderRadius:'8px',width:'100%'}} />
 
-**Android** — device/emulator drive, taps, swipes, screenshots, UI snapshots, Logcat:
+**Android** — device/emulator drive, taps, swipes, screenshots, UI snapshots, Logcat, HTTP capture:
 
 <img src="/images/cli/platform-selection_android.png" alt="Platform multi-select with android checked and the cursor on the android row" style={{borderRadius:'8px',width:'100%'}} />
+
+**Terminal** — CLI / REPL / TUI driving over a PTY: spawn a program, send keystrokes, capture output and exit codes. There are no screenshots here, so terminal is **not** a recording cycle.
+
+<img src="/images/cli/platform-selection_terminal.png" alt="Platform multi-select with terminal checked and the cursor on the terminal row" style={{borderRadius:'8px',width:'100%'}} />
 
 ---
 
@@ -96,6 +101,7 @@ Each platform has an `enable` / `disable` subcommand:
 ironbee node enable       # turn on Node.js runtime verification
 ironbee backend enable    # turn on backend protocol verification
 ironbee android enable    # turn on Android device/emulator verification
+ironbee terminal enable   # turn on terminal (CLI / REPL / TUI) verification
 ironbee browser disable   # turn off the browser cycle (e.g. backend-only projects)
 ```
 
@@ -219,11 +225,16 @@ By default the agent verifies the areas affected by what changed. To tell it **e
 
 When a scenario is supplied it's **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time (any location, any format), so you can keep reusable test scripts in your repo and point at them. The completion gate is unchanged — every active cycle's required tools still have to run for a pass.
 
+To capture a flow once and replay it by name instead of re-typing it every time, save it as a [scenario](/cli/guides/scenarios) and pass `/ironbee-verify scenario:<name>`.
+
 ---
 
 ## What's next?
 
 <CardGroup cols={2}>
+  <Card title="Saved scenarios" icon="bookmark" href="/cli/guides/scenarios">
+    Capture reusable verification flows and replay them by name.
+  </Card>
   <Card title="Verification context" icon="file-text" href="/cli/guides/verification-context">
     Give the agent area-specific instructions with `.ironbee/VERIFICATION.md` files.
   </Card>
