@@ -61,6 +61,29 @@ Collects: payment/stripe/.ironbee/VERIFICATION.md   (if present)
 
 ---
 
+## An always-on instruction (`verification.context.message`)
+
+The `.ironbee/VERIFICATION.md` files are *path-scoped* — they only reach the verifier when a change touches their directory. For a standing instruction that should accompany **every** verification cycle regardless of what changed, set `verification.context.message`:
+
+```bash
+ironbee config set verification.context.message "Confirm the health endpoint returns 200 before passing."
+```
+
+This is injected into every cycle **unconditionally** — even a manual `/ironbee-verify` with no code changes, where the changed-path list and path-scoped docs would otherwise be empty. It's rendered first, ahead of any matched `VERIFICATION.md` guidance, and is **never truncated** (it reserves its own bytes so the `maxBytes` cap still bounds the path-scoped docs).
+
+Two value forms:
+
+- **Inline text** the message itself.
+- **A file reference** `file:<path>`, read at verification time. The path is relative to the project dir; a leading `~` expands to your home directory; a missing or unreadable file is silently skipped.
+
+```bash
+ironbee config set verification.context.message "file:.ironbee/verify-checklist.md"
+```
+
+Like the rest of the context keys, it's layered across global / project / local (the highest layer that sets it wins) and read live, so a change takes effect on the next session.
+
+---
+
 ## What counts as "changed"
 
 By default the changed set comes from **git**: your uncommitted work (working tree: staged, unstaged, and untracked files) plus the last commit. In a non-git project, IronBee falls back to its own `file_change` events for the current cycle.
@@ -87,12 +110,12 @@ It is **advisory in this release**: the agent must follow the guidance as part o
 
 ## Configuration
 
-The feature is on by default. Tune it under the `verificationContext` key. See [Configuration → Verification context](/cli/configuration/configuration#verification-context) for the full table. The common knobs:
+The feature is on by default. Tune it under the `verification.context` key. See [Configuration → Verification context](/cli/configuration/configuration#verification-context) for the full table. The common knobs:
 
 ```bash
-ironbee config set verificationContext.enable false      # turn it off entirely
-ironbee config set verificationContext.commitDepth 0     # uncommitted work only
-ironbee config set verificationContext.source actions    # skip git, use IronBee's own file_change events
+ironbee config set verification.context.enable false      # turn it off entirely
+ironbee config set verification.context.commitDepth 0     # uncommitted work only
+ironbee config set verification.context.source actions    # skip git, use IronBee's own file_change events
 ```
 
 These keys are read live at verification time, so a change takes effect on the next session without re-rendering client artifacts.
@@ -110,6 +133,6 @@ These keys are read live at verification time, so a change takes effect on the n
     Choose which platforms get verified and switch between enforce, assist, and monitoring.
   </Card>
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#verification-context">
-    The full `verificationContext` key reference.
+    The full `verification.context` key reference.
   </Card>
 </CardGroup>

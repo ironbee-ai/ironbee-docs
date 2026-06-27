@@ -64,17 +64,18 @@ Which platforms should require verification?
   [x] browser   web UI · DOM · console · a11y · screenshots · recording
   [ ] node      Node.js runtime · tracepoints · logpoints · exceptions · variables · logs
   [ ] backend   HTTP · gRPC · GraphQL · WebSocket · DB · logs
-  [ ] android   device/emulator · taps · swipes · screenshots · UI snapshots · Logcat
+  [ ] android   device/emulator · taps · swipes · screenshots · UI snapshots · Logcat · HTTP
+  [ ] terminal  CLI / REPL / TUI driving over a PTY · send keys · capture output · exit codes
 ```
 
-Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,backend,android`):
+Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,backend,android,terminal`):
 
 ```bash
 ironbee install --platforms browser,node   # enable just these two
 ironbee install --platforms ""             # disable all cycles (incl. the default-on browser)
 ```
 
-The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `backend` / `android`](/cli/guides/verification#enable-or-disable-a-platform) toggles. Install records the **full** platform state explicitly — an `enable` flag for every cycle (`browser`, `node`, `backend`, `android`) — so the committed `config.json` plainly shows what's on and what's off. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode, including a just-chosen `--mode monitor`), the platform config is left untouched.
+The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `backend` / `android` / `terminal`](/cli/guides/verification#enable-or-disable-a-platform) toggles. Install records the **full** platform state explicitly — an `enable` flag for every cycle (`browser`, `node`, `backend`, `android`, `terminal`) — so the committed `config.json` plainly shows what's on and what's off. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode, including a just-chosen `--mode monitor`), the platform config is left untouched.
 
 <Info>
   Restart your AI coding client after installing so it picks up the new hooks and tools.

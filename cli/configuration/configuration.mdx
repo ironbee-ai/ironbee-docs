@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `android`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `backend`, `android`, `terminal`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -74,6 +74,18 @@ ironbee config list --global
 
 ---
 
+## Runtime
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `runtime.location` | `string` | `"external"` | Where per-session runtime data (the `sessions/` folder — `actions.jsonl`, verdicts, queue, analytics) is stored. `"external"` *(default)* keeps it **out of the project tree** at `~/.ironbee/projects/<token>/sessions/`, so a project never accumulates a growing `sessions/` folder even when it's gitignored. `"in-project"` stores it under `<project>/.ironbee/sessions/` (the legacy layout). Committed config, `scenarios/`, and `VERIFICATION.md` files always stay in-project regardless. The [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var overrides it per process. Takes effect on the next session. See [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives). |
+
+<Note>
+  Switching `runtime.location` doesn't move existing session data — it changes where *new* sessions are written. Old per-session folders under the previous location are left in place; you can delete them by hand if you don't need them.
+</Note>
+
+---
+
 ## Verification
 
 | Key | Type | Default | Description |
@@ -87,11 +99,11 @@ ironbee config list --global
 
 ## Verification cycles
 
-The four cycles: `browser`, `node`, `backend`, and `android`, share the same set of keys (replace `<cycle>` with `browser`, `node`, `backend`, or `android`):
+The five cycles: `browser`, `node`, `backend`, `android`, and `terminal`, share the same set of keys (replace `<cycle>` with `browser`, `node`, `backend`, `android`, or `terminal`):
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `<cycle>.enable` | `boolean` | Explicit on/off. Written `false` by `ironbee <cycle> disable`, stripped by `ironbee <cycle> enable`. Browser is the only cycle on by default; node, backend, and android are opt-in. |
+| `<cycle>.enable` | `boolean` | Explicit on/off. Written `false` by `ironbee <cycle> disable`, stripped by `ironbee <cycle> enable`. Browser is the only cycle on by default; node, backend, android, and terminal are opt-in. |
 | `<cycle>.verifyPatterns` | `string[]` | Files that trigger the cycle. **Four states:** unset → built-in code defaults · `[]` → hard-disable · non-empty → custom patterns (replaces defaults). |
 | `<cycle>.additionalVerifyPatterns` | `string[]` | Extra patterns appended to `verifyPatterns` (or to the defaults when it's unset). Ignored when `verifyPatterns` is `[]`. |
 | `<cycle>.alwaysRequired` | `string[]` | Tools the agent must use before the cycle passes (all-of). Sensible per-cycle defaults apply. *Advanced.* |
@@ -105,6 +117,7 @@ The four cycles: `browser`, `node`, `backend`, and `android`, share the same set
 | `node` | Opt-in | When enabled: server/api/routes code paths |
 | `backend` | Opt-in | When enabled: 13 multi-language code defaults (ts/js/py/go/java/rb/cs/rs/kt/scala/ex/php/clj) |
 | `android` | Opt-in | When enabled: standard Android project layouts (Gradle, Kotlin/Java source trees, resources) |
+| `terminal` | Opt-in | When enabled: CLI / TUI / shell paths (`cli/**`, `cmd/**`, `bin/**`, `**/commands/**`, CLI entrypoints, shell scripts) |
 
 The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
@@ -173,6 +186,18 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     **/AndroidManifest.xml
     ```
   </Accordion>
+  <Accordion title="Terminal default verify patterns">
+    Covers CLI entrypoints, command trees, and shell scripts (applies once the cycle is enabled):
+
+    ```
+    cli/**
+    cmd/**
+    bin/**
+    **/commands/**
+    **/cli.{ts,js,py,go,rs}
+    **/*.{sh,bash,zsh,fish}
+    ```
+  </Accordion>
 </AccordionGroup>
 
 <Note>
@@ -180,7 +205,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
 </Note>
 
 <Note>
-  Prefer the [`ironbee browser` / `node` / `backend` / `android` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off; they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
+  Prefer the [`ironbee browser` / `node` / `backend` / `android` / `terminal` commands](/cli/guides/verification#enable-or-disable-a-platform) for turning cycles on and off; they write `<cycle>.enable` and re-render artifacts for you. Reach for `verifyPatterns` only when you need to change *which files* a cycle covers.
 </Note>
 
 ```json
@@ -202,18 +227,26 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `verificationContext.enable` | `boolean` | `true` | Master switch. When the first verification tool call of a cycle fires, the relevant `.ironbee/VERIFICATION.md` files for the changed paths are injected into the agent's context. Advisory only, never gates. Opt out with `false`. |
-| `verificationContext.source` | `string` | `"git"` | Where the changed-path set comes from. `"git"` = working tree (staged + unstaged + untracked) ∪ the last `commitDepth` commits, with an `actions.jsonl` fallback when the project isn't a git repo. `"actions"` = IronBee's own `file_change` events only (no git subprocess). |
-| `verificationContext.commitDepth` | `number` | `1` | How many recent commits join the working tree for the `git` source. `0` = uncommitted work only. Ignored when `source` is `"actions"`. |
-| `verificationContext.maxBytes` | `number` | `65536` | Aggregate cap (64 KB) on the injected text. Past the cap, the least-specific (root-side) guidance is dropped first, keeping area-specific docs. |
+| `verification.context.enable` | `boolean` | `true` | Master switch. When the first verification tool call of a cycle fires, the relevant `.ironbee/VERIFICATION.md` files for the changed paths are injected into the agent's context. Advisory only, never gates. Opt out with `false`. |
+| `verification.context.source` | `string` | `"git"` | Where the changed-path set comes from. `"git"` = working tree (staged + unstaged + untracked) ∪ the last `commitDepth` commits, with an `actions.jsonl` fallback when the project isn't a git repo. `"actions"` = IronBee's own `file_change` events only (no git subprocess). |
+| `verification.context.commitDepth` | `number` | `1` | How many recent commits join the working tree for the `git` source. `0` = uncommitted work only. Ignored when `source` is `"actions"`. |
+| `verification.context.maxBytes` | `number` | `65536` | Aggregate cap (64 KB) on the injected text. Past the cap, the least-specific (root-side) guidance is dropped first, keeping area-specific docs. |
+| `verification.context.message` | `string` | *(unset)* | A custom instruction injected into **every** verification cycle, independent of which files changed — so it reaches the verifier even on a manual no-change verify (where the path-scoped `VERIFICATION.md` injection is empty). Two forms: literal inline text, or a `file:<path>` reference whose contents are read (path relative to the project dir; a leading `~` expands to your home dir). Rendered first and **never truncated** (it reserves its bytes off the `maxBytes` budget). Layered across global / project / local. |
 
 ```json
 {
-  "verificationContext": {
-    "commitDepth": 0
+  "verification": {
+    "context": {
+      "commitDepth": 0,
+      "message": "Always confirm the health endpoint returns 200 before passing."
+    }
   }
 }
 ```
+
+<Note>
+  Earlier CLI versions used a top-level `verificationContext.*` namespace. These keys now live under `verification.context.*`; update any scripts or committed config that still reference the old names.
+</Note>
 
 ---
 
@@ -289,6 +322,7 @@ Controls whether IronBee may read your Claude Code OAuth token to fill statuslin
 | `claude.oauthAccess.enable` | `boolean` | `true` | Whether IronBee may read the Claude OAuth token (macOS Keychain / `~/.claude/.credentials.json`) and call OAuth-scoped endpoints. Opt out with `false`. Claude-only. |
 | `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch, the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
 | `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` — takes effect on the next `ironbee install`. Claude-only. |
+| `claude.trustWorkspace.enable` | `boolean` | `true` | Whether `ironbee install` marks the project [trusted](/cli/clients/claude-code#workspace-trust) in Claude Code's machine-global `~/.claude.json` when it isn't already. Claude Code 2.1.x ignores a project's committed `permissions.allow` (the devtools + `Bash(ironbee *)` entries IronBee writes) until the workspace is trusted, and the trust dialog doesn't re-appear once onboarding has been seen — so without this the entries stay silently disabled and the agent gets prompted on every devtools/`ironbee` call. Best-effort and idempotent: it only ever flips a missing/false flag to `true` and never clobbers other `~/.claude.json` content. Opt out with `false`. Claude-only. |
 
 ---
 
@@ -318,7 +352,7 @@ IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export 
 
 ## Devtools MCP overrides
 
-Each cycle's MCP server can be customized independently via `browserDevTools`, `nodeDevTools`, `backendDevTools`, and `androidDevTools`:
+Each cycle's MCP server can be customized independently via `browserDevTools`, `nodeDevTools`, `backendDevTools`, `androidDevTools`, and `terminalDevTools`:
 
 | Key | Description |
 |-----|-------------|

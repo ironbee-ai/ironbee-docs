@@ -47,6 +47,7 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | Variable | Effect |
 |----------|--------|
 | `IRONBEE_CLIENT` | Tells a hook runner which client it's acting as (the `--client` flag overrides it). Set by the installed hook config. |
+| `IRONBEE_RUNTIME_LOCATION` | Overrides [`runtime.location`](/cli/configuration/configuration#runtime) for this process — `external` (default, per-session data under `~/.ironbee/projects/<token>/`) or `in-project` (`<project>/.ironbee/sessions/`). Takes precedence over the config layers; mainly used by the test suite. |
 | `IRONBEE_BIN` | Overrides the path to the `ironbee` binary used when spawning background workers. |
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
