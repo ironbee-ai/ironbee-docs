@@ -121,6 +121,42 @@ By default these write to the project config (`<project>/.ironbee/config.json`).
 
 ---
 
+## Project checks run first (lint, tests, types)
+
+Before any devtools verification runs, IronBee can run your own **deterministic project checks** — linters, type-checkers, unit tests, a build — as the first step of every verification cycle. Configure them with the `verification.checks` key (a JSON array):
+
+```json
+{
+  "verification": {
+    "checks": [
+      { "name": "lint",      "command": "npm", "args": ["run", "lint"] },
+      { "name": "typecheck", "command": "npm", "args": ["run", "typecheck"] },
+      { "name": "test",      "command": "npm", "args": ["test"], "timeoutMs": 120000, "required": true }
+    ]
+  }
+}
+```
+
+Each entry takes:
+
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `name` | yes | Label shown in the verdict and any block message. |
+| `command` | yes | Executable to run. |
+| `args` | no | Argument list. |
+| `env` | no | Extra environment variables. |
+| `cwd` | no | Working directory (defaults to the project dir). |
+| `timeoutMs` | no | Per-check timeout in milliseconds. |
+| `required` | no | Whether a failure blocks completion (see below). |
+
+The verifier runs the checks via `ironbee hook run-checks` at the **start** of the cycle, and IronBee trusts the **recorded exit codes**, not the agent's word for it. In **enforce mode**, a `required` check that exits non-zero or times out **blocks completion** — the agent has to fix it and re-run — and a `required` check that *never ran* blocks too, so the agent can't quietly skip it. Non-required checks are recorded but don't gate. A failed check counts toward [`maxRetries`](/cli/configuration/configuration#core-options) like any other block.
+
+<Note>
+  Check results stay **local** to your machine (recorded under `.ironbee/`, not sent to the Collector), and `verification.checks` is read live — editing it takes effect on the next session without re-rendering artifacts. In assist and monitoring-only mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block.
+</Note>
+
+---
+
 ## How verification runs (the verifier sub-agent)
 
 On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools (plus read-only `Read` / `Grep` / `Glob` so it can understand the change it's verifying — but **no edit tools**), and the main agent **delegates** the verification cycle to it — automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.

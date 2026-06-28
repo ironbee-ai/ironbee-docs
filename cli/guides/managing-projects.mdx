@@ -59,7 +59,7 @@ Unless you picked `monitor`, install then asks **which verification platforms** 
 
 ```
 Which platforms should require verification?
-  ↑/↓ move · space toggle · a all · enter confirm
+  ↑/↓ move · space toggle · a all · s suggest · enter confirm
 
   [x] browser   web UI · DOM · console · a11y · screenshots · recording
   [ ] node      Node.js runtime · tracepoints · logpoints · exceptions · variables · logs
@@ -67,6 +67,10 @@ Which platforms should require verification?
   [ ] android   device/emulator · taps · swipes · screenshots · UI snapshots · Logcat · HTTP
   [ ] terminal  CLI / REPL / TUI driving over a PTY · send keys · capture output · exit codes
 ```
+
+When a selected client can run a headless prompt — **Claude Code** or **Codex**, not a Cursor-only install — the picker also offers an **`s` "suggest"** key. Press it to have IronBee analyze your project with that client's model and **replace** the current selection with a recommended set of cycles; you can still adjust it before pressing Enter. It's opt-in (nothing runs until you press `s`), and if the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
+
+<img src="/images/cli/platform-selection_suggest.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted in the help bar and 'Analysing project with claude…' shown while IronBee recommends which cycles to enable" style={{borderRadius:'8px',width:'100%'}} />
 
 Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,backend,android,terminal`):
 
