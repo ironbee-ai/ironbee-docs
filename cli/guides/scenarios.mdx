@@ -35,7 +35,7 @@ Like the verifier, on Claude Code and Codex these **delegate to a dedicated `iro
 
 By default authoring is **live**: the agent drives your running app to understand it (navigate, log in, click, snapshot — the same way a verification run does), writes the script from what it actually observes, validates it by running once, and tears down anything it started. If the app can't be started it falls back to a **source-only draft**, and a leading `draft` token forces source-only authoring up front.
 
-The sub-agent decides add-vs-update (it checks for an existing same-name scenario first), picks the right cycle, and stamps metadata such as the parameters a scenario takes. A delete or a fuzzy-matched update asks you to confirm the matched scenario first.
+The sub-agent decides add-vs-update (it checks for an existing same-name scenario first), picks the right cycle, declares any [parameters](#parametric-scenarios) the script takes, and stamps metadata. A delete or a fuzzy-matched update asks you to confirm the matched scenario first.
 
 ### Search scenarios
 
@@ -45,6 +45,29 @@ The sub-agent decides add-vs-update (it checks for an existing same-name scenari
 ```
 
 It searches every enabled cycle's store and returns the matches (name, description, cycle, and a relevance score for fuzzy searches).
+
+---
+
+## Parametric scenarios
+
+A scenario script reads its inputs from an `args` binding — `const { baseUrl } = args;` — so the same flow can run against different values. Each input is declared up front as a **typed parameter**, so the scenario carries its own input contract: defaults, types, and which values are required all travel with the script.
+
+When the agent authors a parametric scenario it captures sensible **defaults from the live-authoring run**, so the scenario re-runs "as captured" with zero arguments — you only pass `args` to *override* a default. Each parameter declares:
+
+| Field | Purpose |
+|-------|---------|
+| `name` | The `args` key the script reads (e.g. `baseUrl`). Required. |
+| `description` | What the parameter is, for the agent and for humans. |
+| `type` | `string`, `number`, `boolean`, `object`, or `array`. Omit for an untyped passthrough; `object` / `array` are shallow-checked at the top level only. |
+| `default` | Applied when the caller omits the argument (captured from the authoring run). |
+| `example` | A documentation-only shape, surfaced when there's no `default`. Never injected or validated. |
+| `required` | Rejects the run when there's no value **and** no `default`. |
+
+On every run the parameters are enforced: defaults fill in omitted arguments, `required` values must be present, and declared types are shallow-validated — a wrong-type or missing-required run **fails loudly** instead of silently passing `undefined` to the script. The declared parameters ride along in search and run output, so a scenario's contract is visible without opening the script.
+
+<Note>
+  Parameters are first-class — the agent manages them through `/ironbee-manage-scenario`, and they supersede the older `argsSchema` metadata convention. A scenario with no declared parameters keeps a fully-opaque `args` passthrough (its expected shape is documented in the scenario's description).
+</Note>
 
 ---
 
