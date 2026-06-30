@@ -86,17 +86,13 @@ The reference can be an exact name or a semantic description (the verifier picks
 
 ## Where scenarios are stored
 
-Saved scenarios are committed under `.ironbee/scenarios/<prefix>/`, one folder per cycle:
+Saved scenarios are committed under a single flat store, `.ironbee/scenarios/` — the `ironbee-devtools` compose server registers the scenario tools once for the whole project rather than per cycle. A scenario can therefore be **cross-platform**: one script may drive several cycles' tools (for example a `bdt_*` browser step followed by a `bedt_*` backend check), authored as a single scenario rather than split per platform. Each scenario records its platform(s) in its `ironbee.platform` / `ironbee.platforms` metadata, which is what `ironbee scenario status` and the [TUI](/cli/guides/interactive-mode) scenarios area display.
 
-| Cycle | Folder |
-|-------|--------|
-| Browser | `.ironbee/scenarios/bdt/` |
-| Node | `.ironbee/scenarios/ndt/` |
-| Backend | `.ironbee/scenarios/bedt/` |
-| Android | `.ironbee/scenarios/adt/` |
-| Terminal | `.ironbee/scenarios/tdt/` |
+Unlike the per-session `sessions/` data, the scenario store is **not gitignored** — scenarios are repo content meant to be reviewed in PRs and shared with the team, the same trust level as `.ironbee/VERIFICATION.md`. The store is committed and client-agnostic (it isn't per-client).
 
-Unlike the per-session `sessions/` data, the scenario store is **not gitignored** — scenarios are repo content meant to be reviewed in PRs and shared with the team, the same trust level as `.ironbee/VERIFICATION.md`. The store is committed and client-agnostic (it isn't per-client), and one scenario maps to one cycle.
+<Note>
+  Older installs wrote one folder per cycle (`.ironbee/scenarios/bdt/`, `ndt/`, `bedt/`, `adt/`, `tdt/`). That layout is still read for back-compat — its scenarios are unioned with the flat store — so existing scenarios keep working without migration.
+</Note>
 
 ---
 

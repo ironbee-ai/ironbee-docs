@@ -3,7 +3,7 @@ title: Cursor
 description: How IronBee integrates with Cursor - slash commands, rules, hooks, tools, and MCP activation.
 ---
 
-When you run `ironbee install` in a project where [Cursor](https://cursor.com) is detected, IronBee writes the hooks, rules, and tools Cursor needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code), with a few Cursor-specific details, including one manual step to activate the MCP servers.
+When you run `ironbee install` in a project where [Cursor](https://cursor.com) is detected, IronBee writes the hooks, rules, and tools Cursor needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code), with a few Cursor-specific details, including one manual step to activate the MCP server.
 
 ---
 
@@ -16,8 +16,8 @@ When you run `ironbee install` in a project where [Cursor](https://cursor.com) i
 | `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
 | `.cursor/skills/ironbee-{manage,search,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools — Cursor has no sub-agent) |
 | `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
-| `.cursor/mcp.json` | The devtools MCP servers — one entry per enabled cycle (`browser-devtools`, `node-devtools`, `backend-devtools`, `android-devtools`, `terminal-devtools`) |
-| `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (`<server>:*` per enabled cycle + `ironbee` in the terminal allowlist) |
+| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `bedt_*` / `adt_*` / `tdt_*`) |
+| `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (a single `ironbee-devtools:*` + `ironbee` in the terminal allowlist) |
 
 These are merged into your existing Cursor config, not overwritten.
 
@@ -27,17 +27,17 @@ These are merged into your existing Cursor config, not overwritten.
 
 ---
 
-## Activate the MCP servers
+## Activate the MCP server
 
 <Warning>
-  Cursor sometimes doesn't pick up MCP servers added via `mcp.json` automatically. After installing, you usually need to activate them by hand.
+  Cursor sometimes doesn't pick up MCP servers added via `mcp.json` automatically. After installing, you usually need to activate it by hand.
 </Warning>
 
 After running `ironbee install`:
 
 1. **Restart Cursor** so it loads the new hooks and MCP config.
-2. Go to **Settings → Tools & MCP** and confirm the enabled servers (`browser-devtools`, and `node-devtools` / `backend-devtools` / `android-devtools` / `terminal-devtools` if you opted into those cycles) are listed and on.
-3. If a server shows as enabled but its tools aren't available, toggle it off and back on.
+2. Go to **Settings → Tools & MCP** and confirm the **`ironbee-devtools`** server is listed and on (it carries the tools for every cycle you enabled).
+3. If the server shows as enabled but its tools aren't available, toggle it off and back on.
 
 <Note>This is a known Cursor limitation: MCP servers added via config sometimes need a manual nudge.</Note>
 
