@@ -74,18 +74,18 @@ Both paths write the same `privacy.enable` value and re-render artifacts. The ke
 
 ### Gate only one channel
 
-Privacy mode flips both flags together. If you want, say, recordings off but tool detail on, set the per-cycle [DevTools env override](/cli/configuration/configuration#devtools-mcp-overrides) your `*DevTools.env` values are applied *after* the privacy flags, so they win:
+Privacy mode flips both flags together. If you want, say, recordings off but tool detail on, set the [DevTools env override](/cli/configuration/configuration#devtools-mcp-overrides) your `ironbeeDevTools.env` values are applied *after* the privacy flags, so they win:
 
 ```json
 {
   "privacy": { "enable": true },
-  "browserDevTools": {
+  "ironbeeDevTools": {
     "env": { "COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE": "true" }
   }
 }
 ```
 
-Here screenshots and recordings stay redacted (privacy mode), but browser tool detail is allowed back through.
+Here screenshots and recordings stay redacted (privacy mode), but tool detail is allowed back through.
 
 ---
 

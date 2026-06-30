@@ -17,17 +17,17 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
 | `.claude/commands/ironbee-{manage,search,sync}-scenario.md` | The [saved-scenario](/cli/guides/scenarios) slash commands |
 | `.claude/agents/ironbee-scenario.md` | The **scenario sub-agent** that authors, searches, and re-runs [saved scenarios](/cli/guides/scenarios) (like the verifier, it owns the scenario tools and can't edit your code) |
-| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. The devtools MCP servers (one per enabled cycle: `browser-devtools`, `node-devtools`, `backend-devtools`, `android-devtools`, `terminal-devtools`) are rendered **inline** into this file so they're scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server — it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `bedt_*` / `adt_*` / `tdt_*`) under one entry — is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
 | `.claude/settings.local.json` | The [auto-mode allowlist carve-out](#auto-mode-and-the-verifier) for the verifier — written only when verification is active and `claude.autoModeAllowlist.enable` isn't `false`. Merged into any existing local settings |
 
 These are merged into your existing Claude settings, not overwritten.
 
 <Note>
-  The devtools MCP servers live inside the verifier sub-agent (above), not in a top-level `.mcp.json`. See [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent) below.
+  The `ironbee-devtools` MCP server lives inside the verifier sub-agent (above), not in a top-level `.mcp.json`. See [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent) below.
 </Note>
 
 <Info>
-  Restart Claude Code after installing so it picks up the new hooks, commands, and MCP servers.
+  Restart Claude Code after installing so it picks up the new hooks, commands, and MCP server.
 </Info>
 
 ---
@@ -63,7 +63,7 @@ IronBee also installs `/ironbee-manage-scenario`, `/ironbee-search-scenario`, an
 
 ## Verification runs in a sub-agent
 
-On Claude Code, the main agent does **not** drive the devtools tools itself. The devtools MCP servers are scoped to a dedicated `ironbee-verifier` sub-agent (their schemas are rendered inline into `.claude/agents/ironbee-verifier.md`). When verification is needed — automatically at the gate, or manually via `/ironbee-verify` — the main agent **spawns the verifier**, which runs every active cycle's tools and submits the verdict, then hands back a short summary.
+On Claude Code, the main agent does **not** drive the devtools tools itself. They're scoped to a dedicated `ironbee-verifier` sub-agent: a single `ironbee-devtools` MCP server — serving every enabled cycle — is rendered inline into `.claude/agents/ironbee-verifier.md`. When verification is needed — automatically at the gate, or manually via `/ironbee-verify` — the main agent **spawns the verifier**, which runs every active cycle's tools and submits the verdict, then hands back a short summary.
 
 This keeps the heavy devtools output (DOM snapshots, console logs, screenshots) in the sub-agent's context instead of flooding the main conversation. The sub-agent shares the parent session, so its verification events, tool calls, and verdict all land in the same session timeline, and its token/tool usage is folded back into the session analytics.
 
@@ -85,7 +85,7 @@ When the agent fixes something after a failed verdict, it can record what it rep
 
 ## Permissions
 
-The permissions IronBee writes are scoped to what's actually active. Each enabled cycle grants its devtools tools (for example `mcp__browser-devtools__*` when the browser cycle is on, matched against the verifier sub-agent's inline tools), plus `Bash(ironbee *)` for the agent's CLI calls. Disabling a cycle strips its permission; switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#assist-mode-default) keeps the permissions, the verifier sub-agent, and its MCP servers (so manual verification still works) but drops the always-on skill and rule.
+The permissions IronBee writes are scoped to what's actually active. When any cycle is enabled, it grants a single devtools permission, `mcp__ironbee-devtools__*` — the one compose server carries every enabled cycle's tools, matched against the verifier sub-agent's inline tools — plus `Bash(ironbee *)` for the agent's CLI calls. (Any stale per-cycle permissions from an older CLI, like `mcp__browser-devtools__*`, are stripped on every install.) Switching to [monitoring-only mode](/cli/guides/verification#verification-modes) removes all IronBee permissions (and the verifier sub-agent) entirely. [Assist mode](/cli/guides/verification#assist-mode-default) keeps the permissions, the verifier sub-agent, and its MCP server (so manual verification still works) but drops the always-on skill and rule.
 
 ---
 
@@ -103,7 +103,7 @@ To keep verification working under auto mode, IronBee writes **one narrow allowl
 
 ## Workspace trust
 
-Claude Code 2.1.x **ignores a project's committed `permissions.allow`** — the `mcp__*-devtools__*` and `Bash(ironbee *)` entries IronBee writes into `settings.json` — until the workspace is **trusted**. And once you've dismissed Claude's onboarding, the trust dialog no longer re-appears, so those entries would stay silently disabled and the agent would get prompted on every devtools or `ironbee` call.
+Claude Code 2.1.x **ignores a project's committed `permissions.allow`** — the `mcp__ironbee-devtools__*` and `Bash(ironbee *)` entries IronBee writes into `settings.json` — until the workspace is **trusted**. And once you've dismissed Claude's onboarding, the trust dialog no longer re-appears, so those entries would stay silently disabled and the agent would get prompted on every devtools or `ironbee` call.
 
 To avoid that, `ironbee install` marks the project trusted in Claude Code's machine-global `~/.claude.json` (it flips `projects["<dir>"].hasTrustDialogAccepted` to `true`) when verification is active and the flag isn't already set.
 

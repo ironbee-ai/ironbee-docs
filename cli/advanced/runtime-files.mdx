@@ -28,7 +28,7 @@ Created by `ironbee install` in each project:
 |------|---------------|---------|
 | `config.json` | Project config, team settings, shared with the repo | ✅ Yes |
 | `config.local.json` | Personal overrides, your machine only | ❌ Gitignored |
-| `scenarios/<prefix>/` | Saved [verification scenarios](/cli/guides/scenarios) — reusable, parametric test scripts authored via `/ironbee-manage-scenario`, one folder per cycle (`bdt`, `ndt`, `bedt`, `adt`, `tdt`) | ✅ Yes |
+| `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) — reusable, parametric test scripts authored via `/ironbee-manage-scenario`. A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`bedt`/`adt`/`tdt`, still read for back-compat) | ✅ Yes |
 | `VERIFICATION.md` | Area-specific [verification guidance](/cli/guides/verification-context), in any directory | ✅ Yes |
 | `sessions/<id>/` | Per-session runtime data — **only when [`runtime.location`](#where-per-session-data-lives) is `in-project`** | ❌ Gitignored |
 | `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). Always in-project, even in `external` mode | ❌ Gitignored |

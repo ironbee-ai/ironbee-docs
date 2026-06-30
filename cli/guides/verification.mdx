@@ -13,7 +13,7 @@ IronBee runs in one of **three modes**, set by two switches: the master toggle (
 
 ### Assist mode (default)
 
-The machinery is installed the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, MCP servers, and permissions so the agent (or you) can verify **manually**, but nothing is enforced: no verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. This is what a fresh install resolves to.
+The machinery is installed the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, the devtools MCP server, and permissions so the agent (or you) can verify **manually**, but nothing is enforced: no verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. This is what a fresh install resolves to.
 
 ```bash
 ironbee verification auto disable   # assist (default) — manual /ironbee-verify only, nothing enforced
@@ -25,7 +25,7 @@ Assist keeps verification *available* but never *required* — the agent can ver
 
 ### Enforce mode
 
-The agent must pass every active cycle before it can mark a task complete. The blocking verify gate, the always-on skill and rule, the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, and the devtools MCP servers are all installed. Enforce is opt-in turn on the automatic-enforcement sub-toggle:
+The agent must pass every active cycle before it can mark a task complete. The blocking verify gate, the always-on skill and rule, the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, and the devtools MCP server are all installed. Enforce is opt-in turn on the automatic-enforcement sub-toggle:
 
 ```bash
 ironbee verification auto enable    # enforce — block task completion until every active cycle passes
@@ -40,7 +40,7 @@ ironbee verification auto disable   # back to assist (the default)
 
 ### Monitoring-only mode
 
-The agent is never blocked and none of the verification machinery is installed no enforcement hook, skill, rule, command, verifier sub-agent, or MCP servers but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works.
+The agent is never blocked and none of the verification machinery is installed no enforcement hook, skill, rule, command, verifier sub-agent, or MCP server but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works.
 
 ```bash
 ironbee verification disable   # monitoring-only — no machinery, analytics only
@@ -65,13 +65,17 @@ The master and `auto` toggles accept the same target flags as everything else (`
 
 Each platform is a separate cycle with its own tools. IronBee installs all five, but only some are active by default:
 
-| Platform | Default | What it verifies | Tools |
-|----------|---------|------------------|-------|
-| **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `browser-devtools` (`bdt_*`) |
-| **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `node-devtools` (`ndt_*`) |
-| **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `backend-devtools` (`bedt_*`) |
-| **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, read Logcat, and capture HTTP traffic | `android-devtools` (`adt_*`) |
-| **Terminal** | Opt-in | CLI / REPL / TUI changes spawns the program in a pseudo-terminal (PTY), sends input, and reads the output the same way `tmux` drives a pane | `terminal-devtools` (`tdt_*`) |
+| Platform | Default | What it verifies | Tool prefix |
+|----------|---------|------------------|-------------|
+| **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `bdt_*` |
+| **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `ndt_*` |
+| **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `bedt_*` |
+| **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, read Logcat, and capture HTTP traffic | `adt_*` |
+| **Terminal** | Opt-in | CLI / REPL / TUI changes spawns the program in a pseudo-terminal (PTY), sends input, and reads the output the same way `tmux` drives a pane | `tdt_*` |
+
+<Note>
+  Every enabled cycle's tools are served by a **single `ironbee-devtools` MCP server** (a "compose" server that multiplexes them under their fixed per-platform prefixes). The completion gate still routes each tool call to its cycle by that prefix — so `browser-devtools`, `node-devtools`, etc. remain the *logical* cycle names even though there's just one physical server. Enabling or disabling a cycle changes which prefixes that one server exposes.
+</Note>
 
 The browser cycle covers most frontend work out of the box. The Node, backend, Android, and terminal cycles are off until you opt in, so those changes aren't gated until you ask for it. At install time each platform is a row in the multi-select; space toggles it on.
 
