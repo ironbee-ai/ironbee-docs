@@ -3,7 +3,7 @@ title: Importing Sessions
 description: Backfill historical AI coding sessions into the IronBee Collector.
 ---
 
-If you've been using Claude Code or Codex before installing IronBee, your past sessions live on disk but aren't in the Console yet. `ironbee import` backfills them into the IronBee Collector so your analytics include history, not just sessions from today forward. Discovery scans both stores (`~/.claude/projects/` and `~/.codex/sessions/`) and routes each session through the right importer automatically, with no client flag needed.
+If you've been using Claude Code, Codex, or Cursor before installing IronBee, your past sessions live on disk but aren't in the Console yet. `ironbee import` backfills them into the IronBee Collector so your analytics include history, not just sessions from today forward. Discovery scans all three stores (`~/.claude/projects/`, `~/.codex/sessions/`, and Cursor's local `state.vscdb`) and routes each session through the right importer automatically, with no client flag needed.
 
 Sessions already tracked are skipped automatically, so the command is safe to re-run.
 
@@ -17,7 +17,11 @@ From a project directory, import that project's history:
 ironbee import
 ```
 
-By default this reads the current project's Claude Code and Codex session transcripts and ships any that aren't already in the Collector.
+By default this reads the current project's Claude Code, Codex, and Cursor sessions and ships any that aren't already in the Collector.
+
+<Note>
+  Cursor has no per-session transcript file — its "transcript" is the composer stored in `state.vscdb`. Token and cost figures for imported Cursor sessions come from Cursor's usage API and require [`cursor.apiAccess`](/cli/clients/cursor#session-analytics) to be on (the default); without it, imported Cursor sessions carry structure only.
+</Note>
 
 ---
 
@@ -29,8 +33,8 @@ Pick at most one scope (the default is the current directory):
 |------|-------|
 | *(none)* | The current project directory |
 | `--projects <p1,p2,...>` | Specific projects by absolute path, comma-separated |
-| `--all-projects` | Every project Claude Code or Codex has tracked on this machine |
-| `--transcript <path>` | A single `.jsonl` transcript file |
+| `--all-projects` | Every project Claude Code, Codex, or Cursor has tracked on this machine |
+| `--transcript <path>` | A single `.jsonl` transcript file (Claude Code / Codex) |
 
 ---
 

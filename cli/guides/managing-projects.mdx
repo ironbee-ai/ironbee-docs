@@ -28,7 +28,7 @@ ironbee install --client all      # every detected client
 
 When more than one client is detected and you don't pass `--client`, install shows an **arrow-key picker** to choose.
 
-The interactive flow then asks two more questions in order — **mode**, then **platforms** — because choosing `monitor` makes the platform picker moot and skips it.
+The interactive flow then asks three more questions in order — **mode**, **platforms**, then **checks** — because choosing `monitor` makes the platform picker (and the checks step) moot and skips them.
 
 ### Choosing the verification mode
 
@@ -62,7 +62,8 @@ Which platforms should require verification?
   ↑/↓ move · space toggle · a all · s suggest · enter confirm
 
   [x] browser   web UI · DOM · console · a11y · screenshots · recording
-  [ ] node      Node.js runtime · tracepoints · logpoints · exceptions · variables · logs
+  [ ] node      Node.js runtime · tracepoints · logpoints · exceptions · variables · logs · HTTP capture
+  [ ] python    Python runtime (debugpy) · tracepoints · logpoints · exceptions · thread dumps · logs · HTTP capture
   [ ] backend   HTTP · gRPC · GraphQL · WebSocket · DB · logs
   [ ] android   device/emulator · taps · swipes · screenshots · UI snapshots · Logcat · HTTP
   [ ] terminal  CLI / REPL / TUI driving over a PTY · send keys · capture output · exit codes
@@ -70,16 +71,49 @@ Which platforms should require verification?
 
 When a selected client can run a headless prompt — **Claude Code** or **Codex**, not a Cursor-only install — the picker also offers an **`s` "suggest"** key. Press it to have IronBee analyze your project with that client's model and **replace** the current selection with a recommended set of cycles; you can still adjust it before pressing Enter. It's opt-in (nothing runs until you press `s`), and if the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
 
-<img src="/images/cli/platform-selection_suggest.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted in the help bar and 'Analysing project with claude…' shown while IronBee recommends which cycles to enable" style={{borderRadius:'8px',width:'100%'}} />
+<img src="/images/cli/platform-selection_analyze.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted in the help bar and 'Analysing project with claude…' shown while IronBee recommends which cycles to enable" style={{borderRadius:'8px',width:'100%'}} />
 
-Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,backend,android,terminal`):
+When the analysis finishes, IronBee **replaces** your checkboxes with its recommendation (here browser, node, and backend) — still editable before you press Enter:
+
+<img src="/images/cli/platform-selection_suggest.png" alt="Platform multi-select after suggestion with browser, node, and backend checked as the recommended set" style={{borderRadius:'8px',width:'100%'}} />
+
+Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,python,backend,android,terminal`):
 
 ```bash
 ironbee install --platforms browser,node   # enable just these two
 ironbee install --platforms ""             # disable all cycles (incl. the default-on browser)
 ```
 
-The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `backend` / `android` / `terminal`](/cli/guides/verification#enable-or-disable-a-platform) toggles. Install records the **full** platform state explicitly — an `enable` flag for every cycle (`browser`, `node`, `backend`, `android`, `terminal`) — so the committed `config.json` plainly shows what's on and what's off. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode, including a just-chosen `--mode monitor`), the platform config is left untouched.
+The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `python` / `backend` / `android` / `terminal`](/cli/guides/verification#enable-or-disable-a-platform) toggles. Install records the **full** platform state explicitly — an `enable` flag for every cycle (`browser`, `node`, `python`, `backend`, `android`, `terminal`) — so the committed `config.json` plainly shows what's on and what's off. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode, including a just-chosen `--mode monitor`), the platform config is left untouched.
+
+### Choosing your project checks
+
+<Info>Beta — the suggested commands are a starting point to review, not a finished config.</Info>
+
+The last step (skipped in monitoring-only mode, or when no headless-capable client is available) offers to set up [project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) — deterministic lint / typecheck / test / build / format commands IronBee runs as the first step of every verification cycle. In an interactive terminal it asks a yes/no first (default **No**); if you accept, it analyzes your project with your AI client and proposes concrete commands for you to approve.
+
+Control it non-interactively with a tri-state flag:
+
+```bash
+ironbee install --checks       # run the analysis and accept the suggested set (skip the yes/no gate)
+ironbee install --no-checks    # skip the checks step entirely
+```
+
+With no flag, checks are offered only on an interactive terminal and skipped otherwise. This is the same flow as the standalone [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command, which you can re-run anytime; re-suggesting is additive, so it never clobbers checks you've hand-tuned.
+
+### Unattended installs
+
+For scripts and CI, `install` can run with zero prompts:
+
+```bash
+ironbee install <dir> --client claude --mode enforce --platforms browser,node \
+  --no-checks --yes --json
+```
+
+| Flag | Description |
+|------|-------------|
+| `-y`, `--yes`, `--non-interactive` | Force zero prompts even under a TTY. Any choice you didn't pass a flag for falls back to the flag / existing config / defaults. |
+| `--json` | Emit a machine-readable summary to stdout (`{ ok, project, clients, mode, strict, platforms, checks }`); decorative logs go to stderr. |
 
 <Info>
   Restart your AI coding client after installing so it picks up the new hooks and tools.

@@ -50,6 +50,7 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_RUNTIME_LOCATION` | Overrides [`runtime.location`](/cli/configuration/configuration#runtime) for this process — `external` (default, per-session data under `~/.ironbee/projects/<token>/`) or `in-project` (`<project>/.ironbee/sessions/`). Takes precedence over the config layers; mainly used by the test suite. |
 | `IRONBEE_BIN` | Overrides the path to the `ironbee` binary used when spawning background workers. |
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
+| `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the `state.vscdb` store) when reading [Cursor session analytics](/cli/clients/cursor#session-analytics). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
 | `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render — belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
 
