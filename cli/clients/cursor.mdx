@@ -16,7 +16,7 @@ When you run `ironbee install` in a project where [Cursor](https://cursor.com) i
 | `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
 | `.cursor/skills/ironbee-{manage,search,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools — Cursor has no sub-agent) |
 | `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
-| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `bedt_*` / `adt_*` / `tdt_*`) |
+| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`) |
 | `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (a single `ironbee-devtools:*` + `ironbee` in the terminal allowlist) |
 
 These are merged into your existing Cursor config, not overwritten.
@@ -60,6 +60,37 @@ Cursor's stop hook can't hard-deny completion the way Claude's can, so IronBee u
 <Info>
   Restart Cursor after installing, and remember the MCP activation step above; without it the agent won't have the devtools tools it needs to verify.
 </Info>
+
+<Note>
+  Cursor can also power IronBee's **LLM suggestions** — the `s` "suggest" key in the install platform picker and the [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command — by running a one-shot headless prompt via `cursor-agent`. When Claude Code or Codex is also present, IronBee prefers those (`claude > codex > cursor`).
+</Note>
+
+---
+
+## Session analytics
+
+Like Claude Code and Codex, Cursor sessions ship **structural analytics** to the Collector (turns, tools, code-line counts, timings) plus per-request token and cost events. Cursor's pipeline is a little different under the hood: Claude and Codex read a transcript file with embedded token usage, but Cursor keeps its conversation in a local SQLite store (`state.vscdb`) that has the *structure* but **no token or cost data**. IronBee fills that gap from Cursor's own per-user **usage API** (`api2.cursor.sh`), joining the two by timestamp.
+
+Because the token/cost half comes from that API, it's gated behind a capability you can turn off:
+
+```bash
+ironbee cursor api-access status     # show the flag, token readability, plan tier, and a live usage probe
+ironbee cursor api-access disable    # stop reading the token / calling the usage API
+ironbee cursor api-access enable     # re-enable (the default)
+```
+
+| State | What analytics carry |
+|-------|----------------------|
+| **On** *(default)* | Full analytics — structure **plus** exact per-request tokens and cost (Cursor's own billed numbers) and rate-limit windows. |
+| **Off / unavailable** | Structure + code-line analytics only; token and cost are omitted. |
+
+To read tokens and cost, IronBee reads your local Cursor session token (from `state.vscdb`, falling back to the macOS Keychain) and calls the usage API. It never prompts for it, and the capability is the on/off switch for the whole behavior. It maps to the [`cursor.apiAccess.enable`](/cli/configuration/configuration#cursor-cursor-only) config key (with `cursor.apiAccess.usageTtlSeconds` tuning the fetch cache) and is the Cursor parity of Claude's [OAuth access](/cli/clients/claude-code#claude-oauth-access).
+
+<Note>
+  A few signals Cursor simply doesn't expose are always omitted — cache-creation tokens, skill usage, and the rolling 5-hour / 7-day rate-limit windows Claude reports. Cursor surfaces a monthly quota and a hard USD cap instead, which ride along in the generic rate-limit window map.
+</Note>
+
+Cursor sessions are also backfilled by [`ironbee import`](/cli/guides/importing-sessions) — its "transcript" is the composer inside `state.vscdb`, so there's no per-session `.jsonl` file, but imported sessions land in the Console alongside live ones.
 
 ---
 

@@ -17,7 +17,7 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
 | `.claude/commands/ironbee-{manage,search,sync}-scenario.md` | The [saved-scenario](/cli/guides/scenarios) slash commands |
 | `.claude/agents/ironbee-scenario.md` | The **scenario sub-agent** that authors, searches, and re-runs [saved scenarios](/cli/guides/scenarios) (like the verifier, it owns the scenario tools and can't edit your code) |
-| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server — it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `bedt_*` / `adt_*` / `tdt_*`) under one entry — is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server — it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`) under one entry — is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
 | `.claude/settings.local.json` | The [auto-mode allowlist carve-out](#auto-mode-and-the-verifier) for the verifier — written only when verification is active and `claude.autoModeAllowlist.enable` isn't `false`. Merged into any existing local settings |
 
 These are merged into your existing Claude settings, not overwritten.

@@ -3,29 +3,45 @@ title: Verification
 description: Choose which platforms IronBee verifies, and switch between enforcement and monitoring-only.
 ---
 
-When your agent finishes editing code, IronBee runs **verification cycles** to confirm the change actually works before the task can complete. This page covers the verification modes, which platforms get verified, and how the verifier works.
+When your agent finishes editing code, IronBee runs **verification cycles** to confirm the change actually works before the task can complete.
+
+`ironbee install` walks you through three setup choices **in this order** — and each section below shows that install step first, then the command to change it later:
+
+1. **[Mode](#verification-modes)** — enforce, assist, or monitoring-only (and, for enforce, how [strict](#strict-mode) to be).
+2. **[Platforms](#verification-platforms)** — which runtime cycles gate a change (browser, node, python, backend, android, terminal).
+3. **[Project checks](#project-checks-run-first-lint-tests-types)** — deterministic lint / test / typecheck commands to run first.
+
+The rest of the page covers [how the verifier runs](#how-verification-runs-the-verifier-sub-agent), [verify-vs-fix](#verify-only-vs-fix-mode), [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts), and [custom scenarios](#custom-verification-scenarios).
 
 ---
 
 ## Verification modes
 
-IronBee runs in one of **three modes**, set by two switches: the master toggle (`verification enable` / `disable`) and the automatic-enforcement sub-toggle (`verification auto enable` / `disable`). The default is **assist** — the verifier is installed but never blocks completion. You can also pick the mode upfront when you [install](/cli/guides/managing-projects#choosing-the-verification-mode) (`--mode enforce|assist|monitor`); the commands below switch it afterward.
+IronBee runs in one of **three modes**, set by two switches: the master toggle (`verification enable` / `disable`) and the automatic-enforcement sub-toggle (`verification auto enable` / `disable`). The default is **assist** — the verifier is installed but never blocks completion.
+
+<Info>
+  You normally pick the mode **while you [install](/cli/guides/managing-projects#choosing-the-verification-mode)** — the arrow-key pickers shown in this section are exactly what `ironbee install` presents (mode, then, for enforce, [strictness](#strict-mode)). Pass `--mode enforce|assist|monitor` to skip the prompt, or use the `verification` commands below to switch afterward.
+</Info>
 
 ### Assist mode (default)
 
 The machinery is installed the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, the devtools MCP server, and permissions so the agent (or you) can verify **manually**, but nothing is enforced: no verify gate blocks completion, the pre-edit hooks run non-blocking, and the always-on skill/rule are omitted. This is what a fresh install resolves to.
 
+<img src="/images/cli/verification-mode-selection_assist.png" alt="Verification-mode picker with the cursor on assist, described as tools installed but not enforced" style={{borderRadius:'8px',width:'100%'}} />
+
+Assist keeps verification *available* but never *required* — the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion. To switch to it later:
+
 ```bash
 ironbee verification auto disable   # assist (default) — manual /ironbee-verify only, nothing enforced
 ```
 
-Assist keeps verification *available* but never *required* — the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion.
-
-<img src="/images/cli/verification-mode-selection_assist.png" alt="Verification-mode picker with the cursor on assist, described as tools installed but not enforced" style={{borderRadius:'8px',width:'100%'}} />
-
 ### Enforce mode
 
-The agent must pass every active cycle before it can mark a task complete. The blocking verify gate, the always-on skill and rule, the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, and the devtools MCP server are all installed. Enforce is opt-in turn on the automatic-enforcement sub-toggle:
+The agent must pass every active cycle before it can mark a task complete. The blocking verify gate, the always-on skill and rule, the [`/ironbee-verify`](#verify-only-vs-fix-mode) command, the verifier sub-agent, and the devtools MCP server are all installed.
+
+<img src="/images/cli/verification-mode-selection_auto-verify.png" alt="Verification-mode picker with the cursor on auto verify (enforce), described as block task completion until changes are verified" style={{borderRadius:'8px',width:'100%'}} />
+
+Enforce is opt-in — turn on the automatic-enforcement sub-toggle:
 
 ```bash
 ironbee verification auto enable    # enforce — block task completion until every active cycle passes
@@ -36,18 +52,39 @@ ironbee verification auto disable   # back to assist (the default)
   `ironbee verification enable` only flips the master toggle; the mode it resolves to still depends on `auto` (assist unless you've also run `verification auto enable`).
 </Note>
 
-<img src="/images/cli/verification-mode-selection_auto-verify.png" alt="Verification-mode picker with the cursor on auto verify (enforce), described as block task completion until changes are verified" style={{borderRadius:'8px',width:'100%'}} />
+### Strict mode
+
+Enforce has one **follow-up choice**: **how strict** the gate is about [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) — the verifier's way of declaring a change has no runtime surface to exercise (a type-only refactor, a docs tweak). When you pick enforce, install shows a second picker for it right away (assist and monitoring skip it — there's no gate to enforce).
+
+**Non-strict** *(default)* lets the agent skip changes with nothing to exercise — refactors, type-only edits, docs:
+
+<img src="/images/cli/verification-mode-selection_auto-verify_non-strict.png" alt="Picker titled 'How strict should verification be?' with the cursor on non-strict" style={{borderRadius:'8px',width:'100%'}} />
+
+**Strict** always makes the agent actually exercise the change — no cycle can be skipped:
+
+<img src="/images/cli/verification-mode-selection_auto-verify_strict.png" alt="Picker titled 'How strict should verification be?' with the cursor on strict" style={{borderRadius:'8px',width:'100%'}} />
+
+To set it later (rather than at install):
+
+```bash
+ironbee verification strict enable    # reject all N/A verdicts — every active cycle needs real evidence
+ironbee verification strict disable    # back to the default — N/A verdicts accepted (and recorded)
+```
+
+With strict on, a verdict that tries to mark a cycle not-applicable is **blocked**, and the agent has to produce the cycle's required tools. Strict only matters in **enforce mode** (in assist and monitoring-only there's no gate to enforce it). It's read live by the gate, so it takes effect on the next session without re-rendering artifacts. Strict maps to the [`verification.strict`](/cli/configuration/configuration#verification) config key and accepts the usual `-g`/`--global` and `--local` target flags. For how N/A verdicts work in the first place, see [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) below.
 
 ### Monitoring-only mode
 
 The agent is never blocked and none of the verification machinery is installed no enforcement hook, skill, rule, command, verifier sub-agent, or MCP server but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works.
 
+<img src="/images/cli/verification-mode-selection_monitor-only.png" alt="Verification-mode picker with the cursor on monitor only, described as no enforcement, only track sessions / activity / tools for analytics" style={{borderRadius:'8px',width:'100%'}} />
+
+Switch to it (or back) anytime:
+
 ```bash
 ironbee verification disable   # monitoring-only — no machinery, analytics only
 ironbee verification enable    # re-enable verification (resolves to assist unless auto is on)
 ```
-
-<img src="/images/cli/verification-mode-selection_monitor-only.png" alt="Verification-mode picker with the cursor on monitor only, described as no enforcement, only track sessions / activity / tools for analytics" style={{borderRadius:'8px',width:'100%'}} />
 
 <Note>
   `auto` only matters while verification is enabled. If `verification.enable` is `false` (monitoring-only), the mode is monitoring regardless of `auto`, and `ironbee verification auto …` warns that it has no effect until you re-enable verification.
@@ -63,12 +100,13 @@ The master and `auto` toggles accept the same target flags as everything else (`
 
 ## Verification platforms
 
-Each platform is a separate cycle with its own tools. IronBee installs all five, but only some are active by default:
+Each platform is a separate cycle with its own tools. IronBee installs all six, but only some are active by default:
 
 | Platform | Default | What it verifies | Tool prefix |
 |----------|---------|------------------|-------------|
 | **Browser** | On | Frontend changes navigates pages, takes screenshots, checks the console and accessibility | `bdt_*` |
-| **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, and reads runtime snapshots | `ndt_*` |
+| **Node** | Opt-in | Node.js backends attaches the V8 inspector, sets probes, reads runtime snapshots, and captures outbound HTTP | `ndt_*` |
+| **Python** | Opt-in | Python backends attaches to a running process over debugpy/DAP, sets probes, dumps threads, and captures outbound HTTP | `pdt_*` |
 | **Backend** | Opt-in | Any backend runtime drives real HTTP, gRPC, GraphQL, or WebSocket calls and checks the responses | `bedt_*` |
 | **Android** | Opt-in | Android app changes drive an emulator over ADB, launch the app, tap and swipe, take screenshots and UI snapshots, read Logcat, and capture HTTP traffic | `adt_*` |
 | **Terminal** | Opt-in | CLI / REPL / TUI changes spawns the program in a pseudo-terminal (PTY), sends input, and reads the output the same way `tmux` drives a pane | `tdt_*` |
@@ -77,11 +115,41 @@ Each platform is a separate cycle with its own tools. IronBee installs all five,
   Every enabled cycle's tools are served by a **single `ironbee-devtools` MCP server** (a "compose" server that multiplexes them under their fixed per-platform prefixes). The completion gate still routes each tool call to its cycle by that prefix — so `browser-devtools`, `node-devtools`, etc. remain the *logical* cycle names even though there's just one physical server. Enabling or disabling a cycle changes which prefixes that one server exposes.
 </Note>
 
-The browser cycle covers most frontend work out of the box. The Node, backend, Android, and terminal cycles are off until you opt in, so those changes aren't gated until you ask for it. At install time each platform is a row in the multi-select; space toggles it on.
+The browser cycle covers most frontend work out of the box. The Node, Python, backend, Android, and terminal cycles stay off until you opt in, so those changes aren't gated until you ask for it.
 
-**Node** — Node.js runtime (tracepoints, logpoints, exceptions, variables, logs):
+### Choosing platforms at install
+
+You pick which platforms to verify **while you [install](/cli/guides/managing-projects#choosing-which-platforms-to-verify)**, from an arrow-key multi-select — **space** toggles a cycle, **`a`** toggles all, **Enter** confirms. (You can also flip any cycle afterward with the [`enable` / `disable` commands](#enable-or-disable-a-platform) below.)
+
+The picker also offers an **`s` "suggest"** key. Press it and IronBee analyzes your project with your client's model — Claude Code, Codex, and Cursor can all run it (when several are selected it uses the highest-priority one, `claude > codex > cursor`):
+
+<img src="/images/cli/platform-selection_analyze.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted and 'Analysing project with claude…' shown while IronBee inspects the project" style={{borderRadius:'8px',width:'100%'}} />
+
+…then replaces your selection with the cycles it recommends — still editable before you press Enter:
+
+<img src="/images/cli/platform-selection_suggest.png" alt="Platform multi-select after suggestion with browser, node, and backend checked as the recommended set" style={{borderRadius:'8px',width:'100%'}} />
+
+<Note>
+  Suggestion is opt-in — nothing runs until you press `s`. It runs a one-shot headless prompt through your client (`claude -p`, `codex exec`, or `cursor-agent -p`), so the client must be signed in. If the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
+</Note>
+
+Here's each platform, and what its row looks like in that picker.
+
+**Browser** *(on by default)* — a real browser: navigate pages, take screenshots, and check the console and accessibility. It covers most frontend work with no setup, and is the only cycle enabled out of the box.
+
+<img src="/images/cli/platform-selection_browser.png" alt="Platform multi-select with browser checked and the cursor on the browser row" style={{borderRadius:'8px',width:'100%'}} />
+
+**Node** — Node.js runtime (tracepoints, logpoints, exceptions, variables, logs) plus outbound HTTP capture (axios, got, node-fetch, `fetch`/`undici`, http2, gRPC):
 
 <img src="/images/cli/platform-selection_node.png" alt="Platform multi-select with node checked and the cursor on the node row" style={{borderRadius:'8px',width:'100%'}} />
+
+**Python** — a running Python process over **debugpy** (the Debug Adapter Protocol): tracepoints, logpoints, exceptions, watches, stdout/stderr logs, an all-thread **thread dump** (py-spy-style, for deadlock / GIL / hang diagnosis), plus outbound HTTP capture (`urllib`/`http.client`, `requests`, `httpx`, `aiohttp`). It attaches to an already-running process without blocking it — an already-listening debugpy at `host:port` (default `127.0.0.1:5678`), a PID (POSIX), a process name, or a docker container — and never modifies the target's source.
+
+<img src="/images/cli/platform-selection_python.png" alt="Platform multi-select with python checked and the cursor on the python row" style={{borderRadius:'8px',width:'100%'}} />
+
+<Note>
+  The Python cycle needs **`debugpy` installed in the target's Python environment** (`pip install debugpy`). Unlike Node's built-in inspector, debugpy is a third-party package, so IronBee can't attach without it.
+</Note>
 
 **Backend** — HTTP, gRPC, GraphQL, WebSocket, DB, and logs:
 
@@ -95,14 +163,13 @@ The browser cycle covers most frontend work out of the box. The Node, backend, A
 
 <img src="/images/cli/platform-selection_terminal.png" alt="Platform multi-select with terminal checked and the cursor on the terminal row" style={{borderRadius:'8px',width:'100%'}} />
 
----
+### Enable or disable a platform
 
-## Enable or disable a platform
-
-Each platform has an `enable` / `disable` subcommand:
+To change platforms **after** install (rather than re-running it), each has an `enable` / `disable` subcommand:
 
 ```bash
 ironbee node enable       # turn on Node.js runtime verification
+ironbee python enable     # turn on Python runtime verification (needs debugpy in the target env)
 ironbee backend enable    # turn on backend protocol verification
 ironbee android enable    # turn on Android device/emulator verification
 ironbee terminal enable   # turn on terminal (CLI / REPL / TUI) verification
@@ -127,15 +194,62 @@ By default these write to the project config (`<project>/.ironbee/config.json`).
 
 ## Project checks run first (lint, tests, types)
 
-Before any devtools verification runs, IronBee can run your own **deterministic project checks** — linters, type-checkers, unit tests, a build — as the first step of every verification cycle. Configure them with the `verification.checks` key (a JSON array):
+Before any devtools verification runs, IronBee can run your own **deterministic project checks** — linters, type-checkers, unit tests, a build — as the **first step** of every verification cycle. In **enforce mode**, a `required` check that fails (or never ran) **blocks completion**, so the agent has to fix it and re-run before it can finish.
+
+There are two ways to set them up — **let IronBee suggest them** (at install, or on demand) or **write them by hand**. Both land in the same `verification.checks` config key.
+
+### Let IronBee suggest your checks
+
+<Info>Beta — the suggested commands are a starting point to review, not a finished config.</Info>
+
+IronBee can analyze your project with your AI client and propose concrete checks, then let you approve a subset before it writes them. Like the mode and platform steps, this is offered **at install first** — the last step of [`ironbee install`](/cli/guides/managing-projects#choosing-your-project-checks), behind a yes/no gate (default No), after the mode and platform pickers.
+
+Accept the gate and IronBee analyzes the project with the client's model (Esc cancels):
+
+<img src="/images/cli/verification-checks_analyze.png" alt="Beta yes/no gate accepted, with 'Analysing project with claude… (Esc to cancel)' shown while IronBee inspects the project for check commands" style={{borderRadius:'8px',width:'100%'}} />
+
+then hands you a per-check approval list, each check tagged **required** or **advisory** (from its `kind` — typecheck and test default to required):
+
+<img src="/images/cli/verification-checks_suggest.png" alt="Per-check approval multi-select showing 'lint — npm run lint · advisory' and 'test — npm test · required' with checkboxes" style={{borderRadius:'8px',width:'100%'}} />
+
+Optionally, IronBee then **validates** your picks by running each once (a `[y/N]` prompt at install, or the `--validate` flag on the command) — it shows pass/fail and re-presents the list so you can drop any that broke before it writes:
+
+<img src="/images/cli/verification-checks-validate.png" alt="Validate step showing [PASS] lint and [PASS] test, then a confirm-to-save multi-select with each check marked PASS" style={{borderRadius:'8px',width:'100%'}} />
+
+The model reads your `package.json` scripts, `Makefile`, `justfile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, Gradle, turbo/nx, and the like, and returns the concrete command for each kind — **preferring your project's own existing scripts/targets** and never modifying any file. This is **"discovery LLM, deterministic runtime"** — the model runs only at install (or the command below), never during a verification cycle; the gate always just re-runs the committed commands.
+
+**The same flow, standalone.** Run it anytime afterward — to add checks to a project you already set up, or re-suggest after big changes — with `ironbee checks suggest`:
+
+```bash
+ironbee checks suggest                 # analyze the project and propose verification.checks
+ironbee checks suggest --validate      # run each proposal once and drop the ones that fail before writing
+ironbee checks suggest --yes           # accept the full suggested set (for scripts/CI)
+```
+
+| Flag | Description |
+|------|-------------|
+| `--client <name>` | Which client's model to analyze with. Claude Code, Codex, and Cursor all work; defaults to the highest-priority detected one (`claude > codex > cursor`). |
+| `--validate` | Run each suggested check once and drop the ones that fail before writing. |
+| `-y`, `--yes` | Accept the full suggested set without the approval prompt. |
+| `-g`, `--global` / `--local` | Which config layer to write to (default is the committed project config). |
+
+Re-running is **additive and non-destructive** — a fresh suggestion is *unioned* with your existing checks (your hand-tuned entries win on a name clash), so you can re-suggest anytime (or re-run install) without losing customizations.
+
+<Note>
+  Resolving the suggestion runs a one-shot headless prompt through your client — **Claude Code**, **Codex**, or **Cursor** (`cursor-agent`) — so the client must be installed and signed in. With more than one available it uses the highest priority (`claude > codex > cursor`). If none can run headless, write `verification.checks` by hand instead.
+</Note>
+
+### Write the checks by hand
+
+Or set `verification.checks` directly — a JSON array where each entry is one command:
 
 ```json
 {
   "verification": {
     "checks": [
-      { "name": "lint",      "command": "npm", "args": ["run", "lint"] },
-      { "name": "typecheck", "command": "npm", "args": ["run", "typecheck"] },
-      { "name": "test",      "command": "npm", "args": ["test"], "timeoutMs": 120000, "required": true }
+      { "name": "lint",      "command": "npm", "args": ["run", "lint"], "kind": "lint" },
+      { "name": "typecheck", "command": "npm", "args": ["run", "typecheck"], "kind": "typecheck", "required": true },
+      { "name": "test",      "command": "npm", "args": ["test"], "timeoutMs": 120000, "kind": "test", "required": true }
     ]
   }
 }
@@ -152,6 +266,9 @@ Each entry takes:
 | `cwd` | no | Working directory (defaults to the project dir). |
 | `timeoutMs` | no | Per-check timeout in milliseconds. |
 | `required` | no | Whether a failure blocks completion (see below). |
+| `kind` | no | Advisory label — `typecheck` / `lint` / `test` / `build` / `format` / `other`. Cosmetic to the gate; it drives the [suggester's](#let-ironbee-suggest-your-checks) required-by-default choice (`typecheck` and `test` default to required). |
+
+### How a check gates completion
 
 The verifier runs the checks via `ironbee hook run-checks` at the **start** of the cycle, and IronBee trusts the **recorded exit codes**, not the agent's word for it. In **enforce mode**, a `required` check that exits non-zero or times out **blocks completion** — the agent has to fix it and re-run — and a `required` check that *never ran* blocks too, so the agent can't quietly skip it. Non-required checks are recorded but don't gate. A failed check counts toward [`maxRetries`](/cli/configuration/configuration#core-options) like any other block.
 
@@ -227,26 +344,7 @@ Some edits match a cycle's file patterns but have **no runtime surface** to exer
 
 N/A verdicts are **recorded and observable** — they show up in the session's verdict like any pass or fail, with the exempted cycles and reasons attached, so you can see *why* a change wasn't exercised. To guard against abuse, the gate **refuses an N/A after a previous fail** on the same change (an agent can't downgrade a real failure to "not applicable" to escape the gate).
 
-### Strict mode
-
-If you'd rather **never** accept an N/A and always demand real tool evidence for every active cycle, turn on **strict mode**:
-
-```bash
-ironbee verification strict enable    # reject all N/A verdicts — every active cycle needs real evidence
-ironbee verification strict disable    # back to the default — N/A verdicts accepted (and recorded)
-```
-
-When you pick **enforce** at install time, install also asks how strict to be, so you can set this upfront.
-
-**Non-strict** *(default)* lets the agent skip changes with nothing to exercise — refactors, type-only edits, docs:
-
-<img src="/images/cli/verification-mode-selection_auto-verify_non-strict.png" alt="Picker titled 'How strict should verification be?' with the cursor on non-strict" style={{borderRadius:'8px',width:'100%'}} />
-
-**Strict** always makes the agent actually exercise the change — no cycle can be skipped:
-
-<img src="/images/cli/verification-mode-selection_auto-verify_strict.png" alt="Picker titled 'How strict should verification be?' with the cursor on strict" style={{borderRadius:'8px',width:'100%'}} />
-
-With strict on, a verdict that tries to mark a cycle not-applicable is **blocked**, and the agent has to produce the cycle's required tools. Strict only matters in **enforce mode** (in assist and monitoring-only there's no gate to enforce it). It's read live by the gate, so it takes effect on the next session without re-rendering artifacts. Strict maps to the [`verification.strict`](/cli/configuration/configuration#verification) config key and accepts the usual `-g`/`--global` and `--local` target flags.
+To refuse N/A entirely — demanding real tool evidence for every active cycle — turn on **[strict mode](#strict-mode)** (the enforce follow-up choice covered under [Verification modes](#verification-modes)). It's picked at install right after enforce, or toggled later with `ironbee verification strict enable`.
 
 <Note>
   N/A is **off-limits after a fail and under strict mode** — it's an escape hatch for changes that genuinely have no runtime behavior, not a way around a real verification.
