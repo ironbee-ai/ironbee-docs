@@ -121,7 +121,7 @@ The browser cycle covers most frontend work out of the box. The Node, Python, ba
 
 You pick which platforms to verify **while you [install](/cli/guides/managing-projects#choosing-which-platforms-to-verify)**, from an arrow-key multi-select — **space** toggles a cycle, **`a`** toggles all, **Enter** confirms. (You can also flip any cycle afterward with the [`enable` / `disable` commands](#enable-or-disable-a-platform) below.)
 
-On **Claude Code** or **Codex** the picker also offers an **`s` "suggest"** key. Press it and IronBee analyzes your project with that client's model:
+The picker also offers an **`s` "suggest"** key. Press it and IronBee analyzes your project with your client's model — Claude Code, Codex, and Cursor can all run it (when several are selected it uses the highest-priority one, `claude > codex > cursor`):
 
 <img src="/images/cli/platform-selection_analyze.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted and 'Analysing project with claude…' shown while IronBee inspects the project" style={{borderRadius:'8px',width:'100%'}} />
 
@@ -130,7 +130,7 @@ On **Claude Code** or **Codex** the picker also offers an **`s` "suggest"** key.
 <img src="/images/cli/platform-selection_suggest.png" alt="Platform multi-select after suggestion with browser, node, and backend checked as the recommended set" style={{borderRadius:'8px',width:'100%'}} />
 
 <Note>
-  Suggestion is opt-in — nothing runs until you press `s` — and needs a headless-capable client (Claude Code or Codex); a Cursor-only install doesn't show the key. If the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
+  Suggestion is opt-in — nothing runs until you press `s`. It runs a one-shot headless prompt through your client (`claude -p`, `codex exec`, or `cursor-agent -p`), so the client must be signed in. If the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
 </Note>
 
 Here's each platform, and what its row looks like in that picker.
@@ -228,7 +228,7 @@ ironbee checks suggest --yes           # accept the full suggested set (for scri
 
 | Flag | Description |
 |------|-------------|
-| `--client <name>` | Which client's model to analyze with (defaults to a detected Claude / Codex). Cursor has no headless mode, so it can't be used here. |
+| `--client <name>` | Which client's model to analyze with. Claude Code, Codex, and Cursor all work; defaults to the highest-priority detected one (`claude > codex > cursor`). |
 | `--validate` | Run each suggested check once and drop the ones that fail before writing. |
 | `-y`, `--yes` | Accept the full suggested set without the approval prompt. |
 | `-g`, `--global` / `--local` | Which config layer to write to (default is the committed project config). |
@@ -236,7 +236,7 @@ ironbee checks suggest --yes           # accept the full suggested set (for scri
 Re-running is **additive and non-destructive** — a fresh suggestion is *unioned* with your existing checks (your hand-tuned entries win on a name clash), so you can re-suggest anytime (or re-run install) without losing customizations.
 
 <Note>
-  Resolving the suggestion needs a headless-capable client — **Claude Code** or **Codex**. On a Cursor-only project the command has no model to run, so use it from a machine that also has Claude or Codex, or write `verification.checks` by hand.
+  Resolving the suggestion runs a one-shot headless prompt through your client — **Claude Code**, **Codex**, or **Cursor** (`cursor-agent`) — so the client must be installed and signed in. With more than one available it uses the highest priority (`claude > codex > cursor`). If none can run headless, write `verification.checks` by hand instead.
 </Note>
 
 ### Write the checks by hand

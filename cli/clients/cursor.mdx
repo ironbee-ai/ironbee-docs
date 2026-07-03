@@ -61,6 +61,10 @@ Cursor's stop hook can't hard-deny completion the way Claude's can, so IronBee u
   Restart Cursor after installing, and remember the MCP activation step above; without it the agent won't have the devtools tools it needs to verify.
 </Info>
 
+<Note>
+  Cursor can also power IronBee's **LLM suggestions** — the `s` "suggest" key in the install platform picker and the [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command — by running a one-shot headless prompt via `cursor-agent`. When Claude Code or Codex is also present, IronBee prefers those (`claude > codex > cursor`).
+</Note>
+
 ---
 
 ## Session analytics

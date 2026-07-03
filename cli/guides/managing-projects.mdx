@@ -26,7 +26,11 @@ ironbee install --client codex    # Codex CLI
 ironbee install --client all      # every detected client
 ```
 
-When more than one client is detected and you don't pass `--client`, install shows an **arrow-key picker** to choose.
+When you don't pass `--client` (and IronBee can't uniquely detect one), install shows a **checkbox multi-select** so you can set up **any combination** of clients in one pass — **space** toggles a client, **`a`** selects all, **Enter** confirms. The first client is pre-checked, and confirming with nothing selected aborts.
+
+<img src="/images/cli/client-selection.png" alt="Checkbox multi-select titled 'Which client(s) to install for?' with claude checked and cursor and codex unchecked" style={{borderRadius:'8px',width:'100%'}} />
+
+(`--client all` does the same non-interactively — it installs for every detected client.)
 
 The interactive flow then asks three more questions in order — **mode**, **platforms**, then **checks** — because choosing `monitor` makes the platform picker (and the checks step) moot and skips them.
 
@@ -69,7 +73,7 @@ Which platforms should require verification?
   [ ] terminal  CLI / REPL / TUI driving over a PTY · send keys · capture output · exit codes
 ```
 
-When a selected client can run a headless prompt — **Claude Code** or **Codex**, not a Cursor-only install — the picker also offers an **`s` "suggest"** key. Press it to have IronBee analyze your project with that client's model and **replace** the current selection with a recommended set of cycles; you can still adjust it before pressing Enter. It's opt-in (nothing runs until you press `s`), and if the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
+The picker also offers an **`s` "suggest"** key. Press it to have IronBee analyze your project with a headless prompt and **replace** the current selection with a recommended set of cycles; you can still adjust it before pressing Enter. All three clients can run the analysis — Claude Code, Codex, and Cursor — and when several are selected it uses the highest-priority one (`claude > codex > cursor`). It's opt-in (nothing runs until you press `s`), and if the analysis is cancelled (Esc), times out, or fails, your current selection is kept.
 
 <img src="/images/cli/platform-selection_analyze.png" alt="Platform multi-select with the 's suggest (claude)' key highlighted in the help bar and 'Analysing project with claude…' shown while IronBee recommends which cycles to enable" style={{borderRadius:'8px',width:'100%'}} />
 
