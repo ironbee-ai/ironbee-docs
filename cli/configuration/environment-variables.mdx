@@ -28,6 +28,26 @@ ironbee import --since 30d --yes
 
 ---
 
+## Config placeholder bridges
+
+[Config placeholders](/cli/configuration/configuration#placeholders-param-env-built-ins) let a committed config carry references that resolve from the environment — the way to override a team default per developer or per CI run without editing a file:
+
+| Variable pattern | Feeds | Notes |
+|------------------|-------|-------|
+| `IRONBEE_PARAM_<NAME>` | `${param:<name>}` references | Overrides the [`params`](/cli/configuration/configuration#core-options) block for that key. `<name>` maps case-insensitively — `IRONBEE_PARAM_API_URL` fills `${param:api_url}`. |
+| `IRONBEE_ENV_<NAME>` | `${env:<name>}` references | The **only** environment source a `${env:}` reference can read. `IRONBEE_ENV_STAGING_URL` fills `${env:staging_url}`. |
+
+```bash
+# CI: override a committed ${param:api_url} for this run
+export IRONBEE_PARAM_API_URL=https://api.staging.internal
+```
+
+<Note>
+  The `IRONBEE_PARAM_*` / `IRONBEE_ENV_*` prefixes are **reserved for placeholder input** — the implied prefix means arbitrary environment variables (secrets, tokens) are structurally unreachable from config text. An empty value counts as unset (the reference falls through to its `:-` default). IronBee's own operational env vars never use these prefixes.
+</Note>
+
+---
+
 ## Project directory resolution
 
 When a hook or command needs to know which project it's acting on, IronBee resolves the directory in this order:
