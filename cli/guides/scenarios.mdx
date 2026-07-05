@@ -78,9 +78,12 @@ Once a scenario exists, point `/ironbee-verify` at it with a `scenario:` referen
 ```bash
 /ironbee-verify scenario:checkout flow              # run a saved scenario by name or description
 /ironbee-verify fix scenario:the full purchase flow # fix mode + a saved scenario
+/ironbee-verify scenario:checkout flow args:{"baseUrl":"http://localhost:8080"}  # override a param for this run
 ```
 
 The reference can be an exact name or a semantic description (the verifier picks the best match, asks if it's ambiguous, and falls back to normal discovery if nothing matches). This is the third scenario form `/ironbee-verify` accepts, alongside [inline text and file paths](/cli/guides/verification#custom-verification-scenarios).
+
+To run a [parametric scenario](#parametric-scenarios) against different values, add a trailing `args:{...}` JSON object — it overrides the scenario's captured defaults for that run only (omitted params keep their defaults; the same typed-parameter validation still applies). Without it, a saved scenario re-runs exactly as captured.
 
 ---
 

@@ -208,7 +208,7 @@ Accept the gate and IronBee analyzes the project with the client's model (Esc ca
 
 <img src="/images/cli/verification-checks_analyze.png" alt="Beta yes/no gate accepted, with 'Analysing project with claude… (Esc to cancel)' shown while IronBee inspects the project for check commands" style={{borderRadius:'8px',width:'100%'}} />
 
-then hands you a per-check approval list, each check tagged **required** or **advisory** (from its `kind` — typecheck and test default to required):
+then hands you a per-check approval list, each check tagged **required** or **advisory** (from its `kind` — typecheck and test default to required). Per row, **`r`** flips required ⇄ advisory and **`c`** flips [conclusive](#conclusive-checks-let-a-check-decide-the-cycle) (which also forces required):
 
 <img src="/images/cli/verification-checks_suggest.png" alt="Per-check approval multi-select showing 'lint — npm run lint · advisory' and 'test — npm test · required' with checkboxes" style={{borderRadius:'8px',width:'100%'}} />
 
@@ -266,6 +266,7 @@ Each entry takes:
 | `cwd` | no | Working directory (defaults to the project dir). |
 | `timeoutMs` | no | Per-check timeout in milliseconds. |
 | `required` | no | Whether a failure blocks completion (see below). |
+| `conclusive` | no | Makes the check the **arbiter** of the whole cycle — see [Conclusive checks](#conclusive-checks-let-a-check-decide-the-cycle). Implies `required`. Hand-set only (never suggested). |
 | `kind` | no | Advisory label — `typecheck` / `lint` / `test` / `build` / `format` / `other`. Cosmetic to the gate; it drives the [suggester's](#let-ironbee-suggest-your-checks) required-by-default choice (`typecheck` and `test` default to required). |
 
 ### How a check gates completion
@@ -274,6 +275,32 @@ The verifier runs the checks via `ironbee hook run-checks` at the **start** of t
 
 <Note>
   Check results stay **local** to your machine (recorded under `.ironbee/`, not sent to the Collector), and `verification.checks` is read live — editing it takes effect on the next session without re-rendering artifacts. In assist and monitoring-only mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block.
+</Note>
+
+### Conclusive checks (let a check decide the cycle)
+
+By default a check is a *gate* — it can block completion, but the agent still has to run the devtools verification (screenshots, probes, HTTP calls) to actually pass. A check marked **`conclusive: true`** is stronger: it becomes the **arbiter** of the cycle, so its exit code alone can conclude verification — no devtools step needed. Use it when a deterministic command (a full end-to-end suite, an integration test) is a trustworthy stand-in for driving the app by hand.
+
+`conclusive` implies `required`, and there are two outcomes:
+
+- **All conclusive checks pass** → `ironbee hook run-checks` **auto-submits the pass verdict** and closes the cycle. The devtools verification is **skipped** entirely — the recorded exit codes are the evidence, so this is strict-compatible (a machine result, not an agent claim). The agent just reports and stops.
+- **A conclusive check fails** → a **deferred fail**: instead of stopping at the red command, the verifier turns to the devtools tools to **diagnose** the named failure, then submits a findings-rich fail verdict. IronBee auto-prepends a `conclusive check "<name>" failed (exit N)` issue and refuses a pass or N/A for that cycle until a fresh cycle re-runs the checks green.
+
+Because it can *replace* the devtools cycle, `conclusive` is **hand-set only** — the [suggester](#let-ironbee-suggest-your-checks) never marks a check conclusive. Set it in the config by hand, or flip it in the approval pickers (at install, `ironbee checks suggest`, or the [TUI](/cli/guides/interactive-mode)) with the per-row **`c`** key (`c` toggles conclusive — and forces required; **`r`** toggles required/advisory). Give a long conclusive suite an explicit `timeoutMs` (checks default to 120s).
+
+```json
+{
+  "verification": {
+    "checks": [
+      { "name": "e2e", "command": "npm", "args": ["run", "test:e2e"],
+        "timeoutMs": 600000, "kind": "test", "conclusive": true }
+    ]
+  }
+}
+```
+
+<Note>
+  Conclusive checks only conclude the cycle in **enforce mode** (assist and monitoring-only never gate). A deferred fail counts toward [`maxRetries`](/cli/configuration/configuration#core-options) and releases at the cap with the failure reported, like any other block.
 </Note>
 
 ---
