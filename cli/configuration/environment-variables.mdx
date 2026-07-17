@@ -28,6 +28,20 @@ ironbee import --since 30d --yes
 
 ---
 
+## Issue-tracker credentials
+
+The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their secrets in your global config (`~/.ironbee/config.json`, written by `ironbee integrations <provider> setup`). In CI — or anywhere you'd rather source them from a vault — supply them via env instead. Like the collector credentials, these **take precedence over every config layer**:
+
+| Variable | Effect |
+|----------|--------|
+| `IRONBEE_JIRA_API_TOKEN` | Supplies `integrations.jira.apiToken` (Jira **Cloud** API token). Combine with a file-set `integrations.jira.baseUrl` + `email` for a complete config. |
+| `IRONBEE_JIRA_PAT` | Supplies `integrations.jira.pat` (Jira **Server/DC** personal access token). |
+| `IRONBEE_LINEAR_API_KEY` | Supplies `integrations.linear.apiKey` (Linear personal API key or OAuth token). |
+
+GitHub needs no credential variable — it rides the `gh` CLI's own auth (GitHub Actions ships a `GH_TOKEN`).
+
+---
+
 ## Config placeholder bridges
 
 [Config placeholders](/cli/configuration/configuration#placeholders-param-env-built-ins) let a committed config carry references that resolve from the environment — the way to override a team default per developer or per CI run without editing a file:
@@ -72,6 +86,7 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
 | `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the `state.vscdb` store) when reading [Cursor session analytics](/cli/clients/cursor#session-analytics). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
+| `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically — `1`/`true` = active, `0`/`false` = inactive — bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |
 | `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render — belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
 
 ---

@@ -43,7 +43,7 @@ Enabling privacy mode injects two flags into every DevTools MCP server's environ
 You still get the structural signal which tools ran, verdicts, timing, and the session lifecycle all keep flowing but the heavy, potentially-sensitive payloads stay on your machine. Disabling privacy mode removes both flags, so the DevTools resume their default reporting.
 
 <Note>
-  This is a **DevTools-side** switch. The CLI's own event pipeline already whitelists tool input and strips tool responses before sending, so privacy mode is specifically about the extra detail and artifacts the DevTools MCP servers contribute.
+  This is a **DevTools-side** switch. The CLI's own event pipeline already whitelists tool input and strips tool responses before sending — shell commands, for example, are reduced to coarse binary/subcommand labels, and a command that can't be parsed confidently is dropped rather than guessed — so privacy mode is specifically about the extra detail and artifacts the DevTools MCP servers contribute.
 </Note>
 
 ---
@@ -59,6 +59,10 @@ These three are independent knobs, privacy mode doesn't touch the other two:
 | [**Collector**](/cli/configuration/configuration#collector) (`collector.enable`) | Whether session data is sent to the Console at all | On when credentials are set |
 
 To stop sending your session data entirely, suspend the Collector (`collector.enable: false`) rather than reaching for privacy mode, privacy mode trims *what* is sent, not *whether* anything is sent.
+
+<Note>
+  [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) sends **repository and branch names** through the CLI's own pipeline, which privacy mode doesn't touch (it gates the DevTools payloads). If branch names in your repos can carry sensitive text, opt out of the linkage itself with `ironbee config set vcs.enable false`.
+</Note>
 
 ---
 

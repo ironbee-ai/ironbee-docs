@@ -26,7 +26,7 @@ ironbee install --client codex    # Codex CLI
 ironbee install --client all      # every detected client
 ```
 
-When you don't pass `--client` (and IronBee can't uniquely detect one), install shows a **checkbox multi-select** so you can set up **any combination** of clients in one pass — **space** toggles a client, **`a`** selects all, **Enter** confirms. The first client is pre-checked, and confirming with nothing selected aborts.
+When you don't pass `--client` (and IronBee can't uniquely detect one), install shows a **checkbox multi-select** so you can set up **any combination** of clients in one pass — **space** toggles a client, **`a`** selects all, **Enter** confirms. With **no** client detected, the first client is pre-checked; with **several** detected, install shows the same picker with the detected clients pre-checked so you confirm (or trim) the set rather than silently installing into all of them. Confirming with nothing selected aborts. In a non-interactive shell (`-y`, CI, piped stdin), multiple detected clients are all installed without a prompt — the historical behavior.
 
 <img src="/images/cli/client-selection.png" alt="Checkbox multi-select titled 'Which client(s) to install for?' with claude checked and cursor and codex unchecked" style={{borderRadius:'8px',width:'100%'}} />
 
