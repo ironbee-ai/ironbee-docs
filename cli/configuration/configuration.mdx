@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `collector`, `telemetry`, `statusLine`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `collector`, `telemetry`, `statusLine`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -337,6 +337,72 @@ The collector is what ships your session data to the IronBee Console. `ironbee l
 | `privacy.enable` | `boolean` | `false` | [Privacy mode](/cli/advanced/privacy) is a single cross-cutting switch (all cycles) that redacts sensitive payloads from what the devtools MCP servers ship to the collector. **Opt-in, default off.** When `true`, injects `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` (tool input/output detail) and `COLLECTOR_ARTIFACTS_ENABLE=false` (screenshots, recordings) into the devtools MCP env. Devtools-side only and orthogonal to `telemetry` and `collector`. Equivalent to `ironbee privacy enable`. |
 
 [DevTools env overrides](#devtools-mcp-overrides) are applied *after* the privacy flags, so set `ironbeeDevTools.env.COLLECTOR_ARTIFACTS_ENABLE` / `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE` back to `"true"` to let one channel through while privacy mode is on.
+
+---
+
+## Issue-tracker integrations
+
+Connect Jira, Linear, or GitHub Issues — see the [Issue Tracking guide](/cli/guides/issue-tracking) for the setup flows (`ironbee integrations <provider> setup`) and what the integration does. A provider activates by **configuration presence** (a configured credential turns it on; GitHub is on whenever the `gh` CLI is authenticated); its `enable` key is an opt-out kill-switch.
+
+<Warning>
+  **Secrets belong in the global config** (`~/.ironbee/config.json`) — `setup` writes them there for you. Installed artifacts carry only a `${file:…}` reference to the global config, so no token is ever baked into a committed file. In CI, supply them via the [credential env vars](/cli/configuration/environment-variables#issue-tracker-credentials) instead.
+</Warning>
+
+### Jira
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `integrations.jira.baseUrl` | `string` | *(unset — integration off)* | Jira base URL (e.g. `https://acme.atlassian.net`). Not a secret — can be team-shared (project config) or per-user (global, where `setup` writes it). Required for the integration to be configured. |
+| `integrations.jira.email` | `string` | *(unset)* | Jira **Cloud** identity, paired with `apiToken`. Per-user — keep it in the global config (Server/DC deployments leave it unset). |
+| `integrations.jira.apiToken` | `string` | *(unset)* | Jira **Cloud** API token — **secret**, global config only. CI: `IRONBEE_JIRA_API_TOKEN`. |
+| `integrations.jira.pat` | `string` | *(unset)* | Jira **Server/DC** personal access token — **secret**, global config only. CI: `IRONBEE_JIRA_PAT`. |
+| `integrations.jira.deployment` | `string` | *(inferred)* | `cloud` or `server`. Inferred from the credential shape; set explicitly to pin. |
+| `integrations.jira.defaultProject` | `string` | *(unset)* | Default Jira project key for creates and searches (e.g. `PROJ`). Committed. |
+| `integrations.jira.projectKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes accepted when [attributing issues](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) from branch/commit/PR text — kills `UTF-8` / `SHA-256`-style false positives. Read live. |
+| `integrations.jira.writeEnabled` | `boolean` | `false` | Whether the [write tiers](/cli/guides/issue-tracking#read-only-by-default-write-gating) (comment, attach, transition, create/link, report) are enabled. Read-only integrations still read, search, and attribute. |
+| `integrations.jira.enable` | `boolean` | `true` *(when configured)* | Opt-out kill-switch — `false` suspends the integration without deleting its config. Equivalent to `ironbee integrations jira disable`. |
+
+### Linear
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `integrations.linear.apiKey` | `string` | *(unset — integration off)* | Linear API key (`lin_api_…`) — **secret**, global config only. CI: `IRONBEE_LINEAR_API_KEY`. |
+| `integrations.linear.oauth` | `boolean` | `false` | Set `true` when `apiKey` is an **OAuth access token** rather than a personal key (changes how it's sent). |
+| `integrations.linear.defaultTeam` | `string` | *(unset)* | Default Linear team key for creates and searches (e.g. `ENG`). Committed. |
+| `integrations.linear.teamKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes for attribution — same role as Jira's `projectKeys` (also disambiguates the two when both are configured). Read live. |
+| `integrations.linear.workspace` | `string` | *(unset)* | Workspace URL slug (the `acme` in `linear.app/acme`), used to build issue browse links in the attribution data. Unset → no browse URL (graceful). |
+| `integrations.linear.baseUrl` | `string` | Linear's cloud GraphQL endpoint | Rare override for a proxy endpoint. |
+| `integrations.linear.writeEnabled` | `boolean` | `false` | Same write gating as Jira. |
+| `integrations.linear.enable` | `boolean` | `true` *(when configured)* | Opt-out kill-switch. Equivalent to `ironbee integrations linear disable`. |
+
+### GitHub Issues
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `integrations.github.enable` | `boolean` | `true` *(when `gh` is authenticated)* | Opt-out kill-switch. GitHub is driven through the `gh` CLI and auto-activates when `gh` is installed and authenticated — no credential is stored. `false` suspends it regardless. |
+| `integrations.github.writeEnabled` | `boolean` | `false` | Whether the write operations (`gh issue comment` / `close` / `edit`, the verification report) are allowed. Self-enforced by the agent (`gh` is always shell-reachable), unlike Jira/Linear's mechanical gate. Read live. |
+
+---
+
+## VCS linkage
+
+Links each session to the pull request it produced and the issues that PR closes — the join key behind the Console's per-issue cost and verification views. A **sub-feature of analytics**: the effective switch is `analytics.enable` *and* `vcs.enable`, and it runs in every mode (enforce / assist / monitoring-only). See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `vcs.enable` | `boolean` | implicit `true` when a collector is configured | Master switch for the linkage — the git-ref stamp, PR resolution, issue attribution, and the `vcs_link` events. **Note:** it sends repository and *branch names* to the Collector; branch names can carry sensitive text. Independent of [privacy mode](/cli/advanced/privacy). Read live. |
+| `vcs.issueTtlSeconds` | `number` | `600` | Cache TTL for successful / not-found resolutions. Short — a PR can be opened or an issue transitioned at any moment. |
+| `vcs.resolveTtlSeconds` | `number` | `3600` | Cache TTL for resolutions that can't improve on retry (no token, no remote, rejected credentials). |
+| `vcs.stampDirty` | `boolean` | `false` | Probe the working tree for uncommitted changes during the git-ref stamp. Off by default — it's the most expensive part of the stamp and scales with repo size. |
+| `vcs.timeoutMs` | `number` | `5000` | Per-request timeout for PR / issue resolution (always in a detached background worker, never a blocking hook). Clamped to `[1000, 60000]`. |
+
+---
+
+## Web console
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `console.url` | `string` | `https://console.ironbee.ai` | Console base URL, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). `ironbee login` persists whichever console you authenticated against, so self-hosted consoles link correctly. Read live. |
 
 ---
 

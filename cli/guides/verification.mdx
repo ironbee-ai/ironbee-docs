@@ -29,7 +29,7 @@ The machinery is installed the [`/ironbee-verify`](#verify-only-vs-fix-mode) com
 
 <img src="/images/cli/verification-mode-selection_assist.png" alt="Verification-mode picker with the cursor on assist, described as tools installed but not enforced" style={{borderRadius:'8px',width:'100%'}} />
 
-Assist keeps verification *available* but never *required* — the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion. To switch to it later:
+Assist keeps verification *available* but never *required* — the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion. Assist is also **manual-trigger-only**: the installed commands are marked user-only (the model can't auto-invoke them, and their descriptions don't cost context tokens) and the verifier/scenario sub-agents carry a non-proactive stance, so nothing fires unless you ask — see [Claude Code → Assist mode: commands are user-only](/cli/clients/claude-code#assist-mode-commands-are-user-only). To switch to it later:
 
 ```bash
 ironbee verification auto disable   # assist (default) — manual /ironbee-verify only, nothing enforced

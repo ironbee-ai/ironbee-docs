@@ -1,0 +1,153 @@
+---
+title: Issue Tracking
+description: Connect Jira, Linear, or GitHub Issues — verify against tickets, report results back, and attribute session cost to the issues it closed.
+---
+
+IronBee can connect your project to an **issue tracker** — [Jira](#set-up-jira), [Linear](#set-up-linear), or [GitHub Issues](#github-issues) — and use it in two directions:
+
+- **In the agent session:** the `/ironbee-issue-track` command reads a ticket, verifies your changes against its acceptance criteria, and reports the result back to the tracker — with the verification's screenshots and a deep-link to the session timeline in the Console.
+- **In your analytics:** [VCS linkage](#vcs-linkage-sessions-to-prs-and-issues) ties each session to the pull request it produced and the issues that PR closes, so the Console can answer *"what did closing PROJ-123 cost?"* instead of showing an opaque session ID.
+
+Several trackers can be connected at once — one integration surface carries all of them.
+
+<Note>
+  The issue-tracker integration is a **cross-cutting integration** (like telemetry or privacy mode), not a verification cycle: its tools never gate completion and don't count as verification evidence.
+</Note>
+
+---
+
+## Set up Jira
+
+```bash
+ironbee integrations jira setup
+```
+
+The interactive flow walks you through everything and **validates the credential live before saving** (a wrong token aborts without writing anything):
+
+1. **Base URL** — e.g. `https://acme.atlassian.net`. The deployment flavor (Cloud vs Server/Data Center) is auto-detected.
+2. **Credential** — masked entry, with the token-creation URL shown: your **email + API token** for Cloud, or a **personal access token (PAT)** for Server/DC.
+3. **Auth check** — a live `GET /myself` confirms the credential works.
+4. **Write access** — whether IronBee may write to Jira (comments, transitions, the verification report). Default is **read-only**.
+5. **Project keys** *(optional)* — an allow-list of issue-key prefixes (e.g. `PROJ`) used when [attributing issues](#vcs-linkage-sessions-to-prs-and-issues) from branch names and commit messages, so `UTF-8` or `SHA-256` never get mistaken for ticket keys.
+6. **Scope** — enable for this project only, or for all your projects (`-g`).
+
+Credentials are written to your **per-user global config** (`~/.ironbee/config.json`) — a Jira token identifies *you*, so it's never committed. Installed artifacts carry only a `${file:…}` reference that resolves at runtime; no secret is ever baked into a committed file. In CI, supply the credential via the [`IRONBEE_JIRA_API_TOKEN` / `IRONBEE_JIRA_PAT`](/cli/configuration/environment-variables#issue-tracker-credentials) env vars instead.
+
+<Note>
+  In a non-interactive shell, `setup` prints the equivalent `ironbee config set` commands so you can script it.
+</Note>
+
+---
+
+## Set up Linear
+
+```bash
+ironbee integrations linear setup
+```
+
+Linear is cloud-only, so there's no base-URL step: paste your **Personal API key** (`lin_api_…`, masked entry, settings URL shown), IronBee runs a live GraphQL auth check, then asks about write access, an optional **team keys** allow-list (e.g. `ENG`), and the enable scope. As with Jira, the key lands in the global config and CI can supply it via [`IRONBEE_LINEAR_API_KEY`](/cli/configuration/environment-variables#issue-tracker-credentials).
+
+<Note>
+  Using an **OAuth access token** instead of a personal key? Set it with `ironbee config set integrations.linear.apiKey <token> -g` plus `integrations.linear.oauth: true` (it changes how the token is sent).
+</Note>
+
+---
+
+## GitHub Issues
+
+GitHub needs **no setup and no stored credential** — it's driven through the [`gh` CLI](https://cli.github.com), which owns its own auth. The integration is **automatically active** whenever `gh` is installed *and* authenticated (`gh auth status`). Run `ironbee integrations github setup` only to check the connection, grant write access, or opt out:
+
+```bash
+gh auth login                            # if gh isn't authenticated yet
+ironbee integrations github setup        # optional — probe + writeEnabled + scope
+```
+
+Two GitHub-specific details:
+
+- **Reports are comments.** GitHub's issue API has no file-attach endpoint, so the verification report is posted as an issue comment referencing the artifact paths plus the Console timeline link (rather than attaching the screenshots as files, like Jira/Linear do).
+- **Codex sandbox:** on Codex, `gh` runs inside the tool sandbox, which blocks outbound network by default — so `gh issue view` can't reach `api.github.com` unless you enable sandbox network access (`[sandbox_workspace_write] network_access = true` in your Codex config). IronBee doesn't flip that switch for you (it's a session-wide network grant); install prints a pointer to the exact knob. Jira and Linear are unaffected.
+
+---
+
+## Suspend or re-enable a tracker
+
+The integration activates by **configuration presence** — a configured Jira/Linear credential (or an authenticated `gh`) turns it on. To suspend one without deleting its config:
+
+```bash
+ironbee integrations jira disable    # suspend (config kept; artifacts stripped)
+ironbee integrations jira enable     # drop the kill-switch
+```
+
+Same for `linear` and `github`. Both re-render the installed client artifacts and accept the usual `-g` / `--local` / `--client` target flags. `ironbee integrations --help` lists every available provider.
+
+---
+
+## Using it: /ironbee-issue-track
+
+Once a tracker is connected (and verification is in enforce or assist mode), install renders the issue-tracking surface into your client: the `/ironbee-issue-track` command in Claude Code, `$ironbee-issue-track` in Codex, and the matching skill in Cursor. On Claude Code and Codex it delegates to a dedicated **`ironbee-issue-tracker` sub-agent** (like the verifier — the tracker tools stay out of the main conversation); on Cursor the main agent drives the tools.
+
+One command, four modes:
+
+```bash
+/ironbee-issue-track PROJ-123             # full loop — read the ticket, verify the changes
+                                          # against its acceptance criteria, report back
+/ironbee-issue-track read:PROJ-123        # intake only — read and digest the ticket
+/ironbee-issue-track report:PROJ-123      # report the LAST verification to the ticket
+                                          # (never re-verifies; errors if none ran)
+/ironbee-issue-track triage my open bugs  # ad-hoc — any free-form tracker instruction
+```
+
+`<ref>` can be an exact issue key or free text — the integration searches the tracker, proceeding on a single match and asking you to choose when there are several. With more than one tracker connected, pick one with an optional leading provider word: `/ironbee-issue-track linear ENG-42`.
+
+**The report is evidence-backed.** After a verification, the integration recovers that cycle's capture artifacts (screenshots, snapshots) from the session log and attaches them to the ticket, together with a `🔗 View in IronBee` deep-link to the exact session timeline in the Console. Reviewers jump from the ticket straight to the run.
+
+<Note>
+  The command is installed in enforce and assist modes (in assist it's [user-invocable only](/cli/clients/claude-code#assist-mode-commands-are-user-only), never auto-invoked by the model). It's never proactive — issue-tracker operations run only when you ask.
+</Note>
+
+---
+
+## Read-only by default: write gating
+
+A freshly connected tracker is **read-only**: the agent can read and search issues, and issue attribution works, but nothing writes back. Writes — commenting, attaching evidence, transitioning/closing, creating or linking issues, and the verification report — are gated behind `writeEnabled`, which `setup` asks about and you can flip anytime:
+
+```bash
+ironbee config set integrations.jira.writeEnabled true
+```
+
+For Jira and Linear the gate is mechanical (the write tools aren't even exposed to the agent until it's on). For GitHub it's self-enforced — the agent checks the flag before writing, since `gh` is always reachable through the shell.
+
+---
+
+## VCS linkage: sessions to PRs and issues
+
+Independent of the agent-facing command, IronBee links every session to your version control — this is what turns raw session cost into per-issue numbers in the Console:
+
+1. Each agent turn is stamped with its **git ref** (repo, branch, commit).
+2. A background worker resolves the **pull request(s)** the commit belongs to (via GitHub), retroactively — a PR opened an hour after the work is picked up on a later pass.
+3. The turn's **issues** are attributed from every available signal: the GitHub issues the PR closes, the tickets the agent read during the session, plus issue keys mined from the branch name, commit messages, and the PR title — validated against the tracker (a key that doesn't resolve is dropped).
+
+The result ships as `vcs_link` events and a per-session rollup, so the Console can show cost and verification outcomes **per issue and per PR**. Attribution runs in every mode — enforce, assist, even monitoring-only — as a sub-feature of analytics (it follows `analytics.enable`, plus its own [`vcs.enable`](/cli/configuration/configuration#vcs-linkage) opt-out). The `projectKeys` / `teamKeys` allow-lists from setup keep false positives out (and disambiguate Jira from Linear, since both use the `ABC-123` shape).
+
+<Warning>
+  VCS linkage sends **repository and branch names** to the Collector, and branch names can carry sensitive text (`fix/CVE-…`, `feat/acme-corp-…`). It's independent of [privacy mode](/cli/advanced/privacy) (which gates devtools payloads) — opt out of the linkage itself with `ironbee config set vcs.enable false`.
+</Warning>
+
+---
+
+## Config reference
+
+Everything above maps to config keys — the [`integrations.*`](/cli/configuration/configuration#issue-tracker-integrations) section (credentials, write gating, allow-lists, kill-switches) and the [`vcs.*`](/cli/configuration/configuration#vcs-linkage) section (linkage toggle, cache TTLs, timeouts).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#issue-tracker-integrations">
+    The `integrations.*` and `vcs.*` keys in full.
+  </Card>
+  <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
+    The verification cycles the full issue-track loop runs against a ticket.
+  </Card>
+</CardGroup>
