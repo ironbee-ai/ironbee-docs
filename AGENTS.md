@@ -70,6 +70,9 @@ Console
 
 GitHub Action
   Get Started · Concepts · Guides · Configuration · Advanced
+
+Integrations
+  Vercel · GitHub App
 ```
 
 ## Style preferences
@@ -79,8 +82,9 @@ GitHub Action
 - Bold for UI elements: Click **Save**, open **Settings**
 - Code formatting for commands, file paths, env vars, config keys: `ironbee install`, `.ironbee/config.json`, `IRONBEE_API_KEY`
 - Backtick-wrap any token that starts with `<` or `>` to avoid MDX parse errors: `` `<1s` ``, `` `>15m` ``
+- Use a short hyphen (`-`), never an em dash (`—`)
 - No emojis
-- No trailing summaries — end sections cleanly
+- No trailing summaries - end sections cleanly
 
 ## Content boundaries
 

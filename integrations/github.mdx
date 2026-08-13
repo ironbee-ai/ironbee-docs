@@ -1,0 +1,97 @@
+---
+title: GitHub App
+description: Install the IronBee GitHub App so verification runs can read your code, resolve the pull request behind a commit, and report back on it.
+icon: "/images/icons/github.svg"
+---
+
+The IronBee GitHub App is what connects a verification run to the code it is verifying. It lets the cloud agent check out your repository during a run, resolve the pull request behind a deployed commit so there is a real changeset to work from, and report the verdict back on the commit and the pull request.
+
+It pairs with the [Vercel integration](/integrations/vercel), and it is also what binds an [`ironbee verify`](/cli/guides/verification-jobs) run to your repository.
+
+---
+
+## Install the App
+
+Open the Console at **Settings → Integrations** and select **Install the GitHub App** under the GitHub card, or install it directly from [github.com/apps/ironbee-ai](https://github.com/apps/ironbee-ai).
+
+1. On GitHub, choose the **organization or user account** to install into.
+2. Choose the repositories: **all repositories**, or a selected set. Only repositories in that scope are ever read.
+3. GitHub sends you back to IronBee, where you pick the **IronBee account** the installation belongs to, and select **Connect**.
+
+<Note>
+  Binding an installation to an account requires the **owner** or **admin** role on it. If you install into an organization you don't administer on GitHub, an org admin has to approve the request before the installation exists.
+</Note>
+
+---
+
+## What the App uses its access for
+
+| Access | Why |
+|--------|-----|
+| Repository contents (read) | The agent checks out the commit under verification during a run. |
+| Pull requests (read and write) | Resolving the pull request behind a commit for the changeset, and posting the result as a comment. |
+| Checks (read and write) | Opening the live **IronBee Verification** check on the commit and completing it with the verdict. |
+
+Access is read-only where it can be: IronBee never pushes to your repository, and never opens or merges a pull request.
+
+---
+
+## What appears on the pull request
+
+**The check.** When a run is queued, IronBee opens a check run named **IronBee Verification** on the deployed commit, so the pull request shows a live in-progress state while the agent works. When the run finishes, that same check is completed with the verdict:
+
+| IronBee verdict | Check conclusion | Check title |
+|-----------------|------------------|-------------|
+| `pass` | Success | Verification passed |
+| `fail` | Failure | Verification failed |
+| `not_applicable` | Neutral | Verification not applicable |
+| Verification could not run | Neutral | IronBee could not run this verification |
+| Cancelled | Cancelled | Verification canceled |
+
+The check's **Details** link opens the session in the Console, where the timeline, the replay, the network payloads, and the files behind each finding live.
+
+**The comment.** On top of the check, and only for a real verdict, IronBee posts a single comment on the open pull request for that commit - what was verified, what was found, and which files the findings came from. It is one comment, edited in place on every re-run, rather than a new comment per run. A cancelled run or an internal error gets the quiet neutral check and no comment.
+
+---
+
+## Managing the installation
+
+**Settings → Integrations** lists every connected GitHub installation with its organization, the repositories it covers, its status (**Active** or **Suspended**), and the date it was connected. The external-link icon opens the installation's settings on GitHub.
+
+Changes on GitHub's side flow back automatically:
+
+- Adding or removing repositories refreshes the covered repository list.
+- Suspending the installation on GitHub shows it as **Suspended**; unsuspending restores it.
+- Uninstalling the App marks the installation as uninstalled in IronBee, and runs stop being reported to GitHub.
+
+If you change the repository selection from GitHub's own settings page, IronBee refreshes the list and confirms it with a **GitHub installation updated** notice when you return to the Console.
+
+---
+
+## Beyond deployments
+
+The same installation is what lets [`ironbee verify`](/cli/guides/verification-jobs) bind a run to your repository and commit, so a verdict lands next to the right code. If a `verify` run fails with a repository-checkout error or the `NO_GITHUB_INSTALLATION` error code, the App is either not installed for that repository or the repository is outside its scope - grant it access, or re-run with `--no-repo`.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|--------------|
+| The run happens, but nothing appears on the pull request | The App isn't installed for that repository, or the repository is outside the installation's scope. |
+| The check appears, but there is no comment | Comments are posted only for a real verdict, and only when an open pull request heads the commit. A push straight to a branch gets the check alone. |
+| The verification works from a thin changeset | No pull request heads the commit, so the run falls back to the commit's own parent. |
+| `NO_GITHUB_INSTALLATION` from `ironbee verify` | No active installation covers the repository the run tried to bind to. |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
+    Verify every preview deployment as a Vercel deployment check.
+  </Card>
+  <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
+    Start the same cloud verification from your shell or CI with `ironbee verify`.
+  </Card>
+</CardGroup>

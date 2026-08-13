@@ -129,6 +129,14 @@
             ]
           },
           {
+            "group": "Integrations",
+            "icon": "plug",
+            "pages": [
+              "integrations/vercel",
+              "integrations/github"
+            ]
+          },
+          {
             "group": "Help",
             "icon": "life-buoy",
             "pages": [
