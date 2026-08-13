@@ -21,7 +21,7 @@ Settings are read from three files and **deep-merged**. Higher layers override l
 
 Precedence is **local > project > global**. A key set in the local layer wins over the same key in the project layer, which wins over global.
 
-Secrets can also come from the environment: setting `IRONBEE_API_KEY` supplies the collector API key without committing it to any file.
+Secrets can also come from the environment: setting `IRONBEE_SERVICE_API_KEY` (or the legacy `IRONBEE_API_KEY`) supplies the account API key without committing it to any file.
 
 ---
 
@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `collector`, `telemetry`, `statusLine`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `service`, `collector`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `telemetry`, `privacy`, `statusLine`, `otel`, `codex`, `runtime`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -130,6 +130,7 @@ Placeholders resolve for **runtime consumers** (checks, context injection, the c
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
 | `verification.auto` | `boolean` | `false` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). Default `false` = [assist mode](/cli/guides/verification#assist-mode-default), the safer default: the `/ironbee-verify` command, the devtools MCP server, and permissions stay installed for manual verification, but nothing is enforced and no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Set `true` for full [enforce mode](/cli/guides/verification#enforce-mode) (blocking Stop gate + skill/rule installed). Equivalent to [`ironbee verification auto enable`/`disable`](/cli/guides/verification#enforce-mode). |
 | `verification.model` | `string` \| `object` | *(unset — inherit the session model)* | Model the [delegated verifier sub-agent](/cli/guides/verification#picking-the-verifier-model) runs on (Claude Code and Codex). Unset means the verifier inherits the main conversation's model. Set a **string** (e.g. `"sonnet"`, `"gpt-5.5"`) to apply to every client, or a **per-client object** `{ "claude": "sonnet", "codex": "gpt-5.5" }` when a project uses both. Cursor has no verifier sub-agent, so it's a no-op there. Equivalent to [`ironbee verification model <value>`](/cli/guides/verification#picking-the-verifier-model). |
+| `verification.fix` | `boolean` | `true` | [Fix enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it). Default `true`: in enforce mode a **fail** verdict blocks completion until the agent fixes the issues and re-verifies (counts toward `maxRetries`). Set `false` for **report-only**: the agent still must verify and submit a verdict, but a fail is reported (and recorded) rather than looped on — the turn may end with the issues stated plainly. Only meaningful in enforce mode; read live by the gate. A manual `/ironbee-verify fix` run escalates that one run to fix-until-pass regardless. Equivalent to `ironbee verification fix <enable\|disable>`. |
 | `verification.strict` | `boolean` | `false` | [Strict mode](/cli/guides/verification#strict-mode). When `true`, the verify gate **rejects all [N/A verdicts](/cli/guides/verification#when-a-change-has-nothing-to-verify-na-verdicts)** — the agent must produce real tool evidence for every active cycle. Default `false` accepts N/A (recorded and observable). Only meaningful in enforce mode (no gate runs in assist/monitoring). Read live by the gate. Equivalent to [`ironbee verification strict <enable\|disable>`](/cli/guides/verification#strict-mode). |
 | `verification.checks` | `array` | `[]` | [Project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) — deterministic commands (lint, tests, typecheck, build, format) run as the **first step** of every verification cycle, before any devtools verification. Each entry is `{ "name", "command", "args"?, "env"?, "cwd"?, "timeoutMs"?, "required"?, "kind"?, "conclusive"? }` (`kind` is an advisory `typecheck`/`lint`/`test`/`build`/`format`/`other` label). The verifier runs them via `ironbee hook run-checks`; in enforce mode a `required` check that fails (or never ran) **blocks the gate** so the agent fixes and re-runs (it counts toward `maxRetries`). `conclusive: true` (implies `required`; hand-set only, never suggested) makes a check the **arbiter** of the cycle — all conclusive checks passing auto-submits the pass verdict and **skips** devtools verification; a conclusive check failing defers to a devtools **diagnosis** before a findings-rich fail. See [Conclusive checks](/cli/guides/verification#conclusive-checks-let-a-check-decide-the-cycle). Trust is the recorded exit code, never the agent's claim. Can be [LLM-suggested](/cli/guides/verification#let-ironbee-suggest-your-checks) at install or via `ironbee checks suggest`. Read live (not artifact-affecting); results stay local (not shipped to the Collector). |
 
@@ -307,16 +308,33 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 
 ---
 
-## Collector
+## Service identity
 
-The collector is what ships your session data to the IronBee Console. `ironbee login` fills `url` and `oauthToken` for you; you'd only set these by hand to self-host or to run in CI with an API key. See [Authentication](/cli/guides/authentication) for the difference between the two credentials.
+The `service` section is the CLI's **shared identity**: one credential and one stage selector that every IronBee service — the event-ingest collector, the read-side API (used by [`ironbee verify`](/cli/guides/verification-jobs) and the o11y trace tools), and the Console links — resolves from. [`ironbee login`](/cli/guides/authentication) writes it for you; you'd only set it by hand to self-host or to run in CI. See [Authentication](/cli/guides/authentication) for the difference between the two credentials.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `collector.url` | `string` | *(unset)* | Collector endpoint. Required for the collector to be active. |
-| `collector.oauthToken` | `string` | *(unset)* | Personal OAuth access token written by `ironbee login`. The CLI's default credential. Can come from `IRONBEE_OAUTH_TOKEN` instead. |
-| `collector.apiKey` | `string` | *(unset)* | Account API key for collector auth, used for CI and machine-to-machine. Can come from `IRONBEE_API_KEY` instead. When both this and `oauthToken` are set, the OAuth token is used. |
-| `collector.enable` | `boolean` | implicit `true` when `url` + a credential are set | Set `false` to suspend sending while keeping credentials around. |
+| `service.domain` | `string` | `ironbee.ai` | The single **stage selector**. Every service URL derives from it when not set explicitly: the collector at `collector.service.<domain>`, the API at `api.service.<domain>`, the Console at `console.<domain>`. `ironbee login` persists the domain you authenticated against when the hosts are standard-shaped (a non-standard, self-hosted deployment keeps explicit URLs instead). Env: `IRONBEE_SERVICE_DOMAIN`. |
+| `service.oauthToken` | `string` | *(unset)* | Personal OAuth access token written by `ironbee login`. The CLI's default credential, shared by the collector and the API. Env: `IRONBEE_SERVICE_OAUTH_TOKEN`. |
+| `service.apiKey` | `string` | *(unset)* | Account API key, used for CI and machine-to-machine. When both credentials are set, the OAuth token is used. Env: `IRONBEE_SERVICE_API_KEY`. |
+| `api.url` | `string` | derived: `https://api.service.<domain>` | Explicit override for the read-side API base URL ([`ironbee verify`](/cli/guides/verification-jobs), trace lookups). Rarely set — `service.domain` covers the normal cases. |
+
+<Note>
+  Older configs kept the credential under `collector.oauthToken` / `collector.apiKey`. Those keys (and their `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` env vars) still work as **read fallbacks**, so nothing breaks — but new logins write `service.*`, and the `service.*` keys win when both are present.
+</Note>
+
+---
+
+## Collector
+
+The collector is what ships your session data to the IronBee Console. Its endpoint and credential come from the [`service` section](#service-identity) above; the keys here tune delivery (and carry the legacy credential fallbacks).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `collector.url` | `string` | derived: `https://collector.service.<domain>` | Explicit endpoint override. Normally unset — it derives from `service.domain`. |
+| `collector.oauthToken` | `string` | *(unset)* | **Deprecated read fallback** for `service.oauthToken` (configs written before the `service` section). Can come from `IRONBEE_OAUTH_TOKEN` instead. |
+| `collector.apiKey` | `string` | *(unset)* | **Deprecated read fallback** for `service.apiKey`. Can come from `IRONBEE_API_KEY` instead. |
+| `collector.enable` | `boolean` | implicit `true` when a credential is set | Set `false` to suspend sending while keeping credentials around. The collector activates on the **presence of a credential** (`service.*` preferred, `collector.*` fallback) — the URL always resolves via `service.domain`. |
 | `collector.batchSize` | `number` | `100` | Max events per POST. |
 | `collector.timeoutMs` | `number` | `10000` | Per-request timeout (ms), clamped to `[1000, 60000]`. |
 
@@ -402,7 +420,7 @@ Links each session to the pull request it produced and the issues that PR closes
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `console.url` | `string` | `https://console.ironbee.ai` | Console base URL, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). `ironbee login` persists whichever console you authenticated against, so self-hosted consoles link correctly. Read live. |
+| `console.url` | `string` | derived: `https://console.<domain>` | Explicit Console base URL override, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). Normally unset — it derives from [`service.domain`](#service-identity), which `ironbee login` persists, so self-hosted consoles link correctly. Read live. |
 
 ---
 

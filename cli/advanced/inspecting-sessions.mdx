@@ -19,15 +19,19 @@ For each session it prints the verdict (`pass` / `fail`), the number of checks r
 
 ---
 
-## ironbee verify
+## ironbee verdict
 
 Dry-run the verdict checks for a session **without changing anything**, a read-only version of the gate that runs when the agent stops:
 
 ```bash
-ironbee verify [session-id]
+ironbee verdict [session-id]
 ```
 
 If only one session is active, the session ID is auto-detected. Use this to understand exactly why a session would pass or fail before the agent retries. Add `-p, --project-dir <dir>` to target a project other than the current directory.
+
+<Note>
+  This command used to be `ironbee verify [session-id]`. `ironbee verify` now runs a **cloud verification job** through the IronBee API — see [Verification Jobs](/cli/guides/verification-jobs). The local dry-run lives on unchanged as `ironbee verdict`.
+</Note>
 
 ---
 

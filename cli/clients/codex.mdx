@@ -24,7 +24,7 @@ IronBee writes Codex's active config **per project** (under `<project>/.codex/`)
 | `<project>/.agents/skills/ironbee-verification/SKILL.md` | The verification skill the agent follows |
 | `<project>/.agents/skills/ironbee-verify/SKILL.md` | The `$ironbee-verify` skill you can invoke by hand |
 | `<project>/.codex/agents/ironbee-scenario.toml` | The **scenario sub-agent** for [saved scenarios](/cli/guides/scenarios) (registered like the verifier, with the same read-only sandbox) |
-| `<project>/.agents/skills/ironbee-{manage,search,sync}-scenario/SKILL.md` | The `$ironbee-{manage,search,sync}-scenario` skills |
+| `<project>/.agents/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The `$ironbee-{manage,search,run,sync}-scenario` skills |
 | `<project>/.codex/agents/ironbee-issue-tracker.toml` + `<project>/.agents/skills/ironbee-issue-track/SKILL.md` | The **issue-tracker sub-agent** and its `$ironbee-issue-track` skill — written only when an [issue tracker](/cli/guides/issue-tracking) is connected (in `main-agent` mode there's no agent; the skill drives the tools inline) |
 
 IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`. Your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed. Your user-level `~/.codex/config.toml` still applies — for example its top-level `model`.
@@ -52,7 +52,7 @@ $ironbee-verify ./scenarios/checkout.md      # a scenario file
 
 When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) — see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
 
-The same mention syntax applies to the other commands — `$ironbee-{manage,search,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
+The same mention syntax applies to the other commands — `$ironbee-{manage,search,run,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
 
 <Note>
   Using the **GitHub Issues** integration on Codex? Its `gh` calls run inside Codex's tool sandbox, which blocks outbound network by default — enable `[sandbox_workspace_write] network_access = true` if `gh issue view` can't reach `api.github.com`. Install prints a reminder; Jira and Linear are unaffected (their tools run outside the sandbox). See [Issue Tracking → GitHub Issues](/cli/guides/issue-tracking#github-issues).

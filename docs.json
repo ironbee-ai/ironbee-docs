@@ -69,6 +69,7 @@
                   "cli/guides/managing-projects",
                   "cli/guides/verification",
                   "cli/guides/verification-context",
+                  "cli/guides/verification-jobs",
                   "cli/guides/scenarios",
                   "cli/guides/issue-tracking",
                   "cli/guides/importing-sessions",

@@ -11,20 +11,36 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 
 | Variable | Effect |
 |----------|--------|
-| `IRONBEE_API_KEY` | Supplies `collector.apiKey` without committing it. **Takes precedence over every config layer.** Combine with a file-set `collector.url` for a complete config. The credential of choice for CI and the [GitHub Action](/github-action/get-started/getting-started). |
-| `IRONBEE_OAUTH_TOKEN` | Supplies `collector.oauthToken` (the personal token from [`ironbee login`](/cli/guides/authentication)) without committing it. **Takes precedence over every config layer.** When both this and `IRONBEE_API_KEY` are set, the OAuth token wins. |
+| `IRONBEE_SERVICE_API_KEY` | Supplies [`service.apiKey`](/cli/configuration/configuration#service-identity) (the shared account API key) without committing it. **Takes precedence over every config layer.** The credential of choice for CI and the [GitHub Action](/github-action/get-started/getting-started). |
+| `IRONBEE_SERVICE_OAUTH_TOKEN` | Supplies [`service.oauthToken`](/cli/configuration/configuration#service-identity) (the personal token from [`ironbee login`](/cli/guides/authentication)) without committing it. When both credentials are set, the OAuth token wins. |
+| `IRONBEE_SERVICE_DOMAIN` | Supplies [`service.domain`](/cli/configuration/configuration#service-identity), the stage selector every service URL derives from. |
+| `IRONBEE_API_KEY` | Legacy — supplies the deprecated `collector.apiKey` fallback, which is read **only when `service.apiKey` is unset** (a recent `ironbee login` writes `service.*`, which then wins). One exception: [`ironbee verify`](/cli/guides/verification-jobs#credentials) reads it as a deliberate top-priority override. |
+| `IRONBEE_OAUTH_TOKEN` | Legacy — supplies the deprecated `collector.oauthToken` fallback; same caveat as above. |
 | `IRONBEE_TELEMETRY` | Set to `false` to turn off anonymous CLI telemetry for this shell/run, a per-session alternative to the [`telemetry.enable`](/cli/advanced/telemetry-statusline#telemetry) config key. |
 | `IRONBEE_LOG_LEVEL` | Logging verbosity. Set to `debug` to see detailed output when troubleshooting. |
 
 ```bash
 # CI: provide the API key from a secret, no file commit
-export IRONBEE_API_KEY=sk-...
+export IRONBEE_SERVICE_API_KEY=sk-...
 ironbee import --since 30d --yes
 ```
 
 <Note>
-  Because `IRONBEE_API_KEY` overrides the files, a merged read (`ironbee config get collector.apiKey`) returns the env value. A layer-scoped read (`--project` / `--global` / `--local`) bypasses env and shows only what's on disk.
+  Because these override the files, a merged read (`ironbee config get service.apiKey`) returns the env value. A layer-scoped read (`--project` / `--global` / `--local`) bypasses env and shows only what's on disk.
 </Note>
+
+---
+
+## Verification jobs
+
+[`ironbee verify`](/cli/guides/verification-jobs) — the cloud verification-job runner — reads two extra overrides of its own, plus the GitHub Actions context:
+
+| Variable | Effect |
+|----------|--------|
+| `IRONBEE_ACCESS_TOKEN` | OAuth access token for the API, overriding `service.oauthToken`. |
+| `IRONBEE_API_URL` | API base URL, overriding `api.url` (the `--api-url` flag wins over both). |
+| `GITHUB_ACTIONS` | When exactly `"true"`, a created job is declared with the `github_actions` trigger (Console visibility only) and secret-header values are masked with `::add-mask::`. |
+| `GITHUB_REPOSITORY` / `GITHUB_SHA` / `GITHUB_REF` | Fill the run's repository binding: the `owner/repo`, the authoritative commit, and the pull-request number on a PR run. |
 
 ---
 
@@ -86,6 +102,7 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
 | `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the `state.vscdb` store) when reading [Cursor session analytics](/cli/clients/cursor#session-analytics). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
+| `IRONBEE_NO_PREFETCH` | Global kill-switch for the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) — any value other than empty/`0`/`false` skips the npx cache warm on `install`, upgrade re-renders, `ironbee browser enable`, and `ironbee devtools prefetch`. |
 | `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically — `1`/`true` = active, `0`/`false` = inactive — bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |
 | `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render — belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
 
