@@ -7,7 +7,7 @@ When your agent finishes editing code, IronBee runs **verification cycles** to c
 
 `ironbee install` walks you through three setup choices **in this order** — and each section below shows that install step first, then the command to change it later:
 
-1. **[Mode](#verification-modes)** — enforce, assist, or monitoring-only (and, for enforce, how [strict](#strict-mode) to be).
+1. **[Mode](#verification-modes)** — enforce, assist, or monitoring-only (and, for enforce, how [strict](#strict-mode) to be and whether a failing verdict [blocks or just reports](#fix-enforcement-block-on-a-fail-or-just-report-it)).
 2. **[Platforms](#verification-platforms)** — which runtime cycles gate a change (browser, node, python, backend, android, terminal).
 3. **[Project checks](#project-checks-run-first-lint-tests-types)** — deterministic lint / test / typecheck commands to run first.
 
@@ -54,7 +54,9 @@ ironbee verification auto disable   # back to assist (the default)
 
 ### Strict mode
 
-Enforce has one **follow-up choice**: **how strict** the gate is about [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) — the verifier's way of declaring a change has no runtime surface to exercise (a type-only refactor, a docs tweak). When you pick enforce, install shows a second picker for it right away (assist and monitoring skip it — there's no gate to enforce).
+Enforce has two **follow-up choices** at install — how [strict](#strict-mode) the gate is about N/A verdicts, and whether a failing verdict [blocks or just reports](#fix-enforcement-block-on-a-fail-or-just-report-it) (assist and monitoring skip both — there's no gate to enforce).
+
+The first is **how strict** the gate is about [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) — the verifier's way of declaring a change has no runtime surface to exercise (a type-only refactor, a docs tweak). When you pick enforce, install shows its picker right away.
 
 **Non-strict** *(default)* lets the agent skip changes with nothing to exercise — refactors, type-only edits, docs:
 
@@ -72,6 +74,23 @@ ironbee verification strict disable    # back to the default — N/A verdicts ac
 ```
 
 With strict on, a verdict that tries to mark a cycle not-applicable is **blocked**, and the agent has to produce the cycle's required tools. Strict only matters in **enforce mode** (in assist and monitoring-only there's no gate to enforce it). It's read live by the gate, so it takes effect on the next session without re-rendering artifacts. Strict maps to the [`verification.strict`](/cli/configuration/configuration#verification) config key and accepts the usual `-g`/`--global` and `--local` target flags. For how N/A verdicts work in the first place, see [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) below.
+
+### Fix enforcement (block on a fail, or just report it)
+
+Enforce mode actually enforces **two** things: that the agent *verifies* at all (it can't edit code and finish without running the cycle), and that the *outcome* is a pass (a failing verdict blocks completion until the agent fixes the issues, up to [`maxRetries`](/cli/configuration/configuration#core-options)). The second follow-up choice — **fix enforcement** — decouples them. Install shows it as a picker right after strictness, with two options: **fix-enforce** *(default)* and **report-only**.
+
+With fix enforcement **off** (report-only), the agent still must run every active cycle and submit a real verdict — but a **fail** verdict no longer loops it. The gate lets the turn end, records the verdict as *reported, not enforced*, and instructs the agent to state the unresolved issues plainly rather than claim the change works. Retries aren't consumed. Think of it as a third point between full enforce (auto-verify + fix until pass) and assist (nothing enforced): **verification is mandatory, fixing is your call**.
+
+```bash
+ironbee verification fix disable   # report-only — a failing verdict is reported, not looped on
+ironbee verification fix enable    # back to the default — a failing verdict blocks until fixed
+```
+
+It maps to the [`verification.fix`](/cli/configuration/configuration#verification) config key (default `true`), accepts the usual `-g`/`--global` and `--local` target flags, is read live by the gate, and only matters in enforce mode. At install, pass `--fix` / `--no-fix` with `--mode enforce` to skip the picker.
+
+<Note>
+  The manual [`/ironbee-verify fix`](#verify-only-vs-fix-mode) token **escalates a single run** to fix-until-pass regardless of this setting — the config is the sticky default, and the token only ever escalates (it never downgrades an enforced fix loop).
+</Note>
 
 ### Monitoring-only mode
 
@@ -354,7 +373,7 @@ When you trigger `/ironbee-verify` by hand (or `$ironbee-verify` on Codex), an o
 | **Verify-only** *(default)* | *(none)* or `report` | Runs the cycle, submits the verdict, reports it, and **stops**. It never edits your code, even when the verdict is a fail — use it to check the current state. |
 | **Fix** | `fix` | On a fail, the agent fixes the reported issues and re-verifies, looping until it passes (or hits [`maxRetries`](/cli/configuration/configuration#core-options)). |
 
-In **enforce mode** the choice is enforced mechanically, not just suggested: a `fix` run won't let the agent stop on a fail without addressing it, while a verify-only run is allowed to report a fail and end the turn. A custom scenario can follow the mode word.
+In **enforce mode** the choice is enforced mechanically, not just suggested: a `fix` run won't let the agent stop on a fail without addressing it, while a verify-only run is allowed to report a fail and end the turn. A custom scenario can follow the mode word. The `fix` token escalates just that one run — the sticky default for what a failing verdict does at the gate is the [fix enforcement](#fix-enforcement-block-on-a-fail-or-just-report-it) setting.
 
 <Note>
   This only changes the **manual** command's behavior. The automatic completion gate is unaffected — when the agent edits code and tries to finish, it must still pass every active cycle. In [assist mode](#assist-mode-default) nothing blocks the agent, so `fix` there is advisory; in monitoring-only mode the command isn't installed.
@@ -390,7 +409,7 @@ By default the agent verifies the areas affected by what changed. To tell it **e
 
 When a scenario is supplied it's **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time (any location, any format), so you can keep reusable test scripts in your repo and point at them. The completion gate is unchanged — every active cycle's required tools still have to run for a pass.
 
-To capture a flow once and replay it by name instead of re-typing it every time, save it as a [scenario](/cli/guides/scenarios) and pass `/ironbee-verify scenario:<name>`.
+To capture a flow once and replay it by name instead of re-typing it every time, save it as a [scenario](/cli/guides/scenarios) and run it with [`/ironbee-run-scenario`](/cli/guides/scenarios#run-a-saved-scenario). The old `scenario:<name>` reference is **not** accepted by `/ironbee-verify` anymore — the command will point you at `/ironbee-run-scenario` instead.
 
 ---
 

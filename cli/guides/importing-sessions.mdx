@@ -69,6 +69,10 @@ Always start with a dry run if you're unsure of the volume:
 ironbee import --since 30d --dry-run
 ```
 
+<Note>
+  A **permanent** rejection from the Collector (bad credential, exhausted quota, malformed batch — any non-`429` `4xx`) aborts the import immediately with the HTTP status, instead of burning through the retry backoff. Only transient failures (network, `429`, `5xx`) are retried.
+</Note>
+
 ---
 
 ## Common scenarios

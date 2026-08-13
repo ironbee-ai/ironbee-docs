@@ -5,7 +5,7 @@ description: Author, search, and re-run reusable verification scenarios so the a
 
 A **scenario** is a reusable, saved verification script — "log in as admin, open billing, confirm the invoice total updates" — captured once and replayed on demand. Instead of re-describing what to verify (or letting the agent re-discover it) on every run, you build up a small library of scenarios the verifier can run directly. Scenarios are **committed to the repo**, so your whole team (and CI) shares them.
 
-Each scenario belongs to one [verification cycle](/cli/guides/verification#verification-platforms) — a browser scenario drives the browser, an Android scenario drives the device, and so on — and is stored as a script the matching devtools server can run in a single call.
+A scenario drives one or more [verification platforms](/cli/guides/verification#verification-platforms) — a browser scenario drives the browser, an Android scenario the device, a cross-platform one both — and is stored as a script (or a list of [typed steps](#steps-setup-and-teardown)) the `ironbee-devtools` server can execute.
 
 <Note>
   Saved scenarios are installed in **enforce** and **assist** modes (the same gating as the verifier). In **monitoring-only** mode the scenario commands and sub-agent aren't installed.
@@ -15,12 +15,13 @@ Each scenario belongs to one [verification cycle](/cli/guides/verification#verif
 
 ## The commands
 
-Three agent-invoked slash commands manage scenarios. On Claude Code and Cursor they're `/`-prefixed; on Codex use the `$` mention syntax (`$ironbee-manage-scenario`).
+Four agent-invoked slash commands manage scenarios. On Claude Code and Cursor they're `/`-prefixed; on Codex use the `$` mention syntax (`$ironbee-manage-scenario`).
 
 | Command | What it does |
 |---------|--------------|
 | `/ironbee-manage-scenario` | **Add, update, or delete** a scenario. By default it authors the script against your **running app**, then saves it. |
 | `/ironbee-search-scenario` | **Find** saved scenarios by name, description, or metadata (e.g. a covered path). Read-only. |
+| `/ironbee-run-scenario` | **Run** a saved scenario — see [Run a saved scenario](#run-a-saved-scenario). |
 | `/ironbee-sync-scenario` | **Re-validate and repair** saved scenarios that have drifted as the code changed. |
 
 Like the verifier, on Claude Code and Codex these **delegate to a dedicated `ironbee-scenario` sub-agent** that owns the scenario tools (and, like the verifier, can't edit your code — the scenario store is written server-side). On Cursor (and Codex in `main-agent` mode) the main agent drives the tools directly.
@@ -71,37 +72,71 @@ On every run the parameters are enforced: defaults fill in omitted arguments, `r
 
 ---
 
-## Verify with a saved scenario
+## Steps, setup, and teardown
 
-Once a scenario exists, point `/ironbee-verify` at it with a `scenario:` reference instead of re-typing the flow — the verifier resolves it and runs it in one call, with no re-discovery:
+A scenario can be a single `script`, or — with `formatVersion: 2` — a **step-ful** scenario: an ordered list of typed steps under `body.steps`, each reported (and cached, and repaired) individually:
+
+| Step type | What it runs |
+|-----------|--------------|
+| `script` | Sandbox JavaScript with `callTool(...)`, `args`, a shared mutable `ctx`, and `assert`. |
+| `tool-call` | One devtools call as data: `tool` + `input` (values may reference `{{args.<path>}}` / `{{ctx.<path>}}`), optional `assignTo` to keep the output in `ctx`. |
+| `command` | A host shell command; `{ stdout, stderr, exitCode }` lands in `ctx` via `assignTo`. Non-zero exit fails the step unless `allowNonZeroExit: true`. |
+| `llm-action` | A natural-language `intent` the run can't execute deterministically — the run **pauses** and the agent realizes it. Must be named: the name is its [cache key](#steps-that-need-an-agent-llm-action). |
+| `group` | A reporting-only container that nests other steps under one name. |
+| `include` | Splices another saved scenario's steps in (with static `args`, and `as:` to give it a nested `ctx` root). |
+
+Two optional **lifecycle sections**, `setup` and `teardown`, are peers of `body` with the same `steps` shape — but `script` and `command` steps **only** (no `tool-call`, `group`, `llm-action`, or `include`; a pausing step could strand the cleanup). Setup runs before the body and a setup failure skips it; **teardown always runs**, however the run ended, and its failures are reported separately without changing the run's verdict. A scenario that another scenario `include`s skips its own setup/teardown by default — opt in with `"whenReused": "run"`.
+
+A scenario (step-ful or single-script) also declares `requiredPlatforms` (e.g. `["browser", "backend"]`) — the run refuses up front when a required cycle isn't enabled, instead of failing midway (an `include`d scenario's requirements are unioned in automatically). The remedy is `ironbee <platform> enable` plus a fresh agent session, since the devtools server reads its platform set at startup.
+
+### Steps that need an agent (`llm-action`)
+
+The first time a run reaches an `llm-action` step, it pauses; the agent drives the app to realize the intent, and the run captures what the agent did as a **replayable script** in the scenario's sibling cache file, `<name>.cache.json` — committed alongside the scenario and reviewed in PRs like any other change (an `llm-action` inside an `include`d scenario caches into the *included* scenario's own file, so that cache is shared by every scenario that includes it). Every later run **replays the cache** instead of pausing, so a scenario that needed an agent once runs deterministically from then on. The cache re-materializes only when the runtime has marked it broken or stale — a failed warm replay pauses the run for a **self-heal**, showing the broken script for the agent to repair — or when you force it with `refresh:`. A `[static guess]` stale verdict from [`ironbee scenario status`](#ironbee-scenario-status) is detection only; it never changes what a run replays.
+
+<Note>
+  Cache scripts call tools by their **bare** devtools name (`bdt_navigation_go-to`), not the MCP wire name your client shows (`mcp__ironbee-devtools__bdt_navigation_go-to`). `ironbee scenario tool-name <mcp-name>` translates one to the other. The scenario tools themselves (`scenario-run`, search, CRUD) live under the compose server's shared `ibdt_*` prefix, alongside the per-cycle `bdt_*`/`ndt_*`/… families. Never edit a `.cache.json` by hand — the run itself is the only write channel.
+</Note>
+
+---
+
+## Run a saved scenario
+
+Once a scenario exists, run it with `/ironbee-run-scenario` (`$ironbee-run-scenario` on Codex) — by exact name or a semantic description (the agent picks the best match and asks if it's ambiguous):
 
 ```bash
-/ironbee-verify scenario:checkout flow              # run a saved scenario by name or description
-/ironbee-verify fix scenario:the full purchase flow # fix mode + a saved scenario
-/ironbee-verify scenario:checkout flow args:{"baseUrl":"http://localhost:8080"}  # override a param for this run
+/ironbee-run-scenario checkout flow                 # run by name or description
+/ironbee-run-scenario checkout flow args:{"baseUrl":"http://localhost:8080"}  # override a param for this run
+/ironbee-run-scenario step checkout flow            # pause after every step, for a guided walk-through
+/ironbee-run-scenario refresh:all checkout flow     # re-drive every cached step live instead of replaying
 ```
 
-The reference can be an exact name or a semantic description (the verifier picks the best match, asks if it's ambiguous, and falls back to normal discovery if nothing matches). This is the third scenario form `/ironbee-verify` accepts, alongside [inline text and file paths](/cli/guides/verification#custom-verification-scenarios).
+A leading `step` token pauses the run after **every** step; `refresh:<stepId,…>` (or `refresh:all`) forces the named [cached steps](#steps-that-need-an-agent-llm-action) to re-run live instead of replaying their cache. To run a [parametric scenario](#parametric-scenarios) against different values, add a trailing `args:{...}` JSON object — it overrides the scenario's captured defaults for that run only (omitted params keep their defaults; the same typed-parameter validation still applies). Without it, a saved scenario re-runs exactly as captured.
 
-To run a [parametric scenario](#parametric-scenarios) against different values, add a trailing `args:{...}` JSON object — it overrides the scenario's captured defaults for that run only (omitted params keep their defaults; the same typed-parameter validation still applies). Without it, a saved scenario re-runs exactly as captured.
+Under the hood the devtools server executes the scenario's deterministic steps itself and **pauses** only when a step needs an agent — the agent acts (drives the app to realize the step's intent), then **resumes** the same run where it left off. On Claude Code and Codex (in the default `sub-agent` delivery) this loop runs inside the `ironbee-scenario` sub-agent; on Cursor — and Codex in `main-agent` mode — the main agent drives it inline. Follow it live from a second terminal with [`ironbee scenario progress --watch`](#watch-a-run-live).
+
+<Note>
+  Running a scenario is **not a verification cycle** — it opens no gate, submits no gated verdict, and doesn't satisfy the completion gate (use [`/ironbee-verify`](/cli/guides/verification#verify-only-vs-fix-mode) to verify code changes). The run is still fully recorded: it appears on the session timeline as a `scenario`-kind span with a **per-step timeline** — each step is its own start/end interval with the tool calls it drove nested under it — plus a visibility verdict listing each assertion that passed or failed, so the Console shows exactly what the run did and checked. Earlier CLI versions accepted a `scenario:<ref>` reference on `/ironbee-verify` — that form is gone; `/ironbee-run-scenario` is how a saved scenario runs.
+</Note>
 
 ---
 
 ## Where scenarios are stored
 
-Saved scenarios are committed under a single flat store, `.ironbee/scenarios/` — the `ironbee-devtools` compose server registers the scenario tools once for the whole project rather than per cycle. A scenario can therefore be **cross-platform**: one script may drive several cycles' tools (for example a `bdt_*` browser step followed by a `bedt_*` backend check), authored as a single scenario rather than split per platform. Each scenario records its platform(s) in its `ironbee.platform` / `ironbee.platforms` metadata, which is what `ironbee scenario status` and the [TUI](/cli/guides/interactive-mode) scenarios area display.
+Saved scenarios are committed under a single flat store, `.ironbee/scenarios/` — one `<name>.json` per scenario, plus a sibling `<name>.cache.json` for a [step-ful scenario's](#steps-that-need-an-agent-llm-action) captured `llm-action` scripts. The `ironbee-devtools` compose server registers the scenario tools once for the whole project rather than per cycle. A scenario can therefore be **cross-platform**: one script may drive several cycles' tools (for example a `bdt_*` browser step followed by a `bedt_*` backend check), authored as a single scenario rather than split per platform. The platform label `ironbee scenario status` and the [TUI](/cli/guides/interactive-mode) scenarios area display comes from the scenario's top-level [`requiredPlatforms`](#steps-setup-and-teardown) field (joined with `+` for cross-platform ones); the older `ironbee.platform` / `ironbee.platforms` metadata is still read as back-compat for scenarios that predate it.
 
 Unlike the per-session `sessions/` data, the scenario store is **not gitignored** — scenarios are repo content meant to be reviewed in PRs and shared with the team, the same trust level as `.ironbee/VERIFICATION.md`. The store is committed and client-agnostic (it isn't per-client).
 
+A scenario can also be saved with `scope: global` (say it when authoring via `/ironbee-manage-scenario`), which stores it at `~/.ironbee/scenarios/` — personal, cross-project, not committed. `ironbee scenario status` and `coverage` read only the **project** store, so global scenarios don't appear in freshness or coverage output.
+
 <Note>
-  Older installs wrote one folder per cycle (`.ironbee/scenarios/bdt/`, `ndt/`, `bedt/`, `adt/`, `tdt/`). That layout is still read for back-compat — its scenarios are unioned with the flat store — so existing scenarios keep working without migration.
+  Older installs wrote one folder per cycle (`.ironbee/scenarios/bdt/`, `ndt/`, `pdt/`, `bedt/`, `adt/`, `tdt/`). That layout is still read for back-compat — its scenarios are unioned with the flat store — so existing scenarios keep working without migration.
 </Note>
 
 ---
 
 ## Keep scenarios fresh
 
-Saved scenarios rot as the code they cover evolves. Two **pure-code** commands (no LLM, no app run) tell you where things stand — useful both at the terminal and as CI gates:
+Saved scenarios rot as the code they cover evolves. Two **pure-code** commands (no LLM, no app run) tell you where things stand — useful both at the terminal and as CI gates. (These, like `scenario progress`, accept `-p, --project <dir>` to target another project.)
 
 ### `ironbee scenario status`
 
@@ -110,12 +145,15 @@ Reports the freshness of every saved scenario against the current code by git-di
 ```bash
 ironbee scenario status            # fresh / stale / unknown per scenario
 ironbee scenario status --stale    # only stale ones; exits non-zero if any exist (CI gate)
+ironbee scenario status --verbose  # also list each llm-action step cache (baseline, draft, covered paths)
 ironbee scenario status --json     # machine-readable
 ```
 
 - **fresh** — no covered file changed since the scenario was authored.
 - **stale** — covered files changed since then (or it was saved as an unvalidated draft).
-- **unknown** — can't tell (not a git repo, or the scenario has no covered-path / commit baseline).
+- **unknown** — can't tell: not a git repo, no covered-path / commit baseline, the baseline commit isn't in history (shallow or rewritten clone), or it isn't an ancestor of `HEAD` (divergent branch).
+
+A [step-ful scenario](#steps-setup-and-teardown) is judged **per step**: each cached `llm-action` step is classified from its own baseline commit and covered paths, then rolled up — any stale step makes the scenario stale, any unassessable one makes it unknown. A declared step that has **no cache entry yet** (never run) reports `unknown`, not fresh. A stale verdict also says *what it rests on*, strongest first: `[replay failed]` (a warm replay actually broke), `[flagged]` (the run marked the cache stale), or `[static guess: covered files changed — may be behaviour-neutral]` (a git diff over the declared paths). A trailing `(N draft)` marker flags caches that were authored or healed but never successfully replayed — advisory only.
 
 ### `ironbee scenario coverage`
 
@@ -145,6 +183,27 @@ Sync repairs **mechanical** drift only — the way the flow is driven (a renamed
 <Note>
   Browse freshness without running anything from the [TUI](/cli/guides/interactive-mode) **Scenarios** area — a read-only fresh/stale/unknown view of every saved scenario. Repair is still the agent's `/ironbee-sync-scenario`.
 </Note>
+
+---
+
+## Watch a run live
+
+On Claude Code and Codex (sub-agent delivery) a scenario runs inside the `ironbee-scenario` sub-agent, so its step-by-step progress doesn't stream into your conversation. `ironbee scenario progress` shows the live state of the current (or last) run from a second terminal:
+
+```bash
+ironbee scenario progress            # one snapshot of the current/last run
+ironbee scenario progress --watch    # follow it live (q or Ctrl-C to stop)
+ironbee scenario progress --json     # machine-readable
+```
+
+`--watch` draws a full-screen pane (in the alternate screen buffer, like `less`) and redraws as the run advances. It shows the **whole scenario's step tree by name** — including steps the run hasn't reached yet — with per-step glyphs (`✓` passed, `✗` failed, `⊘` skipped, `.` not reached, `>` running), `[setup]` / `[teardown]` phase tags, whether each step ran from `(cache)` or `(live)`, the currently-pending step's intent (and self-heal reason, when a cache broke), and a footer with the verdict and assertion counts. The pane fits your terminal, follows the newest output, and is scrollable: `↑`/`↓` (or `k`/`j`) scroll, `PgUp`/`PgDn` page, `g`/`G` jump to top/bottom (`G` re-arms live-follow), `q` quits.
+
+| Flag | Description |
+|------|-------------|
+| `--watch` | Redraw as the run advances (Ctrl-C to stop). |
+| `--session <id>` | Watch one session (default: the one that last ran a scenario). |
+| `--interval-ms <n>` | Poll interval for `--watch` (default 400, min 100). |
+| `-p, --project <dir>` | Target a project other than the current directory. |
 
 ---
 

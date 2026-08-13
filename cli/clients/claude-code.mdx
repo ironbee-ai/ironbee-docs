@@ -15,9 +15,9 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
 | `.claude/rules/ironbee-verification.md` | The always-on verification rule that enforces the gate (enforce mode) |
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
-| `.claude/commands/ironbee-{manage,search,sync}-scenario.md` | The [saved-scenario](/cli/guides/scenarios) slash commands |
+| `.claude/commands/ironbee-{manage,search,run,sync}-scenario.md` | The [saved-scenario](/cli/guides/scenarios) slash commands |
 | `.claude/agents/ironbee-scenario.md` | The **scenario sub-agent** that authors, searches, and re-runs [saved scenarios](/cli/guides/scenarios) (like the verifier, it owns the scenario tools and can't edit your code) |
-| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server — it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`) under one entry — is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
+| `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server — it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`), plus the shared `ibdt_*` family (batch execute, scenario run/CRUD, o11y trace helpers, issue-tracker tools), under one entry — is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
 | `.claude/commands/ironbee-issue-track.md` | The `/ironbee-issue-track` command — written only when an [issue tracker](/cli/guides/issue-tracking) is connected |
 | `.claude/agents/ironbee-issue-tracker.md` | The **issue-tracker sub-agent** `/ironbee-issue-track` delegates to (Jira/Linear tools scoped to it; GitHub driven via `gh`) — written only when an issue tracker is connected |
 | `.claude/settings.local.json` | The [auto-mode allowlist carve-out](#auto-mode-and-the-verifier) for the verifier — written only when verification is active and `claude.autoModeAllowlist.enable` isn't `false`. Merged into any existing local settings |
@@ -59,7 +59,7 @@ An optional leading word picks what happens on a fail: the default is **verify-o
 
 ### Scenario commands
 
-IronBee also installs `/ironbee-manage-scenario`, `/ironbee-search-scenario`, and `/ironbee-sync-scenario` for authoring, finding, and repairing [saved verification scenarios](/cli/guides/scenarios). Like `/ironbee-verify`, they delegate to a dedicated sub-agent (`ironbee-scenario`). They're installed in enforce and assist modes, alongside the verifier.
+IronBee also installs `/ironbee-manage-scenario`, `/ironbee-search-scenario`, `/ironbee-run-scenario`, and `/ironbee-sync-scenario` for authoring, finding, running, and repairing [saved verification scenarios](/cli/guides/scenarios). Like `/ironbee-verify`, they delegate to a dedicated sub-agent (`ironbee-scenario`). They're installed in enforce and assist modes, alongside the verifier.
 
 ### ironbee-issue-track
 
@@ -67,7 +67,7 @@ When an [issue tracker is connected](/cli/guides/issue-tracking) (Jira, Linear, 
 
 ### Assist mode: commands are user-only
 
-In [assist mode](/cli/guides/verification#assist-mode-default) — which is manual-trigger-only by design — install marks every IronBee command (`/ironbee-verify`, the three scenario commands, and `/ironbee-issue-track` when present) with `disable-model-invocation: true`. You can still type them, but the model can't auto-invoke them and their descriptions stop costing context tokens (they show as *user-only* in Claude's `/skills` viewer). The sub-agents' descriptions likewise switch to a **non-proactive stance** in assist mode, so the model doesn't spawn the verifier or scenario agent on its own — a user-driven `/ironbee-verify` still spawns it explicitly. Enforce mode keeps auto-invocation on, since the verification mandate may route the model through the command.
+In [assist mode](/cli/guides/verification#assist-mode-default) — which is manual-trigger-only by design — install marks every IronBee command (`/ironbee-verify`, the four scenario commands, and `/ironbee-issue-track` when present) with `disable-model-invocation: true`. You can still type them, but the model can't auto-invoke them and their descriptions stop costing context tokens (they show as *user-only* in Claude's `/skills` viewer). The sub-agents' descriptions likewise switch to a **non-proactive stance** in assist mode, so the model doesn't spawn the verifier or scenario agent on its own — a user-driven `/ironbee-verify` still spawns it explicitly. Enforce mode keeps auto-invocation on, since the verification mandate may route the model through the command.
 
 ---
 

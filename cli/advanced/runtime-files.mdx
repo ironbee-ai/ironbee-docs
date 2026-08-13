@@ -28,7 +28,7 @@ Created by `ironbee install` in each project:
 |------|---------------|---------|
 | `config.json` | Project config, team settings, shared with the repo | ✅ Yes |
 | `config.local.json` | Personal overrides, your machine only | ❌ Gitignored |
-| `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) — reusable, parametric test scripts authored via `/ironbee-manage-scenario`. A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`bedt`/`adt`/`tdt`, still read for back-compat) | ✅ Yes |
+| `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) — one `<name>.json` per scenario, plus a sibling `<name>.cache.json` holding a step-ful scenario's captured `llm-action` replay scripts (both committed; never hand-edit the cache). A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`pdt`/`bedt`/`adt`/`tdt`, still read for back-compat) | ✅ Yes |
 | `VERIFICATION.md` | Area-specific [verification guidance](/cli/guides/verification-context), in any directory | ✅ Yes |
 | `sessions/<id>/` | Per-session runtime data — **only when [`runtime.location`](#where-per-session-data-lives) is `in-project`** | ❌ Gitignored |
 | `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). Always in-project, even in `external` mode | ❌ Gitignored |
@@ -56,18 +56,31 @@ Each agent task gets its own directory, keeping concurrent sessions isolated (se
 
 | File | What it holds |
 |------|---------------|
-| `actions.jsonl` | The session event log: file edits, tool calls, and verification markers. The source of truth for what happened. |
-| `state.json` | The session's current state: phase, active cycle, verification status, and the project dir it belongs to. |
-| `verdict.json` | The latest verdict for the session (`status`, `checks`, `issues`, `fixes`). |
+| `state.json` | The session's current state: phase, verification status, and the project dir it belongs to. |
+| `agents/<agentId>/` | **Per-agent state** — see below. Each agent active in the session (the main conversation and every delegated sub-agent) gets its own partition. |
 | `retries` | The current verification retry count. |
 | `analytics/` | Per-session analytics state (`state.json`) and log (`analytics.log`) used to derive session metrics. |
 | `statusline/` | Chained-statusline state (`state.json`) for the Claude statusline integration. |
-| `queue/` | Pending Collector jobs not yet shipped (and any dead-letter entries). See [Job queue](/cli/advanced/job-queue). |
+| `queue/` | Queue snapshots awaiting delivery, dead-letter entries, and the worker log. See [Job queue](/cli/advanced/job-queue). |
 | `session.log` | Diagnostic log of the session's hook activity. |
 | `imported.json` | A marker written by [`ironbee import`](/cli/guides/importing-sessions) so a session isn't re-imported. |
 
+### Per-agent state (`agents/<agentId>/`)
+
+A session usually has more than one actor: the **main** agent, and the delegated sub-agents IronBee installs (`ironbee-verifier`, `ironbee-scenario`, `ironbee-issue-tracker`). Everything an individual agent writes is partitioned under its own `agents/<agentId>/` directory so concurrent writers — say a verifier running in the background while the main agent keeps working — never clobber each other's state. The `<agentId>` is the host's opaque agent/thread id (only the main conversation is literally `main`); the human-readable agent name travels separately, as `cycle.json`'s `owner` and the `agent_name` on shipped events.
+
+| File | What it holds |
+|------|---------------|
+| `actions.jsonl` | That agent's event log: file edits, tool calls, and verification markers. The main conversation writes `agents/main/actions.jsonl`. |
+| `cycle.json` | The agent's one open verification cycle (id, kind — gated or scenario — start time, trace id). |
+| `verdict.json` | The agent's latest verdict (`status`, `checks`, `issues`, `fixes`). |
+| `aux.json` | Auxiliary cycle flags (recording, conclusive checks, context injection, the [scenario](/cli/guides/scenarios) pause marker). |
+| `steps.json` | The open [scenario step](/cli/guides/scenarios) stack. |
+| `queue/jobs.jsonl` | The agent's live Collector queue producer file. |
+| `fix.json` | *(main only)* The active fix cycle and the `/ironbee-verify fix` intent. |
+
 <Note>
-  Not every file is present in every session: `retries`, `queue/`, and `imported.json` appear only when relevant. These persist after a session ends (they aren't auto-deleted). You rarely touch them directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
+  Not every file is present in every session, and these persist after a session ends (they aren't auto-deleted). Sessions from older CLI versions kept `actions.jsonl` at the session root — that file is still merged in for a session in flight across the upgrade, but new writes all land under `agents/` (a pre-upgrade root `verdict.json` is no longer read; verdicts are looked up only under `agents/<agentId>/`). You rarely touch any of this directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
 </Note>
 
 ---

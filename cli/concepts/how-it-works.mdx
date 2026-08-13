@@ -70,6 +70,8 @@ A failed verdict sends the agent back to fix the issues and verify again. The [`
 
 On **Claude Code** and **Codex**, the main agent doesn't run the devtools tools itself — it **delegates to a dedicated `ironbee-verifier` sub-agent** that owns them. This keeps the heavy devtools output (DOM, console, screenshots) out of the main conversation while still recording everything to the same session. **Cursor** has no sub-agent surface, so its main agent verifies directly. See [Verification → How verification runs](/cli/guides/verification#how-verification-runs-the-verifier-sub-agent).
 
+Every agent-bound event the session ships — tool calls, file changes, verification start/end, verdicts, per-request cost — carries an **`agent_name`** (`main` for the top-level conversation, or the sub-agent's name like `ironbee-verifier`), so the Console can show exactly *who* did what within one session. Each agent's runtime state is likewise kept in its own partition on disk (see [Runtime files → Per-agent state](/cli/advanced/runtime-files#per-agent-state-agentsagentid)), so a delegated verifier and the main agent never race on the same files.
+
 ---
 
 ## Default vs custom scenarios

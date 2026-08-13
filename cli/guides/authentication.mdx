@@ -14,7 +14,7 @@ Both are first-class and supported. The difference is who they identify: an OAut
 
 ## OAuth tokens (default)
 
-Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens your browser, asks you to authorize the CLI, and writes a personal access token to `~/.ironbee/config.json` under `collector.oauthToken`. From then on the CLI authenticates as you.
+Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens your browser, asks you to authorize the CLI, and writes a personal access token to `~/.ironbee/config.json` under [`service.oauthToken`](/cli/configuration/configuration#service-identity) (older CLI versions wrote `collector.oauthToken`, which is still read as a fallback). It also persists `service.domain` — the stage you authenticated against — so the collector, API, and Console URLs all derive from one place (and any hand-set explicit URLs are dropped so they re-derive; pin the Console with `--console-url` if you need to). For a self-hosted deployment on non-standard hosts, no domain is inferred and the explicit URLs are kept instead. From then on the CLI authenticates as you, everywhere: event delivery to the Collector **and** the read-side API behind [`ironbee verify`](/cli/guides/verification-jobs).
 
 ```bash
 ironbee login
@@ -44,13 +44,13 @@ To free a slot, open the [API Tokens page](/console/access-tokens), revoke a tok
 
 ## API keys (CI and automation)
 
-For automation that runs without a browser; the GitHub Action, scheduled jobs, scripts, use an account API key instead. Supply it through the `IRONBEE_API_KEY` environment variable so it never lands in a committed file:
+For automation that runs without a browser; the GitHub Action, scheduled jobs, scripts, use an account API key instead. Supply it through the `IRONBEE_SERVICE_API_KEY` environment variable (the legacy `IRONBEE_API_KEY` still works) so it never lands in a committed file:
 
 ```bash
-export IRONBEE_API_KEY=<your-account-api-key>
+export IRONBEE_SERVICE_API_KEY=<your-account-api-key>
 ```
 
-The CLI reads it into `collector.apiKey`. You can also set it on disk with `ironbee config set collector.apiKey <key> --global`, but the environment variable is preferred for CI because it [overrides every config layer](/cli/configuration/environment-variables).
+The CLI reads it into [`service.apiKey`](/cli/configuration/configuration#service-identity). You can also set it on disk with `ironbee config set service.apiKey <key> --global`, but the environment variable is preferred for CI because it [overrides every config layer](/cli/configuration/environment-variables).
 
 Find and manage the account API key on the [Account page](/console/account) in the Console. Owners and admins can view, copy, and rotate it.
 
@@ -70,10 +70,10 @@ If both are present, the OAuth token takes priority on the wire. In practice:
 | Situation | Credential | How to set it |
 |-----------|-----------|---------------|
 | You, working locally | OAuth token | `ironbee login` |
-| GitHub Action / CI | API key | `IRONBEE_API_KEY` secret |
-| Scripted or headless machine | API key | `IRONBEE_API_KEY` or `collector.apiKey` |
+| GitHub Action / CI | API key | `IRONBEE_SERVICE_API_KEY` secret |
+| Scripted or headless machine | API key | `IRONBEE_SERVICE_API_KEY` or `service.apiKey` |
 
-Both `IRONBEE_OAUTH_TOKEN` and `IRONBEE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
+Both `IRONBEE_SERVICE_OAUTH_TOKEN` and `IRONBEE_SERVICE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. The legacy `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` forms fill only the deprecated `collector.*` fallback keys — they're used **only when the matching `service.*` key is unset** (except by [`ironbee verify`](/cli/guides/verification-jobs#credentials), which treats `IRONBEE_API_KEY` as a top-priority override), so on a machine that has run a recent `ironbee login` (which writes `service.oauthToken`) prefer the `IRONBEE_SERVICE_*` forms. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
 
 ---
 

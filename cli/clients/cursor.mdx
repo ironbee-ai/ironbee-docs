@@ -14,10 +14,10 @@ When you run `ironbee install` in a project where [Cursor](https://cursor.com) i
 | `.cursor/hooks.json` | Registers IronBee's lifecycle hooks |
 | `.cursor/skills/ironbee-verification.md` | The verification skill the agent follows |
 | `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
-| `.cursor/skills/ironbee-{manage,search,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools — Cursor has no sub-agent) |
+| `.cursor/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools — Cursor has no sub-agent) |
 | `.cursor/skills/ironbee-issue-track/SKILL.md` | The `/ironbee-issue-track` command — written only when an [issue tracker](/cli/guides/issue-tracking) is connected (the main agent drives the tracker tools) |
 | `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
-| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`) |
+| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`), plus the shared `ibdt_*` family (batch execute, scenario run/CRUD, o11y trace helpers, issue-tracker tools) |
 | `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (a single `ironbee-devtools:*` + `ironbee` in the terminal allowlist) |
 
 These are merged into your existing Cursor config, not overwritten.
