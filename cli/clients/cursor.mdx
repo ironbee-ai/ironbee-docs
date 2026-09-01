@@ -72,30 +72,15 @@ Cursor's stop hook can't hard-deny completion the way Claude's can, so IronBee u
 
 ---
 
-## Session analytics
+## What Cursor sessions ship
 
-Like Claude Code and Codex, Cursor sessions ship **structural analytics** to the Collector (turns, tools, code-line counts, timings) plus per-request token and cost events. Cursor's pipeline is a little different under the hood: Claude and Codex read a transcript file with embedded token usage, but Cursor keeps its conversation in a local SQLite store (`state.vscdb`) that has the *structure* but **no token or cost data**. IronBee fills that gap from Cursor's own per-user **usage API** (`api2.cursor.sh`), joining the two by timestamp.
+Cursor sessions ship the same events as Claude Code and Codex — session lifecycle, agent turns, tool calls, file changes, verification cycles, and verdicts — through the [Collector](/cli/configuration/configuration#collector).
 
-Because the token/cost half comes from that API, it's gated behind a capability you can turn off:
-
-```bash
-ironbee cursor api-access status     # show the flag, token readability, plan tier, and a live usage probe
-ironbee cursor api-access disable    # stop reading the token / calling the usage API
-ironbee cursor api-access enable     # re-enable (the default)
-```
-
-| State | What analytics carry |
-|-------|----------------------|
-| **On** *(default)* | Full analytics — structure **plus** exact per-request tokens and cost (Cursor's own billed numbers) and rate-limit windows. |
-| **Off / unavailable** | Structure + code-line analytics only; token and cost are omitted. |
-
-To read tokens and cost, IronBee reads your local Cursor session token (from `state.vscdb`, falling back to the macOS Keychain) and calls the usage API. It never prompts for it, and the capability is the on/off switch for the whole behavior. It maps to the [`cursor.apiAccess.enable`](/cli/configuration/configuration#cursor-cursor-only) config key (with `cursor.apiAccess.usageTtlSeconds` tuning the fetch cache) and is the Cursor parity of Claude's [OAuth access](/cli/clients/claude-code#claude-oauth-access).
+IronBee also does one read-only lookup in Cursor's local SQLite store (`state.vscdb`): the signed-in user's cached email, so events can be attributed to you in the Console. Nothing is ever written there, and the read degrades silently when no SQLite driver is available. Point it elsewhere with [`IRONBEE_CURSOR_USER_DIR`](/cli/configuration/environment-variables#advanced) if your Cursor install isn't in the standard per-OS location.
 
 <Note>
-  A few signals Cursor simply doesn't expose are always omitted — cache-creation tokens, skill usage, and the rolling 5-hour / 7-day rate-limit windows Claude reports. Cursor surfaces a monthly quota and a hard USD cap instead, which ride along in the generic rate-limit window map.
+  IronBee 0.42 removed the Cursor usage-API integration (`ironbee cursor api-access`) that used to enrich sessions with per-request tokens and cost from `api2.cursor.sh`, together with the rest of the insights layer. The `cursor.apiAccess.*` config keys are inert and can be dropped from your config files.
 </Note>
-
-Cursor sessions are also backfilled by [`ironbee import`](/cli/guides/importing-sessions) — its "transcript" is the composer inside `state.vscdb`, so there's no per-session `.jsonl` file, but imported sessions land in the Console alongside live ones.
 
 ---
 

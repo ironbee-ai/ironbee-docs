@@ -8,7 +8,7 @@ description: Manage IronBee from a full-screen terminal UI instead of individual
 It mirrors the CLI: anything you do in the TUI runs the same underlying logic as the matching command.
 
 <Frame caption="The IronBee TUI home menu, pick an area to dive into.">
-  <img src="/images/cli/tui-home.png" alt="IronBee TUI home menu showing the Configuration, Platforms, Projects, Sessions, Queue, and Import areas with a help bar at the bottom" />
+  <img src="/images/cli/tui-home.png" alt="IronBee TUI home menu showing the Configuration, Platforms, Projects, Sessions, Scenarios, and Queue areas with a help bar at the bottom" />
 </Frame>
 
 ---
@@ -28,7 +28,7 @@ ironbee tui projects -p /path/to/project
 
 | Argument / flag | Description |
 |-----------------|-------------|
-| `[area]` | Open directly into an area: `config`, `platforms`, `projects`, `sessions`, `scenarios`, `queue`, or `import` |
+| `[area]` | Open directly into an area: `config`, `platforms`, `projects`, `sessions`, `scenarios`, or `queue` |
 | `-p <dir>` | Start with a specific project as the active one (default: current directory) |
 
 <Note>
@@ -47,7 +47,6 @@ ironbee tui projects -p /path/to/project
 | **Sessions** | Browse sessions with their phase, verdict, and retry counts; run a read-only verdict check |
 | **Scenarios** | Browse [saved verification scenarios](/cli/guides/scenarios) with their freshness (fresh / stale / unknown vs the current code, plus a `(N draft)` marker for never-replayed step caches). The detail pane lists each `llm-action` step cache — state, baseline commit, live-validated / draft, covered paths. Read-only — repair is the agent's `/ironbee-sync-scenario` |
 | **Queue** | Inspect and drain the background job queue; manage dead-letter entries |
-| **Import** | Backfill historical sessions with a live dry-run estimate before you commit |
 
 <Note>
   Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **mode single-select** (`enforce` / `assist` / `monitor` — the equivalent of `ironbee install --mode`; picking `enforce` adds the same [strictness](/cli/guides/verification#strict-mode) and [fix-enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it) sub-pickers, with Esc stepping back) and, unless you pick `monitor`, a **platform multi-select** (pre-checked from the project's current config — the equivalent of `ironbee install --platforms`) to choose which cycles to enable, including the same **`s` suggest** key. One difference: a TUI install never runs the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) — it tips you to run `ironbee devtools prefetch` in a terminal instead.

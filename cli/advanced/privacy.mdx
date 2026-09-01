@@ -48,6 +48,22 @@ You still get the structural signal which tools ran, verdicts, timing, and the s
 
 ---
 
+## Tool-call reasons
+
+IronBee asks its verifier and scenario sub-agents to annotate each DevTools call with a one-sentence **reason** — *why this call, what it expects to see* — which is recorded on the `tool_call` event and rendered on the Console timeline. It's a readability feature: it never changes what a tool does or whether a cycle passes.
+
+Because it's model-authored free text, it's worth knowing exactly where it sits:
+
+- **Privacy mode does not redact it.** The two flags above gate the DevTools' tool input/output detail and artifacts; the reason is a separate top-level field on the `tool_call` event that the CLI records itself.
+- **There's no switch for it.** The channel that carries it (`TOOL_INPUT_EXTRAS_ENABLE`) is one of the IronBee invariants that always wins last when the DevTools MCP env is rendered, so an `ironbeeDevTools.env` override can't turn it off. If you need it gone, suspend the [Collector](/cli/configuration/configuration#collector) (`collector.enable: false`) — then nothing ships at all.
+- **IronBee instructs the agent** to keep it to one sentence and to put no secrets, tokens, or personal data in it. The instruction lives in the sub-agent prompts, so it only reaches the modes that have one.
+
+<Note>
+  **Scope:** reasons come from the delegated sub-agents — Claude Code's verifier and scenario agents, and Codex in its default `sub-agent` mode. Where the main agent drives the tools itself (Cursor, and Codex in [`main-agent` mode](/cli/clients/codex#how-verification-is-delivered)) no annotation is requested, so no reason is recorded. On **Claude Code** there's one extra source: a `Bash` call the agent didn't annotate records the model's own `description` for the command (a field Claude Code already asks for) instead. Codex and Cursor shell tools carry no description.
+</Note>
+
+---
+
 ## How it relates to telemetry and the collector
 
 These three are independent knobs, privacy mode doesn't touch the other two:
@@ -55,7 +71,7 @@ These three are independent knobs, privacy mode doesn't touch the other two:
 | Control | Governs | Default |
 |---------|---------|---------|
 | **Privacy** (`privacy.enable`) | How much detail the DevTools send to *your* Collector | Off (full detail) |
-| [**Telemetry**](/cli/advanced/telemetry-statusline#telemetry) (`telemetry.enable`) | Anonymous PostHog product analytics for the CLI itself | On |
+| [**Telemetry**](/cli/advanced/telemetry) (`telemetry.enable`) | Anonymous PostHog product analytics for the CLI itself | On |
 | [**Collector**](/cli/configuration/configuration#collector) (`collector.enable`) | Whether session data is sent to the Console at all | On when credentials are set |
 
 To stop sending your session data entirely, suspend the Collector (`collector.enable: false`) rather than reaching for privacy mode, privacy mode trims *what* is sent, not *whether* anything is sent.
@@ -96,7 +112,7 @@ Here screenshots and recordings stay redacted (privacy mode), but tool detail is
 ## What's next?
 
 <CardGroup cols={2}>
-  <Card title="Telemetry & Statusline" icon="chart-line" href="/cli/advanced/telemetry-statusline">
+  <Card title="Telemetry" icon="chart-line" href="/cli/advanced/telemetry">
     The other data toggle — anonymous CLI telemetry.
   </Card>
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#privacy">

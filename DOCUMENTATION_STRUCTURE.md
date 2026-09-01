@@ -24,16 +24,16 @@ Current structure as of the `docs.json` navigation configuration.
 | `cli/guides/managing-projects.mdx` | Managing Projects | ✅ |
 | `cli/guides/verification.mdx` | Verification | ✅ |
 | `cli/guides/verification-context.mdx` | Verification Context | ✅ |
+| `cli/guides/verification-jobs.mdx` | Verification Jobs | ✅ |
 | `cli/guides/scenarios.mdx` | Saved Scenarios | ✅ |
 | `cli/guides/issue-tracking.mdx` | Issue Tracking | ✅ |
-| `cli/guides/importing-sessions.mdx` | Importing Sessions | ✅ |
 | `cli/guides/interactive-mode.mdx` | Interactive Mode | ✅ |
 | `cli/configuration/configuration.mdx` | Configuration | ✅ |
 | `cli/configuration/environment-variables.mdx` | Environment Variables | ✅ |
 | `cli/advanced/inspecting-sessions.mdx` | Inspecting Sessions | ✅ |
 | `cli/advanced/job-queue.mdx` | Job Queue | ✅ |
 | `cli/advanced/privacy.mdx` | Privacy Mode | ✅ |
-| `cli/advanced/telemetry-statusline.mdx` | Telemetry & Statusline | ✅ |
+| `cli/advanced/telemetry.mdx` | Telemetry | ✅ |
 | `cli/advanced/runtime-files.mdx` | Runtime Files | ✅ |
 | `cli/clients/claude-code.mdx` | Claude Code | ✅ |
 | `cli/clients/cursor.mdx` | Cursor | ✅ |

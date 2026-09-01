@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `service`, `collector`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `telemetry`, `privacy`, `statusLine`, `otel`, `codex`, `runtime`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `service`, `collector`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `telemetry`, `privacy`, `codex`, `runtime`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -115,7 +115,7 @@ Placeholders resolve for **runtime consumers** (checks, context injection, the c
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `runtime.location` | `string` | `"external"` | Where per-session runtime data (the `sessions/` folder — `actions.jsonl`, verdicts, queue, analytics) is stored. `"external"` *(default)* keeps it **out of the project tree** at `~/.ironbee/projects/<token>/sessions/`, so a project never accumulates a growing `sessions/` folder even when it's gitignored. `"in-project"` stores it under `<project>/.ironbee/sessions/` (the legacy layout). Committed config, `scenarios/`, and `VERIFICATION.md` files always stay in-project regardless. The [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var overrides it per process. Takes effect on the next session. See [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives). |
+| `runtime.location` | `string` | `"external"` | Where per-session runtime data (the `sessions/` folder — `actions.jsonl`, verdicts, queue) is stored. `"external"` *(default)* keeps it **out of the project tree** at `~/.ironbee/projects/<token>/sessions/`, so a project never accumulates a growing `sessions/` folder even when it's gitignored. `"in-project"` stores it under `<project>/.ironbee/sessions/` (the legacy layout). Committed config, `scenarios/`, and `VERIFICATION.md` files always stay in-project regardless. The [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var overrides it per process. Takes effect on the next session. See [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives). |
 
 <Note>
   Switching `runtime.location` doesn't move existing session data — it changes where *new* sessions are written. Old per-session folders under the previous location are left in place; you can delete them by hand if you don't need them.
@@ -157,7 +157,7 @@ The six cycles: `browser`, `node`, `python`, `backend`, `android`, and `terminal
 | `python` | Opt-in | When enabled: server/api/app `.py` paths, Django (`views.py`/`urls.py`/`models.py`/`tasks.py`), Flask/FastAPI (`app.py`/`main.py`), WSGI/ASGI entry points |
 | `backend` | Opt-in | When enabled: 13 multi-language code defaults (ts/js/py/go/java/rb/cs/rs/kt/scala/ex/php/clj) |
 | `android` | Opt-in | When enabled: standard Android project layouts (Gradle, Kotlin/Java source trees, resources) |
-| `terminal` | Opt-in | When enabled: CLI / TUI / shell paths (`cli/**`, `cmd/**`, `bin/**`, `**/commands/**`, CLI entrypoints, shell scripts) |
+| `terminal` | Opt-in | When enabled: CLI / TUI / shell paths — `cli/`, `cmd/`, `commands/`, and `bin/` trees (at any depth), CLI entrypoints, and shell scripts |
 
 The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
@@ -245,16 +245,22 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     ```
   </Accordion>
   <Accordion title="Terminal default verify patterns">
-    Covers CLI entrypoints, command trees, and shell scripts (applies once the cycle is enabled):
+    Covers CLI entrypoints, command trees, and shell scripts (applies once the cycle is enabled). Note these are **extension-scoped** — a `README.md` or a fixture inside `cli/` doesn't activate the cycle:
 
     ```
-    cli/**
-    cmd/**
+    cli/**/*.{ts,js,mjs,cjs,py,go,rs,rb,java,kt}
+    **/cli/**/*.{ts,js,mjs,cjs,py,go,rs,rb,java,kt}
+    cmd/**/*.{go,ts,js,mjs,cjs,py,rs}
+    **/cmd/**/*.{go,ts,js,mjs,cjs,py,rs}
+    **/commands/**/*.{ts,js,mjs,cjs,py,go,rs,rb}
     bin/**
-    **/commands/**
-    **/cli.{ts,js,py,go,rs}
+    **/bin/**/*.{ts,js,mjs,cjs,py,go,rs,rb,sh}
+    **/cli.{ts,js,mjs,cjs,py,go,rs,rb}
+    **/main.{go,rs}
     **/*.{sh,bash,zsh,fish}
     ```
+
+    `bin/**` is the one deliberately unscoped entry — a top-level `bin/` holds executables that often carry no extension at all.
   </Accordion>
 </AccordionGroup>
 
@@ -336,7 +342,6 @@ The collector is what ships your session data to the IronBee Console. Its endpoi
 | `collector.apiKey` | `string` | *(unset)* | **Deprecated read fallback** for `service.apiKey`. Can come from `IRONBEE_API_KEY` instead. |
 | `collector.enable` | `boolean` | implicit `true` when a credential is set | Set `false` to suspend sending while keeping credentials around. The collector activates on the **presence of a credential** (`service.*` preferred, `collector.*` fallback) — the URL always resolves via `service.domain`. |
 | `collector.batchSize` | `number` | `100` | Max events per POST. |
-| `collector.timeoutMs` | `number` | `10000` | Per-request timeout (ms), clamped to `[1000, 60000]`. |
 
 ---
 
@@ -344,7 +349,7 @@ The collector is what ships your session data to the IronBee Console. Its endpoi
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `telemetry.enable` | `boolean` | `true` | Anonymous PostHog product analytics for the CLI itself (separate from the collector pipeline). Opt out with `false`, also turns off telemetry in the devtools MCP servers. Equivalent to `ironbee telemetry disable`. |
+| `telemetry.enable` | `boolean` | `true` | [Anonymous PostHog product analytics](/cli/advanced/telemetry) for the CLI itself (separate from the collector pipeline). Opt out with `false`, also turns off telemetry in the devtools MCP servers. Equivalent to `ironbee telemetry disable`. |
 
 ---
 
@@ -404,7 +409,7 @@ Connect Jira, Linear, or GitHub Issues — see the [Issue Tracking guide](/cli/g
 
 ## VCS linkage
 
-Links each session to the pull request it produced and the issues that PR closes — the join key behind the Console's per-issue cost and verification views. A **sub-feature of analytics**: the effective switch is `analytics.enable` *and* `vcs.enable`, and it runs in every mode (enforce / assist / monitoring-only). See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+Links each agent turn to the pull request it produced and the issues that PR closes — the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -433,36 +438,12 @@ Links each session to the pull request it produced and the issues that PR closes
 
 ---
 
-## Import
+## Claude (Claude Code only)
+
+Two install-time behaviors that keep the verifier working with Claude Code's own host-side guardrails. See [Claude Code](/cli/clients/claude-code).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `import.concurrency` | `number` | `4` | Default parallelism for [`ironbee import`](/cli/guides/importing-sessions). The `--concurrency` flag overrides it. Clamped to `[1, 32]`. |
-
----
-
-## Statusline (Claude Code only)
-
-Integrates session status into Claude Code's statusline while preserving any statusline you already have. Manage it with `ironbee claude statusline enable` / `disable`.
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `statusLine.enable` | `boolean` | implicit `true` when configured / collector set | Master switch for the statusline integration. |
-| `statusLine.renderDefault` | `boolean` | `false` | When you have no existing statusline, `true` renders a minimal model + context-% line instead of staying silent. |
-| `statusLine.emitMinIntervalSeconds` | `number` | `10` | Minimum seconds between emitted status events. `0` disables the throttle. |
-| `statusLine.refreshInterval` | `number` | *(unset)* | Claude Code's own timer-based statusline refresh, in seconds. |
-| `statusLine.skipUnchanged` | `boolean` | `false` | Skip a `session_status` emit when its resource-metric signature (model, context window, cost, rate-limits) is identical to the last one. Default `false` — every throttle-passing tick emits even if unchanged (a heartbeat, so a long sub-agent delegation with flat main-thread metrics still produces points). Set `true` to emit only on a genuine change (lower volume, gaps while flat). The throttle applies either way. Read live. |
-
----
-
-## Claude OAuth access (Claude Code only)
-
-Controls whether IronBee may read your Claude Code OAuth token to fill statusline rate-limits for plans whose statusline JSON omits them (team / enterprise). Manage with `ironbee claude oauth-access enable` / `disable` / `status`. See [Claude Code → Claude OAuth access](/cli/clients/claude-code#claude-oauth-access).
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `claude.oauthAccess.enable` | `boolean` | `true` | Whether IronBee may read the Claude OAuth token (macOS Keychain / `~/.claude/.credentials.json`) and call OAuth-scoped endpoints. Opt out with `false`. Claude-only. |
-| `claude.oauthAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the rate-limit fetch, the token read + usage call fire at most once per this interval, however often the statusline ticks. `0` = every tick. |
 | `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` — takes effect on the next `ironbee install`. Claude-only. |
 | `claude.trustWorkspace.enable` | `boolean` | `true` | Whether `ironbee install` marks the project [trusted](/cli/clients/claude-code#workspace-trust) in Claude Code's machine-global `~/.claude.json` when it isn't already. Claude Code 2.1.x ignores a project's committed `permissions.allow` (the devtools + `Bash(ironbee *)` entries IronBee writes) until the workspace is trusted, and the trust dialog doesn't re-appear once onboarding has been seen — so without this the entries stay silently disabled and the agent gets prompted on every devtools/`ironbee` call. Best-effort and idempotent: it only ever flips a missing/false flag to `true` and never clobbers other `~/.claude.json` content. Opt out with `false`. Claude-only. |
 
@@ -475,31 +456,6 @@ Controls how the Codex verification cycle is driven. Manage with `ironbee codex 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `codex.verifier.mode` | `string` | `sub-agent` | How the Codex verification cycle runs. `"sub-agent"` (default) delegates to the [`ironbee-verifier`](/cli/clients/codex) custom agent (per-agent MCP, slim delegation skill/rule/command), keeping the heavy devtools output out of the main conversation. `"main-agent"` makes the **main** agent drive the devtools tools directly (session-level MCP server, no verifier sub-agent, inline skill/rule/command) — the Cursor-style fallback for when Codex's sub-agent machinery regresses. Re-renders the Codex client. Codex-only. |
-
----
-
-## Cursor (Cursor only)
-
-Controls whether IronBee may read your local Cursor session token and call Cursor's per-user usage API to enrich [Cursor analytics](/cli/clients/cursor#session-analytics) with exact per-request tokens and cost. Manage with [`ironbee cursor api-access enable` / `disable` / `status`](/cli/clients/cursor#session-analytics).
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `cursor.apiAccess.enable` | `boolean` | `true` | Whether IronBee may read the local Cursor session token (`state.vscdb` / macOS Keychain) and call Cursor's usage API (`api2.cursor.sh`) for exact per-request tokens, cost, and rate-limit windows. When off or unavailable, Cursor analytics degrade to **structure + line data only** (cost/tokens omitted). Opt out with `false`. Parity with `claude.oauthAccess`. Cursor-only; read live (not artifact-affecting). |
-| `cursor.apiAccess.usageTtlSeconds` | `number` | `60` | Cache TTL for the usage/rate-limit fetch — the token read + usage call fire at most once per this interval. `0` = every request. |
-
----
-
-## OTEL collector
-
-IronBee runs a local OTEL collector daemon that turns Claude Code's OTLP export into `session_context` (context-usage) events. One daemon per machine, started and reaped automatically. Manage it with [`ironbee claude otel`](/cli/clients/claude-code#otel-collector).
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `otel.enable` | `boolean` | implicit `true` when a collector is configured | Master switch for the local OTEL pipeline. Also gates whether the OTEL env block is written to `settings.json`. |
-| `otel.port` | `number` | `15986` | Loopback port the daemon binds to (one daemon per machine). |
-| `otel.idleTimeoutSeconds` | `number` | `600` | Daemon self-reaps after this many seconds with no activity; restarted on the next session. |
-| `otel.ensureMinIntervalSeconds` | `number` | `30` | Throttle for the liveness check fired from per-tool hooks. |
-| `otel.emitMinIntervalSeconds` | `number` | `0` | Per-session `session_context` emit throttle. `0` = emit on every API request (full context-growth series). |
 
 ---
 
@@ -536,7 +492,6 @@ These sections auto-enable when a collector is configured and rarely need manual
 
 - **`recording:`** session recording for the browser and Android cycles (`recording.enable`); the node, python, backend, and terminal cycles never trigger it.
 - **`jobQueue:`** the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
-- **`analytics:`** per-session structural analytics and how often they emit (`analytics.enable`, `analytics.emitOnStop`, and per-event opt-in/opt-out flags).
 
 ---
 
@@ -581,7 +536,7 @@ Or use the CLI: `ironbee browser disable && ironbee backend enable`.
 
 Or use the CLI: `ironbee verification auto disable`.
 
-### Capture code diffs in analytics
+### Capture code diffs on file-change events
 
 ```json
 {

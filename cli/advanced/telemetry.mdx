@@ -1,0 +1,48 @@
+---
+title: Telemetry
+description: Manage the anonymous product telemetry the IronBee CLI and DevTools send.
+---
+
+IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. This is **separate** from the IronBee Collector pipeline that ships your session data — turning telemetry off doesn't change what your Console shows.
+
+---
+
+## Enable or disable
+
+```bash
+ironbee telemetry disable   # opt out
+ironbee telemetry enable    # opt back in (the default)
+```
+
+Disabling turns telemetry off in **both** the CLI and the IronBee DevTools MCP servers (it injects `TELEMETRY_ENABLE=false` into their environment), so one switch covers both sides.
+
+By default these write to the project config. Use `-g`/`--global` for all your projects or `--local` for a gitignored personal override. The underlying key is [`telemetry.enable`](/cli/configuration/configuration#telemetry).
+
+For a single shell or CI run, `IRONBEE_TELEMETRY=false` does the same thing without touching any config file — see [Environment variables](/cli/configuration/environment-variables#common).
+
+<Note>
+  Telemetry is about the CLI's own *anonymous* product analytics. To control how much of *your* session detail (tool input/output, screenshots, recordings) reaches the Collector, see [Privacy mode](/cli/advanced/privacy).
+</Note>
+
+---
+
+## How it relates to the other data switches
+
+| Control | Governs | Default |
+|---------|---------|---------|
+| **Telemetry** (`telemetry.enable`) | Anonymous product analytics for the CLI and DevTools themselves | On |
+| [**Privacy**](/cli/advanced/privacy) (`privacy.enable`) | How much detail the DevTools send to *your* Collector | Off (full detail) |
+| [**Collector**](/cli/configuration/configuration#collector) (`collector.enable`) | Whether session data is sent to the Console at all | On when credentials are set |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#telemetry">
+    The `telemetry.enable` key in full.
+  </Card>
+  <Card title="Privacy Mode" icon="bot" href="/cli/advanced/privacy">
+      Redact tool detail, screenshots, and recordings from the data the DevTools MCP servers ship to the Collector.
+  </Card>
+</CardGroup>

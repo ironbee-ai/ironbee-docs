@@ -1,12 +1,12 @@
 ---
 title: Issue Tracking
-description: Connect Jira, Linear, or GitHub Issues — verify against tickets, report results back, and attribute session cost to the issues it closed.
+description: Connect Jira, Linear, or GitHub Issues — verify against tickets, report results back, and attribute each session to the issues it closed.
 ---
 
 IronBee can connect your project to an **issue tracker** — [Jira](#set-up-jira), [Linear](#set-up-linear), or [GitHub Issues](#github-issues) — and use it in two directions:
 
 - **In the agent session:** the `/ironbee-issue-track` command reads a ticket, verifies your changes against its acceptance criteria, and reports the result back to the tracker — with the verification's screenshots and a deep-link to the session timeline in the Console.
-- **In your analytics:** [VCS linkage](#vcs-linkage-sessions-to-prs-and-issues) ties each session to the pull request it produced and the issues that PR closes, so the Console can answer *"what did closing PROJ-123 cost?"* instead of showing an opaque session ID.
+- **In the Console:** [VCS linkage](#vcs-linkage-sessions-to-prs-and-issues) ties each agent turn to the pull request it produced and the issues that PR closes, so verification data is attributable to *"the work behind PROJ-123"* instead of an opaque session ID.
 
 Several trackers can be connected at once — one integration surface carries all of them.
 
@@ -121,13 +121,13 @@ For Jira and Linear the gate is mechanical (the write tools aren't even exposed 
 
 ## VCS linkage: sessions to PRs and issues
 
-Independent of the agent-facing command, IronBee links every session to your version control — this is what turns raw session cost into per-issue numbers in the Console:
+Independent of the agent-facing command, IronBee links every agent turn to your version control — this is what makes a session's verification record reportable per issue in the Console:
 
 1. Each agent turn is stamped with its **git ref** (repo, branch, commit).
 2. A background worker resolves the **pull request(s)** the commit belongs to (via GitHub), retroactively — a PR opened an hour after the work is picked up on a later pass.
 3. The turn's **issues** are attributed from every available signal: the GitHub issues the PR closes, the tickets the agent read during the session, plus issue keys mined from the branch name, commit messages, and the PR title — validated against the tracker (a key that doesn't resolve is dropped).
 
-The result ships as `vcs_link` events and a per-session rollup, so the Console can show cost and verification outcomes **per issue and per PR**. Attribution runs in every mode — enforce, assist, even monitoring-only — as a sub-feature of analytics (it follows `analytics.enable`, plus its own [`vcs.enable`](/cli/configuration/configuration#vcs-linkage) opt-out). The `projectKeys` / `teamKeys` allow-lists from setup keep false positives out (and disambiguate Jira from Linear, since both use the `ABC-123` shape).
+The result ships as one `vcs_link` event per agent turn, so the Console can show verification outcomes **per issue and per PR**. Each event carries a deterministic ID and is re-emitted whenever the resolution improves (a PR opened later, an issue transitioned), so the record catches up on its own. Attribution runs in every mode — enforce, assist, even monitoring-only — and auto-enables whenever a collector is configured; opt out with [`vcs.enable`](/cli/configuration/configuration#vcs-linkage). The `projectKeys` / `teamKeys` allow-lists from setup keep false positives out (and disambiguate Jira from Linear, since both use the `ABC-123` shape).
 
 <Warning>
   VCS linkage sends **repository and branch names** to the Collector, and branch names can carry sensitive text (`fix/CVE-…`, `feat/acme-corp-…`). It's independent of [privacy mode](/cli/advanced/privacy) (which gates devtools payloads) — opt out of the linkage itself with `ironbee config set vcs.enable false`.

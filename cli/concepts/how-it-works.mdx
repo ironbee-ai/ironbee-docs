@@ -50,6 +50,7 @@ To pass a cycle, the agent exercises the affected paths with that cycle's tools 
 ```json
 {
   "status": "pass",
+  "name":   "checkout total updates",
   "checks": [ ... ],
   "issues": [ ... ],
   "fixes":  [ ... ]
@@ -57,6 +58,24 @@ To pass a cycle, the agent exercises the affected paths with that cycle's tools 
 ```
 
 IronBee doesn't take `status: "pass"` at face value. Each cycle defines the tools that must appear on the wire before a pass counts: required tools (all-of) and alternative evidence paths (any-of). If the agent claims success without actually using the tools, the gate overrides the verdict to **fail**. This is what stops an agent from declaring "it works" without testing.
+
+`name` is an optional short label (3–6 words) for what the cycle actually verified. It isn't part of the verdict itself — IronBee lifts it off the payload and stamps it on the cycle as it closes. See [What a cycle records](#what-a-cycle-records) below.
+
+---
+
+## What a cycle records
+
+Beyond the verdict, every verification cycle carries three pieces of metadata so the Console can describe a run at a glance:
+
+| | Where it comes from | Trusted because |
+|---|---|---|
+| **Name** | The agent names the cycle when it opens (`ironbee hook verification-start --name`) and may rename it on the verdict's optional `name` field. The closing name wins — the agent knows more once it's done. A [saved-scenario](/cli/guides/scenarios) run is named after its scenario automatically. | Display only. It never gates anything, so a bad label costs nothing but clarity. |
+| **Platforms** | Which cycles were *enabled* when the cycle opened, and which ones it *actually exercised* by the time it closed. | The exercised set is derived **mechanically** from the cycle's own recorded tool calls, never from what the agent claims. A cycle that drove no platform tools records none. |
+| **Reason** | A one-sentence "why this call". IronBee's [delegated sub-agents](#who-drives-the-tools) attach one to every verification tool call; on Claude Code a `Bash` call without one falls back to the model's own command `description`. Where the main agent drives the tools directly (Cursor, Codex `main-agent`) none is requested. | Display only — it annotates the timeline, it never changes what a tool does or whether a cycle passes. |
+
+<Warning>
+  The per-call **reason** is model-authored free text that ships to the Collector alongside the tool call. IronBee instructs the agent to keep it to one sentence and to put no secrets, tokens, or personal data in it — but it is not redacted by [privacy mode](/cli/advanced/privacy), which gates DevTools payloads rather than this field, and there's no separate switch for it. See [Privacy mode → Tool-call reasons](/cli/advanced/privacy#tool-call-reasons).
+</Warning>
 
 ---
 
@@ -70,7 +89,7 @@ A failed verdict sends the agent back to fix the issues and verify again. The [`
 
 On **Claude Code** and **Codex**, the main agent doesn't run the devtools tools itself — it **delegates to a dedicated `ironbee-verifier` sub-agent** that owns them. This keeps the heavy devtools output (DOM, console, screenshots) out of the main conversation while still recording everything to the same session. **Cursor** has no sub-agent surface, so its main agent verifies directly. See [Verification → How verification runs](/cli/guides/verification#how-verification-runs-the-verifier-sub-agent).
 
-Every agent-bound event the session ships — tool calls, file changes, verification start/end, verdicts, per-request cost — carries an **`agent_name`** (`main` for the top-level conversation, or the sub-agent's name like `ironbee-verifier`), so the Console can show exactly *who* did what within one session. Each agent's runtime state is likewise kept in its own partition on disk (see [Runtime files → Per-agent state](/cli/advanced/runtime-files#per-agent-state-agentsagentid)), so a delegated verifier and the main agent never race on the same files.
+Every agent-bound event the session ships — tool calls, file changes, verification start/end, verdicts, check results — carries an **`agent_name`** (`main` for the top-level conversation, or the sub-agent's name like `ironbee-verifier`), so the Console can show exactly *who* did what within one session. Each agent's runtime state is likewise kept in its own partition on disk (see [Runtime files → Per-agent state](/cli/advanced/runtime-files#per-agent-state-agentsagentid)), so a delegated verifier and the main agent never race on the same files.
 
 ---
 

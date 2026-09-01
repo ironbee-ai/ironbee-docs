@@ -33,7 +33,7 @@ This guide covers the basics: create an account, install the CLI, sign in, and s
 
 ---
 
-## Step 1 - Create your account
+## Step 1: Create your account
 
 Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up. If you already have an account, just sign in.
 
@@ -41,7 +41,7 @@ Your account gives you access to the dashboard and is what the CLI connects to i
 
 ---
 
-## Step 2 - Install the CLI
+## Step 2: Install the CLI
 
 Install the CLI globally with npm:
 
@@ -57,7 +57,7 @@ ironbee --version
 
 ---
 
-## Step 3 - Sign in
+## Step 3: Sign in
 
 From any directory, run:
 
@@ -85,7 +85,7 @@ When it completes, the terminal prints a confirmation:
 
 ---
 
-## Step 4 - Set up your project
+## Step 4: Set up your project
 
 Navigate to the project you want to use IronBee with, then run the installer:
 
@@ -102,7 +102,7 @@ Then it walks you through two quick arrow-key pickers. First, **which verificati
 
 - **`assist`** *(default)* the verifier and `/ironbee-verify` are installed so the agent can verify on demand, but nothing blocks task completion.
 - **`enforce`** changes must pass every active cycle before a task can complete.
-- **`monitor`** analytics only; no verification machinery is installed.
+- **`monitor`** tracking only — sessions, activity, and tool calls are recorded to the Collector; no verification machinery is installed.
 
 <img src="/images/cli/verification-mode-selection_assist.png" alt="Arrow-key picker titled 'Which verification mode?' with auto verify (enforce), assist, and monitor only options, the cursor on assist" style={{borderRadius:'8px',width:'100%'}} />
 

@@ -18,7 +18,7 @@ There is no workflow file to add and no test suite to maintain. Nothing waits on
 
 ---
 
-## Step 1 - Install the Vercel integration
+## Step 1: Install the Vercel integration
 
 Open the Console at **Settings → Integrations** and select **Install the Vercel integration** under the Vercel card. You can also install it from the [Vercel Marketplace](https://vercel.com/marketplace) listing.
 
@@ -38,7 +38,7 @@ If the connect page reports that the installation is no longer pending, it expir
 
 ---
 
-## Step 2 - Install the GitHub App
+## Step 2: Install the GitHub App
 
 The Vercel integration knows the deployment; the GitHub App knows the code behind it. Installing both is what gives the agent a diff to verify against, a live check on the pull request, and the result posted as a PR comment.
 
@@ -46,7 +46,7 @@ Install it from **Settings → Integrations → Install the GitHub App**, then f
 
 ---
 
-## Step 3 - Give IronBee preview access
+## Step 3: Give IronBee preview access
 
 Preview deployments are usually behind Vercel deployment protection, which means IronBee cannot open the deployment it is meant to verify. Pick any **one** of the three options below - each is enough on its own. If your previews are already public, skip this step.
 
