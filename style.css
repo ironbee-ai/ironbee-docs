@@ -147,3 +147,13 @@ img.nav-logo {
   max-width: 220px;
   height: auto;
 }
+/* Brand marks used as page icons (Vercel, GitHub): Mintlify renders a custom
+   SVG icon as a plain <img>, so the file's own fill can't follow the theme.
+   Force the mark black on light and white on dark, the way the site logo works. */
+img[src^='/images/icons/'] {
+  filter: brightness(0);
+}
+
+.dark img[src^='/images/icons/'] {
+  filter: brightness(0) invert(1);
+}

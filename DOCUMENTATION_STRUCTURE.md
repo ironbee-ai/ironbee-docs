@@ -41,6 +41,16 @@ Current structure as of the `docs.json` navigation configuration.
 
 ---
 
+## Integrations
+
+| File | Title | Status |
+|------|-------|--------|
+| `integrations/vercel.mdx` | Vercel | ✅ |
+| `integrations/netlify.mdx` | Netlify | ✅ |
+| `integrations/github.mdx` | GitHub App | ✅ |
+
+---
+
 ## Console
 
 ### Projects & Sessions
