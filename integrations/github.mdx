@@ -6,7 +6,7 @@ icon: "/images/icons/github.svg"
 
 The IronBee GitHub App is what connects a verification run to the code it is verifying. It lets the cloud agent check out your repository during a run, resolve the pull request behind a deployed commit so there is a real changeset to work from, and report the verdict back on the commit and the pull request.
 
-It pairs with the [Vercel integration](/integrations/vercel), and it is also what binds an [`ironbee verify`](/cli/guides/verification-jobs) run to your repository.
+It pairs with the [Vercel integration](/integrations/vercel) and the [Netlify extension](/integrations/netlify), and it is also what binds an [`ironbee verify`](/cli/guides/verification-jobs) run to your repository.
 
 ---
 
@@ -90,6 +90,9 @@ The same installation is what lets [`ironbee verify`](/cli/guides/verification-j
 <CardGroup cols={2}>
   <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
     Verify every preview deployment as a Vercel deployment check.
+  </Card>
+  <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
+    Verify every deploy preview, with the verdict on the deploy summary.
   </Card>
   <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
     Start the same cloud verification from your shell or CI with `ironbee verify`.

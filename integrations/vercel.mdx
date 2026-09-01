@@ -132,7 +132,7 @@ The conclusion Vercel shows maps to the verdict like this:
 | Verification could not run | Neutral |
 | Cancelled | Canceled |
 
-The check's link opens the session in the Console, where the timeline, the replay, the network payloads, the spans, and the files a finding came from all live. In the Console's verification list these runs carry the **Vercel** trigger, so you can filter for them.
+The check's link opens the session in the Console. While the run is going, the session streams **live**: every action as it executes, the browser view, and the network requests behind it. Once it concludes, the recording replays the exact same workspace - the action timeline, the network payloads, the traces and logs, and the files a finding came from - synced to the replay. In the Console's verification list these runs carry the **Vercel** trigger, so you can filter for them.
 
 ---
 
@@ -173,6 +173,9 @@ Changes on Vercel's side flow back automatically:
 <CardGroup cols={2}>
   <Card title="GitHub App" icon="/images/icons/github.svg" href="/integrations/github">
     Repository access, the check on the commit, and the pull request comment.
+  </Card>
+  <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
+    The same verification on Netlify deploy previews, via the Netlify extension.
   </Card>
   <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
     The same cloud verification, started from your shell or CI with `ironbee verify`.

@@ -133,6 +133,7 @@
             "icon": "plug",
             "pages": [
               "integrations/vercel",
+              "integrations/netlify",
               "integrations/github"
             ]
           },
