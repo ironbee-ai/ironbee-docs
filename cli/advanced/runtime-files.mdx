@@ -15,7 +15,7 @@ Machine-wide state, shared across all your projects:
 |------|---------------|
 | `config.json` | Global config for your defaults across all projects. `ironbee login` writes your collector credentials here. |
 | `projects.json` | The project inventory, the set of project paths IronBee is installed in. Powers `install --all` / `uninstall --all`. |
-| `install-snapshots.json` | Backups of any statusline config IronBee overwrote, so `uninstall` can restore your original. |
+| `install-snapshots.json` | Transitional — backups of the statusline config older IronBee versions overwrote, so an upgrade or `uninstall` can restore your original. Written by nothing today and removed once every install has upgraded past the [statusline integration](/cli/clients/claude-code#removed-integrations). |
 | `projects/<token>/` | **Per-session runtime data** for each project, in the default `external` [runtime location](#where-per-session-data-lives). `<token>` is derived from the project's path, so each project gets its own folder. Holds the same `sessions/<id>/` tree described below. |
 
 ---
@@ -31,9 +31,8 @@ Created by `ironbee install` in each project:
 | `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) — one `<name>.json` per scenario, plus a sibling `<name>.cache.json` holding a step-ful scenario's captured `llm-action` replay scripts (both committed; never hand-edit the cache). A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`pdt`/`bedt`/`adt`/`tdt`, still read for back-compat) | ✅ Yes |
 | `VERIFICATION.md` | Area-specific [verification guidance](/cli/guides/verification-context), in any directory | ✅ Yes |
 | `sessions/<id>/` | Per-session runtime data — **only when [`runtime.location`](#where-per-session-data-lives) is `in-project`** | ❌ Gitignored |
-| `otel/` | Local OTEL collector daemon log (`daemon.log`) and raw OTLP bodies awaiting processing into `session_context` events. See [OTEL collector](/cli/clients/claude-code#otel-collector). Always in-project, even in `external` mode | ❌ Gitignored |
 
-`ironbee install` adds `.ironbee/sessions/`, `.ironbee/otel/`, and `.ironbee/config.local.json` to your project's `.gitignore` automatically. These are machine-local runtime state and personal overrides, not something you commit. The committed `config.json`, `scenarios/`, and any `VERIFICATION.md` files are what your teammates pick up when they run `ironbee install`.
+`ironbee install` adds five entries to your project's `.gitignore` automatically — `.ironbee/sessions/`, `.ironbee/config.local.json`, `.ironbee/codex-threads.json`, `.ironbee/vcs-cache.json`, and `.claude/settings.local.json`. Each is appended independently and only when it isn't already there, so an existing `.gitignore` is never rewritten. The last three are belt-and-suspenders: today the Codex thread map and the VCS cache live inside the `sessions/` folder (already covered by the first entry), and `.claude/settings.local.json` only exists on Claude Code — they're listed anyway so no machine-local state can slip into a commit on an older layout. The committed `config.json`, `scenarios/`, and any `VERIFICATION.md` files are what your teammates pick up when they run `ironbee install`.
 
 ---
 
@@ -46,7 +45,7 @@ The per-session runtime tree (`sessions/<id>/`) is controlled by [`runtime.locat
 | `external` *(default)* | `~/.ironbee/projects/<token>/sessions/<id>/` | Kept **out of the project tree** so a project never accumulates a growing `sessions/` folder, even though it's gitignored. `<token>` is a stable hash of the project's real path. |
 | `in-project` | `<project>/.ironbee/sessions/<id>/` | The legacy layout — runtime data sits beside your config, under the gitignored `sessions/` folder. |
 
-Either way the contents of `sessions/<id>/` are identical — only the base directory differs. **Committed config (`config.json`, `config.local.json`, `scenarios/`, `VERIFICATION.md`) and the transient `otel/` dir always stay in-project**, regardless of `runtime.location`. Switch layouts with `ironbee config set runtime.location in-project` or the [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var; it takes effect on the next session.
+Either way the contents of `sessions/<id>/` are identical — only the base directory differs. **Committed config (`config.json`, `config.local.json`, `scenarios/`, `VERIFICATION.md`) always stays in-project**, regardless of `runtime.location`. Switch layouts with `ironbee config set runtime.location in-project` or the [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var; it takes effect on the next session.
 
 ---
 
@@ -59,11 +58,11 @@ Each agent task gets its own directory, keeping concurrent sessions isolated (se
 | `state.json` | The session's current state: phase, verification status, and the project dir it belongs to. |
 | `agents/<agentId>/` | **Per-agent state** — see below. Each agent active in the session (the main conversation and every delegated sub-agent) gets its own partition. |
 | `retries` | The current verification retry count. |
-| `analytics/` | Per-session analytics state (`state.json`) and log (`analytics.log`) used to derive session metrics. |
-| `statusline/` | Chained-statusline state (`state.json`) for the Claude statusline integration. |
 | `queue/` | Queue snapshots awaiting delivery, dead-letter entries, and the worker log. See [Job queue](/cli/advanced/job-queue). |
+| `activity/` | One presence marker per participant in the open agent turn (the main agent and each delegated sub-agent). The turn closes only when the last participant leaves, so a backgrounded verifier can't split it. |
+| `tool-results/` | Sidecar drop box for tool results the host truncated (a step-ful [scenario run](/cli/guides/scenarios) can exceed the host's tool-result limit). Normally empty — entries are consumed and deleted immediately. |
+| `vcs-emitted.json` | Fingerprint of the last [`vcs_link`](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) emitted per turn, so an unchanged turn produces no repeat wire traffic. |
 | `session.log` | Diagnostic log of the session's hook activity. |
-| `imported.json` | A marker written by [`ironbee import`](/cli/guides/importing-sessions) so a session isn't re-imported. |
 
 ### Per-agent state (`agents/<agentId>/`)
 

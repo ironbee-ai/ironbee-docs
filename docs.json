@@ -72,7 +72,6 @@
                   "cli/guides/verification-jobs",
                   "cli/guides/scenarios",
                   "cli/guides/issue-tracking",
-                  "cli/guides/importing-sessions",
                   "cli/guides/interactive-mode"
                 ]
               },
@@ -89,7 +88,7 @@
                   "cli/advanced/inspecting-sessions",
                   "cli/advanced/job-queue",
                   "cli/advanced/privacy",
-                  "cli/advanced/telemetry-statusline",
+                  "cli/advanced/telemetry",
                   "cli/advanced/runtime-files"
                 ]
               },

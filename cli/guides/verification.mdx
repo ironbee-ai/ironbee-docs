@@ -94,14 +94,14 @@ It maps to the [`verification.fix`](/cli/configuration/configuration#verificatio
 
 ### Monitoring-only mode
 
-The agent is never blocked and none of the verification machinery is installed no enforcement hook, skill, rule, command, verifier sub-agent, or MCP server but session lifecycle, tool calls, and timing still flow to the IronBee Collector. Use this when you want the analytics without changing how the agent works.
+The agent is never blocked and none of the verification machinery is installed no enforcement hook, skill, rule, command, verifier sub-agent, or MCP server but session lifecycle, tool calls, file changes, and timing still flow to the IronBee Collector. Use this when you want the session record without changing how the agent works.
 
-<img src="/images/cli/verification-mode-selection_monitor-only.png" alt="Verification-mode picker with the cursor on monitor only, described as no enforcement, only track sessions / activity / tools for analytics" style={{borderRadius:'8px',width:'100%'}} />
+<img src="/images/cli/verification-mode-selection_monitor-only.png" alt="Verification-mode picker with the cursor on monitor only, described as no enforcement, only track sessions / activity / tools to the collector" style={{borderRadius:'8px',width:'100%'}} />
 
 Switch to it (or back) anytime:
 
 ```bash
-ironbee verification disable   # monitoring-only — no machinery, analytics only
+ironbee verification disable   # monitoring-only — no machinery, tracking only
 ironbee verification enable    # re-enable verification (resolves to assist unless auto is on)
 ```
 
@@ -328,7 +328,7 @@ Because it can *replace* the devtools cycle, `conclusive` is **hand-set only** �
 
 On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools (plus read-only `Read` / `Grep` / `Glob` so it can understand the change it's verifying — but **no edit tools**), and the main agent **delegates** the verification cycle to it — automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
 
-The point is to keep the heavy devtools output (DOM snapshots, console logs, screenshots) inside the sub-agent's context instead of the main conversation. The sub-agent shares the session, so its events still flow to the Collector and its token/tool usage is folded into the session analytics.
+The point is to keep the heavy devtools output (DOM snapshots, console logs, screenshots) inside the sub-agent's context instead of the main conversation. The sub-agent shares the session, so its events still flow to the Collector — each tagged with its `agent_name` so the Console can tell the verifier's work from the main agent's.
 
 <Note>
   **Cursor** has no verifier sub-agent — its main agent runs the verification itself, because Cursor's sub-agents can't share the verification session.

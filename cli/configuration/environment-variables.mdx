@@ -16,13 +16,13 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 | `IRONBEE_SERVICE_DOMAIN` | Supplies [`service.domain`](/cli/configuration/configuration#service-identity), the stage selector every service URL derives from. |
 | `IRONBEE_API_KEY` | Legacy — supplies the deprecated `collector.apiKey` fallback, which is read **only when `service.apiKey` is unset** (a recent `ironbee login` writes `service.*`, which then wins). One exception: [`ironbee verify`](/cli/guides/verification-jobs#credentials) reads it as a deliberate top-priority override. |
 | `IRONBEE_OAUTH_TOKEN` | Legacy — supplies the deprecated `collector.oauthToken` fallback; same caveat as above. |
-| `IRONBEE_TELEMETRY` | Set to `false` to turn off anonymous CLI telemetry for this shell/run, a per-session alternative to the [`telemetry.enable`](/cli/advanced/telemetry-statusline#telemetry) config key. |
+| `IRONBEE_TELEMETRY` | Set to `false` to turn off [anonymous CLI telemetry](/cli/advanced/telemetry) for this shell/run, a per-session alternative to the `telemetry.enable` config key. |
 | `IRONBEE_LOG_LEVEL` | Logging verbosity. Set to `debug` to see detailed output when troubleshooting. |
 
 ```bash
 # CI: provide the API key from a secret, no file commit
 export IRONBEE_SERVICE_API_KEY=sk-...
-ironbee import --since 30d --yes
+ironbee install --mode enforce --yes
 ```
 
 <Note>
@@ -82,7 +82,7 @@ export IRONBEE_PARAM_API_URL=https://api.staging.internal
 
 When a hook or command needs to know which project it's acting on, IronBee resolves the directory in this order:
 
-1. The client's own variable `CLAUDE_PROJECT_DIR` (Claude Code) or `CURSOR_PROJECT_DIR` (Cursor), set automatically by the host
+1. The client's own variable — `CLAUDE_PROJECT_DIR` (Claude Code), `CURSOR_PROJECT_DIR` (Cursor), or `CODEX_PROJECT_DIR` (Codex) — set automatically by the host
 2. `IRONBEE_PROJECT_DIR`, an explicit override you can set
 3. The current working directory
 
@@ -100,7 +100,11 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_RUNTIME_LOCATION` | Overrides [`runtime.location`](/cli/configuration/configuration#runtime) for this process — `external` (default, per-session data under `~/.ironbee/projects/<token>/`) or `in-project` (`<project>/.ironbee/sessions/`). Takes precedence over the config layers; mainly used by the test suite. |
 | `IRONBEE_BIN` | Overrides the path to the `ironbee` binary used when spawning background workers. |
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
-| `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the `state.vscdb` store) when reading [Cursor session analytics](/cli/clients/cursor#session-analytics). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
+| `IRONBEE_UPDATE_CHECK` | Set to `false` to skip the npm-registry version check (and its update banner) that runs after a command. Worth setting for scripts that spawn `ironbee` in a loop — each check keeps the event loop alive for up to a 3 s round trip. |
+| `IRONBEE_DEVTOOLS_MCP` | Points the `ironbee-devtools` MCP server at your own entry without writing an [`ironbeeDevTools.mcp`](/cli/configuration/configuration#devtools-mcp-overrides) block. A full JSON object: `{"command": "...", "args": [...], "env": {...}}`. Read at install / re-render time, so the resolved command is baked into the artifact — export it when you run `ironbee install`. Wins over the config block; IronBee's invariant env is still layered on top. Mainly for editor extensions that bundle DevTools. |
+| `IRONBEE_DEVTOOLS_ENTRY` | Simpler form of the above: a path, rendered as `node <path>`. Used only when `IRONBEE_DEVTOOLS_MCP` is unset or malformed. |
+| `IRONBEE_VCS_STAMP_BUDGET_MS` | Total budget (ms, default `3000`) for the git-ref stamp taken at the start of each agent turn. An ops escape hatch — raise it on a heavily loaded machine where the stamp would otherwise go partial and drop `repo`/`host` from the [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues). |
+| `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the read-only `state.vscdb` store it reads the signed-in user's email from, for event attribution). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
 | `IRONBEE_NO_PREFETCH` | Global kill-switch for the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) — any value other than empty/`0`/`false` skips the npx cache warm on `install`, upgrade re-renders, `ironbee browser enable`, and `ironbee devtools prefetch`. |
 | `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically — `1`/`true` = active, `0`/`false` = inactive — bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |

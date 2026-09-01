@@ -102,7 +102,7 @@ A few details differ from the other clients, all handled automatically:
 - **Config is project-level.** Hooks, the MCP server, and the verifier are written per project (`<project>/.codex/`), so each repo gets its own setup and there's no machine-global conflict. The devtools live inside the verifier agent (`<project>/.codex/agents/ironbee-verifier.toml`) under a single `[mcp_servers.ironbee-devtools]` block whose `COMPOSE_PLATFORMS` lists the enabled cycles — browser on by default, node / python / backend / android / terminal added when you enable those cycles. A model must be resolvable for the verifier sub-agent: it inherits your `~/.codex/config.toml` `model` unless you pin [`verification.model`](/cli/guides/verification#picking-the-verifier-model); if neither supplies one, install warns you.
 
 <Note>
-  The Claude-only integrations — the **statusline**, **OAuth access**, and the local **OTEL collector** — don't apply to Codex. Session lifecycle, tool calls, verdicts, and analytics still flow to the Collector.
+  Session lifecycle, tool calls, file changes, verdicts, and [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) flow to the Collector exactly as they do on the other clients.
 </Note>
 
 ---

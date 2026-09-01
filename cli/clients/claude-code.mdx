@@ -1,6 +1,6 @@
 ---
 title: Claude Code
-description: How IronBee integrates with Claude Code - slash commands, rules, hooks, tools, OAuth access, and the OTEL collector.
+description: How IronBee integrates with Claude Code - slash commands, rules, hooks, tools, the verifier sub-agent, and workspace trust.
 ---
 
 When you run `ironbee install` in a project where [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is detected, IronBee writes everything Claude needs to verify your agent's work. This page covers what gets installed and the agent-facing commands.
@@ -75,7 +75,7 @@ In [assist mode](/cli/guides/verification#assist-mode-default) — which is manu
 
 On Claude Code, the main agent does **not** drive the devtools tools itself. They're scoped to a dedicated `ironbee-verifier` sub-agent: a single `ironbee-devtools` MCP server — serving every enabled cycle — is rendered inline into `.claude/agents/ironbee-verifier.md`. When verification is needed — automatically at the gate, or manually via `/ironbee-verify` — the main agent **spawns the verifier**, which runs every active cycle's tools and submits the verdict, then hands back a short summary.
 
-This keeps the heavy devtools output (DOM snapshots, console logs, screenshots) in the sub-agent's context instead of flooding the main conversation. The sub-agent shares the parent session, so its verification events, tool calls, and verdict all land in the same session timeline, and its token/tool usage is folded back into the session analytics.
+This keeps the heavy devtools output (DOM snapshots, console logs, screenshots) in the sub-agent's context instead of flooding the main conversation. The sub-agent shares the parent session, so its verification events, tool calls, and verdict all land in the same session timeline — each tagged with its `agent_name` so the Console shows who did what.
 
 By default the verifier runs on the **same model as the main conversation**. To pin it to a specific (e.g. cheaper or faster) model, set [`verification.model`](/cli/configuration/configuration#verification) — for example `ironbee verification model sonnet --client claude`. See [Verification → Picking the verifier's model](/cli/guides/verification#picking-the-verifier-model).
 
@@ -107,7 +107,7 @@ To keep verification working under auto mode, IronBee writes **one narrow allowl
 
 - Written **only** when verification is active (enforce or assist), and it's **inert** unless the host is actually in auto mode.
 - Lives in `settings.local.json` (the local layer, gitignored), merges safely alongside anything else there, and is removed on uninstall or when you switch to monitoring-only.
-- Opt out with `ironbee config set claude.autoModeAllowlist.enable false` (takes effect on your next `ironbee install`). See [`claude.autoModeAllowlist.enable`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
+- Opt out with `ironbee config set claude.autoModeAllowlist.enable false` (takes effect on your next `ironbee install`). See [`claude.autoModeAllowlist.enable`](/cli/configuration/configuration#claude-claude-code-only).
 
 ---
 
@@ -120,36 +120,15 @@ To avoid that, `ironbee install` marks the project trusted in Claude Code's mach
 - This is the **one machine-global file** IronBee writes — every other Claude artifact is a per-project `.claude/*` file.
 - **Best-effort, idempotent, and non-clobbering:** it only ever flips a missing or `false` flag to `true`, preserves every other entry and key in the file, and never creates `~/.claude.json` if it's absent (Claude writes it on first run).
 - It is **not** reverted on uninstall — un-trusting a workspace could surprise you if you rely on the trust elsewhere.
-- Opt out with `ironbee config set claude.trustWorkspace.enable false`. See [`claude.trustWorkspace.enable`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
+- Opt out with `ironbee config set claude.trustWorkspace.enable false`. See [`claude.trustWorkspace.enable`](/cli/configuration/configuration#claude-claude-code-only).
 
 ---
 
-## Claude OAuth access
+## Removed integrations
 
-IronBee can read your Claude Code OAuth token (macOS Keychain or `~/.claude/.credentials.json`) to fill in statusline rate-limits for plans whose statusline JSON omits them, namely **team and enterprise**. It's **on by default** and Claude-only.
+IronBee 0.42 removed the Claude-only *insights* integrations — the **statusline wrapper** (`session_status` events), the **local OTEL collector daemon** (`session_context` context-usage events), and the **OAuth-token read** (`ironbee claude oauth-access`) — along with the whole `ironbee claude` command group. Verification, session lifecycle, tool calls, file changes, verdicts, and [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) are unaffected.
 
-```bash
-ironbee claude oauth-access status    # capability flag, token readability + expiry, live plan / rate-limit probe
-ironbee claude oauth-access disable   # stop reading the token
-ironbee claude oauth-access enable    # re-enable (and prime the macOS Keychain permission)
-```
-
-On macOS, `enable` reads the token right away so the Keychain permission prompt appears in your terminal. Choose **Always Allow** so later background reads don't re-prompt. Writes to the global config by default; `--project` / `--local` target other layers. Underlying keys: [`claude.oauthAccess.*`](/cli/configuration/configuration#claude-oauth-access-claude-code-only).
-
----
-
-## OTEL collector
-
-To derive context-usage metrics, IronBee runs a small **local OTEL collector daemon** that receives Claude Code's OTLP export and turns it into `session_context` events. One daemon serves every session on the machine, and it starts and reaps itself automatically, so you rarely touch it. When you need to:
-
-```bash
-ironbee claude otel status   # query the daemon's /health
-ironbee claude otel stop     # graceful shutdown
-ironbee claude otel retry    # re-process bodies that piled up during an outage (starts the daemon if needed)
-ironbee claude otel run      # run in the foreground (mainly an internal spawn target)
-```
-
-All accept `--port` (default `15986`) and `-p, --project`. Tuning lives under [`otel.*`](/cli/configuration/configuration#otel-collector).
+Upgrading cleans up after itself: the re-render restores whatever statusline you had before IronBee wrapped it (or strips ours so a lower settings layer re-emerges), removes the OTEL env block from `settings.json`, and deletes the transient `.ironbee/otel/` directory. The `statusLine.*`, `otel.*`, and `claude.oauthAccess.*` config keys are inert and can be dropped from your config files.
 
 ---
 
