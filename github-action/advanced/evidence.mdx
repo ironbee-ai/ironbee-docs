@@ -1,42 +1,65 @@
 ---
 title: Evidence
-description: Console links and the downloadable artifact bundle each run produces.
+description: Where the recording, screenshots and logs of each run are, on IronBee and on your runner.
 ---
 
-Beyond the [PR report](/github-action/guides/running-in-ci#the-pr-report), each run records evidence to the IronBee Console and uploads a downloadable bundle. This page covers both.
+Every run keeps the evidence behind its verdict. Where you find it depends on where the verification ran.
+
+---
+
+## Runs on IronBee
+
+The evidence of a run on IronBee is in the IronBee Console:
+- the recording
+- screenshots
+- the actions the agent took
+- network requests, traces and logs
+
+Open it from the **View session in IronBee Console** link in the [report](/github-action/guides/running-in-ci#the-report), from the `job_url` output, or from the project's **Verifications** tab. See [Verification detail](/console/verification-detail).
+
+When the app ran on your runner, the action also uploads the `ironbee-application-log` artifact. It holds:
+- the app's output
+- the output of `app_logs_command`, when you set it
+
+The artifact is kept for 30 days. Use it when a verification fails because the app itself stopped or errored.
+
+---
+
+## Runs on your runner
+
+A run on your runner records to the IronBee Console and also uploads the `ironbee-verification-evidence` artifact, kept for 30 days:
+
+```
+.ironbee/artifacts/
+  cycle-1/
+    screenshots/
+    recordings/
+  cycle-2/
+    screenshots/
+    recordings/
+  claude-output.log
+  ironbee-devtools-mcp.log
+  sessions/<id>/        # verdict.json, actions.jsonl
+```
+
+- Screenshots and recordings are grouped by verification cycle.
+- `claude-output.log` holds the agent's output.
+- `ironbee-devtools-mcp.log` is the DevTools server's log.
+
+The report links to the artifact, and the `artifacts_url` output carries its download URL for later steps.
 
 ---
 
 ## Console links
 
-The report links each session and verification cycle to the IronBee Console so you can replay the recording and inspect the timeline. By default these point at `console.ironbee.ai`; override the host if you self-host:
+The report's links point at `console.ironbee.ai`. To use a different host, set `ironbee_console_url` to the hostname, without a scheme:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
     ironbee_console_url: 'console.example.com'
 ```
-
----
-
-## Evidence artifacts
-
-Screenshots and recordings are organized by verification cycle and uploaded as a GitHub Actions artifact with 30-day retention:
-
-```
-.ironbee/artifacts/
-  cycle-1/
-    screenshots/homepage-before-fix.png
-    recordings/verification.webm
-  cycle-2/
-    screenshots/homepage-after-fix.png
-    recordings/verification.webm
-  sessions/<id>/        # verdict.json, actions.jsonl
-```
-
-The download URL is also exposed as the [`artifacts_url` output](/github-action/configuration/configuration#outputs) for use in later workflow steps.
 
 ---
 
@@ -44,9 +67,9 @@ The download URL is also exposed as the [`artifacts_url` output](/github-action/
 
 <CardGroup cols={2}>
   <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
-    Triggers, fix behavior, and the PR report.
+    Triggers, fixes and the report.
   </Card>
   <Card title="Diagnostics" icon="stethoscope" href="/github-action/advanced/diagnostics">
-    Troubleshoot a run with verbose logs and session data.
+    Find out why a run didn't behave as expected.
   </Card>
 </CardGroup>

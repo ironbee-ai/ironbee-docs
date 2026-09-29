@@ -1,40 +1,60 @@
 ---
-title: API Tokens
-description: Create, name, and revoke the personal OAuth access tokens the CLI uses to send data on your behalf.
+title: OAuth tokens
+description: Personal tokens the IronBee CLI uses to send data on your behalf.
 ---
 
-The **API Tokens** page lists your personal access tokens, the OAuth credentials [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) creates so the CLI can send session data as you. Each token is tied to your user and account, and you manage them independently of the shared [account API key](/console/account).
+OAuth tokens are personal: each one belongs to you, in one account, and you can revoke it on its own. The IronBee CLI uses one to send data on your behalf. `ironbee login` creates one for you.
 
-## What you see
+Open **Settings**, then **Personal > OAuth Tokens**.
 
-Each token in the list shows:
+For CI and deployment tooling, where no one signs in, use the shared [account API key](/console/account#account-api-key) instead.
 
-- **Name**: the label set at creation (the CLI defaults this to your machine's hostname)
-- **Prefix**: the first characters of the token, followed by `…`; the full value is never shown again after creation
-- **Created**: when the token was issued
-- **Expires**: the expiry date, or "Never expires" for non-expiring tokens
+---
+
+## The tokens list
+
+<img className="ib-shot ib-shot-light" src="/images/console/settings/oauth-tokens-list-light.png" alt="OAuth Tokens page with the Create token button and a list of tokens that are Active, Expiring soon or Never expires" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/oauth-tokens-list-dark.png" alt="OAuth Tokens page with the Create token button and a list of tokens that are Active, Expiring soon or Never expires" />
+
+| Column | What it shows |
+|--------|---------------|
+| **Token** | The token's name and the first characters of the token |
+| **Status** | **Active**, **Expiring soon** (within 7 days), **Expired** or **Never expires** |
+| **Created** | When the token was created |
+| **Expires** | When the token expires, and how many days are left. A token that never expires shows `-` |
+| **Actions** | Revoke the token |
+
+---
 
 ## Create a token
 
-Click **Create token**, give it a name, and choose an expiry (30, 60, 90, 180, or 365 days, or no expiration). The full token is shown **once** on the next screen, copy it somewhere safe, because it cannot be retrieved later.
+1. Click **Create token**. The **Create access token** dialog opens.
+2. Enter a **Name**, such as `laptop` or `ci`.
+3. Choose an **Expiration**: **30 days**, **60 days**, **90 days** (the default), **180 days**, **1 year** or **No expiration**.
+4. Click **Create token**.
 
-Most people never create tokens here by hand; `ironbee login` mints one for you. Create one manually when you need a token for a specific tool or a custom expiry.
+<img className="ib-shot ib-shot-light" src="/images/console/settings/create-token-dialog-light.png" alt="Create access token dialog with the Name field set to laptop and Expiration set to 90 days" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/create-token-dialog-dark.png" alt="Create access token dialog with the Name field set to laptop and Expiration set to 90 days" />
+
+**Copy your new access token** shows the token once. Copy it, confirm you stored it, and click **Done**. It can't be shown again.
+
+Tokens that `ironbee login` creates expire after 90 days. They're named after your machine's hostname, or the label you pass with `ironbee login --name`.
+
+---
 
 ## Revoke a token
 
-Click **Revoke** next to any token to disable it immediately. Anything still using that token can no longer authenticate.
+Open the token's **⋯** menu in the **Actions** column, choose **Revoke**, and click **Revoke** in **Revoke this token?**. The token stops sending data within a few minutes. This can't be undone.
 
-<Note>
-  You can hold at most **10 access tokens** at a time, including expired ones you have not removed. If you hit the limit, revoke one here before creating or minting another. This is also what frees up `ironbee login` when it reports the limit.
-</Note>
+---
 
-## Tokens vs the account API key
+## Related pages
 
-| | API token | Account API key |
-|--|-----------|-----------------|
-| Identifies | You | The account |
-| Created by | `ironbee login` or this page | Generated with the account |
-| Used for | Interactive CLI use | CI and machine-to-machine, like the [GitHub Action](/github-action/get-started/getting-started) |
-| Managed on | This page | The [Account page](/console/account) |
-
-See [Authentication](/cli/guides/authentication) for how the CLI chooses between them.
+<CardGroup cols={2}>
+  <Card title="CLI authentication" icon="terminal" href="/cli/guides/authentication">
+    How the CLI signs in and which credential it uses.
+  </Card>
+  <Card title="Account" icon="building-2" href="/console/account">
+    The shared account API key for CI.
+  </Card>
+</CardGroup>

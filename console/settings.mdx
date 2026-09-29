@@ -1,25 +1,55 @@
 ---
 title: Settings
-description: Customize the IronBee Console appearance and default behavior.
+description: Your personal settings, your workspace, and how the console looks.
 ---
 
-The Settings page controls how the console looks and behaves for your account. Access it from the bottom of the sidebar.
-<img src="/images/console/account/setting-dark.png" alt="IronBee Console — Setting Page" style={{borderRadius:'8px',width:'100%'}} />
+Open **Settings** from the gear at the bottom of the sidebar, or from your user menu. The settings menu has two parts:
 
-## Appearance
+| Section | Page | Who sees it |
+|---------|------|-------------|
+| | **Getting started** | Owners and admins |
+| **Personal** | [Profile](/console/profile) | Everyone |
+| | [OAuth Tokens](/console/access-tokens) | Everyone |
+| | **Visual** | Everyone |
+| **Workspace** | [Account](/console/account) | Everyone. Some parts are for owners and admins only |
+| | [Team](/console/team) | Owners and admins |
+| | **Archived projects** | Owners and admins. See [Project settings](/console/project-settings#unarchive-a-project) |
+| | [Pricing](/console/pricing) | Owners and billing admins |
 
-### Theme
+**Settings** opens on **Account**. **Getting started** reopens the onboarding steps, to connect another provider or set up the CLI.
 
-Switch between **Light** and **Dark** mode. The transition is animated. Your selection is saved per-browser.
+---
 
-### Sidebar position
+## Visual
 
-Move the navigation sidebar to the **left** or **right** side of the screen. A live preview shows the effect before you confirm.
+The **Visual** page controls how the console looks and shows your data. Changes apply immediately and are saved in your browser, so each browser keeps its own choices.
 
-### Default projects view
+<img className="ib-shot ib-shot-light" src="/images/console/settings/visual-settings-light.png" alt="Settings menu with the Personal and Workspace groups, and the Visual page with Sidebar Position, Color Theme, Default View and Time Format" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/visual-settings-dark.png" alt="Settings menu with the Personal and Workspace groups, and the Visual page with Sidebar Position, Color Theme, Default View and Time Format" />
 
-Choose whether the Projects page opens in **Card view** or **List view** by default. Can be overridden per-session from the Projects toolbar.
+### Appearance
 
-### Briefing panel
+| Setting | Options |
+|---------|---------|
+| **Sidebar Position** | **Left** or **Right** |
+| **Color Theme** | **Dark** (the default) or **Light** |
 
-Toggle the **briefing panel** on or off. The briefing panel appears on the Findings and Recommendations pages and shows an AI-generated summary of current results. Hiding it gives more space to the data table.
+### Data display
+
+| Setting | Options |
+|---------|---------|
+| **Default View** | **Card** or **List**, for the [Projects](/console/projects) page |
+| **Time Format** | **12-hour** (`4:30 PM`, the default) or **24-hour** (`16:30`), for every clock in the console, in lists and filters alike |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Team" icon="users" href="/console/team">
+    Invite teammates and manage their roles.
+  </Card>
+  <Card title="Roles and permissions" icon="shield" href="/console/roles">
+    What each role can do.
+  </Card>
+</CardGroup>

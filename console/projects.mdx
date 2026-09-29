@@ -1,74 +1,123 @@
 ---
 title: Projects
-description: Organize your codebases and track verification health at a glance.
+description: Every project your account verifies, with its recent runs and pass rate at a glance.
 ---
-A **project** in IronBee maps to a codebase. When you run `ironbee install` in a directory, that directory is associated with a project and all session data flows there automatically.
-<img src="/images/console/main-dark.png" alt="IronBee Console — Projects page" style={{borderRadius:'8px',width:'100%'}} />
 
-## The projects page
+**Projects** is the console's home page. It lists every project in your account with its recent verification runs.
 
-The projects page is the home screen of the IronBee Console. It shows every project your account has access to. Use the **date filter** in the page header to scope all metrics to a specific time range.
+A project is one of:
 
-## Quick Search
-<img src="/images/console/project/search-dark.png" alt="IronBee Console — Search" style={{borderRadius:'8px',width:'100%'}} />
-Use the search bar at the top of the console to jump directly to any project, session, or finding by ID or keyword. Quick Search returns results across all projects your account has access to.
+- a **GitHub** repository, a **Vercel** project or a **Netlify** site that an owner or admin enabled from [Integrations](/integrations/overview)
+- a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a github.com repository reports to that repository's GitHub project instead
 
-## View modes
+Click a project to open its [Verifications](/console/verifications) tab. A project that hasn't run yet opens on its **Settings** tab.
 
-Toggle between **Card view** and **List view** using the toolbar controls. Your preference is saved automatically.
+---
 
-### Card view
+## Bands
 
+When a project is waiting for its first run or is no longer active, the page groups projects into these bands. Otherwise all projects show in one group.
+
+| Band | What's in it |
+|------|--------------|
+| **Waiting for the first verification** | Projects that are enabled but haven't run yet. The card says what starts the first run |
+| **Active** | Projects with verification runs |
+| **Not active** | Projects that are no longer enabled on their provider, so their deployments aren't verified. Enable them again from the provider's integration |
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-bands-light.png" alt="Projects page in card view with three bands: Waiting for the first verification with a Vercel project whose card says the next Vercel deployment starts a web verification, Active with two projects, and Not active with a Netlify project" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-bands-dark.png" alt="Projects page in card view with three bands: Waiting for the first verification with a Vercel project whose card says the next Vercel deployment starts a web verification, Active with two projects, and Not active with a Netlify project" />
+
+Archived projects aren't listed here. Owners and admins find them under **Settings > Archived projects**. See [Project settings](/console/project-settings#archive-a-project).
+
+---
+
+## Date range
+
+The date filter in the page header sets the window every number on the page covers. The subtitle shows it as **Showing data for** a date range.
+
+- Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days** or **Last 90 Days**.
+- Or pick a **Custom Range** with a **From** and **To** time down to the hour.
+
+---
+
+## Card view
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-cards-light.png" alt="Projects page header with the sort, view toggle, New project and date filter, above two project cards with a pass rate ring, run strip and last 5 runs" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-cards-dark.png" alt="Projects page header with the sort, view toggle, New project and date filter, above two project cards with a pass rate ring, run strip and last 5 runs" />
+
+Each project card shows:
+
+- **The name and the provider**: GitHub, Vercel, Netlify or CLI. A **Live** badge means a run is in progress; otherwise the card shows when the project was last active.
+- **The verification type**: **Web**, **API**, or **No verification type declared**. CLI projects leave this line empty, and a project that's no longer enabled shows **Not active**.
+- **The pass rate**: a ring and a percentage. Hover the ring for the counts. Below it, the trend against the previous window, such as **vs previous 7d**. With too few runs, the card says it's too early for a trend.
+- **Counts**: verifications and fixes in the window.
+- **A run strip**: the window laid out as a time axis. Click a slot to open that run, or the runs in that slice of time.
+- **Findings and recommendations**: the counts link to the project's [Findings](/console/findings) and [Recommendations](/console/recommendations).
+- **The last runs**: a rail of the last five results, labeled **Last 5 runs**, or **Running now** while a run is in progress. Click it to open those runs.
+
+---
+
+## List view
+
+Switch to the list with the toolbar's view toggle.
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-list-light.png" alt="Projects list view with the Project, Provider, Runs, Success Rate, Verifications, Fixes, Findings and Recs columns" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-list-dark.png" alt="Projects list view with the Project, Provider, Runs, Success Rate, Verifications, Fixes, Findings and Recs columns" />
+
+The list has these columns:
+
+| Column | What it shows |
+|--------|---------------|
+| **Project** | The project name |
+| **Provider** | GitHub, Vercel, Netlify or CLI, with the verification type below it |
+| **Runs** | The run strip: the window laid out as a time axis. Click a slot to open its runs |
+| **Success Rate** | The share of verifications that passed |
+| **Verifications**, **Fixes** | Counts in the window |
+| **Findings**, **Recs** | Open findings, split by severity, and open recommendations |
+| **Last Run** | The latest run's result, name and duration. Click it to open the run |
+| **Last Active** | When the project was last active |
+
+Click a column header to sort, except **Provider**, **Runs** and **Last Run**. In card view, the sort menu offers **Project Name**, **Success Rate**, **Verifications**, **Fixes**, **Findings**, **Recommendations** and **Last Activity**.
+
+The view you pick lasts until you reload the page. To change the default view, open **Settings > Visual** and set **Default View**. On a phone, projects always show as cards.
+
+---
+
+## Quick search
+
+Press `⌘K` (or `Ctrl+K`), or click **Search projects or anything...** in the top bar.
+- Type at least 3 characters to find a project by name. Picking one opens its **Verifications** tab.
+- With an empty query, the palette shows your **Recent** projects and **Navigation** shortcuts.
+
+For queries across sessions, verifications, findings and more, use [Search](/console/search).
+
+---
+
+## Create a project
+
+Owners and admins click **New project** in the page header:
+
+1. Under **Where does it deploy?**, pick a connected integration: a GitHub installation, a Vercel team or a Netlify team. Click **Continue**.
+2. Select what to verify. **New projects** lists what isn't a project yet. **Enable again** lists **Not active** projects, which come back with their history and settings.
+3. Set each project's verification type: **Web** or **API**. Under **Verification type**, **All Web** and **All API** set every row at once.
+4. Click **Create N projects** (or **Enable N projects**).
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/new-project-pick-light.png" alt="New project dialog listing two Vercel projects to create, each with a Web or API choice, and the Create 2 projects button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/new-project-pick-dark.png" alt="New project dialog listing two Vercel projects to create, each with a Web or API choice, and the Create 2 projects button" />
+
+For Vercel, the dialog reminds you that protected preview deployments need a **Bypass token** secret. Add it in the new project's [Secrets](/console/secrets) once the project exists.
+
+Projects from the CLI are created automatically the first time the CLI reports under a new name.
+
+---
+
+## What's next?
 
 <CardGroup cols={2}>
-    <Card title="Each project card shows:">
-        - **Project name**
-        - **Last active date**
-        - **Pass rate donut chart**, center label shows the percentage of verifications that passed; hover for a passed/failed count breakdown
-        - **KPI stack**, Sessions, Verifications, Fixes counts
-        - **Time breakdown**: Total activity time split into Coding, Verification, and Fix phases with percentages
-        - **Findings tiles**, Critical, Concern, and Notice finding counts (click to go directly to the filtered Findings page)
-        - **Recommendations button**, shows count of active recommendations (click to open the Recommendations page)
-    </Card>
-    <Card title="Card View">
-        <img src="/images/console/project/project-card-dark.png" alt="Card View" style={{borderRadius:'8px',width:'100%'}}/>
-    </Card>
-</CardGroup>
-
-### List view
-
-The table has the following columns (all sortable by clicking the header):
-<img src="/images/console/project/project-list-dark.png" alt="IronBee Projects — List View" style={{borderRadius:'8px',width:'100%'}}/>
-
-| Column | Description |
-|--------|-------------|
-| Project | Project name |
-| Sessions | Total session count |
-| Verifications | Total verification cycle count |
-| Success Rate | Percentage of verifications that passed, with a bar chart |
-| Fixes | Total fix attempts |
-| Total Time | Combined coding + verification + fix time (hover for breakdown) |
-| Verif. Time | Time spent in verification cycles |
-| Fix Time | Time spent on fixes |
-| Analyze | Critical / Concern / Notice finding counts (clickable) |
-| Recs | Active recommendations count (clickable) |
-| Activity | Last and first activity dates |
-
-## Sorting
-
-In card view, use the **Sort dropdown** in the toolbar to sort by: Project Name, Sessions, Verifications, Success Rate, Fixes, Total Time, Verif. Time, Fix Time, or Last Activity. In list view, click any column header to sort.
-
-## Creating a project
-
-Projects are created automatically the first time a session is started in a directory that has IronBee installed. No manual setup is required in the console.
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Sessions" icon="clock" href="/console/sessions">
-    Browse and filter all sessions for a project.
+  <Card title="Verifications" icon="list-checks" href="/console/verifications">
+    Every verification run of a project.
   </Card>
-  <Card title="Analysis" icon="sparkles" href="/console/analysis">
-    View AI-powered insights across your project.
+  <Card title="Project settings" icon="settings" href="/console/project-settings">
+    Verification type, environments, variables, secrets and archiving.
   </Card>
 </CardGroup>

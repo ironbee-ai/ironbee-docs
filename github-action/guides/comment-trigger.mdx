@@ -1,0 +1,130 @@
+---
+title: Verify from a pull request comment
+description: Start a verification on demand by commenting /ironbee-verify on a pull request.
+---
+
+With the `issue_comment` trigger, anyone you allow can start a verification by commenting on a pull request:
+
+```
+/ironbee-verify
+```
+
+The run verifies the whole pull request the comment is on. The run posts its report on the pull request. It fixes what it finds only when the comment asks for it.
+
+---
+
+## Add the workflow
+
+```yaml
+name: IronBee Verification (comment)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ironbee-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # Who may start a run is decided here, not by the action.
+    if: >-
+      github.event.issue.pull_request &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      startsWith(github.event.comment.body, '/ironbee-verify')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      # issue_comment runs on the default branch, so check out the pull request's head explicitly.
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+          fetch-depth: 0
+      - uses: ironbee-ai/ironbee-action@v1.1.0
+        with:
+          ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          app_install_command: npm ci
+          app_build_command: npm run build
+          app_start_command: npm run start
+          app_port: 3000
+```
+
+<Warning>
+  Keep the job-level `if:`. An `issue_comment` event fires for anyone who can comment on the repository, and the run holds the base repository's secrets. The condition is the security boundary. It must:
+  - check that the comment is on a pull request (`github.event.issue.pull_request`)
+  - restrict the author (`author_association`)
+  - require the command (`startsWith(...)`)
+</Warning>
+
+`issue_comment` runs on the default branch, and `github.sha` points there, not at the pull request. The `ref: refs/pull/<number>/head` checkout makes the runner build the pull request's code. The action reads the pull request itself to decide what to verify.
+
+You can add the `issue_comment` trigger to your existing workflow instead of a separate file. In that case, combine the condition with your other events, as shown in [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off).
+
+---
+
+## The command
+
+```
+/ironbee-verify
+/ironbee-verify --fix
+/ironbee-verify check the coupon flow end to end
+/ironbee-verify --fix the totals are wrong when a coupon is applied
+```
+
+- The command must be the first line of the comment that isn't a quote. A comment that only mentions it, or a reply that quotes it, starts nothing.
+- Options start with `--`. Everything after the first word that isn't an option is the instruction for the agent. It's added to the verification like `verification_prompt`. So `/ironbee-verify fix the cart total` is an instruction, not a request to fix.
+- A multi-line comment works too: the whole body below the command line is the instruction.
+- An unknown option gets a usage reply on the pull request, and the run ends red instead of verifying something other than what was asked.
+
+To use a different command, set `verification_command` and change the `startsWith` condition to match.
+
+---
+
+## Fixes from a comment
+
+`--fix` asks the run to fix what it finds and commit the fix to the pull request branch.
+- It needs an Anthropic credential.
+- It is bounded by `verification_apply_fix`: a repository that turned fixing off can't turn it back on from a comment.
+- Without `--fix`, a comment run only verifies and reports.
+
+---
+
+## Following the run
+
+A comment run doesn't appear in the pull request's checks, so the action reacts to the comment instead:
+- an eyes reaction when the run starts
+- a thumbs up or thumbs down when it ends
+
+The report is posted on the pull request as with any other run.
+
+---
+
+## Forks
+
+Comment commands on pull requests from forks are refused. A comment run holds the base repository's secrets, so building and starting a fork's code under it would hand them to whoever opened the pull request.
+
+---
+
+## Comments only
+
+To verify only when someone comments, and never automatically on pushes and pull requests, see [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off). Neither the `if:` nor `verification_auto` stops a comment command.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
+    The other triggers and the report.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
+    `verification_command`, `verification_auto` and every other input.
+  </Card>
+</CardGroup>

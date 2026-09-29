@@ -1,0 +1,116 @@
+---
+title: Migrate from v1.0
+description: What changed in v1.1.0 of the IronBee Action and how to update a v1.0 workflow.
+---
+
+v1.1.0 of the IronBee Action adds a second place to run the verification, on IronBee, next to your runner. It also takes over the outcome of a run: it commits fixes, posts the report and passes or fails the job. A few inputs were renamed along the way. This page lists what to change in a workflow written for v1.0.
+
+<Warning>
+  The `v1` tag points to v1.1.0. A workflow that uses `ironbee-ai/ironbee-action@v1` already runs v1.1.0. Pin `@v1.1.0` and update the inputs below.
+</Warning>
+
+---
+
+## Pin the version
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1.1.0
+```
+
+---
+
+## Rename these inputs
+
+GitHub ignores unknown inputs with only a warning, so the old names stop working without failing the run.
+
+| v1.0 input | v1.1.0 input |
+|------------|--------------|
+| `prompt` | `verification_prompt` |
+| `model` | `claude_code_model` |
+| `max_turns` | `claude_code_max_turns` |
+| `claude_args` | `claude_code_args` |
+
+---
+
+## Name a target
+
+In v1.0 the agent could work out how to reach your app from the repository. v1.1.0 needs a target, and stops before verifying anything when it has none. Set one of:
+
+- `app_start_command` and `app_port` for an app that runs on the runner, usually with `app_install_command` and `app_build_command`
+- `app_url` for an app that is already deployed at a public URL
+
+See [Verifying your application](/github-action/guides/verifying-your-app).
+
+---
+
+## Choose where it runs
+
+The new `verification_mode` input picks where the verification runs, and defaults to `auto`:
+
+- A public repository runs **on IronBee**.
+- A private repository with an Anthropic credential runs **on your runner**, as in v1.0.
+- A private repository without one runs on IronBee, which needs the IronBee GitHub App on the repository.
+
+To keep the v1.0 behavior everywhere, set `verification_mode: local`. See [Platform and local verification](/github-action/concepts/verification-modes).
+
+An Anthropic credential is now optional. It's needed only on your runner, or to fix findings.
+
+---
+
+## What the action now does for you
+
+- **It commits the fixes.** The agent only edits files. The action commits and pushes them: to the pull request branch on a pull request, otherwise to a new `ironbee/fix-<sha7>-<run_id>` branch with a pull request. A fix whose re-verification fails is not pushed.
+- **It passes or fails the job.** The last step fails the job when the verification fails or ends without a verdict. If other jobs depend on this one, they now see that result.
+- **It writes the job summary.** The report goes to the pull request comment and to the workflow run's summary.
+
+---
+
+## Changed defaults and outputs
+
+- `ironbee_exclude_files` now defaults to `true`. IronBee's generated files (`.ironbee/`, `.claude/`, `.mcp.json`, `.gitignore`) stay out of the commits the action makes.
+- `ironbee_collector_url` and `ironbee_console_url` are empty by default and derived by the CLI.
+- The `verdict` output can be `pass`, `fail`, `not_applicable` or `unknown`.
+- New outputs: `mode`, `job_id` and `job_url`. `artifacts_url` is set only when the verification ran on your runner.
+- Every `true`/`false` input also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any other value fails the run and names the input.
+
+---
+
+## Before and after
+
+<CodeGroup>
+```yaml v1.0
+- uses: ironbee-ai/ironbee-action@v1.0.0
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    prompt: 'Focus on the checkout flow'
+    max_turns: '30'
+```
+
+```yaml v1.1.0
+- uses: ironbee-ai/ironbee-action@v1.1.0
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verification_mode: local
+    verification_prompt: 'Focus on the checkout flow'
+    claude_code_max_turns: '30'
+    app_install_command: npm ci
+    app_build_command: npm run build
+    app_start_command: npm run start
+    app_port: 3000
+```
+</CodeGroup>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output in v1.1.0.
+  </Card>
+  <Card title="How it works" icon="lightbulb" href="/github-action/concepts/how-it-works">
+    What happens in a run, from the plan to the report.
+  </Card>
+</CardGroup>

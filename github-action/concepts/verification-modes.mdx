@@ -1,0 +1,85 @@
+---
+title: Platform and local verification
+description: Where the verification runs, how the action picks, and which inputs apply to each mode.
+---
+
+The IronBee Action can run the verification in two places:
+
+- **Platform mode:** on IronBee. The console calls this **On IronBee**.
+- **Local mode:** on your GitHub runner. The console calls this **On your GitHub runner**.
+
+Everything after the verification is the same in both modes: the verdict, the fix, the commit and the report. The `verification_mode` input picks the mode: `auto` (the default), `platform` or `local`.
+
+---
+
+## Compare the two modes
+
+| | Platform (on IronBee) | Local (on your runner) |
+|---|---|---|
+| Where the agent runs | IronBee's infrastructure | Your GitHub runner |
+| Model access | IronBee's | Your Anthropic API key or Claude Code OAuth token |
+| Runner setup | None: no Chromium, no DevTools install | Chromium, IronBee DevTools and Claude Code, installed on every run |
+| Anthropic credential | Only to fix what it finds | Required |
+| What it verifies | Your web app, in a browser | The [DevTools platforms](/github-action/guides/verification-platforms) you enable: browser, backend, Node.js, Python, terminal |
+| Evidence | The IronBee Console | The IronBee Console and a workflow artifact |
+| Private repositories | Need the IronBee GitHub App | Work with any checkout |
+
+---
+
+## How `auto` decides
+
+With `verification_mode: auto`, the action decides from two things it can check without calling IronBee: whether the repository is private, and whether an Anthropic credential is set.
+
+| Repository | Anthropic credential | Mode |
+|------------|----------------------|------|
+| Public | Any | Platform. IronBee can check out a public repository without the GitHub App |
+| Private | Set | Local. The action can't check whether the GitHub App covers the repository, so it uses the engine it knows can run |
+| Private | Not set | Platform, the only engine available. This needs the GitHub App on the repository |
+
+The first line of the run's log names the mode and the reason.
+
+<Tip>
+  If your repository is private and the [IronBee GitHub App](/integrations/github) covers it, set `verification_mode: platform` explicitly. Otherwise `auto` runs on your runner whenever an Anthropic credential is set.
+</Tip>
+
+A private repository without the GitHub App can still be verified on IronBee: set `ironbee_bind_repository: false` to verify the running application without a checkout of the repository.
+
+---
+
+## Inputs that apply to one mode
+
+The action warns in the log when you set an input that doesn't apply to the mode it runs in.
+
+**Platform mode only**
+
+| Input | Purpose |
+|-------|---------|
+| `ironbee_project` | The project the run reports to. Empty uses the repository's name |
+| `ironbee_environment` | The project environment whose variables and secrets the run uses |
+| `ironbee_bind_repository` | Bind the run to the repository so it verifies the changeset |
+| `ironbee_job_timeout_minutes` | The run's timeout on IronBee |
+| `app_restart_command`, `app_logs_command`, `app_wait_seconds` | An app that runs on the runner, reached through a tunnel |
+| `app_headers`, `app_secret_headers` | Request headers for a deployed URL |
+
+**Local mode only**
+
+| Input | Purpose |
+|-------|---------|
+| `ironbee_browser_devtools`, `ironbee_backend_devtools`, `ironbee_node_devtools`, `ironbee_python_devtools`, `ironbee_terminal_devtools` | The DevTools platforms the agent verifies through |
+| `ironbee_extra_config` | Raw IronBee CLI config. See [Custom configuration](/github-action/advanced/custom-configuration) |
+| `claude_code_model`, `claude_code_max_turns`, `claude_code_args` | The Claude Code agent on your runner |
+
+`claude_code_cli_version` and the Anthropic credential also apply to the fix step in platform mode. See [Configuration](/github-action/configuration/configuration) for every input.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="How it works" icon="lightbulb" href="/github-action/concepts/how-it-works">
+    The run from the plan to the report.
+  </Card>
+  <Card title="GitHub App" icon="github" href="/integrations/github">
+    Give IronBee access to private repositories.
+  </Card>
+</CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: Authentication
-description: How the CLI authenticates with IronBee with OAuth tokens for interactive use, API keys for CI and automation.
+description: "How the CLI authenticates with IronBee: OAuth tokens for interactive use, API keys for CI and automation."
 ---
 
 IronBee accepts two kinds of credentials, and the CLI picks the right one for you:
@@ -14,19 +14,21 @@ Both are first-class and supported. The difference is who they identify: an OAut
 
 ## OAuth tokens (default)
 
-Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens your browser, asks you to authorize the CLI, and writes a personal access token to `~/.ironbee/config.json` under [`service.oauthToken`](/cli/configuration/configuration#service-identity) (older CLI versions wrote `collector.oauthToken`, which is still read as a fallback). It also persists `service.domain` — the stage you authenticated against — so the collector, API, and Console URLs all derive from one place (and any hand-set explicit URLs are dropped so they re-derive; pin the Console with `--console-url` if you need to). For a self-hosted deployment on non-standard hosts, no domain is inferred and the explicit URLs are kept instead. From then on the CLI authenticates as you, everywhere: event delivery to the Collector **and** the read-side API behind [`ironbee verify`](/cli/guides/verification-jobs).
+Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens **Connect CLI** in your browser, where the console authorizes the CLI for your current account once you're signed in, and writes a personal access token to `~/.ironbee/config.json` under [`service.oauthToken`](/cli/configuration/configuration#service-identity) (older CLI versions wrote `collector.oauthToken`, which is still read as a fallback). It also persists `service.domain` - the stage you authenticated against - so the collector, API, and Console URLs all derive from one place (and any hand-set explicit URLs are dropped so they re-derive; pin the Console with `--console-url` if you need to). For a self-hosted deployment on non-standard hosts, no domain is inferred and the explicit URLs are kept instead. From then on the CLI authenticates as you, everywhere: event delivery to the Collector **and** the read-side API behind [`ironbee verify`](/cli/guides/verification-jobs).
 
 ```bash
 ironbee login
 ```
 
-The login flow waits up to five minutes for you to confirm in the browser; press `Ctrl+C` to cancel. By default the token is named after your machine's hostname so you can recognize it later in the Console and pass `--name` to set your own label:
+The login flow waits up to five minutes for the browser to finish, including signing in if you need to; press `Ctrl+C` to cancel. By default the token is named after your machine's hostname so you can recognize it later in the Console and pass `--name` to set your own label:
 
 ```bash
 ironbee login --name "work-laptop"
 ```
 
-Each token appears on the [API Tokens page](/console/access-tokens) in the Console, where you can see when it was created, when it expires, and revoke it. CLI-minted tokens default to a 90-day lifetime.
+For a self-hosted or non-production collector, pass its base URL with `--collector-url`; events are sent to `{url}/v1/events`. If the console answers the login with a shared account API key instead of a personal token, `ironbee login` stores it as `service.apiKey`.
+
+Each token appears on the [OAuth Tokens page](/console/access-tokens) in the Console, where you can see when it was created, when it expires, and revoke it. CLI-minted tokens default to a 90-day lifetime.
 
 ### Token limit
 
@@ -38,13 +40,13 @@ If you are already at the limit, `ironbee login` cannot mint a new one and print
 You already have the maximum of 10 access tokens, so a new one could not be issued for the CLI. Revoke one on the IronBee Console's API Tokens page, then run "ironbee login" again
 ```
 
-To free a slot, open the [API Tokens page](/console/access-tokens), revoke a token you no longer use, then run `ironbee login` again.
+To free a slot, open the [OAuth Tokens page](/console/access-tokens), revoke a token you no longer use, then run `ironbee login` again.
 
 ---
 
 ## API keys (CI and automation)
 
-For automation that runs without a browser; the GitHub Action, scheduled jobs, scripts, use an account API key instead. Supply it through the `IRONBEE_SERVICE_API_KEY` environment variable (the legacy `IRONBEE_API_KEY` still works) so it never lands in a committed file:
+For automation that runs without a browser, such as CI jobs, scheduled jobs and scripts, use an account API key instead. The [GitHub Action](/github-action/get-started/getting-started) takes it as its `ironbee_api_key` input. Supply it through the `IRONBEE_SERVICE_API_KEY` environment variable (the legacy `IRONBEE_API_KEY` still works) so it never lands in a committed file:
 
 ```bash
 export IRONBEE_SERVICE_API_KEY=<your-account-api-key>
@@ -70,17 +72,18 @@ If both are present, the OAuth token takes priority on the wire. In practice:
 | Situation | Credential | How to set it |
 |-----------|-----------|---------------|
 | You, working locally | OAuth token | `ironbee login` |
-| GitHub Action / CI | API key | `IRONBEE_SERVICE_API_KEY` secret |
+| GitHub Action | API key | `IRONBEE_API_KEY` repository secret, passed as the `ironbee_api_key` input |
+| Other CI | API key | `IRONBEE_SERVICE_API_KEY` secret |
 | Scripted or headless machine | API key | `IRONBEE_SERVICE_API_KEY` or `service.apiKey` |
 
-Both `IRONBEE_SERVICE_OAUTH_TOKEN` and `IRONBEE_SERVICE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. The legacy `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` forms fill only the deprecated `collector.*` fallback keys — they're used **only when the matching `service.*` key is unset** (except by [`ironbee verify`](/cli/guides/verification-jobs#credentials), which treats `IRONBEE_API_KEY` as a top-priority override), so on a machine that has run a recent `ironbee login` (which writes `service.oauthToken`) prefer the `IRONBEE_SERVICE_*` forms. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
+Both `IRONBEE_SERVICE_OAUTH_TOKEN` and `IRONBEE_SERVICE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. The legacy `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` forms fill only the deprecated `collector.*` fallback keys - they're used **only when the matching `service.*` key is unset** (except by [`ironbee verify`](/cli/guides/verification-jobs#credentials), which treats `IRONBEE_API_KEY` as a high-priority override, although an OAuth token still wins over it), so on a machine that has run a recent `ironbee login` (which writes `service.oauthToken`) prefer the `IRONBEE_SERVICE_*` forms. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
 
 ---
 
 ## What's next?
 
 <CardGroup cols={2}>
-  <Card title="API Tokens in the Console" icon="key" href="/console/access-tokens">
+  <Card title="OAuth Tokens in the Console" icon="key" href="/console/access-tokens">
     Create, name, and revoke your personal OAuth access tokens.
   </Card>
   <Card title="Account API key" icon="building" href="/console/account">

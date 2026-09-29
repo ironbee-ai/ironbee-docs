@@ -1,10 +1,15 @@
 ---
 title: Netlify
-description: Install the IronBee Netlify extension so every deploy preview is verified automatically, with the verdict reported right on the deploy summary.
+description: Install the IronBee Netlify extension so the deploy previews and branch deploys of your sites are verified, with the result on the deploy page.
 icon: "/images/icons/netlify.svg"
 ---
 
-The Netlify extension puts IronBee on your deploys. When a deploy preview or branch deploy succeeds, a cloud agent opens it in a real browser, reads what the pull request changed, walks the affected flows, and reports what it found back to the deploy - with the full evidence behind it in the Console.
+The Netlify extension verifies your deploys. When a deploy preview or branch deploy of a site with verification turned on goes live, a cloud agent does three things:
+- opens the deploy
+- reads what the pull request changed
+- exercises the affected flows
+
+It reports the result on the Netlify deploy page. The full evidence is in the IronBee Console.
 
 There is no workflow file to add and no test suite to maintain. Nothing waits on IronBee: the deploy completes as before, and the verification reports on it.
 
@@ -12,41 +17,83 @@ There is no workflow file to add and no test suite to maintain. Nothing waits on
 
 ## Prerequisites
 
-- A Netlify team with sites that build **deploy previews** from a Git repository.
-- An IronBee account, and the **owner** or **admin** role on it - connecting a team to an account requires one of those roles.
-- The [IronBee GitHub App](/integrations/github), so the agent can check out your code and resolve the pull request behind the deploy. Without it a run still happens, but with no changeset to work from.
+- A Netlify team with sites that build deploy previews or branch deploys from a GitHub repository.
+- The **owner** or **admin** role on your IronBee account.
+- The [IronBee GitHub App](/integrations/github). It's recommended for every repository and required for private ones:
+  - It lets the run check out a private repository.
+  - It finds the pull request behind a branch deploy.
+  - It posts the result on the pull request as a check and a comment.
 
 ---
 
-## Step 1 - Install the Netlify extension
+## Step 1: Install the extension
 
-Open the Console at **Settings → Integrations**, pick **Netlify**, and select **Install the Netlify extension**. You can also reach the same flow from onboarding by choosing **Connect Netlify**.
+In the console, open **Integrations** in the sidebar, select **Netlify**, and click **Install the Netlify extension**. It opens the [IronBee extension on Netlify](https://app.netlify.com/extensions/y-0ak6dz-ironbee) in a new tab. Install it on your team.
 
-<img src="/images/console/integrations/netlify-integrations.png" alt="Console - Integrations page, Netlify not yet connected" style={{borderRadius:'8px',width:'100%'}} />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-not-connected-light.png" alt="The Integrations page with Netlify selected under Available: Not connected, with the Install the Netlify extension button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-not-connected-dark.png" alt="The Integrations page with Netlify selected under Available: Not connected, with the Install the Netlify extension button" />
 
-The connect flow is three short steps on Netlify, and IronBee finishes the rest for you:
-
-1. **Install the IronBee extension on Netlify.** The button opens app.netlify.com in a new tab; pick the team the extension should live on.
-2. **Turn on verification for your sites.** Enable IronBee on the sites you deploy - only enabled sites are verified.
-3. **Come back.** IronBee detects the installation and moves you forward automatically. Already installed? It can take a few seconds to show up.
-
-<img src="/images/console/integrations/netlify-connect.png" alt="IronBee - Connect Netlify flow with automatic extension detection" style={{borderRadius:'8px',width:'100%'}} />
+During onboarding, the same step is **Connect Netlify**. The console detects the installation and moves you forward automatically.
 
 ---
 
-## Step 2 - Connect the team to your IronBee account
+## Step 2: Connect the team to your IronBee account
 
-Installing the extension puts IronBee on the Netlify team; connecting is what tells IronBee where the results should go. When the connect flow detects the installation, it moves you to the connection step:
+1. On Netlify, open your team's **Extensions > IronBee** and click **Connect to IronBee**, then **Open IronBee**.
+2. On **Connect Netlify to IronBee**, check the **Netlify team**, pick the **IronBee account** its results go to, and click **Connect**.
+3. **You are connected** confirms it. Click **Back to Netlify**, then **I have connected, refresh** on the extension. To pick the sites to verify in the console right away, click **Enable sites** instead.
 
-1. Confirm the Netlify team shown.
-2. Pick the **IronBee account** the team reports to. Verification results for the team's sites land in that account.
-3. Select **Connect**.
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-connect-light.png" alt="Connect Netlify to IronBee, showing the Netlify team, the IronBee account picker and the Connect button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-connect-dark.png" alt="Connect Netlify to IronBee, showing the Netlify team, the IronBee account picker and the Connect button" />
 
 <Note>
-  Only accounts where you hold the **owner** or **admin** role appear in the picker. If none do, ask an account owner to open the same link, or to grant you the admin role and reload the page.
+  Only accounts where you hold the **owner** or **admin** role appear in the picker. A Netlify team can be connected to one IronBee account. If the link is no longer valid, click **Connect to IronBee** on Netlify again to get a fresh one.
 </Note>
 
-Once connected, the extension's **Configuration** section on Netlify shows the connection and which IronBee account the team reports to, with **Open IronBee settings** jumping straight to the Console.
+Once connected, the extension shows **Connected to IronBee** and the account the team reports to, with **Open IronBee settings** to jump to the console.
+
+<img className="ib-shot" src="/images/integrations/netlify-extension-connected.png" alt="Netlify: the IronBee extension's Configuration card, Connected to IronBee, with the IronBee account the team reports to, Open IronBee settings and Disconnect" />
+
+---
+
+## Step 3: Turn on verification for a site
+
+On Netlify, open the IronBee panel from a site's menu and click **Turn on verification**. This does two things:
+- It creates the site's deploy notification, which tells IronBee when a deploy goes live.
+- It enables the site in IronBee as a project with the **Web** verification type.
+
+Under **Which deploys**, choose the deploy contexts to verify. **Deploy previews** and **Branch deploys** are on by default. **Production deploys** is off unless you turn it on.
+
+<Warning>
+  IronBee has to be able to open your previews. If a site's deploy previews are private and production is public, **Turn on verification** makes the deploy previews public. If the whole site is private, the panel asks first: **Make the project public** makes production and previews reachable by anyone with the link. To keep previews private, protect them with a password instead. See [Preview access](#preview-access).
+</Warning>
+
+To verify a site's API instead of its web UI, change its type in the console: **Integrations > Netlify**, expand the team, open the actions menu (the three dots) next to the site and choose **Edit type**.
+
+You can also enable sites from the console: **Integrations > Netlify** or **Projects > New project**. A site enabled in the console starts runs once its deploy notification exists, so turn on verification for it in the extension too.
+
+---
+
+## Step 4: Install the GitHub App
+
+The Netlify extension knows the deploy; the GitHub App knows the code behind it. With both, the run verifies the pull request's changes, and the result also lands on the pull request.
+
+In **Integrations**, select **GitHub** and click **Install the GitHub App**. Then follow [GitHub App](/integrations/github).
+
+---
+
+## Preview access
+
+Public previews need nothing. For protected previews:
+
+- **Password protection** (Netlify Pro plan):
+  1. In Netlify, set the site's visibility to a password under **Project configuration > General > Visitor access**.
+  2. In the IronBee Console, open the project and go to **Settings > Secrets**.
+  3. Click **New secret**, choose the **Password** tab and enter the same password as the **Site password**.
+
+  IronBee signs in to the password page once and keeps only the cookie Netlify answers with. The password itself is never stored. After you change the password on Netlify, save the new one here.
+- **Basic authentication:** add an **HTTP headers** secret with an `Authorization` header in the project's **Settings > Secrets**.
+- **Team login (SSO)** can't be bypassed. Use a password, Basic authentication or public previews.
 
 ---
 
@@ -54,38 +101,34 @@ Once connected, the extension's **Configuration** section on Netlify shows the c
 
 | Access | Why |
 |--------|-----|
-| Deploy events (read) | Knowing when a deploy preview or branch deploy of an enabled site succeeds, and the URL and Git metadata behind it. |
-| Deploy notifications (write) | Posting the **IronBee verification** card onto the deploy summary. |
-| Sites (read) | Listing the team's sites, so verification can be enabled per site. |
+| `site:read`, `site:write` | Read the site and, when you turn on verification, make its previews public |
+| `deploy:read` | Know which deploy a notification is about |
+| `hook:read`, `hook:write`, `hook:delete` | Create and remove the site's deploy notification |
 
-The extension never changes your sites, builds, or deploy settings: it watches deploys and reports on them. Disconnecting removes the deploy notifications IronBee created on the next delivery.
-
----
-
-## Step 3 - Install the GitHub App
-
-The Netlify extension knows the deploy; the GitHub App knows the code behind it. Installing both is what gives the agent a diff to verify against, a live check on the pull request, and the result posted as a PR comment.
-
-Install it from **Settings → Integrations → Install the GitHub App**, then follow [GitHub App](/integrations/github) for the setup and permissions.
+The extension doesn't change your builds. IronBee never stores a Netlify token.
 
 ---
 
 ## How it runs
 
 <Steps>
-  <Step title="The deploy goes out">
-    Netlify builds exactly as before. When a deploy preview or branch deploy of an enabled site succeeds, the extension hands it to IronBee.
+  <Step title="The deploy goes live">
+    Netlify builds exactly as before. When a deploy in a selected context goes live, the deploy notification tells IronBee.
   </Step>
-  <Step title="The change is driven">
-    IronBee queues a verification job carrying the deploy URL and its Git metadata. With the GitHub App installed it resolves the **pull request** behind the deployed commit, so the agent works from the full diff. The agent then writes a scenario for what changed and exercises it in a real browser against your real backend.
+  <Step title="The change is verified">
+    IronBee starts a verification run with the deploy URL and its Git metadata.
+    - **The changeset:** on a deploy preview, the run verifies the pull request's full diff. On a branch deploy, the GitHub App finds the pull request behind the commit.
+    - **The environment:** the run is against the environment named after the deploy context: `deploy-preview`, `branch-deploy` or `production`. IronBee creates these automatically; their variables and secrets apply.
   </Step>
   <Step title="Watch it live, if you want">
-    While the run is going, the session in the Console streams live: every action as it executes, the browser view, and the network requests behind it. Nothing is lost when it ends - the recording replays the exact same workspace, action by action.
+    While a Web run is going, the run in the console streams live: every action as it executes, the browser view and the network requests. When it ends and its recording has uploaded, the recording replays the same workspace, action by action.
 
-    <img src="/images/console/integrations/netlify-live-run.png" alt="Console - a Netlify deploy preview verification running live" style={{borderRadius:'8px',width:'100%'}} />
+    <img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-live-run-light.png" alt="A running verification in the console: the actions so far, and the Live browser view with 2 watching" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-live-run-dark.png" alt="A running verification in the console: the actions so far, and the Live browser view with 2 watching" />
+
   </Step>
   <Step title="The result comes back to the deploy">
-    The verdict lands as an **IronBee verification** card on the Netlify deploy summary, and the full report with the evidence behind it lives in the Console.
+    The deploy page shows the **IronBee verification** card with the result. With the GitHub App installed, the same result lands on the pull request as a check and a comment.
   </Step>
 </Steps>
 
@@ -93,36 +136,55 @@ Install it from **Settings → Integrations → Install the GitHub App**, then f
 
 ## What you see on the deploy
 
-The deploy summary on Netlify gets an **IronBee** row alongside Netlify's own build notes. Expanding it shows the verification card: the verdict, the issues that were found, how many checks passed, and a link that opens the full report in IronBee.
+The deploy page on Netlify gets an **IronBee verification** card. It shows one headline:
 
-<img src="/images/console/integrations/netlify-deploy-summary.png" alt="Netlify - deploy summary with the IronBee verification card" style={{borderRadius:'8px',width:'100%'}} />
+| Headline | Meaning |
+|----------|---------|
+| IronBee is verifying this deploy in a real browser... | The run is in progress |
+| Verified: no issues found. | The verification passed |
+| Verified: issues found. | The verification failed. The **Issues** list shows what was found |
+| IronBee could not reach a verdict for this deploy. | The run ended without a verdict |
+| The verification was cancelled. | The run was cancelled |
 
-The full report is the same evidence workspace every verification gets: the action timeline, the recording synced to it, the network payloads, traces and logs, and each issue with where it happened, the proof behind it, and its impact - plus suggested fixes.
+Below it are the summary, the **Issues** and **View details in IronBee**, which opens the full report in the console. The report has the actions, the recording synced to them, the network requests, traces and logs, and each issue with the evidence behind it and suggested fixes.
 
-<img src="/images/console/integrations/netlify-run-report.png" alt="Console - the full verification report for a Netlify deploy preview" style={{borderRadius:'8px',width:'100%'}} />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-run-report-light.png" alt="The report of a Netlify run with a Fail result: the summary strip marked Web and Netlify, a step's screenshot above the recording controls, and the Issues tab" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-run-report-dark.png" alt="The report of a Netlify run with a Fail result: the summary strip marked Web and Netlify, a step's screenshot above the recording controls, and the Issues tab" />
+
+In the project's **Verifications** list, these runs carry the **Netlify** trigger. See [Verification detail](/console/verification-detail).
 
 ---
 
-## Scope and limits
+## Scope
 
-- **Deploy previews and branch deploys.** Production deploys are not verified.
-- **Non-blocking.** The verification never holds up a deploy; it reports on a deploy that already succeeded.
-- **Per-site.** Only sites where IronBee is enabled are verified.
-- **Scoped to the team.** The extension covers the Netlify team it is installed on, and results report to the IronBee account that team is connected to.
+- **Deploy previews and branch deploys by default.** Production deploys are verified only on sites where you turned them on.
+- **Sites with verification on.** Other sites are ignored.
+- **Once per deploy.** Each deploy is verified once. To verify again, deploy again. Netlify doesn't resend a notification IronBee missed.
+- **Non-blocking.** The verification never holds up a deploy.
 
 ---
 
 ## Managing the installation
 
-On Netlify, the extension lives under your team's **Extensions → IronBee** page:
+**On Netlify**, the extension has two panels:
 
-- **Configuration** shows the connection and which IronBee account the team reports to. **Open IronBee settings** jumps to the Console.
-- **Disconnect** stops verification for every project on the team. Deploy notifications IronBee created are removed on the next delivery.
-- **Uninstall**, under the danger zone, removes the extension from the team. Verification history already reported stays in the IronBee Console.
+- **Team** (**Extensions > IronBee**): the connection and the IronBee account the team reports to. **Disconnect** stops verification for every site on the team. The sites' IronBee projects become **Not active** and keep their history. The deploy notifications IronBee created are removed on their next delivery.
+- **Site** (from a site's menu):
+  - **Turn off verification**
+  - **Which deploys**
+  - the health of the deploy notification. If Netlify paused it after repeated failures, click **Resume notification**. If it's missing, turn verification off and on again.
 
-<img src="/images/console/integrations/netlify-extension.png" alt="Netlify - the IronBee extension page with configuration and danger zone" style={{borderRadius:'8px',width:'100%'}} />
+To remove the extension, **Disconnect** first, then uninstall it from the team's extension page. Uninstalling alone doesn't tell IronBee.
 
-In the Console, **Settings → Integrations → Netlify** shows the connected team, or the install button when no team is connected yet.
+**In the console**, **Integrations > Netlify** lists the connected team with its **Enabled sites**, **Status** and when it was **Connected**. **Manage on Netlify** and **Configure the Netlify extension** open the extension. Expand the team to manage its sites. Each site's actions menu (the three dots) holds:
+- **Enable** turns on verification for a site.
+- **Edit type** changes its verification type.
+- **Disable** stops verification and keeps the project's history.
+
+The gear icon next to an enabled site, **Project settings**, opens the project's settings.
+
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-sites-light.png" alt="Integrations, Netlify: the Acme team expanded, with its two sites marked Not enabled and the note that a site starts runs once its deploy notification is set up" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-sites-dark.png" alt="Integrations, Netlify: the Acme team expanded, with its two sites marked Not enabled and the note that a site starts runs once its deploy notification is set up" />
 
 ---
 
@@ -130,11 +192,12 @@ In the Console, **Settings → Integrations → Netlify** shows the connected te
 
 | Symptom | Likely cause |
 |---------|--------------|
-| No IronBee card on the deploy summary | The deploy is a production build, IronBee isn't enabled for that site, or the extension isn't installed on the team. |
-| The run verifies broad behaviour instead of what the commit changed | The GitHub App isn't installed for that repository, so there was no diff to work from. See [GitHub App](/integrations/github). |
-| The Console says no Netlify team is connected | The extension is installed but the team was never connected to an IronBee account. Run the connect flow again from **Settings → Integrations**. |
-| The connect flow doesn't detect the installation | Detection can take a few seconds after installing on Netlify. Keep the connect page open; it moves forward automatically. |
-| No account appears in the picker when connecting | Connecting requires the **owner** or **admin** role on the IronBee account. Ask an account owner to run the connect flow, or to grant you the admin role. |
+| The IronBee card shows no result for the deploy | Verification isn't on for the site, the deploy context isn't selected under **Which deploys**, or the deploy never went live |
+| The card says verification isn't turned on | Open the site's IronBee panel on Netlify and click **Turn on verification** |
+| Deploys stopped being verified | Netlify paused or lost the deploy notification. Click **Resume notification** in the site panel, or turn verification off and on again |
+| The run shows the agent stuck on a password page | Add the site password as a **Password** secret. See [Preview access](#preview-access) |
+| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or the GitHub App doesn't cover it. See [GitHub App](/integrations/github) |
+| **This Netlify team is already connected** | Another IronBee account holds the team. Ask an owner of that account to invite you, or connect a different team |
 
 ---
 
@@ -144,7 +207,7 @@ In the Console, **Settings → Integrations → Netlify** shows the connected te
   <Card title="GitHub App" icon="/images/icons/github.svg" href="/integrations/github">
     Repository access, the check on the commit, and the pull request comment.
   </Card>
-  <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
-    The same cloud verification, started from your shell or CI with `ironbee verify`.
+  <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
+    The same verification on Vercel preview deployments.
   </Card>
 </CardGroup>

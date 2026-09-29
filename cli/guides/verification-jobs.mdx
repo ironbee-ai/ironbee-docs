@@ -1,139 +1,200 @@
 ---
-title: Verification Jobs
-description: Run a real verification job in the IronBee cloud with `ironbee verify` — against a deployed URL or a local port through a reverse tunnel.
+title: Verification jobs
+description: "Run a verification on IronBee with `ironbee verify`: a web app in a cloud browser or an API over HTTP, at a deployed URL or a local port through a reverse tunnel."
 ---
 
-`ironbee verify` starts a **verification job through the IronBee API**: a cloud agent exercises your application — a deployed URL, or a local app reached through a reverse tunnel — and returns a verdict. Nothing runs in your editor: no AI client, no local devtools server, no completion gate. It's the same kind of verification your agent performs locally, packaged as a command you can run from any shell or CI pipeline.
+`ironbee verify` starts a **verification job through the IronBee API**. A cloud agent verifies your application and returns a verdict:
+- **the target**: a deployed URL, or a local app reached through a reverse tunnel
+- **how it verifies**: in a browser for a web app, by calling it for an API
+
+Nothing runs in your editor: no AI client, no local devtools server, no completion gate. It's the same kind of verification your agent performs locally, packaged as a command you can run from any shell or CI pipeline. Each job appears in the console as a verification run on the project's [Verifications](/console/verifications) tab.
 
 ```bash
-ironbee verify run web --url https://preview.example.com     # verify a deployment
-ironbee verify run web --port 3000                           # verify a local app via tunnel
+ironbee verify run web --url https://preview.example.com     # verify a deployed web app
+ironbee verify run web --port 3000                           # verify a local app through a tunnel
+ironbee verify run api --url https://api.preview.example.com # verify a deployed API
 ironbee verify status <job-id>                               # read a job back
 ironbee verify cancel <job-id> "superseded by a newer build" # ask a job to stop
 ```
 
 <Note>
-  Earlier CLI versions used `ironbee verify [session-id]` for a **local dry-run** of a session's verdict checks. That command is now [`ironbee verdict`](/cli/advanced/inspecting-sessions#ironbee-verdict) — `ironbee verify` is exclusively the cloud verification job runner.
+  Earlier CLI versions used `ironbee verify [session-id]` for a **local dry-run** of a session's verdict checks. That command is now [`ironbee verdict`](/cli/advanced/inspecting-sessions#ironbee-verdict). `ironbee verify` is exclusively the cloud verification job runner.
 </Note>
 
 ---
 
-## Credentials
+## Targets
 
-The command authenticates with your IronBee account — run [`ironbee login`](/cli/guides/authentication) once, or supply a credential from the environment (the way to do it in CI):
+| Command | Verifies | How |
+|---------|----------|-----|
+| `ironbee verify run web` | A web application | The agent opens it in a cloud browser and exercises it as a user would. The run records a video, screenshots, actions and network requests |
+| `ironbee verify run api` | An API: HTTP, GraphQL, gRPC or WebSocket | The agent calls the endpoints directly and checks the responses. There's no browser, so no recording or screenshots |
 
-| Source | Credential |
-|--------|-----------|
-| `ironbee login` | Personal OAuth access token, stored under [`service.oauthToken`](/cli/configuration/configuration#service-identity) |
-| `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY` | The standard [config env overrides](/cli/configuration/environment-variables) — they work here too |
-| `IRONBEE_ACCESS_TOKEN` | OAuth access token, a verify-specific override that beats everything above |
-| `IRONBEE_API_KEY` | Account API key (the legacy CI form) — likewise beats the config |
+Both take the same flags. The target is exactly one of:
 
-When both an OAuth token and an API key are available the OAuth token wins. With no credential at all the command fails with `no IronBee credential — run ironbee login, or set IRONBEE_ACCESS_TOKEN / IRONBEE_API_KEY`. The credential is **never a CLI argument**, so it can't leak through the process table.
-
----
-
-## `ironbee verify run web`
-
-Starts a job and follows it to a verdict. The target is exactly one of:
-
-- **`--url <url>`** — a publicly reachable deployment. The cloud agent drives it directly.
-- **`--port <number>`** — a local application. The CLI holds a **reverse tunnel** open for the duration of the run, so the cloud agent reaches `127.0.0.1:<port>` on your machine without you exposing anything.
+- **`--url <url>`**: a publicly reachable deployment. The cloud agent reaches it directly.
+- **`--port <number>`**: a local application. The CLI holds a **reverse tunnel** open for the duration of the run, so the cloud agent reaches `127.0.0.1:<port>` on your machine without you exposing anything.
 
 ```bash
 ironbee verify run web --url https://preview.example.com \
   --prompt "log in as admin, open /billing, confirm the invoice total updates"
 
 ironbee verify run web --port 3000 --name "checkout smoke"
+
+ironbee verify run api --url https://api.preview.example.com \
+  --prompt "check the orders endpoints, including a missing order and a bad token"
 ```
+
+An API run may reach only the hosts it's told about: the target, the environment's URL and OpenAPI properties, and the hosts its secrets are bound to.
+
+---
+
+## Credentials
+
+The command authenticates with your IronBee account. Run [`ironbee login`](/cli/guides/authentication) once, or supply a credential from the environment, which is the way to do it in CI:
+
+| Source | Credential |
+|--------|-----------|
+| `ironbee login` | Personal OAuth access token, stored under [`service.oauthToken`](/cli/configuration/configuration#service-identity) |
+| `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY` | The standard [config env overrides](/cli/configuration/environment-variables). They work here too |
+| `IRONBEE_ACCESS_TOKEN` | OAuth access token, a verify-specific override that beats everything above |
+| `IRONBEE_API_KEY` | Account API key (the legacy CI form). It also beats the config |
+
+When both an OAuth token and an API key are available, the OAuth token wins. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
+
+---
+
+## Flags
 
 ### Target flags
 
 | Flag | Description |
 |------|-------------|
-| `--url <url>` | Publicly reachable URL of the deployment to verify. |
-| `--port <number>` | Local port the application listens on; reached through a reverse tunnel. |
-| `--header <name:value>` | Request header for the URL target (repeatable). |
-| `--secret-header <name:value>` | Request header whose value is **secret** — encrypted by the service, never read back (repeatable). |
-| `--app-wait <seconds>` | Give up if the local port is not accepting within this (default `60`). |
+| `--url <url>` | Publicly reachable URL of the deployment to verify |
+| `--port <number>` | Local port the application listens on; reached through a reverse tunnel |
+| `--header <name:value>` | Request header for the URL target (repeatable) |
+| `--secret-header <name:value>` | Request header whose value is **secret**: encrypted by the service, never read back (repeatable) |
+| `--app-wait <seconds>` | Give up if the local port is not accepting within this (default `60`) |
 
-`--header` / `--secret-header` apply to `--url` only — a tunnel target's traffic passes no layer that could apply them.
+`--header` and `--secret-header` apply to `--url` only: a tunnel target's traffic passes no layer that could apply them.
+
+### Common flags
+
+| Flag | Description |
+|------|-------------|
+| `--prompt <text>` | What to verify on the target |
+| `--prompt-file <path>` | Read the prompt from a file, or from stdin with `-` |
+| `--project <name>` | Project the results attach to. See [Binding the run to your repository](#binding-the-run-to-your-repository) for the default |
+| `--environment <name>` | [Environment](#environments) the run is against. Selects that environment's variables and secrets on top of the project-wide ones |
+| `-C, --project-dir <dir>` | Directory the project and repository are derived from (default `.`) |
+| `--name <text>` | Job name, as it appears in the console |
+| `--timeout <seconds>` | Run timeout (default: the API's own) |
+| `--queue-wait <seconds>` | Give up if the job has not started within this (default `900`). The run then **cancels the job** and exits `2` |
+| `--api-url <url>` | API base URL (default: the configured service domain) |
+| `--json` | Print the finished job as JSON on stdout and nothing else |
+| `--no-wait` | Create the job, print its id, and exit without following it |
+
+`--prompt` and `--prompt-file` are alternatives. `--no-wait` can't be combined with `--port`: the run reaches the application only while the command is holding the tunnel open.
 
 ### Secret headers for protected deployments
 
-A preview deployment behind **deployment protection** (e.g. a Vercel protection-bypass header) needs a header the agent must send to reach it. Pass it with `--secret-header` so the value is treated as a secret end to end:
+A preview deployment behind **deployment protection**, such as Vercel's, needs a header to reach it. Pass it with `--secret-header` so the value is treated as a secret end to end:
 
 ```bash
 ironbee verify run web --url https://preview.example.com \
   --secret-header 'X-Vercel-Protection-Bypass: <token>'
 ```
 
-The value is masked from all CLI output the instant it's parsed (and registered with `::add-mask::` on GitHub Actions runners), sent in a dedicated `secretHeaders` field the service **encrypts and never reads back**. Plain `--header` values get none of that treatment — use it only for non-sensitive headers.
+The value is masked from all CLI output the moment it's parsed, and registered with `::add-mask::` on GitHub Actions runners. It's sent in a dedicated `secretHeaders` field that the service **encrypts and never reads back**. Plain `--header` values get none of that treatment, so use them only for non-sensitive headers.
 
-### Common flags
+To store a bypass for every run instead of passing it each time, add it as a [project secret](/console/secrets).
+
+---
+
+## Environments
+
+`--environment <name>` names the deployment the run is against, such as `staging` or `preview`. The run uses that environment's [variables](/console/variables) and [secrets](/console/secrets) on top of the project-wide ones. Without it, the run uses the project-wide ones only.
+
+- A name the project hasn't seen yet is created by the job.
+- When the environment has **Domain** properties, `--url` must fall inside those domains, and a `--port` target is refused because a tunnel has no domain.
+
+When the API refuses a job over the environment, the error line ends with how to recover:
+
+| Error code | What to do |
+|------------|------------|
+| `TARGET_OUTSIDE_ENVIRONMENT_DOMAIN` | Pass a `--url` inside the environment's domains, or change its domain properties in the console |
+| `ENVIRONMENT_DOMAIN_NO_TUNNEL` | Pass `--url` with one of the environment's addresses instead of `--port`, or name another `--environment` |
+| `INVALID_ENVIRONMENT_DOMAIN` | A domain property of the environment is no longer valid. Edit it in the console |
+
+See [Environments](/console/environments).
+
+---
+
+## Binding the run to your repository
+
+By default the run is bound to your repository and current commit, so the verdict lands next to the right code in the console. Fine-tune or opt out:
 
 | Flag | Description |
 |------|-------------|
-| `--prompt <text>` | What to verify on the target. |
-| `--prompt-file <path>` | Read the prompt from a file, or from stdin with `-`. |
-| `--project <name>` | Project the results attach to (default: derived from the git remote). |
-| `-C, --project-dir <dir>` | Directory the project and repository are derived from (default `.`). |
-| `--name <text>` | Job name, as it appears in the console. |
-| `--timeout <seconds>` | Run timeout (default: the API's own). |
-| `--queue-wait <seconds>` | Give up if the job has not started within this (default `900`) — the run then **cancels the job** and exits `2`. |
-| `--api-url <url>` | API base URL (default: the configured service domain). |
-| `--json` | Print the finished job as JSON on stdout and nothing else. |
-| `--no-wait` | Create the job, print its id, and exit without following it. |
+| `--commit <sha>` | Bind to this full 40-character commit SHA (default: derived from the repo, or `GITHUB_SHA`) |
+| `--base <ref>` | Measure the changeset from this ref or SHA |
+| `--pr <number>` | Bind to this pull request instead of a commit (default: from `GITHUB_REF` on a pull request run) |
+| `--no-diff` | Bind the commit but declare no changeset. Can't be combined with `--base` |
+| `--no-repo` | Don't bind the run to a repository at all |
 
-`--prompt` and `--prompt-file` are alternatives. `--no-wait` can't be combined with `--port`: the run reaches the application only while the command is holding the tunnel open.
+The binding attaches only when it would actually work:
+- The remote must be **GitHub**.
+- A commit derived from local HEAD must be **reachable from a remote-tracking branch**. An unpushed HEAD produces a warning, and the run proceeds **unbound** rather than pointing at code the service can't read. An explicit `--commit`, or `GITHUB_SHA` in CI, is taken at face value.
+- A dirty working tree only warns. The run stays bound to the committed SHA, so what the agent reads and what's on your disk may differ.
 
-### Binding the run to your repository
+In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository, or re-run with `--no-repo`.
 
-By default the run is bound to your repository and current commit, so the verdict lands next to the right code in the Console. Fine-tune or opt out:
+**Which project.** Without `--project`, the project name comes from your repository. That's the `origin` remote's repository name, else the first remote's, else the repository folder's name. A checkout of a github.com repository whose name matches reports to that repository's GitHub project. `--project <name>` names the project explicitly and doesn't claim a GitHub project. See [How IronBee identifies your project](/cli/concepts/projects).
 
-| Flag | Description |
-|------|-------------|
-| `--commit <sha>` | Bind to this full 40-character commit SHA (default: derived from the repo / `GITHUB_SHA`). |
-| `--base <ref>` | Measure the changeset from this ref or SHA. |
-| `--pr <number>` | Bind to this pull request instead of a commit (default: from `GITHUB_REF` on a PR run). |
-| `--no-diff` | Bind the commit but declare no changeset. |
-| `--no-repo` | Don't bind the run to a repository at all. |
+---
 
-The binding attaches only when it would actually work: the remote must be **GitHub**, and a commit derived from local HEAD must be **reachable from a remote-tracking branch** — an unpushed HEAD produces a warning and the run proceeds **unbound** rather than pointing at code the service can't read (an explicit `--commit`, or `GITHUB_SHA` in CI, is taken at face value). A dirty working tree only warns: the run stays bound to the committed SHA, so what the agent reads and what's on your disk may differ. In GitHub Actions the binding is automatic — `GITHUB_REPOSITORY`, `GITHUB_SHA`, and `GITHUB_REF` fill in the repo, commit, and PR, and the job is declared with a `github_actions` trigger so the Console can filter CI-triggered runs (purely informational — it carries no authority). If the job errors with a repo-checkout failure, grant the [IronBee GitHub App](/integrations/github) access to the repository, or re-run with `--no-repo`.
+## How a tunnel run starts
 
-### How a tunnel run starts
-
-For a `--port` target the CLI first probes the local port — **before** creating the job, so a doomed run is never started:
+For a `--port` target, the CLI first probes the local port, **before** creating the job, so a doomed run is never started:
 
 - It keeps waiting while nothing is listening, and while the port **accepts and immediately hangs up** (Docker publishes a container's port before the app inside is ready).
 - A server that accepts but stays silent is treated as ready (just slow), not as a failure.
 - A **TLS** listener fails immediately: the tunnel carries plain HTTP, so serve the app over HTTP locally.
-- On `--app-wait` expiry (default 60s) the command exits 1 with the last probe error.
+- When `--app-wait` runs out (default 60s), the command exits 1 with the last probe error.
 
-Once the job is created, the CLI prints every status change (`queued` → `starting` → `running` → a terminal status) while holding the tunnel. When the run finishes, the service closes the tunnel with a dedicated "run ended" signal and the command stops without reconnecting; if that signal is ever lost (a killed environment, a dropped connection), the command falls back to the job's own status polling — the verdict is the same either way. `Ctrl-C` requests a cancel and waits for the service to confirm; a second `Ctrl-C` exits immediately.
+Once the job is created, the CLI prints every status change (`queued`, `starting`, `running`, then a terminal status) while holding the tunnel. When the run finishes, the service closes the tunnel with a dedicated "run ended" signal and the command stops without reconnecting. If that signal is ever lost, the command falls back to the job's own status polling; the verdict is the same either way. `Ctrl-C` requests a cancel and waits for the service to confirm; a second `Ctrl-C` exits immediately.
 
 ---
 
 ## Output and exit codes
 
-A finished run prints the job's summary, its `checks` / `issues` / `fixes` / `reason` lists, a warning when the run **refused** or narrowed part of the request, and a final banner — `PASS`, `FAIL`, `NOT APPLICABLE — the run verified nothing`, or `no verdict — the job <status>`.
+When the job is created, the CLI prints `created job <id>`. Any **notices** from the service follow as warnings, for example when the project the job resolved to has none of the variables or secrets a same-named project holds.
+
+A finished run prints:
+- the job's summary
+- its `checks`, `issues`, `fixes` and `reason` lists
+- a warning when the run **refused** or narrowed part of the request
+- a final banner: `PASS`, `FAIL`, `NOT APPLICABLE`, or `no verdict` with the job's status
 
 | Exit code | Meaning |
 |-----------|---------|
-| `0` | The job succeeded **and** the verdict is `pass`. |
-| `1` | Failing verdict, not-applicable, no verdict, job failed, or any error. |
-| `2` | Cancelled (including `Ctrl-C`). |
-| `3` | `verify status` only: the job isn't terminal yet. |
+| `0` | The job succeeded **and** the verdict is `pass` |
+| `1` | Failing verdict, not applicable, no verdict, job failed, or any error |
+| `2` | Cancelled (including `Ctrl-C`) |
+| `3` | `verify status` only: the job isn't terminal yet |
 
 That makes it CI-gate-ready: `ironbee verify run web --url … && deploy.sh`.
 
 ### `--json`
 
-With `--json`, stdout carries exactly one JSON document (all decoration goes to stderr). A run that produced a job prints the **job body**:
+With `--json`, stdout carries exactly one JSON document, and all decoration goes to stderr. A run that produced a job prints the **job body**:
 
 ```json
 {
   "id": "…", "name": "…", "status": "succeeded",
+  "projectName": "…", "projectId": "…", "environment": "staging",
+  "triggerType": "api", "attempt": "…", "verificationId": "…",
+  "input": { "type": "web" },
   "result": {
     "status": "pass",
     "checks": ["…"], "issues": [], "fixes": [], "reason": [],
@@ -142,17 +203,29 @@ With `--json`, stdout carries exactly one JSON document (all decoration goes to 
 }
 ```
 
-`status` is one of `queued` / `starting` / `running` / `succeeded` / `failed` / `cancelled`; `result.status` is `pass` / `fail` / `not_applicable`. The result may also carry `refused: true` with a `reasonCode` when the run declined or narrowed part of the request — a refused run can still be `succeeded`, so a caller should check it — and the job may carry an `error: { type, message }`. A failure that produced **no job** prints a machine-readable error envelope instead (discriminate on the presence of `id`):
+- `status` is one of `queued`, `starting`, `running`, `succeeded`, `failed` or `cancelled`.
+- `result.status` is `pass`, `fail` or `not_applicable`.
+- The body also carries the resolved `environment`, the project, the target type in `input.type`, the trigger, and the created, started and ended timestamps.
+- The result may carry `refused: true` with a `reasonCode` when the run declined or narrowed part of the request. A refused run can still be `succeeded`, so a caller should check it.
+- The job may carry an `error: { type, message }`.
+- With `--no-wait --json`, the output also includes the create-time `notices`.
+
+A failure that produced **no job** prints a machine-readable error envelope instead. Tell the two apart by the presence of `id`:
 
 ```json
-{ "error": { "status": 409, "code": "NO_GITHUB_INSTALLATION", "message": "…",
+{ "error": { "status": 409, "code": "PROJECT_ARCHIVED", "message": "…",
              "details": [ { "field": "…", "message": "…" } ] } }
 ```
 
-`error.code` is the API's own error code — the field to branch on. `status` and `details` appear only when the failure came from the API; a purely local failure (flag validation, missing credential) carries only `message`.
+`error.code` is the API's own error code, and the field to branch on. Codes worth handling include:
+- `UNAUTHORIZED` and `ACCOUNT_INACTIVE`
+- `PROJECT_ARCHIVED`
+- the [environment codes](#environments) above
+
+`status` and `details` appear only when the failure came from the API. A purely local failure, such as flag validation or a missing credential, carries only `message`.
 
 <Note>
-  On a **GitHub Actions** runner the CLI also writes `::add-mask::` workflow-command lines to stdout (masking the credential and any `--secret-header` values with the runner). A `--json` consumer there should parse the last JSON document rather than assume the stream is pure JSON.
+  On a **GitHub Actions** runner the CLI also writes `::add-mask::` workflow-command lines to stdout, masking the credential and any `--secret-header` values with the runner. A `--json` consumer there should parse the last JSON document rather than assume the stream is pure JSON.
 </Note>
 
 ---
@@ -165,7 +238,7 @@ ironbee verify status <job-id> --watch    # poll until the job is terminal
 ironbee verify cancel <job-id> [reason]   # ask the job to stop, with an optional reason for the record
 ```
 
-`status` accepts the same `--json` / `--api-url` / `-C, --project-dir` flags as `run`, plus `--queue-wait <seconds>` with `--watch`. As an observer it never cancels — if the queue wait elapses it just warns that the job is still queued.
+`status` accepts the same `--json`, `--api-url` and `-C, --project-dir` flags as `run`, plus `--queue-wait <seconds>` with `--watch`. As an observer it never cancels: if the queue wait elapses, it just warns that the job is still queued.
 
 ---
 
@@ -173,7 +246,7 @@ ironbee verify cancel <job-id> [reason]   # ask the job to stop, with an optiona
 
 <CardGroup cols={2}>
   <Card title="Verification" icon="shield-check" href="/cli/guides/verification">
-    The in-editor verification gate — cycles, modes, and the verifier sub-agent.
+    The in-editor verification gate: cycles, modes, and the verifier sub-agent.
   </Card>
   <Card title="Authentication" icon="key" href="/cli/guides/authentication">
     OAuth tokens for interactive use, API keys for CI.

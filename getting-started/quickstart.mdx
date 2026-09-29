@@ -1,128 +1,108 @@
 ---
-title: Quick Start
-description: Sign up, install the CLI, connect to your account, and run your first verification.
+title: Quickstart
+description: Create your account, connect GitHub, Vercel or Netlify or set up the CLI, and see your first verification run.
 ---
 
-## Prerequisites
+## Step 1: Create your account
 
-- **Node.js 22 or later** check with `node --version`
-- An AI coding client: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Codex CLI](https://github.com/openai/codex)
-
-
----
-
-## Step 1 - Create your account
-
-Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up. Your account gives you access to the dashboard and generates the API key the CLI needs to ship session data.
+Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up with Google, GitHub, or your work email. The first time you sign in, name your account, for example after your company. The console then opens the onboarding. See [Sign in and team access](/console/sign-in).
 
 ---
 
-## Step 2 - Install the CLI
+## Step 2: Choose your path
 
-```bash
-npm install -g @ironbee-ai/cli
-```
+The onboarding offers four ways in. You can connect more than one, and everything is also available later from **Setup** in the top bar.
 
-Verify the installation:
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-connect-light.png" alt="The onboarding cards for GitHub, Vercel, Netlify and IronBee CLI, with the Connect GitHub, Connect Vercel, Connect Netlify and Set up the CLI buttons" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-connect-dark.png" alt="The onboarding cards for GitHub, Vercel, Netlify and IronBee CLI, with the Connect GitHub, Connect Vercel, Connect Netlify and Set up the CLI buttons" />
 
-```bash
-ironbee --version
-```
+<Tabs>
+  <Tab title="GitHub">
+    Recommended. Verify every push and pull request with the IronBee Action.
+
+    1. Choose **Connect GitHub**, and install the IronBee GitHub App on the organization you deploy from. Choose the repositories it can see.
+    2. In the **IronBee Action** step, pick:
+       - the **Repository**
+       - **Where it runs**: **On IronBee** or **On your GitHub runner**
+       - **On a finding**: **Report it** or **Fix it too**
+    3. Fill in how your app starts, and add the repository secrets the console lists: `IRONBEE_API_KEY`, plus `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` when your answers need one. Then click **Create the file on GitHub**.
+    4. Committing the file is a push, and that push starts your first verification run.
+
+    If you deploy with Vercel or Netlify, choose **I deploy with Vercel or Netlify, skip this** after installing the App, and connect them instead. See [GitHub Action: Getting started](/github-action/get-started/getting-started).
+  </Tab>
+  <Tab title="Vercel">
+    Verify the preview deployments of your Vercel projects.
+
+    1. Choose **Connect Vercel**, and add the IronBee integration on your Vercel team. Choose the projects it can see.
+    2. Back in IronBee, connect the installation to your account, and enable the projects to verify with a verification type: **Web** or **API**.
+    3. If your previews are protected, add a **Bypass token** secret. See [Preview access](/integrations/vercel#preview-access).
+    4. The next preview deployment starts your first verification run.
+
+    Install the GitHub App too, so runs verify each pull request's changes and report on it. See [Vercel](/integrations/vercel).
+  </Tab>
+  <Tab title="Netlify">
+    Verify the deploy previews and branch deploys of your Netlify sites.
+
+    1. Choose **Connect Netlify**, and install the IronBee extension on your Netlify team.
+    2. From the extension, click **Connect to IronBee** and connect the team to your IronBee account.
+    3. Open IronBee from a site's menu on Netlify and click **Turn on verification**.
+    4. The next deploy preview starts your first verification run.
+
+    Install the GitHub App too, so runs verify each pull request's changes and report on it. See [Netlify](/integrations/netlify).
+  </Tab>
+  <Tab title="CLI">
+    Let your AI coding agent verify its own changes. You need Node.js 22 or later, and Claude Code, Cursor or Codex. In the onboarding, **Set up the CLI** shows the same three steps and detects your sign-in.
+
+    ```bash
+    npm install -g @ironbee-ai/cli
+    ironbee login
+    cd your-project
+    ironbee install
+    ```
+
+    - `ironbee login` opens your browser to authorize the CLI, and stores a personal OAuth token in `~/.ironbee/config.json`. The token shows up on the [OAuth Tokens page](/console/access-tokens), where you can revoke it.
+    - `ironbee install` detects your AI client and asks a few questions: the verification mode (**assist**, the default, **enforce** or **monitor**) and the platforms to verify (the browser by default).
+    - Restart your AI client afterwards. On Cursor, also turn on the `ironbee-devtools` server. See [Cursor setup](/cli/clients/cursor#activate-the-mcp-server).
+
+    Then give your agent a task. In assist mode, run `/ironbee-verify` (`$ironbee-verify` on Codex) when the change is ready. In enforce mode, the agent verifies before it can finish. See [CLI: Getting started](/cli/get-started/getting-started).
+  </Tab>
+</Tabs>
 
 ---
 
-## Step 3 - Connect the CLI to your account
+## Step 3: See your first result
 
-Run `ironbee login` from any directory. It opens your browser at `console.ironbee.ai`, asks you to authorize the CLI, and writes a personal OAuth access token and collector URL to `~/.ironbee/config.json` automatically.
+Open **Projects** in the console. Your project appears when its first data arrives. Click it to open its [Verifications](/console/verifications) tab:
+- While a run is in progress, you can watch it live.
+- Afterwards, its [detail page](/console/verification-detail) shows the recording, the actions, the network requests and the result.
 
-```bash
-ironbee login
-```
+The **Setup** checklist in the top bar tracks your progress: connect a provider, see your first project, receive your first deployment or session, and invite a teammate.
 
-The browser opens, you confirm, and the terminal prints:
-
-```
-✓ Logged in successfully!
-  Console   https://console.ironbee.ai
-  Collector https://collector.service.ironbee.ai
-  Token     personal (my-laptop)
-  Config    ~/.ironbee/config.json
-```
-
-The token is named after your machine by default and shows up on the [API Tokens page](/console/access-tokens) in the Console, where you can revoke it anytime.
-
-<Accordion title="Running in CI instead?">
-  For automation that has no browser, the [GitHub Action](/github-action/get-started/getting-started) or any CI pipeline and use an account API key instead of `ironbee login`. Supply it through the environment:
+<Accordion title="Running in CI without the GitHub Action?">
+  Use the account API key instead of `ironbee login`. Owners and admins find it in the console under **Settings > Account**. Supply it through the environment:
 
   ```bash
-  export IRONBEE_API_KEY=<your-account-api-key>
+  export IRONBEE_SERVICE_API_KEY=<your-account-api-key>
   ```
 
-  Find the account API key on the [Account page](/console/account) in the Console. See [Authentication](/cli/guides/authentication) for when to use each credential.
+  See [Authentication](/cli/guides/authentication) for when to use each credential.
 </Accordion>
-
----
-
-## Step 4 - Set up your project
-
-Navigate to your project directory and run:
-
-```bash
-cd your-project
-ironbee install
-```
-
-IronBee auto-detects your AI client and writes:
-
-- **Hook configuration** — the client calls IronBee automatically when the agent finishes
-- **Verification skill/rules** — the agent knows the verification workflow
-- **An MCP server entry** — a single `ironbee-devtools` server carrying the tools for every cycle you enabled
-- **Permissions** — grants the agent access to devtools tools
-
-<Info>
-  If you are using **Cursor**, you need one extra step after install: go to **Settings → Tools & MCP** and confirm the `ironbee-devtools` server is listed and on. See [Cursor setup](/cli/clients/cursor#activate-the-mcp-server) for details.
-</Info>
-
----
-
-## Step 5 - Let the agent work
-
-Open Claude Code, Cursor, or Codex and give the agent a task:
-
-
-When the agent finishes editing code, IronBee intercepts the completion and requires verification:
-
-1. The agent navigates to the affected pages in a real browser
-2. It takes screenshots, checks the console, and tests functionality
-3. It submits a verdict, pass or fail
-4. If it fails, the agent fixes the issues and re-verifies
-
----
-
-## Step 6 - View your results
-
-Open the [IronBee Console](https://console.ironbee.ai) and navigate to your project. You will find:
-
-- The session with all activity recorded
-- Screenshots and browser interactions from each verification cycle
-- Pass/fail verdict with evidence
-- Timing breakdowns how long the agent spent coding, verifying, and fixing
 
 ---
 
 ## What's next?
 
 <CardGroup cols={2}>
+  <Card title="How integrations work" icon="plug" href="/integrations/overview">
+    Projects, verification types, environments and where results land.
+  </Card>
+  <Card title="Key concepts" icon="book-open" href="/getting-started/key-concepts">
+    The terms used across the console and the docs.
+  </Card>
+  <Card title="Environments and secrets" icon="lock" href="/console/secrets">
+    Give runs the credentials to sign in to your app.
+  </Card>
   <Card title="CLI configuration" icon="settings" href="/cli/configuration/configuration">
-    Customize verify patterns, retry limits, and devtools settings.
-  </Card>
-  <Card title="Enable backend verification" icon="server" href="/cli/guides/verification#enable-or-disable-a-platform">
-    Add Node.js or backend protocol verification for backend code changes.
-  </Card>
-  <Card title="GitHub Action" icon="git-branch" href="/github-action/get-started/getting-started">
-    Verify changes automatically on every pull request.
-  </Card>
-  <Card title="Explore the console" icon="layout-dashboard" href="/console/projects">
-    Understand sessions, verifications, findings, and recommendations.
+    Verify patterns, retry limits and devtools settings.
   </Card>
 </CardGroup>

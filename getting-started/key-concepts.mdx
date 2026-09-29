@@ -1,159 +1,165 @@
 ---
-title: Key Concepts
-description: Core terminology you will encounter throughout IronBee.
+title: Key concepts
+description: The terms you'll meet across IronBee, from projects and verification runs to sessions and verdicts.
 ---
-<img
-    className="block dark:hidden"
-    src="/images/console/keyconcepts-light.png"
-    alt="IronBee Console — Key Concepts"
-    style={{borderRadius:'8px',width:'100%'}}
-/>
-<img
-    className="hidden dark:block"
-    src="/images/console/keyconcepts-dark.png"
-    alt="IronBee Console — Key Concepts"
-    style={{borderRadius:'8px',width:'100%'}}
-/>
+
+IronBee organizes everything around **projects**. A project collects two kinds of work:
+- **verification runs**, which IronBee executes on its own infrastructure for your deployments and pull requests
+- **sessions**, which your AI coding agent records with the IronBee CLI
+
+```mermaid actions={false}
+flowchart TD
+    A[Account] --> P[Project]
+    P --> E[Environments, variables, secrets]
+    P --> R[Verification runs]
+    R --> V[Result and evidence]
+    P --> S[CLI sessions]
+    S --> C[Verification cycles]
+    C --> D[Verdict]
+```
+
+---
+
+## Account
+
+Your **account** is the workspace your team shares. It holds your projects, integrations and settings. Everyone in it has a role: **Owner**, **Admin**, **Member** or **Billing Admin**. See [Roles and permissions](/console/roles).
+
+---
 
 ## Project
 
-A **project** maps to a codebase, in practice usually a single git repository. When you run `ironbee install` in a directory, that directory is associated with a project in the console. All sessions, verifications, and analysis for that codebase are grouped under its project.
+A **project** is what IronBee verifies:
+- a GitHub repository
+- a Vercel project
+- a Netlify site
+- a **CLI project**: a name your IronBee CLI reports under
+
+Owners and admins enable GitHub, Vercel and Netlify projects from [Integrations](/integrations/overview). CLI projects appear on their own the first time the CLI reports under a name. See [How IronBee identifies your project](/cli/concepts/projects).
+
+Every project has a **verification type**:
+- **Web**: open the deployment in a browser and exercise it as a user would.
+- **API**: call the deployment over HTTP and check the responses against its contract.
+
+A project that is no longer enabled on its provider is **Not active**: it keeps its history, and its deployments aren't verified. A project can also be archived. See [Project settings](/console/project-settings).
+
+---
+
+## Verification run
+
+A **verification run** is one verification of a change: a preview deployment, a push, a pull request, or a run you start yourself. An agent reads what changed, exercises it against your running app, and records a **result** with the evidence behind it.
+
+Every run has:
+- **A trigger**, what started it: **Vercel**, **Netlify**, **GitHub Actions**, **API**, **CLI** or **Console**.
+- **A status**, where it is: Created, Queued, Starting, Running, Completed, Failed, Cancelled.
+- **A result**, what it concluded: **Pass**, **Fail**, **Not applicable** (the change left nothing to verify), **Soft fail** or **Unknown**.
+- **The source** it verified, for runs tied to a GitHub repository: repository, branch, commit and pull request.
+
+Runs appear on the project's [Verifications](/console/verifications) tab. While a run is in progress you can watch it live, and afterwards replay it on its [verification detail](/console/verification-detail) page.
+
+---
+
+## Environment, variable and secret
+
+An **environment** is one deployment of a project that runs are verified against, such as `preview` or `staging`. Integrations create environments automatically. Its **URL**, **OpenAPI document** and **Domain** properties tell the run about the deployment. See [Environments](/console/environments).
+
+**Variables** are plain values a run is told outright. See [Variables](/console/variables).
+
+**Secrets** are credentials a run can use without seeing them: sign-in credentials, tokens, headers, a deployment protection bypass. They're written once and never shown again. See [Secrets](/console/secrets).
+
+Variables and secrets apply to all environments, or to one.
+
+---
+
+## Evidence
+
+The **evidence** of a run is everything it recorded:
+- the recording and screenshots
+- the actions it took
+- the network requests
+- the traces
+- the logs
+
+A **span** is one timed operation inside a trace. The **Traces** tab shows the spans as a tree.
 
 ---
 
 ## Session
 
-A **session** is a single continuous working period for an AI agent from when it starts editing to when it completes (or is interrupted). Every agent task creates a session.
+A **session** is one working session of your AI coding agent with the IronBee CLI, from start to finish. It records what the agent did: its activities, its verification cycles, and their verdicts.
 
-Sessions record:
-- All activities performed by the agent
-- Every verification cycle attempted
-- Total coding time, fix time, and idle time
-- Pass/fail outcomes and retry counts
-
----
-
-## Activity
-
-An **activity** is a discrete action within a session. Activities include:
-
-- Code edits the agent makes to files
-- Verification cycles the agent runs to test its changes
-- Fixes the agent applies after a failed verification
-- Individual tool calls (browser navigation, screenshots, API requests, console checks, etc.)
+An **activity** is one agent turn: from your prompt to the moment the agent stops.
 
 ---
 
 ## Verification cycle
 
-A **verification cycle** (or just "cycle") is one complete pass of testing. IronBee supports three cycle types that can run in parallel:
+A **verification cycle** is one pass of verification inside a session. The CLI verifies through six platforms:
 
-### Browser cycle
+| Platform | Default | Verifies through |
+|----------|---------|------------------|
+| Browser | On | A real browser: navigation, screenshots, console, accessibility |
+| Node | Opt-in | The Node.js runtime: probes, snapshots, outbound HTTP |
+| Python | Opt-in | A running Python process over debugpy: probes, thread dumps, outbound HTTP |
+| Backend | Opt-in | Real HTTP, gRPC, GraphQL or WebSocket calls |
+| Android | Opt-in | An emulator: taps, swipes, screenshots, UI snapshots, Logcat |
+| Terminal | Opt-in | CLI, REPL and TUI programs in a pseudo-terminal |
 
-The agent uses browser devtools to:
-1. Navigate to affected pages
-2. Take screenshots
-3. Check browser console for errors
-4. Test functionality (clicks, forms, navigation)
-5. Submit a verdict
+Every enabled platform that matches the changed files takes part in the same cycle. Turn platforms on or off with `ironbee <platform> enable|disable`. See [Verification](/cli/guides/verification).
 
-The browser cycle is **on by default** for code changes matching `browser.verifyPatterns` (most code file types). Disable it with `ironbee browser disable`.
-
-### Node cycle
-
-The agent connects to a running Node.js process and:
-1. Sets V8 tracepoints or logpoints at changed code paths
-2. Exercises those paths
-3. Reads back execution snapshots or runtime logs
-4. Submits verdict with backend evidence
-
-The Node cycle is **opt-in** enable it with `ironbee node enable`. Only applies to Node.js backends.
-
-### Backend cycle
-
-The agent drives real HTTP, gRPC, GraphQL, or WebSocket calls against a running backend service and verifies the responses. Works with any backend runtime (Node, Java, Python, Go, Rust, and more).
-
-The backend cycle is **opt-in** enable it with `ironbee backend enable`.
-
-A single task can require **multiple cycles in parallel** the agent must provide evidence for each active cycle before completing.
+In the console, CLI cycles appear among the project's verification runs with the **CLI** trigger.
 
 ---
 
 ## Verdict
 
-A **verdict** is the agent's signed assessment of whether its changes work. It includes:
+A **verdict** is the agent's assessment of whether its change works:
 
-- `status`: `pass` or `fail`
-- `checks`: evidence items the agent confirmed (e.g. "form submits successfully", "API returns 200")
-- `issues` (on fail): what went wrong
-- `fixes` (on a passing retry after a previous failure): what was changed to resolve the issues
+- `status`: `pass`, `fail`, or `not_applicable` when the change has nothing to verify
+- `checks`: what the agent confirmed, such as "form submits successfully"
+- `issues`: what went wrong. On a pass they're advisory; on a fail they must be fixed
+- `fixes`: what was changed to resolve earlier issues
 
-IronBee validates the verdict against the evidence. If the evidence does not support a `pass`, the gate overrides to `fail` and the agent must retry.
+IronBee doesn't take a pass at face value. Each platform requires certain tools to have been used before a pass counts. In enforce mode, the gate rejects a pass without them and sends the agent back to verify.
 
 ---
 
 ## Fix
 
-A **fix** is a code change made by the agent in response to a failed verification. After a fix, the agent re-verifies. All fixes are tracked separately so you can see exactly what the agent changed to resolve an issue.
+A **fix** is a code change the agent makes after a failed verification. The agent then verifies again, up to a retry limit. The GitHub Action can fix findings too, and commit the fix for you.
 
 ---
 
-## Trace & span
+## Verification modes
 
-IronBee records **traces** for each verification cycle, a structured log of every tool call, with timing. Within a trace, each individual tool invocation is a **span**.
+The CLI runs in one of three modes:
 
-The **waterfall chart** in the console visualizes these as a timeline, making it easy to see what the agent tested, in what order, and how long each step took.
+| Mode | What it does |
+|------|--------------|
+| **Assist** *(default)* | The verification tools are installed. You or the agent run a verification with `/ironbee-verify`, and nothing blocks completion |
+| **Enforce** | The agent can't finish a task until every active cycle passes. Turn it on with `ironbee verification auto enable` |
+| **Monitor** | Nothing is verified. Sessions, tool calls and timing are still recorded |
 
----
-
-## Analysis
-
-After a session completes, IronBee runs **analysis** an LLM-powered pass over the session data. Analysis produces:
-
-- **Findings** — specific problems identified (errors, failures, inconsistencies)
-- **Recommendations** — concrete suggestions for improving code quality or the verification setup
-
-Analysis runs at two scopes: **project level** (focused on a single codebase) and **account level** (aggregated across all your projects, surfacing broader patterns).
+See [Verification modes](/cli/guides/verification#verification-modes).
 
 ---
 
-## Operation modes
+## Analysis, findings and recommendations
 
-IronBee supports three operation modes:
-
-### Assist mode (default)
-
-Verification is enabled the devtools, the verifier, the `/ironbee-verify` command, and MCP servers are all installed but the completion gate does **not** automatically block the agent. The agent (or you) can run verifications on demand and the results are recorded, but a pass isn't required before completing. This is the default after `ironbee install` — the tooling is available without strict enforcement.
-
-### Enforce mode
-
-Verification is fully enforced. When the agent tries to complete a task, the completion gate triggers automatically and the agent cannot finish until all active verification cycles pass. Opt in with `ironbee verification auto enable` (or pick `enforce` at install time).
-
-### Monitoring-only mode
-
-When **verification is disabled** (`ironbee verification disable`), IronBee runs in monitoring-only mode. The enforcement hook, verification skill, and MCP servers are not installed. Sessions still record tool calls and timing data and you get full observability without slowing the agent down.
-
-This is useful for measuring baseline agent behavior before enabling enforcement.
-
----
-
-## Projects inventory
-
-
-`ironbee install` records every project it touches in `~/.ironbee/projects.json`. This inventory powers batch operations like `ironbee install --all` (re-install across every registered project) and `ironbee uninstall --all` (wipe IronBee from every project). Use `ironbee register` / `ironbee unregister` for manual inventory management.
+Once a day, IronBee analyzes each project's recent sessions:
+- The [Quality analysis](/console/analysis) measures how well the agent verifies.
+- [Findings](/console/findings) are observations grounded in that data, such as a file with a high fix rate or a pattern of retries. They aren't necessarily bugs.
+- [Recommendations](/console/recommendations) are directives generated from findings.
 
 ---
 
 ## Config files
 
-IronBee reads config from three locations, deep-merged (project-local wins over project wins over global):
+The CLI reads its config from three layers, deep-merged (project-local wins over project, which wins over global):
 
 | File | Scope | Committed? |
 |------|-------|------------|
 | `~/.ironbee/config.json` | Global, applies to all projects | N/A |
-| `<project>/.ironbee/config.json` | Project-level, shared with team | Yes |
+| `<project>/.ironbee/config.json` | Project-level, shared with your team | Yes |
 | `<project>/.ironbee/config.local.json` | Project-local, machine-specific overrides | No (gitignored) |
 
-The `IRONBEE_API_KEY` environment variable overrides `collector.apiKey` from any config file.
-
-See [Configuration](/cli/configuration/configuration) for all available options.
+The `IRONBEE_SERVICE_API_KEY` environment variable overrides `service.apiKey` from any config file. See [Configuration](/cli/configuration/configuration).

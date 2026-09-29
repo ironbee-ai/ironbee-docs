@@ -1,9 +1,11 @@
 ---
-title: How Verification Works
-description: The completion gate, verification cycles, verdicts, and retries what happens when your agent finishes a task.
+title: How verification works
+description: "The completion gate, verification cycles, verdicts and retries: what happens when your agent finishes a task."
 ---
 
 IronBee's core idea is simple: **code isn't done until it's verified.** This page explains the mechanism behind that: how IronBee intercepts task completion, what the agent has to do to pass, and what happens when it doesn't.
+
+The blocking gate is [enforce mode](#enforce-assist-and-monitoring-only). In the default assist mode, the same verification runs when you or the agent ask for it with `/ironbee-verify`, and nothing blocks completion.
 
 ---
 
@@ -13,7 +15,7 @@ When you run `ironbee install`, IronBee registers a **completion hook** with you
 
 If the agent changed code files, the hook runs verification before letting the task complete:
 
-```mermaid
+```mermaid actions={false}
 flowchart TD
     A[Agent edits code] --> B[Agent tries to finish]
     B --> C{IronBee completion gate}
@@ -24,6 +26,8 @@ flowchart TD
 
 If no code files changed (docs, config, etc.), the gate doesn't trigger.
 
+By default, IronBee counts a file as changed when the agent edits it with its file-editing tools. Edits made through shell commands, such as `sed -i` or a script, aren't seen unless you set `verification.changes.source` to `git`. See [How IronBee detects changes](/cli/guides/verification#how-ironbee-detects-changes).
+
 ---
 
 ## Verification cycles
@@ -32,12 +36,12 @@ A **cycle** is one pass of testing against a real surface. IronBee has six, and 
 
 | Cycle | Exercises the change through… |
 |-------|-------------------------------|
-| Browser | A real browser, navigation, screenshots, console, accessibility |
-| Node | The Node.js V8 inspector, probes, runtime snapshots, and outbound HTTP capture |
-| Python | A running Python process over debugpy/DAP, probes, thread dumps, and outbound HTTP capture |
-| Backend | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
-| Android | An emulator over ADB taps, swipes, screenshots, UI snapshots, Logcat, HTTP capture |
-| Terminal | A pseudo-terminal (PTY) spawn the CLI / REPL / TUI, send input, capture output and exit codes |
+| Browser | A real browser: navigation, screenshots, console, accessibility |
+| Node | The Node.js V8 inspector: probes, runtime snapshots, and outbound HTTP capture |
+| Python | A running Python process over debugpy/DAP: probes, thread dumps, and outbound HTTP capture |
+| Backend | Real protocol calls: HTTP, gRPC, GraphQL, WebSocket |
+| Android | An emulator over ADB: taps, swipes, screenshots, UI snapshots, Logcat, HTTP capture |
+| Terminal | A pseudo-terminal (PTY): spawn the CLI, REPL or TUI, send input, capture output and exit codes |
 
 When a task completes, **every active cycle whose patterns match the changed files must pass in the same verification attempt**. They run in parallel, not one task at a time. See [Verification](/cli/guides/verification) for choosing which cycles are active.
 
@@ -57,9 +61,11 @@ To pass a cycle, the agent exercises the affected paths with that cycle's tools 
 }
 ```
 
-IronBee doesn't take `status: "pass"` at face value. Each cycle defines the tools that must appear on the wire before a pass counts: required tools (all-of) and alternative evidence paths (any-of). If the agent claims success without actually using the tools, the gate overrides the verdict to **fail**. This is what stops an agent from declaring "it works" without testing.
+IronBee doesn't take `status: "pass"` at face value. Each cycle defines the tools that must appear on the wire before a pass counts: required tools (all-of) and alternative evidence paths (any-of). If the agent submits a pass without having used those tools, the gate rejects it and sends the agent back to verify. This is what stops an agent from declaring "it works" without testing.
 
-`name` is an optional short label (3–6 words) for what the cycle actually verified. It isn't part of the verdict itself — IronBee lifts it off the payload and stamps it on the cycle as it closes. See [What a cycle records](#what-a-cycle-records) below.
+A **pass** can still list `issues`. They are advisory: the change counts as verified, and the issues are reported for you to consider, not as something the agent must fix. Only a **fail** verdict's issues have to be fixed.
+
+`name` is an optional short label (3–6 words) for what the cycle actually verified. It isn't part of the verdict itself: IronBee lifts it off the payload and stamps it on the cycle as it closes. See [What a cycle records](#what-a-cycle-records) below.
 
 ---
 
@@ -69,39 +75,44 @@ Beyond the verdict, every verification cycle carries three pieces of metadata so
 
 | | Where it comes from | Trusted because |
 |---|---|---|
-| **Name** | The agent names the cycle when it opens (`ironbee hook verification-start --name`) and may rename it on the verdict's optional `name` field. The closing name wins — the agent knows more once it's done. A [saved-scenario](/cli/guides/scenarios) run is named after its scenario automatically. | Display only. It never gates anything, so a bad label costs nothing but clarity. |
+| **Name** | The agent names the cycle when it opens (`ironbee hook verification-start --name`) and may rename it on the verdict's optional `name` field. The closing name wins - the agent knows more once it's done. A [saved-scenario](/cli/guides/scenarios) run is named after its scenario automatically. | Display only. It never gates anything, so a bad label costs nothing but clarity. |
 | **Platforms** | Which cycles were *enabled* when the cycle opened, and which ones it *actually exercised* by the time it closed. | The exercised set is derived **mechanically** from the cycle's own recorded tool calls, never from what the agent claims. A cycle that drove no platform tools records none. |
-| **Reason** | A one-sentence "why this call". IronBee's [delegated sub-agents](#who-drives-the-tools) attach one to every verification tool call; on Claude Code a `Bash` call without one falls back to the model's own command `description`. Where the main agent drives the tools directly (Cursor, Codex `main-agent`) none is requested. | Display only — it annotates the timeline, it never changes what a tool does or whether a cycle passes. |
+| **Reason** | A one-sentence "why this call". IronBee's [delegated sub-agents](#who-drives-the-tools) attach one to every verification tool call; on Claude Code a `Bash` call without one falls back to the model's own command `description`. Where the main agent drives the tools directly (Cursor, Codex `main-agent`) none is requested. | Display only - it annotates the timeline, it never changes what a tool does or whether a cycle passes. |
 
 <Warning>
-  The per-call **reason** is model-authored free text that ships to the Collector alongside the tool call. IronBee instructs the agent to keep it to one sentence and to put no secrets, tokens, or personal data in it — but it is not redacted by [privacy mode](/cli/advanced/privacy), which gates DevTools payloads rather than this field, and there's no separate switch for it. See [Privacy mode → Tool-call reasons](/cli/advanced/privacy#tool-call-reasons).
+  The per-call **reason** is model-authored free text that ships to the Collector alongside the tool call. IronBee instructs the agent to keep it to one sentence and to put no secrets, tokens, or personal data in it - but it is not redacted by [privacy mode](/cli/advanced/privacy), which gates DevTools payloads rather than this field, and there's no separate switch for it. See [Privacy mode → Tool-call reasons](/cli/advanced/privacy#tool-call-reasons).
 </Warning>
 
 ---
 
 ## Retries
 
-A failed verdict sends the agent back to fix the issues and verify again. The [`maxRetries`](/cli/configuration/configuration#core-options) limit (default **3**) caps this loop: once it's hit, the agent is allowed to complete the task **but must report the unresolved issues** rather than silently pass. One counter covers all active cycles.
+A failed verdict sends the agent back to fix the issues and verify again. Two counters bound this loop, both capped by [`maxRetries`](/cli/configuration/configuration#core-options) (default **3**):
+
+- **The gate's retry count**, across all active cycles.
+- **The fail streak**: consecutive failed verdicts for the current change. Each failed verdict's reply shows it, for example `fail (2/3 for this change)`. The streak resets on a pass, on a not-applicable verdict, and whenever the gate lets the task complete.
+
+When either counter reaches the cap, the reply reads `RETRY LIMIT REACHED`. The agent is then allowed to complete the task **but must report the unresolved issues** rather than silently pass. The streak also bounds delegated verification loops and manual `/ironbee-verify fix` runs, in every mode.
 
 ---
 
 ## Who drives the tools
 
-On **Claude Code** and **Codex**, the main agent doesn't run the devtools tools itself — it **delegates to a dedicated `ironbee-verifier` sub-agent** that owns them. This keeps the heavy devtools output (DOM, console, screenshots) out of the main conversation while still recording everything to the same session. **Cursor** has no sub-agent surface, so its main agent verifies directly. See [Verification → How verification runs](/cli/guides/verification#how-verification-runs-the-verifier-sub-agent).
+On **Claude Code** and **Codex**, the main agent **delegates verification to a dedicated `ironbee-verifier` sub-agent** that owns the devtools tools. This keeps the heavy devtools output (DOM, console, screenshots) out of the main conversation while still recording everything to the same session. On Codex 0.154 and later, the devtools server is also registered for the whole session, so the main agent can see its tools. IronBee's rule, and in enforce mode its hook, keep the main agent delegating. **Cursor** has no sub-agent surface, so its main agent verifies directly. See [Verification → How verification runs](/cli/guides/verification#how-verification-runs-the-verifier-sub-agent).
 
-Every agent-bound event the session ships — tool calls, file changes, verification start/end, verdicts, check results — carries an **`agent_name`** (`main` for the top-level conversation, or the sub-agent's name like `ironbee-verifier`), so the Console can show exactly *who* did what within one session. Each agent's runtime state is likewise kept in its own partition on disk (see [Runtime files → Per-agent state](/cli/advanced/runtime-files#per-agent-state-agentsagentid)), so a delegated verifier and the main agent never race on the same files.
+Every agent-bound event the session ships - tool calls, file changes, verification start/end, verdicts, check results - carries an **`agent_name`** (`main` for the top-level conversation, or the sub-agent's name like `ironbee-verifier`), so the Console can show exactly *who* did what within one session. Each agent's runtime state is likewise kept in its own partition on disk (see [Runtime files → Per-agent state](/cli/advanced/runtime-files#per-agent-state-agentsagentid)), so a delegated verifier and the main agent never race on the same files.
 
 ---
 
 ## Default vs custom scenarios
 
-By default the gate verifies only the areas affected by what changed. You (or the agent) can instead pass a **custom scenario** to [`/ironbee-verify`](/cli/clients/claude-code#slash-commands) — inline text or a path to a scenario file — to specify exactly which flows, states, and endpoints to exercise. See [Custom verification scenarios](/cli/guides/verification#custom-verification-scenarios).
+By default the gate verifies only the areas affected by what changed. You (or the agent) can instead pass a **custom scenario** to [`/ironbee-verify`](/cli/clients/claude-code#slash-commands) - inline text or a path to a scenario file - to specify exactly which flows, states, and endpoints to exercise. See [Custom verification scenarios](/cli/guides/verification#custom-verification-scenarios).
 
 ---
 
 ## Enforce, assist, and monitoring-only
 
-The blocking gate described above is **enforce mode**. It's one of three [verification modes](/cli/guides/verification#verification-modes), and it's **opt-in** — a fresh install defaults to **assist**:
+The blocking gate described above is **enforce mode**. It's one of three [verification modes](/cli/guides/verification#verification-modes), and it's **opt-in** - a fresh install defaults to **assist**:
 
 - **Assist** *(default)* (`ironbee verification auto disable`) - the `/ironbee-verify` command, the verifier sub-agent, and the devtools MCP server stay installed so the agent (or you) can verify on demand, but no gate ever blocks completion. Every manual cycle is still recorded to the Collector. Turn on full enforcement with `ironbee verification auto enable`.
 - **Monitoring-only** (`ironbee verification disable`) - none of the machinery is installed. The agent works unblocked, but session lifecycle, tool calls, and timing still flow to the Collector. Useful for measuring baseline behavior before turning verification on.
@@ -116,14 +127,20 @@ Teams can steer *how* the agent verifies a given part of the codebase by committ
 
 ## Session isolation
 
-Every agent task runs as its own **session**, tracked independently in a per-session `sessions/<id>/` directory (by default under `~/.ironbee/projects/<token>/`, outside the project tree — see [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives)). Concurrent sessions, even in the same project, keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
+Every agent task runs as its own **session**, tracked independently in a per-session `sessions/<id>/` directory (by default under `~/.ironbee/projects/<token>/`, outside the project tree - see [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives)). Concurrent sessions, even in the same project, keep separate event logs, verdicts, and retry counters, so they never interfere. See [Runtime files](/cli/advanced/runtime-files) for what's stored per session.
+
+---
+
+## Where sessions go
+
+Every session reports to a project in the [IronBee Console](https://console.ironbee.ai), where its verification cycles appear on the project's [Verifications](/console/verifications) tab. The project is chosen from your repository. See [How IronBee identifies your project](/cli/concepts/projects).
 
 ---
 
 ## What's next?
 
 <CardGroup cols={2}>
-    <Card title="Manage Projects" icon="search" href="/cli/guides/managing-projects">
+    <Card title="Manage projects" icon="search" href="/cli/guides/managing-projects">
         Install, remove, track, and update IronBee across your projects.
     </Card>
     <Card title="Verification" icon="shield-check" href="/cli/guides/verification">

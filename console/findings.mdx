@@ -1,37 +1,104 @@
 ---
 title: Findings
-description: Observations and problems identified during analysis, per project and across your account.
+description: Observations the daily analysis surfaces for a project, grounded in its session data.
 ---
 
-**Findings** are observations that IronBee's analysis identified, a file with a high fix-cycle rate, a pattern of retries, excessive token spend, or a behavioral habit worth changing. Each finding is grounded in actual session data.
+**Findings** are observations that IronBee's [analysis](/console/analysis) identified in a project's sessions. Examples:
+- a file with a high fix-cycle rate
+- a pattern of retries
+- a habit worth changing
 
-## Finding areas
+Each finding is grounded in actual session data. Findings aren't necessarily bugs; they describe how the work is going.
 
-| Area | What it covers |
-|------|---------------|
-| **Quality** | Verification thoroughness, fix effectiveness, recurring failures |
-| **Efficiency** | Time and compute waste, rework rate, slow sessions |
-| **Patterns** | Files and issues that recur across sessions |
-| **Behavior** | Agent working habits and interaction style |
-| **Cost** | Token spend, cache efficiency, expensive sessions |
+Findings are tracked per project. Every daily analysis replaces the project's findings, and the list shows the active ones.
 
-## Severity levels
+---
+
+## Open a project's findings
+
+Open **Findings** in the sidebar and pick a project. You can also click a findings count on a [project card](/console/projects#card-view), or follow a finding from a recommendation's causal chain.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/findings-list-light.png" alt="The Findings page for a project: severity counts, the severity and area filters, title search and the findings table" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/findings-list-dark.png" alt="The Findings page for a project: severity counts, the severity and area filters, title search and the findings table" />
+
+<Info>
+  The findings page covers observations across sessions. The problems a single verification run found are its **Issues**, on its [verification detail](/console/verification-detail#the-result) page.
+</Info>
+
+---
+
+## Severity
 
 | Severity | Meaning |
 |----------|---------|
-| `notice` (Information) | Descriptive observation, informational, no action required |
-| `concern` | Worth watching, may have a linked recommendation |
-| `critical` | Serious degradation, should have a linked recommendation |
+| **Information** | A descriptive observation. No action is needed |
+| **Concern** | Worth watching. It may have a linked recommendation |
+| **Critical** | A serious degradation. It should have a linked recommendation |
 
-Only `concern` and `critical` findings can have recommendations attached.
+Only **Concern** and **Critical** findings can have recommendations attached.
 
-## Scopes
+---
+
+## Areas
+
+| Area | What it covers |
+|------|----------------|
+| **Quality** | Verification thoroughness, fix effectiveness, recurring failures |
+| **Efficiency** | Time spent on rework, slow sessions |
+| **Patterns** | Files and issues that recur across sessions |
+| **Behavior** | The agent's working habits |
+
+---
+
+## Counts
+
+Four tiles at the top count the project's active findings: **Critical**, **Concern**, **Information** and **Total Findings**.
+
+---
+
+## Filter and search
+
+- Filter by severity (**All severities**) and by area (**All areas**).
+- **Search title…** matches finding titles from 3 characters.
+- **Clear filters** resets them.
+
+When you arrive from a link to one finding or one analysis, a **Finding** or **Analysis** chip pins the list to it. Remove the chip to see every finding.
+
+---
+
+## The findings table
+
+| Column | What it shows |
+|--------|---------------|
+| **Severity** | Critical, Concern or Information |
+| **Title** | The observation |
+| **Area** | Quality, Efficiency, Patterns or Behavior |
+| **Created** | When the finding was generated |
+
+Every column sorts. The newest findings come first. Show 20, 50 or 100 rows per page.
+
+---
+
+## Finding details
+
+Click a row to open the finding:
+
+- The severity, the area, the project and when it was created.
+- The title and the full description, with the evidence and metrics behind it. Some findings add a table or a chart.
+- **View linked recommendation**, for **Concern** and **Critical** findings. It opens the recommendations that came from this finding.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/finding-detail-light.png" alt="An open Concern finding in the Patterns area, with its title, description, an evidence table and the View linked recommendation link" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/finding-detail-dark.png" alt="An open Concern finding in the Patterns area, with its title, description, an evidence table and the View linked recommendation link" />
+
+---
+
+## Related pages
 
 <CardGroup cols={2}>
-  <Card title="Account Findings" icon="building-2" href="/console/findings-account">
-    Findings across all projects on the account.
+  <Card title="Recommendations" icon="lightbulb" href="/console/recommendations">
+    Directives generated from findings.
   </Card>
-  <Card title="Project Findings" icon="folder" href="/console/findings-project">
-    Findings scoped to a single project.
+  <Card title="Analysis" icon="sparkles" href="/console/analysis">
+    The daily quality analysis that produces findings.
   </Card>
 </CardGroup>

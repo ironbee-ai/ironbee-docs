@@ -1,6 +1,6 @@
 ---
-title: Runtime Files
-description: What IronBee writes to disk which are global state, project config, and per-session runtime data.
+title: Runtime files
+description: "What IronBee writes to disk: global state, project config, and per-session runtime data."
 ---
 
 IronBee stores its state in a few places: a global directory in your home folder, an `.ironbee/` directory inside each project, and a per-session runtime tree that by default lives **outside** the project. This page is a reference for what lives where, and what's safe to commit.
@@ -13,9 +13,12 @@ Machine-wide state, shared across all your projects:
 
 | Path | What it holds |
 |------|---------------|
-| `config.json` | Global config for your defaults across all projects. `ironbee login` writes your collector credentials here. |
+| `config.json` | Global config for your defaults across all projects. `ironbee login` writes your credential (`service.oauthToken` or `service.apiKey`) and `service.domain` here. |
+| `telemetry.json` | The anonymous ID for [CLI telemetry](/cli/advanced/telemetry). |
+| `install-state.json` | The install schema version, so an upgraded CLI knows when to re-render your projects' artifacts. |
+| `scenarios/` | Global [saved scenarios](/cli/guides/scenarios), available in every project. |
 | `projects.json` | The project inventory, the set of project paths IronBee is installed in. Powers `install --all` / `uninstall --all`. |
-| `install-snapshots.json` | Transitional — backups of the statusline config older IronBee versions overwrote, so an upgrade or `uninstall` can restore your original. Written by nothing today and removed once every install has upgraded past the [statusline integration](/cli/clients/claude-code#removed-integrations). |
+| `install-snapshots.json` | Transitional - backups of the statusline config older IronBee versions overwrote, so an upgrade or `uninstall` can restore your original. Written by nothing today and removed once every install has upgraded past the [statusline integration](/cli/clients/claude-code#removed-integrations). |
 | `projects/<token>/` | **Per-session runtime data** for each project, in the default `external` [runtime location](#where-per-session-data-lives). `<token>` is derived from the project's path, so each project gets its own folder. Holds the same `sessions/<id>/` tree described below. |
 
 ---
@@ -26,13 +29,13 @@ Created by `ironbee install` in each project:
 
 | Path | What it holds | Commit? |
 |------|---------------|---------|
-| `config.json` | Project config, team settings, shared with the repo | ✅ Yes |
-| `config.local.json` | Personal overrides, your machine only | ❌ Gitignored |
-| `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) — one `<name>.json` per scenario, plus a sibling `<name>.cache.json` holding a step-ful scenario's captured `llm-action` replay scripts (both committed; never hand-edit the cache). A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`pdt`/`bedt`/`adt`/`tdt`, still read for back-compat) | ✅ Yes |
-| `VERIFICATION.md` | Area-specific [verification guidance](/cli/guides/verification-context), in any directory | ✅ Yes |
-| `sessions/<id>/` | Per-session runtime data — **only when [`runtime.location`](#where-per-session-data-lives) is `in-project`** | ❌ Gitignored |
+| `config.json` | Project config, team settings, shared with the repo | Yes |
+| `config.local.json` | Personal overrides, your machine only | No, gitignored |
+| `scenarios/` | Saved [verification scenarios](/cli/guides/scenarios) - one `<name>.json` per scenario, plus a sibling `<name>.cache.json` holding a step-ful scenario's captured `llm-action` replay scripts (both committed; never hand-edit the cache). A single flat store (older installs used per-cycle subfolders `bdt`/`ndt`/`pdt`/`bedt`/`adt`/`tdt`, still read for back-compat) | Yes |
+| `VERIFICATION.md` | Area-specific [verification guidance](/cli/guides/verification-context), in any directory | Yes |
+| `sessions/<id>/` | Per-session runtime data - **only when [`runtime.location`](#where-per-session-data-lives) is `in-project`** | No, gitignored |
 
-`ironbee install` adds five entries to your project's `.gitignore` automatically — `.ironbee/sessions/`, `.ironbee/config.local.json`, `.ironbee/codex-threads.json`, `.ironbee/vcs-cache.json`, and `.claude/settings.local.json`. Each is appended independently and only when it isn't already there, so an existing `.gitignore` is never rewritten. The last three are belt-and-suspenders: today the Codex thread map and the VCS cache live inside the `sessions/` folder (already covered by the first entry), and `.claude/settings.local.json` only exists on Claude Code — they're listed anyway so no machine-local state can slip into a commit on an older layout. The committed `config.json`, `scenarios/`, and any `VERIFICATION.md` files are what your teammates pick up when they run `ironbee install`.
+`ironbee install` adds five entries to your project's `.gitignore` automatically - `.ironbee/sessions/`, `.ironbee/config.local.json`, `.ironbee/codex-threads.json`, `.ironbee/vcs-cache.json`, and `.claude/settings.local.json`. Each is appended independently and only when it isn't already there, so an existing `.gitignore` is never rewritten. The last three are belt-and-suspenders: today the Codex thread map and the VCS cache live inside the `sessions/` folder (already covered by the first entry), and `.claude/settings.local.json` only exists on Claude Code - they're listed anyway so no machine-local state can slip into a commit on an older layout. The committed `config.json`, `scenarios/`, and any `VERIFICATION.md` files are what your teammates pick up when they run `ironbee install`.
 
 ---
 
@@ -43,9 +46,9 @@ The per-session runtime tree (`sessions/<id>/`) is controlled by [`runtime.locat
 | `runtime.location` | Per-session data lives at | Notes |
 |--------------------|---------------------------|-------|
 | `external` *(default)* | `~/.ironbee/projects/<token>/sessions/<id>/` | Kept **out of the project tree** so a project never accumulates a growing `sessions/` folder, even though it's gitignored. `<token>` is a stable hash of the project's real path. |
-| `in-project` | `<project>/.ironbee/sessions/<id>/` | The legacy layout — runtime data sits beside your config, under the gitignored `sessions/` folder. |
+| `in-project` | `<project>/.ironbee/sessions/<id>/` | The legacy layout - runtime data sits beside your config, under the gitignored `sessions/` folder. |
 
-Either way the contents of `sessions/<id>/` are identical — only the base directory differs. **Committed config (`config.json`, `config.local.json`, `scenarios/`, `VERIFICATION.md`) always stays in-project**, regardless of `runtime.location`. Switch layouts with `ironbee config set runtime.location in-project` or the [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var; it takes effect on the next session.
+Either way the contents of `sessions/<id>/` are identical - only the base directory differs. **Committed config (`config.json`, `config.local.json`, `scenarios/`, `VERIFICATION.md`) always stays in-project**, regardless of `runtime.location`. Switch layouts with `ironbee config set runtime.location in-project` or the [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var; it takes effect on the next session.
 
 ---
 
@@ -55,23 +58,24 @@ Each agent task gets its own directory, keeping concurrent sessions isolated (se
 
 | File | What it holds |
 |------|---------------|
-| `state.json` | The session's current state: phase, verification status, and the project dir it belongs to. |
-| `agents/<agentId>/` | **Per-agent state** — see below. Each agent active in the session (the main conversation and every delegated sub-agent) gets its own partition. |
-| `retries` | The current verification retry count. |
+| `state.json` | The session's current state: phase, verification status, the gate's retry count (`retries`) and the fail streak (`failVerdictStreak`), and the project dir it belongs to. |
+| `agents/<agentId>/` | **Per-agent state** - see below. Each agent active in the session (the main conversation and every delegated sub-agent) gets its own partition. |
+| `tree-fingerprint.json` | The working-tree fingerprint the gate compares against. Only with [`verification.changes.source`](/cli/guides/verification#how-ironbee-detects-changes) set to `git` or `shadow`. |
+| `changes-shadow.jsonl` | Where `shadow` mode logs the decisions on which `actions` and `git` disagree. |
 | `queue/` | Queue snapshots awaiting delivery, dead-letter entries, and the worker log. See [Job queue](/cli/advanced/job-queue). |
 | `activity/` | One presence marker per participant in the open agent turn (the main agent and each delegated sub-agent). The turn closes only when the last participant leaves, so a backgrounded verifier can't split it. |
-| `tool-results/` | Sidecar drop box for tool results the host truncated (a step-ful [scenario run](/cli/guides/scenarios) can exceed the host's tool-result limit). Normally empty — entries are consumed and deleted immediately. |
+| `tool-results/` | Sidecar drop box for tool results the host truncated (a step-ful [scenario run](/cli/guides/scenarios) can exceed the host's tool-result limit). Normally empty - entries are consumed and deleted immediately. |
 | `vcs-emitted.json` | Fingerprint of the last [`vcs_link`](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) emitted per turn, so an unchanged turn produces no repeat wire traffic. |
 | `session.log` | Diagnostic log of the session's hook activity. |
 
 ### Per-agent state (`agents/<agentId>/`)
 
-A session usually has more than one actor: the **main** agent, and the delegated sub-agents IronBee installs (`ironbee-verifier`, `ironbee-scenario`, `ironbee-issue-tracker`). Everything an individual agent writes is partitioned under its own `agents/<agentId>/` directory so concurrent writers — say a verifier running in the background while the main agent keeps working — never clobber each other's state. The `<agentId>` is the host's opaque agent/thread id (only the main conversation is literally `main`); the human-readable agent name travels separately, as `cycle.json`'s `owner` and the `agent_name` on shipped events.
+A session usually has more than one actor: the **main** agent, and the delegated sub-agents IronBee installs (`ironbee-verifier`, `ironbee-scenario`, `ironbee-issue-tracker`). Everything an individual agent writes is partitioned under its own `agents/<agentId>/` directory so concurrent writers - say a verifier running in the background while the main agent keeps working - never clobber each other's state. The `<agentId>` is the host's opaque agent/thread id (only the main conversation is literally `main`); the human-readable agent name travels separately, as `cycle.json`'s `owner` and the `agent_name` on shipped events.
 
 | File | What it holds |
 |------|---------------|
 | `actions.jsonl` | That agent's event log: file edits, tool calls, and verification markers. The main conversation writes `agents/main/actions.jsonl`. |
-| `cycle.json` | The agent's one open verification cycle (id, kind — gated or scenario — start time, trace id). |
+| `cycle.json` | The agent's one open verification cycle (id, kind - gated or scenario - start time, trace id). |
 | `verdict.json` | The agent's latest verdict (`status`, `checks`, `issues`, `fixes`). |
 | `aux.json` | Auxiliary cycle flags (recording, conclusive checks, context injection, the [scenario](/cli/guides/scenarios) pause marker). |
 | `steps.json` | The open [scenario step](/cli/guides/scenarios) stack. |
@@ -79,7 +83,7 @@ A session usually has more than one actor: the **main** agent, and the delegated
 | `fix.json` | *(main only)* The active fix cycle and the `/ironbee-verify fix` intent. |
 
 <Note>
-  Not every file is present in every session, and these persist after a session ends (they aren't auto-deleted). Sessions from older CLI versions kept `actions.jsonl` at the session root — that file is still merged in for a session in flight across the upgrade, but new writes all land under `agents/` (a pre-upgrade root `verdict.json` is no longer read; verdicts are looked up only under `agents/<agentId>/`). You rarely touch any of this directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
+  Not every file is present in every session, and these persist after a session ends (they aren't auto-deleted). Sessions from older CLI versions kept `actions.jsonl` at the session root - that file is still merged in for a session in flight across the upgrade, but new writes all land under `agents/` (a pre-upgrade root `verdict.json` is no longer read; verdicts are looked up only under `agents/<agentId>/`). You rarely touch any of this directly: use [`ironbee status`](/cli/advanced/inspecting-sessions#ironbee-status) to read verdicts and [`ironbee queue`](/cli/advanced/job-queue) to inspect pending sends.
 </Note>
 
 ---

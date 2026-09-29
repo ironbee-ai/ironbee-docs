@@ -1,0 +1,49 @@
+---
+title: Roles and permissions
+description: What owners, admins, members and billing admins can do in an IronBee account.
+---
+
+Everyone in an IronBee account has one role. The account's creator is its **Owner**. Owners and admins [invite teammates](/console/team) and choose their roles.
+
+| Role | For |
+|------|-----|
+| **Owner** | The person who created the account. There is one owner |
+| **Admin** | People who manage integrations, projects and the team |
+| **Member** | People who work with verification runs and results |
+| **Billing Admin** | People who manage the account's billing |
+
+---
+
+## What each role can do
+
+| Capability | Who can do it |
+|------------|---------------|
+| View projects, verifications, analyses, findings and recommendations | Everyone |
+| Use Search, and manage your own profile, OAuth tokens and visual settings | Everyone |
+| Read project settings: environments, variables and secret names | Everyone |
+| Run an instant verification | Owner, Admin, Member |
+| Change project settings: verification type, environments, variables and secrets | Owner, Admin |
+| Create, archive and unarchive projects | Owner, Admin |
+| Connect and manage integrations, and use **Getting started** | Owner, Admin |
+| View, copy and rotate the account API key | Owner, Admin |
+| Invite and remove teammates, and change their roles | Owner for everyone; Admin for members and billing admins |
+| Rename the account | Owner |
+| Manage the [plan and billing](/console/pricing) | Owner, Billing Admin |
+
+Nobody can change their own role, and the owner role can't be given to someone else. On the [Team](/console/team) page, the owner's role shows as a plain **Owner** label, and the role picker for other members offers **Admin**, **Member** and **Billing Admin**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/settings/role-picker-light.png" alt="Members table with the owner's role shown as Owner and an open role picker offering Admin, Member and Billing Admin" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/role-picker-dark.png" alt="Members table with the owner's role shown as Owner and an open role picker offering Admin, Member and Billing Admin" />
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Team" icon="users" href="/console/team">
+    Invite teammates and change their roles.
+  </Card>
+  <Card title="Account" icon="building-2" href="/console/account">
+    The account's name and API key.
+  </Card>
+</CardGroup>

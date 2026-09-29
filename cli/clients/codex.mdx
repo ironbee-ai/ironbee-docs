@@ -13,59 +13,59 @@ When you run `ironbee install` in a project where [Codex CLI](https://github.com
 
 ## What gets installed
 
-IronBee writes Codex's active config **per project** (under `<project>/.codex/`) so each project gets its own hooks, MCP server, and verifier — no machine-global "last install wins". These files are committed alongside your `.claude/*` and `AGENTS.md`.
+IronBee writes Codex's active config **per project** (under `<project>/.codex/`) so each project gets its own hooks, MCP server, and verifier - no machine-global "last install wins". These files are committed alongside your `.claude/*` and `AGENTS.md`.
 
 | File | What it does |
 |------|--------------|
 | `<project>/.codex/hooks.json` | Registers IronBee's lifecycle hooks |
-| `<project>/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`) and registers the verifier agent (`[agents.ironbee-verifier]`) |
-| `<project>/.codex/agents/ironbee-verifier.toml` | The **verifier sub-agent** that runs the cycles. A single `[mcp_servers.ironbee-devtools]` block (serving every enabled cycle's tools) lives here, scoped to the sub-agent |
+| `<project>/.codex/config.toml` | Enables Codex's hook runtime (`[features] hooks = true`), registers the verifier agent (`[agents.ironbee-verifier]`), registers the session-level `[mcp_servers.ironbee-devtools]` server, sets the multi-agent options under `[features.multi_agent_v2]`, and adds the sandbox `writable_roots` grant |
+| `<project>/.codex/agents/ironbee-verifier.toml` | The **verifier sub-agent** that runs the cycles, with its own `[mcp_servers.ironbee-devtools]` block serving every enabled cycle's tools. Codex 0.154 and later ignore this block and use the session-level one in `config.toml` |
 | `<project>/AGENTS.md` | The always-applied verification rule, written into an IronBee-delimited block (`<!-- ironbee:start -->` … `<!-- ironbee:end -->`) |
 | `<project>/.agents/skills/ironbee-verification/SKILL.md` | The verification skill the agent follows |
 | `<project>/.agents/skills/ironbee-verify/SKILL.md` | The `$ironbee-verify` skill you can invoke by hand |
-| `<project>/.codex/agents/ironbee-scenario.toml` | The **scenario sub-agent** for [saved scenarios](/cli/guides/scenarios) (registered like the verifier, with the same read-only sandbox) |
+| `<project>/.codex/agents/ironbee-scenario.toml` | The **scenario sub-agent** for [saved scenarios](/cli/guides/scenarios) (registered like the verifier; its read-only sandbox applies on Codex versions before 0.154) |
 | `<project>/.agents/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The `$ironbee-{manage,search,run,sync}-scenario` skills |
-| `<project>/.codex/agents/ironbee-issue-tracker.toml` + `<project>/.agents/skills/ironbee-issue-track/SKILL.md` | The **issue-tracker sub-agent** and its `$ironbee-issue-track` skill — written only when an [issue tracker](/cli/guides/issue-tracking) is connected (in `main-agent` mode there's no agent; the skill drives the tools inline) |
+| `<project>/.codex/agents/ironbee-issue-tracker.toml` + `<project>/.agents/skills/ironbee-issue-track/SKILL.md` | The **issue-tracker sub-agent** and its `$ironbee-issue-track` skill - written only when an [issue tracker](/cli/guides/issue-tracking) is connected (in `main-agent` mode there's no agent; the skill drives the tools inline) |
 
-IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`. Your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed. Your user-level `~/.codex/config.toml` still applies — for example its top-level `model`.
+IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`. Your own hooks, MCP servers, and guidance outside the IronBee block are never touched. On uninstall, only the IronBee block and skills are removed. Your user-level `~/.codex/config.toml` still applies - for example its top-level `model`.
 
 <Note>
-  The layout above is the default **`sub-agent`** delivery mode. In **`main-agent`** mode there's no `ironbee-verifier.toml` — the `ironbee-devtools` MCP server is registered at the session level in `config.toml` and the skill/rule/command are inlined instead of delegating. See [How verification is delivered](#how-verification-is-delivered).
+  The layout above is the default **`sub-agent`** delivery mode. In **`main-agent`** mode there's no `ironbee-verifier.toml`: the skill, rule and command are inlined instead of delegating. The session-level `ironbee-devtools` server in `config.toml` is written in both modes. See [How verification is delivered](#how-verification-is-delivered).
 </Note>
 
 <Info>
-  Restart Codex after installing so it picks up the new hooks, guidance, and MCP servers. The first time, Codex shows a one-time **"hooks need review"** prompt (its safety gate for project-level hooks) — run `/hooks` to approve. IronBee writes `[features] hooks = true` for you; without it Codex parses hooks but never dispatches them.
+  Restart Codex after installing so it picks up the new hooks, guidance, and MCP servers. The first time, Codex shows a one-time **"hooks need review"** prompt (its safety gate for project-level hooks) - run `/hooks` to approve. IronBee writes `[features] hooks = true` for you; without it Codex parses hooks but never dispatches them.
 </Info>
 
 ---
 
 ## The $ironbee-verify skill
 
-Codex has no user-defined slash commands, so IronBee's manual verification trigger is exposed as a **skill you mention by name**. Type `$ironbee-verify` in the Codex prompt to run a verification cycle for the current changes. As with [`/ironbee-verify` in Claude Code](/cli/clients/claude-code#slash-commands), you can pass a **custom scenario** — inline text or a path to a scenario file — that defines exactly what to verify:
+Codex has no user-defined slash commands, so IronBee's manual verification trigger is exposed as a **skill you mention by name**. Type `$ironbee-verify` in the Codex prompt to run a verification cycle for the current changes. As with [`/ironbee-verify` in Claude Code](/cli/clients/claude-code#slash-commands), you can pass a **custom scenario** - inline text or a path to a scenario file - that defines exactly what to verify:
 
 ```bash
-$ironbee-verify                              # default — exercise the changed pages/endpoints
+$ironbee-verify                              # default - exercise the changed pages/endpoints
 $ironbee-verify check that the cart total    # inline scenario
   recalculates after removing an item
 $ironbee-verify ./scenarios/checkout.md      # a scenario file
 ```
 
-When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) — see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
+When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) - see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
 
-The same mention syntax applies to the other commands — `$ironbee-{manage,search,run,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
+The same mention syntax applies to the other commands - `$ironbee-{manage,search,run,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
 
 <Note>
-  Using the **GitHub Issues** integration on Codex? Its `gh` calls run inside Codex's tool sandbox, which blocks outbound network by default — enable `[sandbox_workspace_write] network_access = true` if `gh issue view` can't reach `api.github.com`. Install prints a reminder; Jira and Linear are unaffected (their tools run outside the sandbox). See [Issue Tracking → GitHub Issues](/cli/guides/issue-tracking#github-issues).
+  Using the **GitHub Issues** integration on Codex? Its `gh` calls run inside Codex's tool sandbox, which blocks outbound network by default - enable `[sandbox_workspace_write] network_access = true` if `gh issue view` can't reach `api.github.com`. Install prints a reminder; Jira and Linear are unaffected (their tools run outside the sandbox). See [Issue Tracking → GitHub Issues](/cli/guides/issue-tracking#github-issues).
 </Note>
 
 ---
 
 ## How verification is enforced
 
-IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes. By default, like Claude Code, Codex **delegates verification to the `ironbee-verifier` sub-agent** — the devtools tools are scoped to that agent (in `<project>/.codex/agents/ironbee-verifier.toml`), so the main conversation never carries the heavy devtools output. The verifier navigates the affected paths and submits a verdict; on failure the main agent fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit. You can pin the verifier's model with [`verification.model`](/cli/guides/verification#picking-the-verifier-model).
+IronBee registers a **Stop hook** that fires when the agent tries to finish a task. If code files changed, the hook runs verification automatically and blocks completion until every active cycle passes. By default, like Claude Code, Codex **delegates verification to the `ironbee-verifier` sub-agent**, so the main conversation doesn't carry the heavy devtools output. On Codex 0.154 and later the devtools server is also visible to the main agent (see [How verification is delivered](#how-verification-is-delivered)); IronBee's rule, and in enforce mode its Stop hook, keep it delegating. The verifier navigates the affected paths and submits a verdict; on failure the main agent fixes the issues and re-verifies, up to your [`maxRetries`](/cli/configuration/configuration#core-options) limit; at the limit the reply reads `RETRY LIMIT REACHED` and the agent reports the unresolved issues. Issues on a **pass** verdict are advisory. You can pin the verifier's model with [`verification.model`](/cli/guides/verification#picking-the-verifier-model).
 
 <Note>
-  Enforcement only blocks task completion in [enforce mode](/cli/guides/verification#enforce-mode) (`ironbee verification auto enable`). In the default **assist** mode the verifier and `$ironbee-verify` are installed but nothing gates completion — see [Verification modes](/cli/guides/verification#verification-modes).
+  Enforcement only blocks task completion in [enforce mode](/cli/guides/verification#enforce-mode) (`ironbee verification auto enable`). In the default **assist** mode the verifier and `$ironbee-verify` are installed but nothing gates completion - see [Verification modes](/cli/guides/verification#verification-modes).
 </Note>
 
 Codex's Stop hook returns a `decision: "block"` with a continuation reason, which pushes the agent back into the verification loop, the same enforcement semantics as Claude Code.
@@ -76,7 +76,11 @@ Codex exposes file edits through its single `apply_patch` tool, so IronBee gates
 
 ## How verification is delivered
 
-By default Codex runs the cycle in the **`ironbee-verifier` sub-agent** (the `sub-agent` delivery mode), exactly like Claude Code — the devtools MCP server is scoped to that agent and the heavy output stays out of the main conversation. If Codex's sub-agent machinery regresses, you can fall back to driving the tools from the **main agent** instead:
+By default Codex runs the cycle in the **`ironbee-verifier` sub-agent** (the `sub-agent` delivery mode), exactly like Claude Code, and the heavy output stays out of the main conversation.
+
+Codex 0.154 and later ignore the `mcp_servers` and `sandbox_mode` settings in an agent file. So IronBee also registers `[mcp_servers.ironbee-devtools]` at the session level in `config.toml`, in both modes. The main agent can then see the devtools tools. In `sub-agent` mode, IronBee's rule, and in enforce mode its Stop hook, keep the main agent delegating. The verifier's read-only sandbox is applied only on earlier Codex versions.
+
+IronBee also sets `[features.multi_agent_v2]` with `default_wait_timeout_ms = 600000`, so a single `wait_agent` call blocks for up to 10 minutes while the verifier works, instead of polling. If Codex's sub-agent machinery regresses, you can fall back to driving the tools from the **main agent** instead:
 
 ```bash
 ironbee codex verifier mode main-agent   # main agent drives the devtools tools directly
@@ -85,8 +89,8 @@ ironbee codex verifier mode sub-agent    # back to the default delegated verifie
 
 | Mode | What changes |
 |------|--------------|
-| **`sub-agent`** *(default)* | The `ironbee-verifier` custom agent owns the devtools tools (per-agent MCP in `ironbee-verifier.toml`); a slim delegation skill/rule/command tell the main agent to hand off. Heavy devtools output stays in the sub-agent. |
-| **`main-agent`** | No verifier sub-agent. The `ironbee-devtools` MCP server is registered at the **session** level (`[mcp_servers.ironbee-devtools]` in `config.toml`) and the main agent drives its tools itself, with an inline (non-delegating) skill/rule/command — the same shape Cursor uses. |
+| **`sub-agent`** *(default)* | The `ironbee-verifier` custom agent runs the cycles; a slim delegation skill/rule/command tell the main agent to hand off. Heavy devtools output stays in the sub-agent. |
+| **`main-agent`** | No verifier sub-agent. The main agent drives the session-level devtools tools itself, with an inline (non-delegating) skill/rule/command: the same shape Cursor uses. |
 
 Switching re-renders the Codex client. The choice maps to the [`codex.verifier.mode`](/cli/configuration/configuration#codex-codex-cli-only) config key; `verification.model` still applies in `sub-agent` mode and is a no-op in `main-agent` mode (there's no sub-agent to spawn).
 
@@ -98,8 +102,8 @@ A few details differ from the other clients, all handled automatically:
 
 - **No `SessionEnd` hook.** Codex doesn't expose one, so IronBee treats every Stop as a checkpoint and writes a session-end snapshot there (the Collector keeps the latest). Quitting Codex with `/quit` fires no hooks.
 - **Interrupt recovery.** Pressing **Esc** to interrupt the agent doesn't fire a Stop hook in Codex ([#22858](https://github.com/openai/codex/issues/22858)). IronBee reconciles the interrupted activity on your next prompt, so the session timeline stays accurate.
-- **Sandbox grant for external runtime.** With the default [`external` runtime location](/cli/advanced/runtime-files#where-per-session-data-lives), per-session data lives at `~/.ironbee/projects/` — outside the Codex workspace sandbox. So the agent's verdict writes (`ironbee hook submit-verdict` / `record-fix`) don't hit an approval prompt, IronBee adds a narrow `[sandbox_workspace_write].writable_roots` grant for `~/.ironbee/projects` to `config.toml` (the global `config.json` and collector credentials under `~/.ironbee` stay out of reach). It's reconciled away in `in-project` or monitoring mode and removed on uninstall.
-- **Config is project-level.** Hooks, the MCP server, and the verifier are written per project (`<project>/.codex/`), so each repo gets its own setup and there's no machine-global conflict. The devtools live inside the verifier agent (`<project>/.codex/agents/ironbee-verifier.toml`) under a single `[mcp_servers.ironbee-devtools]` block whose `COMPOSE_PLATFORMS` lists the enabled cycles — browser on by default, node / python / backend / android / terminal added when you enable those cycles. A model must be resolvable for the verifier sub-agent: it inherits your `~/.codex/config.toml` `model` unless you pin [`verification.model`](/cli/guides/verification#picking-the-verifier-model); if neither supplies one, install warns you.
+- **Sandbox grant for external runtime.** With the default [`external` runtime location](/cli/advanced/runtime-files#where-per-session-data-lives), per-session data lives at `~/.ironbee/projects/` - outside the Codex workspace sandbox. So the agent's verdict writes (`ironbee hook submit-verdict` / `record-fix`) don't hit an approval prompt, IronBee adds a narrow `[sandbox_workspace_write].writable_roots` grant for `~/.ironbee/projects` to `config.toml` (the global `config.json` and collector credentials under `~/.ironbee` stay out of reach). It's reconciled away in `in-project` or monitoring mode and removed on uninstall.
+- **Config is project-level.** Hooks, the MCP server, and the verifier are written per project (`<project>/.codex/`), so each repo gets its own setup and there's no machine-global conflict. The devtools are served by one `[mcp_servers.ironbee-devtools]` server whose `COMPOSE_PLATFORMS` lists the enabled cycles - browser on by default, node / python / backend / android / terminal added when you enable those cycles. A model must be resolvable for the verifier sub-agent: it inherits your `~/.codex/config.toml` `model` unless you pin [`verification.model`](/cli/guides/verification#picking-the-verifier-model); if neither supplies one, install warns you.
 
 <Note>
   Session lifecycle, tool calls, file changes, verdicts, and [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) flow to the Collector exactly as they do on the other clients.

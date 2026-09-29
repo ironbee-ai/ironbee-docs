@@ -1,44 +1,72 @@
 ---
 title: Team
-description: Manage team members and pending invitations.
+description: Invite teammates to your account, and manage their roles.
 ---
 
-The Team page is accessible to Owners and Admins. It shows all current members and pending invitations for the account.
-<img src="/images/console/account/team-dark.png" alt="IronBee Console — Team Page" style={{borderRadius:'8px',width:'100%'}} />
+Owners and admins manage who has access to the account. Open **Settings**, then **Workspace > Team**. The page has two tabs: **Members** and **Invites**.
+
+For what each role can do, see [Roles and permissions](/console/roles).
+
+---
 
 ## Members
 
-A searchable, sortable table of everyone on the account:
+The **Members** tab lists everyone in the account:
+- **User**: their name and email
+- **Role**
+- **Invited By**: who sent their invitation
+- **Invited At** and **Accepted At**
+- **Last Login**
 
-| Column | Description |
-|--------|-------------|
-| User | Avatar, name, and email |
-| Role | Owner, Admin, Member, or Billing Admin |
-| Invited by | Who sent the invitation |
-| Invited at | When the invitation was sent |
-| Accepted at | When the member joined |
-| Last login | Most recent login timestamp |
-| Actions | Remove member (if you have permission) |
+<img className="ib-shot ib-shot-light" src="/images/console/settings/team-members-light.png" alt="Team page on the Members tab, with a search box and a table of members, their roles, invitation and login dates, and a Remove button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/team-members-dark.png" alt="Team page on the Members tab, with a search box and a table of members, their roles, invitation and login dates, and a Remove button" />
 
-Click any column header to sort. Members with no data for a field sort to the bottom.
+Search by name or email. Click the **User**, **Invited At**, **Accepted At** or **Last Login** header to sort.
 
-**Permission rules:**
-- Owners can manage anyone
-- Admins can manage Members and Billing Admins only
-- You cannot remove yourself
+To change a member's role, pick a new one in the **Role** column and confirm with **Change role**. To remove someone, click **Remove** in the **Actions** column and confirm **Remove member?**. Nobody can change their own role, and the owner role can't be assigned.
 
-## Invitations
+---
 
-A table of pending and past invitations:
+## Invite a teammate
 
-| Column | Description |
-|--------|-------------|
-| Email | The invited address |
-| Role | The role they will receive on joining |
-| Status | `pending`, `accepted`, or `expired` |
-| Expires | Expiry date of the invitation link |
-| Actions | Revoke (pending) or Resend (expired) |
+1. On the **Invites** tab, click **Invite member**.
+2. In **Invite team member**, enter the **Email address** and pick a **Role**. **Member** is the default.
+3. Click **Send invitation**.
 
-## Inviting a new member
+<img className="ib-shot ib-shot-light" src="/images/console/settings/invite-member-dialog-light.png" alt="Invite team member dialog with an Email address field, the Role set to Member, and the Send invitation button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/invite-member-dialog-dark.png" alt="Invite team member dialog with an Email address field, the Role set to Member, and the Send invitation button" />
 
-Click **Invite** to open the invite dialog. Enter the email address and select a role. The invitee receives an email with a link to accept and create their account.
+The recipient has 7 days to accept. If the email can't be sent, the dialog shows the invitation link so you can share it yourself.
+
+The **Invites** tab lists invitations that are pending or expired, with their **Email**, **Role**, **Status** and **Expires** date:
+- **Revoke** a pending one, and confirm **Revoke invitation?**.
+- **Resend** an expired one.
+
+<img className="ib-shot ib-shot-light" src="/images/console/settings/team-invites-light.png" alt="Team page on the Invites tab, with the Invite member button, a Pending invitation with Revoke and an Expired invitation with Resend" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/team-invites-dark.png" alt="Team page on the Invites tab, with the Invite member button, a Pending invitation with Revoke and an Expired invitation with Resend" />
+
+An accepted invitation leaves the list, and the person appears under **Members**.
+
+---
+
+## Accept an invitation
+
+The person you invite gets an email with a link. The link opens a **You've been invited** page with the account, the role and the expiry date.
+
+- Signed in: click **Accept invitation**.
+- Not signed in: click **Continue with Google**, **Continue with GitHub** or **Sign in with email**, using the invited email address.
+
+Once accepted, the console switches to the team's account. See [Sign in and team access](/console/sign-in).
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Roles and permissions" icon="shield" href="/console/roles">
+    What owners, admins, members and billing admins can do.
+  </Card>
+  <Card title="Account" icon="building-2" href="/console/account">
+    The account's name and API key.
+  </Card>
+</CardGroup>

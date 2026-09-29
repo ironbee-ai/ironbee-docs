@@ -1,126 +1,193 @@
 ---
-title: Getting Started
+title: Getting started
 description: Add IronBee verification to your GitHub Actions workflow.
 ---
 
-The IronBee GitHub Action brings IronBee's verification loop into CI. On every push or pull request, it has Claude Code review your changes, verify them through IronBee DevTools, a real browser by default, plus optional backend and Node.js modes, fix any issues found, and post a report on the PR.
+The IronBee GitHub Action verifies every push and pull request against your running application and reports the result on the pull request. It can run the verification in one of two places:
 
-This guide gets the action running in your workflow in a couple of minutes. For the mechanics behind it, see [How it works](/github-action/concepts/how-it-works).
+- **On IronBee**: IronBee verifies the change on its own infrastructure. Nothing is installed on your runner.
+- **On your GitHub runner**: the verification runs inside your workflow with your own Anthropic access.
+
+When the verification finds a problem, the action can report it, or also write the fix and commit it.
+
+This guide gets the action running in a few minutes. For the mechanics behind it, see [How it works](/github-action/concepts/how-it-works).
 
 ---
 
 ## Prerequisites
 
-- An [IronBee account](https://console.ironbee.ai) and your **account API key**, found in the Console on the [Account page](/console/account). The action runs without a browser, so it authenticates with the account API key rather than an interactive [OAuth login](/cli/guides/authentication).
-- An Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com)) or a Claude Code OAuth token
+- An [IronBee account](https://console.ironbee.ai) and your account API key. Owners and admins find it in the console under **Settings > Account**. Other members can ask an owner or admin for it.
+- To verify **on IronBee**: the [IronBee GitHub App](/integrations/github) installed on the repository. A public repository also works without it.
+- To verify **on your GitHub runner**, or to have findings fixed: an Anthropic API key from [console.anthropic.com](https://console.anthropic.com), or a Claude Code OAuth token from `claude setup-token`.
 
 ---
 
-## Minimal setup
+## Set it up from the console
 
-Create a file at `.github/workflows/ironbee.yml`:
+The fastest path is the console, which writes the workflow for you.
 
-```yaml
-name: IronBee Verification
+<Steps>
+  <Step title="Connect GitHub">
+    During onboarding, or later from **Setup** in the top bar, choose **Connect GitHub**. Install the IronBee GitHub App on the organization you deploy from, and choose the repositories it can see.
+  </Step>
+  <Step title="Answer three questions">
+    In the **IronBee Action** step:
+    - **Repository**: the repository the workflow file and the secrets go into.
+    - **Where it runs**: **On IronBee** (recommended) or **On your GitHub runner**.
+    - **On a finding**: **Report it**, or **Fix it too**.
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    types: [opened, synchronize]
+    <img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-github-action-light.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-github-action-dark.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  </Step>
+  <Step title="Set it up on GitHub">
+    Fill in how your app starts, add the repository secrets the console lists, then click **Create the file on GitHub**. Committing the file is a push, and that push starts your first verification.
+  </Step>
+</Steps>
 
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ironbee-ai/ironbee-action@v1
-        with:
-          ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-```
-
-Then add both keys to your repository secrets:
-
-1. Go to **Settings → Secrets and variables → Actions**
-2. Click **New repository secret**
-3. Add `IRONBEE_API_KEY` (your IronBee API key) and `ANTHROPIC_API_KEY` (your Anthropic key)
-
-That's it. The next push or pull request will trigger a verification run.
+The rest of this page builds the same workflow by hand.
 
 ---
 
-## With application build and start
+## Add the workflow
 
-Verification needs your app running. Tell the action how to bring it up:
+Create `.github/workflows/ironbee.yml` with one of the two starter workflows below. The action is also listed on the [GitHub Marketplace](https://github.com/marketplace/actions/ironbee-action).
 
-```yaml
-- uses: ironbee-ai/ironbee-action@v1
-  with:
-    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-    app_install_command: 'npm ci'
-    app_build_command: 'npm run build'
-    app_start_command: 'npm run start'
-    app_url: 'http://localhost:3000'
-```
+<Tabs>
+  <Tab title="On IronBee, report only">
+    ```yaml
+    name: IronBee Verification
 
-<Info>
-  These inputs are optional but recommended. Without them the agent infers how to install, build, start, and reach your app from the repository which works, but is slower and less reliable than spelling it out. See [Verifying your application](/github-action/guides/verifying-your-app) for details.
-</Info>
+    on:
+      push:
+        branches: [main]
+      pull_request:
+        types: [opened, synchronize]
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    concurrency:
+      group: ironbee-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+
+    jobs:
+      verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 90
+        steps:
+          - uses: actions/checkout@v4
+          - uses: ironbee-ai/ironbee-action@v1.1.0
+            with:
+              ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+              verification_mode: platform
+              verification_apply_fix: false
+              # Where the app runs during the workflow: on this runner ...
+              app_install_command: npm ci
+              app_build_command: npm run build
+              app_start_command: npm run start
+              app_port: 3000
+              # ... or at a preview URL instead of the four lines above:
+              # app_url: https://preview.example.com
+    ```
+  </Tab>
+  <Tab title="On your runner, fixing too">
+    ```yaml
+    name: IronBee Verification
+
+    on:
+      push:
+        branches: [main]
+      pull_request:
+        types: [opened, synchronize]
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    concurrency:
+      group: ironbee-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+
+    jobs:
+      verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 90
+        steps:
+          - uses: actions/checkout@v4
+          - uses: ironbee-ai/ironbee-action@v1.1.0
+            with:
+              ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+              anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+              verification_mode: local
+              verification_apply_fix: true
+              # Where the app runs during the workflow: on this runner ...
+              app_install_command: npm ci
+              app_build_command: npm run build
+              app_start_command: npm run start
+              app_port: 3000
+              # ... or at a preview URL instead of the four lines above:
+              # app_url: https://preview.example.com
+    ```
+  </Tab>
+</Tabs>
+
+Replace the four `app_*` lines with your own install, build and start commands and the port your app listens on. If your app is already deployed at a public preview URL, delete the four lines and set `app_url` instead. The action needs one of the two: without a target the run stops before it verifies anything. See [Verifying your application](/github-action/guides/verifying-your-app).
+
+To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: true`.
+
+<Tip>
+  At the start of every run, the action logs the `timeout-minutes` its configuration needs. If that is more than your job allows, raise `timeout-minutes`. When GitHub stops a job mid-run, the verification is cancelled with it.
+</Tip>
+
+---
+
+## Add the secrets
+
+In your repository, open **Settings > Secrets and variables > Actions** and click **New repository secret** for each one:
+
+| Secret | Value | Needed for |
+|--------|-------|------------|
+| `IRONBEE_API_KEY` | Your IronBee account API key | Every run |
+| `ANTHROPIC_API_KEY` | An Anthropic API key | Verifying on your runner, or fixing |
+| `CLAUDE_CODE_OAUTH_TOKEN` | A Claude Code OAuth token, instead of `ANTHROPIC_API_KEY` | Verifying on your runner, or fixing |
+
+Pass the Claude Code token with `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` instead of `anthropic_api_key`. Your Anthropic key or token stays in GitHub: the action uses it on your runner, and IronBee receives only the verification result.
+
+The next push or pull request starts a verification run.
 
 ---
 
 ## Required permissions
 
-The action needs these GitHub token permissions to operate:
+The action needs these GitHub token permissions:
 
 | Permission | Purpose |
 |------------|---------|
-| `contents: write` | Commit fixes to PR branches, create fix branches |
-| `pull-requests: write` | Post verification report comments, create fix PRs |
-| `issues: write` | Update PR comments via the GitHub API |
+| `contents: write` | Commit fixes to the pull request branch and create fix branches |
+| `pull-requests: write` | Post the verification report and open fix pull requests |
+| `issues: write` | Update the report comment, and react to comment commands |
 
----
-
-## Authentication
-
-The action needs two credentials:
-
-**IronBee API key (always required)** authenticates the collector so sessions are recorded and reportable. Passed as an env var, never written to disk.
-
-```yaml
-ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-```
-
-**Claude authentication (one of the two)** either an Anthropic API key:
-
-```yaml
-anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-```
-
-…or a Claude Code OAuth token:
-
-```yaml
-claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-```
+A pull request from a fork receives no secrets, so no verification can run there. The action detects it and says so instead of failing on an empty key.
 
 ---
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
-    How the action behaves on different events and what it reports.
+  <Card title="Platform and local verification" icon="split" href="/github-action/concepts/verification-modes">
+    How the action decides where the verification runs.
   </Card>
-  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
-    Build commands, app URL, verification platforms, and more.
+  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
+    How the action behaves on each trigger and what it reports.
+  </Card>
+  <Card title="Verify from a comment" icon="message-square" href="/github-action/guides/comment-trigger">
+    Start a verification with `/ironbee-verify` on a pull request.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output, with defaults.
   </Card>
 </CardGroup>

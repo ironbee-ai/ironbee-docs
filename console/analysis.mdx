@@ -1,56 +1,140 @@
 ---
 title: Analysis
-description: AI-powered analysis of your sessions which are quality, cost, and behavioral patterns.
+description: The daily quality analysis of each project's agent sessions, and the findings and recommendations it produces.
 ---
 
-After sessions complete, IronBee automatically runs **analysis** an LLM-powered pass over session data that turns raw telemetry into actionable insights.
+Once a day, IronBee runs an LLM analysis for each project. It looks at the recent sessions your AI coding agents recorded with the [IronBee CLI](/cli/get-started/getting-started) and reports how well they verify their changes: first-pass success, where the agent gets stuck, how effective its fixes are, and which files cause the most trouble. Verification runs that IronBee executes on its own infrastructure aren't part of the analysis.
 
-## Analysis types
+Each analysis also produces the project's [findings](/console/findings) and [recommendations](/console/recommendations).
 
-IronBee produces five analysis types across two scopes:
+---
 
-| Type | Scope | What it covers |
-|------|-------|----------------|
-| [Project Quality Analysis](/console/analysis-quality) | Project | Verification thoroughness, fix effectiveness, retry patterns, hot files |
-| [Project Cost Analysis](/console/analysis-project-cost) | Project | Token spend, cache efficiency, cost per session, top billed sessions |
-| [Project Session Insights](/console/analysis-project-session-insights) | Project | Session patterns, tool usage, context pressure, languages, activity categories |
-| [Account Cost Analysis](/console/analysis-account-cost) | Account | Account-wide spend across all projects and users |
-| [Account Session Insights](/console/analysis-account-session-insights) | Account | Account-wide behavioral patterns across all projects |
+## Open an analysis
 
-## The analyses list
+Open **Analyses** in the sidebar and pick a project. The page shows the project's latest quality analysis and when it was generated.
 
-The Analyses page shows a card grid of recent analysis runs. Use the **Account / Project** scope tabs to switch between account-wide and project-scoped analyses. When viewing Project scope, use the project picker to select a project.
+- If the project has no analysis yet, the page says **No analysis has been generated for this project yet.**
+- An analysis built from few sessions carries a **Limited data** label.
+- Cards appear only when they have data. Hover the info icon on a card to see what it measures.
 
-Each card shows:
-- Analysis type and timestamp
-- A hero metric with a mini trend chart
-- Five secondary metrics at a glance
+You can also reach an analysis from a recommendation's **Source Analysis** link, or with **Go to Analyses** in the `⌘K` palette.
 
-Click a card to open the full analysis detail view.
+<img className="ib-shot ib-shot-light" src="/images/console/insights/analysis-overview-light.png" alt="The Analyses page for a project, with the project picker, the time the analysis was generated and the Quality overview card" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/analysis-overview-dark.png" alt="The Analyses page for a project, with the project picker, the time the analysis was generated and the Quality overview card" />
 
-Account Analysis:
-<img src="/images/console/analysis/account-dark.png" alt="IronBee Console — Account Analysis" style={{borderRadius:'8px',width:'100%'}} />
+---
 
-Project Analysis:
-<img src="/images/console/analysis/analysis-project-dark.png" alt="IronBee Console — Account Analysis" style={{borderRadius:'8px',width:'100%'}} />
+## Quality overview
 
+The headline states how many sessions were analyzed and how many verify and fix cycles the worst session ran. Below it are six metrics:
 
-## How analysis works
+| Metric | What it measures |
+|--------|------------------|
+| First-pass success | The share of sessions whose first verdict was a pass |
+| Re-fail rate | The share of verdicts that failed right after a failed verdict |
+| Verifications / session | The average number of verification cycles per session |
+| Issues caught on fail | The average number of issues reported per failed verdict |
+| Fixes / session | The average number of fix attempts per session |
+| Failed sessions | The number of sessions whose final verdict was a fail |
 
-1. A session completes (verdict submitted or retry limit reached)
-2. IronBee aggregates session metrics into a structured data packet
-3. An LLM analyst processes the packet and produces findings and recommendations
-4. The analysis appears in the Analyses page and the Findings and Recommendations pages update
+**First-pass success** and **Verifications / session** also show a weekly sparkline and the change from the previous week. **Issues caught on fail** shows the weekly trend of checks per verdict instead.
 
-Analysis typically completes within a minute of session end.
+---
+
+## Session outcomes
+
+- **Session outcomes:** how sessions ended.
+  - **Pass**: the last verdict passed.
+  - **Fail**: the last verdict failed.
+  - **Abandoned**: the last verdict failed and a new cycle started after it.
+  - **Completed**: the session ended without a verdict.
+- **Client distribution:** which AI client ran each session: Claude Code, Cursor or Codex.
+- **First-pass share:** the share of time not spent on fixes, against rework.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/analysis-session-outcomes-light.png" alt="The Session outcomes, Client distribution and First-pass share cards of a project analysis" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/analysis-session-outcomes-dark.png" alt="The Session outcomes, Client distribution and First-pass share cards of a project analysis" />
+
+---
+
+## Where time goes
+
+How session time splits across coding, verification and fixes, with the average duration of a session, an activity, a verification and a fix.
+
+---
+
+## Issues before vs after fix
+
+The average issue count before a fix attempt and after it. It shows whether fixes resolve the problems the agent finds.
+
+---
+
+## Verification depth
+
+**Verification depth: on pass vs on fail** compares how thoroughly the agent checked before it passed and before it failed:
+
+- Checks / verdict
+- Screenshots / verif.
+- Aria snap. / verif.
+- Issues / verdict
+
+---
+
+## Fix outcomes
+
+Fix cycles grouped by what they did:
+
+- **Helpful:** the fix reduced or resolved the issues.
+- **No-effect:** the issues didn't change.
+- **Backfiring:** the fix introduced new issues.
+
+---
+
+## Top blockers
+
+The most frequent reasons the verification gate blocked the agent from finishing, such as a failed verdict, a missing verdict, or a verification that didn't use the required tools.
+
+---
+
+## Hot files
+
+The files the agent edited most, with how many sessions touched them, how many fix cycles they needed, and their fail rate.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/analysis-hot-files-light.png" alt="The Hot files card, listing each file with its edits, sessions, fix cycles and fail rate" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/analysis-hot-files-dark.png" alt="The Hot files card, listing each file with its edits, sessions, fix cycles and fail rate" />
+
+---
+
+## Weekly trend
+
+A chosen metric by week: pass rate, efficiency, cycles or checks.
+
+---
+
+## Outcomes by session size
+
+A heatmap of session outcomes by duration and by number of activities. It shows whether longer or busier sessions fail more often.
+
+---
+
+## Recent corpus
+
+Three lists from recent verdicts:
+
+- **Recent issues:** what the agent flagged in failed verifications.
+- **Recent fixes:** what the agent said it did to resolve problems.
+- **Recent verification checks:** what the agent verified.
+
+Use them to spot recurring patterns in failures.
+
+---
 
 ## Related pages
 
 <CardGroup cols={2}>
   <Card title="Findings" icon="triangle-alert" href="/console/findings">
-    Specific observations surfaced by the analyzer.
+    Observations the analysis surfaces.
   </Card>
   <Card title="Recommendations" icon="lightbulb" href="/console/recommendations">
-    Directives injected into the agent's context on future sessions.
+    Directives generated from findings.
   </Card>
 </CardGroup>

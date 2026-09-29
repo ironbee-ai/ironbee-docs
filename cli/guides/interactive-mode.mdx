@@ -1,5 +1,5 @@
 ---
-title: Interactive Mode (TUI)
+title: Interactive mode (TUI)
 description: Manage IronBee from a full-screen terminal UI instead of individual commands.
 ---
 
@@ -42,14 +42,14 @@ ironbee tui projects -p /path/to/project
 | Area | What you can do |
 |------|-----------------|
 | **Configuration** | Browse and edit config keys across the global, project, and local layers; see the effective merged value and where it comes from |
-| **Platforms** | Toggle the browser, Node, Python, backend, Android, and terminal cycles per layer — or press **`s`** to have a detected client suggest the set and apply it |
+| **Platforms** | Toggle the browser, Node, Python, backend, Android, and terminal cycles per layer - or press **`s`** to have a detected client suggest the set and apply it |
 | **Projects** | Install, uninstall, register, or unregister for the current directory or any project in your inventory; switch which project is active |
 | **Sessions** | Browse sessions with their phase, verdict, and retry counts; run a read-only verdict check |
-| **Scenarios** | Browse [saved verification scenarios](/cli/guides/scenarios) with their freshness (fresh / stale / unknown vs the current code, plus a `(N draft)` marker for never-replayed step caches). The detail pane lists each `llm-action` step cache — state, baseline commit, live-validated / draft, covered paths. Read-only — repair is the agent's `/ironbee-sync-scenario` |
+| **Scenarios** | Browse [saved verification scenarios](/cli/guides/scenarios) with their freshness (fresh / stale / unknown vs the current code, plus a `(N draft)` marker for never-replayed step caches). The detail pane lists each `llm-action` step cache - state, baseline commit, live-validated / draft, covered paths. Read-only - repair is the agent's `/ironbee-sync-scenario` |
 | **Queue** | Inspect and drain the background job queue; manage dead-letter entries |
 
 <Note>
-  Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **mode single-select** (`enforce` / `assist` / `monitor` — the equivalent of `ironbee install --mode`; picking `enforce` adds the same [strictness](/cli/guides/verification#strict-mode) and [fix-enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it) sub-pickers, with Esc stepping back) and, unless you pick `monitor`, a **platform multi-select** (pre-checked from the project's current config — the equivalent of `ironbee install --platforms`) to choose which cycles to enable, including the same **`s` suggest** key. One difference: a TUI install never runs the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) — it tips you to run `ironbee devtools prefetch` in a terminal instead.
+  Installing from the **Projects** area runs the same flow as the CLI: a client picker when more than one is detected, then a **mode single-select** (`enforce` / `assist` / `monitor` - the equivalent of `ironbee install --mode`; picking `enforce` adds the same [strictness](/cli/guides/verification#strict-mode) and [fix-enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it) sub-pickers, with Esc stepping back) and, unless you pick `monitor`, a **platform multi-select** (pre-checked from the project's current config - the equivalent of `ironbee install --platforms`) to choose which cycles to enable, including the same **`s` suggest** key. One difference: a TUI install never runs the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) - it tips you to run `ironbee devtools prefetch` in a terminal instead.
 </Note>
 
 ---
@@ -62,6 +62,18 @@ ironbee tui projects -p /path/to/project
 | `Enter` | Select / open |
 | `Esc` | Back to the home menu |
 | `q` / `Ctrl-C` | Quit |
+
+### Keys by area
+
+| Area | Keys |
+|------|------|
+| **Configuration** | `e` / `g` / `l` edit the project, global or local value; `x` unsets it (you pick the layer); `/` searches the keys |
+| **Platforms** | `e` / `g` / `l` toggle the cycle in the project, global or local layer; `x` clears it; `s` suggests a set |
+| **Projects** | `Tab` switches between the current directory panel and the registered projects list. `i` install, `x` uninstall, `a` register, `d` unregister, `c` make active; `I` installs in every registered project and `X` uninstalls from all of them |
+| **Sessions** | `v` runs a read-only verdict check |
+| **Scenarios** | `r` refreshes |
+| **Queue** | `d` drain, `D` drain all, `l` dead-letter entries (pick one to retry), `s` dead-letter stats, `c` clear the dead-letter, `p` purge |
+| **Home** | `u` updates the CLI |
 
 The breadcrumb at the top always shows the **active project**. In the Projects area you can switch which project is active, and every project-scoped area (Configuration, Platforms, Sessions, Queue) retargets to it, so you can launch in one repo and inspect or edit another without changing directories.
 
