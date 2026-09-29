@@ -1,51 +1,58 @@
 ---
-title: Custom Configuration
+title: Custom configuration
 description: Override any IronBee CLI setting the action doesn't expose as a dedicated input.
 ---
 
-Most behavior is controlled by the action's [dedicated inputs](/github-action/configuration/configuration). For anything not exposed as an input, `ironbee_extra_config` is a raw JSON escape hatch: it's deep-merged into the generated `.ironbee/config.json`, and your keys win over the defaults.
+Most behavior is controlled by the action's [dedicated inputs](/github-action/configuration/configuration). For anything else, `ironbee_extra_config` passes raw JSON that is deep-merged into the `.ironbee/config.json` the action generates. Your keys win over the defaults.
+
+<Note>
+  `ironbee_extra_config` applies to local mode only, when the verification runs on your runner. On IronBee, the action logs a warning and ignores it.
+</Note>
 
 ---
 
 ## How it works
 
-Pass a JSON object as a string. It's merged on top of the config the action generates, so you only specify the keys you want to change:
+Pass a JSON object as a string. It's merged on top of the configuration the action generates, so you only list the keys you want to change:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verification_mode: local
     ironbee_extra_config: |
       {
-        "verification": { "enable": true },
-        "browserDevTools": { "env": { "LOG_FILE": "/tmp/browser-devtools.log" } }
+        "maxRetries": 5
       }
 ```
 
-This accepts any key from the IronBee CLI config, see the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+Any key from the IronBee CLI configuration is accepted. See the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+
+During the run, the action writes its own `.ironbee/config.json`, so a configuration file committed to your repository isn't used. The action restores your file when the run ends.
 
 ---
 
-## Tuning a verification platform
+## Tuning the DevTools server
 
-Each [verification platform](/github-action/guides/verification-platforms)'s MCP server is customized under `browserDevTools`, `backendDevTools`, or `nodeDevTools`. Set extra environment variables or replace the server entirely:
+The [local-mode platforms](/github-action/guides/verification-platforms) are served by one `ironbee-devtools` MCP server. Pass extra environment variables to it under `ironbeeDevTools.env`:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verification_mode: local
     ironbee_extra_config: |
       {
-        "browserDevTools": { "env": { "BROWSER_HEADLESS_ENABLE": "true" } }
+        "ironbeeDevTools": { "env": { "BROWSER_HEADLESS_ENABLE": "true" } }
       }
 ```
 
-See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the full set of keys each platform accepts.
+See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the keys the server accepts.
 
 <Note>
-  IronBee always sets its own invariants (tool-name prefix, metadata flags, platform) last, these can't be overridden via `ironbee_extra_config`.
+  IronBee always sets its own invariants (the tool-name prefix, metadata flags and platform) last. They can't be overridden through `ironbee_extra_config`.
 </Note>
 
 ---
@@ -53,10 +60,10 @@ See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools
 ## What's next?
 
 <CardGroup cols={2}>
-  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
-    The browser, backend, and Node.js platforms you're tuning.
+  <Card title="Local-mode platforms" icon="layers" href="/github-action/guides/verification-platforms">
+    The platforms the DevTools server provides.
   </Card>
-  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
     Every input and output, with defaults.
   </Card>
 </CardGroup>

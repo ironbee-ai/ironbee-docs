@@ -1,49 +1,55 @@
 ---
-title: Verification Platforms
-description: Verify through the browser, backend, Node.js, and Android and tune each platform.
+title: Local-mode platforms
+description: Choose the IronBee DevTools platforms the agent verifies through when the verification runs on your runner.
 ---
 
-The action verifies through IronBee DevTools modes: the browser, backend, Node.js, and Android platforms, the same cycles the [CLI uses](/cli/concepts/how-it-works#verification-cycles). Each enabled platform registers its MCP server so the agent can exercise the change through that surface.
+When the verification runs on your GitHub runner (local mode), the agent verifies through IronBee DevTools, the same platforms the [CLI uses](/cli/concepts/how-it-works). You choose which platforms it gets.
+
+<Note>
+  These inputs apply to local mode only. On IronBee, the run verifies your web app in a browser, and the action logs a warning if you set them. See [Platform and local verification](/github-action/concepts/verification-modes).
+</Note>
 
 ---
 
-## The four platforms
+## The platforms
 
-| Platform | Input | Default | Verifies through… |
-|----------|-------|---------|-------------------|
-| Browser | `ironbee_browser_devtools` | `true` | A real Chromium browser navigation, screenshots, console, accessibility |
-| Backend | `ironbee_backend_devtools` | `false` | Real protocol calls HTTP, gRPC, GraphQL, WebSocket |
-| Node.js | `ironbee_node_devtools` | `false` | The Node.js V8 inspector probes and runtime snapshots |
-| Android | `ironbee_android_devtools` | `false` | A real emulator over ADB app launch, taps, swipes, screenshots, UI snapshots, Logcat |
+| Platform | Input | Default | Verifies through |
+|----------|-------|---------|------------------|
+| Browser | `ironbee_browser_devtools` | `true` | A real Chromium browser: navigation, DOM, console, accessibility, screenshots, recording |
+| Backend | `ironbee_backend_devtools` | `false` | Real protocol calls: HTTP, gRPC, GraphQL, WebSocket, databases, logs |
+| Node.js | `ironbee_node_devtools` | `false` | The Node.js runtime: tracepoints, exceptions, variables, HTTP capture |
+| Python | `ironbee_python_devtools` | `false` | The Python runtime through debugpy: tracepoints, exceptions, logs, thread dumps |
+| Terminal | `ironbee_terminal_devtools` | `false` | CLI, REPL and TUI programs, driven through a pseudo-terminal |
 
-Only the browser runs by default. Opt into backend, Node.js, or Android verification by setting the corresponding input to `true`.
+Only the browser runs by default. Turn on the others when those layers are part of the change:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    verification_mode: local
     ironbee_browser_devtools: 'true'
     ironbee_backend_devtools: 'true'
-    ironbee_node_devtools: 'false'
-    ironbee_android_devtools: 'false'
 ```
 
-<Info>
-  Each enabled platform is registered as an MCP server during `ironbee install`, and its log is written under `.ironbee/artifacts/` so it ships with the [evidence artifact](/github-action/advanced/evidence#evidence-artifacts).
-</Info>
+<Warning>
+  The terminal platform gives the agent a shell on the runner. Turn it on only when a command-line program is what you are verifying.
+</Warning>
+
+All enabled platforms are served by one `ironbee-devtools` MCP server. Its log is written to `.ironbee/artifacts/ironbee-devtools-mcp.log` and ships with the [evidence artifact](/github-action/advanced/evidence).
 
 ---
 
 ## Browser on CI runners
 
-GitHub-hosted Linux runners reject user-namespace sandboxing, which would otherwise kill Chromium on first navigation. The action handles this for you by launching Chromium with `--no-sandbox` (`BROWSER_CHROMIUM_SANDBOX=false`), no configuration needed.
+GitHub-hosted Linux runners reject user-namespace sandboxing, which would otherwise stop Chromium on its first navigation. The action launches Chromium with `--no-sandbox` for you. No configuration is needed.
 
 ---
 
 ## Tuning a platform
 
-Each platform's MCP server can be customized beyond the enable toggles, set extra environment variables or replace the server entirely via `ironbee_extra_config`. See [Custom configuration](/github-action/advanced/custom-configuration).
+To pass extra environment variables to the DevTools server, or to change other CLI settings, use `ironbee_extra_config`. See [Custom configuration](/github-action/advanced/custom-configuration).
 
 ---
 
@@ -51,9 +57,9 @@ Each platform's MCP server can be customized beyond the enable toggles, set extr
 
 <CardGroup cols={2}>
   <Card title="Verifying your application" icon="play" href="/github-action/guides/verifying-your-app">
-    Install, build, start, and reach your app.
+    Choose the target and how to reach it.
   </Card>
-  <Card title="How it works" icon="lightbulb" href="/github-action/concepts/how-it-works">
-    The verification loop behind these platforms.
+  <Card title="Custom configuration" icon="sliders-horizontal" href="/github-action/advanced/custom-configuration">
+    Tune the DevTools server and other CLI settings.
   </Card>
 </CardGroup>

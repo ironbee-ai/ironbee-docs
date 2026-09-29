@@ -3,7 +3,24 @@ title: Telemetry
 description: Manage the anonymous product telemetry the IronBee CLI and DevTools send.
 ---
 
-IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. This is **separate** from the IronBee Collector pipeline that ships your session data — turning telemetry off doesn't change what your Console shows.
+IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. It never sends source code, file contents, or personally identifiable information. This is **separate** from the IronBee Collector pipeline that ships your session data: turning telemetry off doesn't change what your Console shows.
+
+---
+
+## What is sent
+
+Each event carries the CLI version, the Node.js version, and your operating system and architecture, under an anonymous ID stored in `~/.ironbee/telemetry.json`.
+
+| Event | When |
+|-------|------|
+| `cli_installed`, `cli_uninstalled` | IronBee is installed in, or removed from, a project |
+| `cli_registered`, `cli_unregistered` | A project is added to, or removed from, the inventory |
+| `npm_installed`, `npm_uninstalled` | The CLI package itself is installed or removed |
+| `session_start` | An agent session starts |
+| `verdict_write` | A verdict is submitted, with its status |
+| `verification_requested` | The gate asks for a verification, with its action and reason |
+
+The `npm_installed` and `npm_uninstalled` events follow only the global config and `IRONBEE_TELEMETRY`, because they run outside any project. An older `telemetryEnabled: false` in `telemetry.json` is still honored.
 
 ---
 
@@ -18,7 +35,7 @@ Disabling turns telemetry off in **both** the CLI and the IronBee DevTools MCP s
 
 By default these write to the project config. Use `-g`/`--global` for all your projects or `--local` for a gitignored personal override. The underlying key is [`telemetry.enable`](/cli/configuration/configuration#telemetry).
 
-For a single shell or CI run, `IRONBEE_TELEMETRY=false` does the same thing without touching any config file — see [Environment variables](/cli/configuration/environment-variables#common).
+For a single shell or CI run, `IRONBEE_TELEMETRY=false` does the same thing without touching any config file - see [Environment variables](/cli/configuration/environment-variables#common).
 
 <Note>
   Telemetry is about the CLI's own *anonymous* product analytics. To control how much of *your* session detail (tool input/output, screenshots, recordings) reaches the Collector, see [Privacy mode](/cli/advanced/privacy).
@@ -42,7 +59,7 @@ For a single shell or CI run, `IRONBEE_TELEMETRY=false` does the same thing with
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#telemetry">
     The `telemetry.enable` key in full.
   </Card>
-  <Card title="Privacy Mode" icon="bot" href="/cli/advanced/privacy">
+  <Card title="Privacy mode" icon="bot" href="/cli/advanced/privacy">
       Redact tool detail, screenshots, and recordings from the data the DevTools MCP servers ship to the Collector.
   </Card>
 </CardGroup>

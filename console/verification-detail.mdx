@@ -1,94 +1,133 @@
 ---
-title: Verification Detail
-description: Event timeline, video playback, verdict, and traces for a single verification cycle.
+title: Verification detail
+description: Follow a verification run live, replay its recording, and read its actions, network, traces, logs and result.
 ---
 
-The verification detail panel opens when you click a verification interval in the [Session Timeline](/console/session-timeline). It shows everything that happened during the cycle: the event sequence, video recording, verdict, and traces.
-<img src="/images/console/project/verification-detail-dark.png" alt="IronBee Console — Verification Detail" style={{borderRadius:'8px',width:'100%'}} />
+Every verification run has a **Verification Details** page. Open it by clicking a row in a project's [Verifications](/console/verifications) list, or by following the link in a GitHub check, a Vercel check, a Netlify deploy card or the GitHub Action's report.
+
+The page brings together everything the run did:
+- what it saw, in the recording and screenshots
+- what it did, in the actions
+- what went over the network, in the requests, traces and logs
+- what it concluded, in the result
+
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/verification-detail-light.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/verification-detail-dark.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
+
+---
 
 ## Header
 
-The panel header shows the verification ID and a status chip: **Pass**, **Fail**, **In progress**, or **Unknown**. Two buttons sit alongside it:
+The breadcrumbs lead back to the project. Next to the title, runs tied to a GitHub repository link to the commit and the pull request. On the right, a badge shows the result, or the status while the run has no result yet.
 
-- **Traces** toggles the [trace panel](#trace-panel)
-- **Play** arms video playback (visible when a recording exists)
+The strip below the title summarizes the run:
+
+- The result, the run's name, and its type, trigger and attempt, for example **Web · Vercel · attempt 1**.
+- The [callbacks](/console/verifications#callbacks) that report the result back to Vercel, GitHub or Netlify.
+- **Run details**, the info icon, which opens the run's facts: its name and id, project, trigger, type, attempts, duration, why it ended, when it was created, started and ended, any error, and the delivery of each callback.
+- The duration, and how many actions, requests and screenshots the run recorded.
 
 ---
 
-## Video playback
+## Watch a run live
 
-When a browser session recording is available, the playback section shows a video player with:
+While a run on IronBee is in progress, the page shows it live: the browser view, every action as it executes, and the network requests behind it. The stage goes through **Authorizing**, **Connecting to the run** and **Waiting for the first frame** before the stream starts.
 
-- Play / pause button
-- Scrub track with drag support
-- Current time and total duration
-- Speed toggle — 1× and 2×
-- Picture-in-Picture button
-- Fullscreen button
-<img src="/images/console/project/playback-dark.png" alt="IronBee Console — Video Playback" style={{borderRadius:'8px',width:'100%'}} />
+The live view is for watching. Anyone in the account can open it, and the stage shows how many people are watching. When the run ends, the page switches to the recording as soon as it's uploaded. See [The recording](#the-recording).
 
-**Keyboard shortcuts:**
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/live-run-light.png" alt="A running Vercel run streaming live: the Running badge, the actions so far, the Live stage with 2 watching, and the network requests" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/live-run-dark.png" alt="A running Vercel run streaming live: the Running badge, the actions so far, the Live stage with 2 watching, and the network requests" />
+
+Verification cycles from the CLI aren't streamed. Their page updates as the cycle reports, and the recording arrives when the cycle finishes.
+
+---
+
+## The recording
+
+After a run, the recording replays what the run saw:
+- Play, and scrub with a preview on hover.
+- Change the speed: the smart speed moves quickly through idle stretches.
+- Go fullscreen.
+- Keep the actions, the network and the logs synced to the playback position.
+
+The recording is uploaded when the run ends, so it can take a moment to appear. Until it does, the play control is disabled, and a step without a screenshot of its own shows why on the stage:
+
+| The stage says | When |
+|----------------|------|
+| **Waiting for the recording**, **It arrives when the run finishes.** | A CLI verification cycle is still running |
+| **Waiting for the recording**, **The run ended. The recording shows up here as soon as it is uploaded.** | A run has just ended. The page checks again on its own, so there's no need to reload |
+| **No recording was captured for this run; open a nearby screenshot.** | No recording arrived within two minutes of the end. The play control's tooltip says **This run captured no recording** |
+
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/recording-wait-light.png" alt="The stage of a run that has just ended, with Step 4 selected: Waiting for the recording, The run ended. The recording shows up here as soon as it is uploaded." />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/recording-wait-dark.png" alt="The stage of a run that has just ended, with Step 4 selected: Waiting for the recording, The run ended. The recording shows up here as soon as it is uploaded." />
+
+API runs call your endpoints over HTTP, so they have no recording or screenshots. Their actions show each request with its status and timing.
+
+---
+
+## Actions and screenshots
+
+The left panel lists what the run did:
+
+- **Actions** is every step, in order. Filter the list, or turn on **Only IronBee tools** to hide everything else. Hover a step and click **Show details** to see the tool call and its result. **Copy raw event** copies it.
+- **Screenshots** shows every screenshot the run took.
+
+Selecting a step moves the recording, the network and the logs to that moment.
+
+---
+
+## The result
+
+The result panel shows the verdict of the run:
+
+| Tab | What it shows |
+|-----|---------------|
+| **Summary** | What the run verified and what it concluded |
+| **Checks** | Each check the run made, and its outcome |
+| **Issues** | Each problem found, with where it happened and the evidence behind it |
+| **Suggested fixes** | The changes the run suggests for the issues. They are suggestions, not applied fixes |
+
+You can resize the panel, collapse it, or swap it with the recording.
+
+---
+
+## Network, traces and logs
+
+The right panel inspects what went over the wire:
+
+- **Network** lists every request the run made.
+  - Open a request to see its **General**, **Request**, **Response** and **Others** details.
+  - Bodies show as **Preview** or **Raw**.
+- **Traces** shows the run's spans as a tree, with a bar for each span's timing. Search the spans, and open a span to see its details. The footer counts the spans and the errors among them.
+- **Logs** lists the log records the run collected.
+
+All three follow the playback: they show what happened up to the selected step or the current playback position.
+
+---
+
+## Keyboard shortcuts
 
 | Key | Action |
 |-----|--------|
-| `Space` / `k` | Play / pause |
-| `←` / `→` | Seek ±1 second |
-| `j` / `l` | Seek ±10 seconds |
-
-While playing, the event timeline below highlights the event corresponding to the current video time.
+| `[` and `]` | Show or hide the side panels |
+| Left and right arrows | Move to the previous or next step |
+| `Esc` | Leave the current view |
 
 ---
 
-## Event timeline
+## Share a view
 
-A chronological list of every event recorded during the verification cycle. Each row is clickable to expand its details.
-
-### Event types
-
-| Event | What it shows |
-|-------|--------------|
-| **Verification started** | User email and session ID |
-| **Tool call** | Tool name, MCP server (if applicable), type badge (mcp / skill / sub-agent), duration, input size, response size, any error, inline images or videos captured |
-| **Verification ended** | Status, duration, and reason |
-| **Verdict** | Final pass or fail, with the full **Checks**, **Issues**, and **Fixes** lists |
-
-### Per-event details
-
-Each row shows:
-- A color-coded icon by tool domain (file, search, exec, web, UI, diagnostic, flow)
-- Time offset from the start of the cycle (e.g., `+1m 23s`)
-- Absolute timestamp
-- Status chips. error indicator, duration, MCP server name, tool type badge
-- **View JSON** button tool events split into Input / Output with byte sizes; other events show a full view
-<img src="/images/console/project/view-json-dark.png" alt="IronBee Console — View Json" style={{borderRadius:'8px',width:'100%'}} />
-
-Images captured by tool calls appear inline within the event row. Click an image to open it in a lightbox.
+The page's URL keeps the selected tab, panel, step and screenshot. Copy it to point a teammate at the exact moment you are looking at.
 
 ---
 
-## Verdict
+## What's next?
 
-The verdict section at the bottom of the event timeline shows the final assessment:
-
-- **Status:** `pass` or `fail`
-- **Checks:** evidence items the agent confirmed (green)
-- **Issues:** what went wrong, if the verdict is `fail` (red)
-- **Fixes:** what was changed to resolve issues on a passing retry (orange)
-<img src="/images/console/project/verdict-detail-dark.png" alt="IronBee Console — Verdict Detail" style={{borderRadius:'8px',width:'100%'}} />
-
----
-
-## Trace panel
-
-Click **Traces** in the header to open the trace panel alongside the event timeline. The panel shows a span waterfall chart for the cycle with:
-
-- **Filters:** by span kind (Internal / Client / Server / Producer / Consumer) and status (OK / Error / Unset)
-- **Text search:** filter spans by name or service name
-- **View toggle;** Fit (panel-width) or Wide (horizontal scroll for dense traces)
-<img src="/images/console/project/trace-panel-dark.png" alt="IronBee Console — Trace Panel" style={{borderRadius:'8px',width:'100%'}} />
-
-Click any span bar to open a JSON modal with the raw span data.
-<img src="/images/console/project/span-detail-dark.png" alt="IronBee Console — Span Detail" style={{borderRadius:'8px',width:'100%'}} />
-
-
-
+<CardGroup cols={2}>
+  <Card title="Verifications" icon="list-checks" href="/console/verifications">
+    Every run of a project, with its trigger, status and result.
+  </Card>
+  <Card title="Findings" icon="triangle-alert" href="/console/findings">
+    Patterns the daily analysis finds across a project's sessions.
+  </Card>
+</CardGroup>

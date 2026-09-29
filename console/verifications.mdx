@@ -1,70 +1,130 @@
 ---
 title: Verifications
-description: Browser, Node, and backend verification cycles how the agent tests its changes before completing.
+description: Every verification run of a project in one list, with its trigger, status and result.
 ---
 
-A **verification** is a complete testing cycle the agent runs to prove that its code changes work. Before any task can complete, every affected code path must be exercised with real tools.
+A project's **Verifications** tab lists every verification run of the project:
 
-Verifications are accessed through the [Session Timeline](/console/session-timeline) and they appear as labeled intervals (Verification 1, Verification 2, …) nested inside activity bars. Click a verification interval to open the [Verification Detail](/console/verification-detail) panel.
+- **Runs on IronBee's infrastructure.** These are started by Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), or **Run instant verification** in the console.
+- **Verification cycles from the [IronBee CLI](/cli/concepts/how-it-works).** These are reported by your AI coding agent while it works.
 
----
+Open **Projects** and click a project. It opens on its **Verifications** tab. Click a row to open the run's [verification detail](/console/verification-detail) page.
 
-## Verification types
-
-IronBee supports three cycle types that can run in parallel:
-
-### Browser cycle
-
-The agent uses browser devtools to verify frontend and full-stack changes:
-
-- Navigates to affected pages
-- Takes screenshots at key states
-- Checks the browser console for errors
-- Tests user interactions (clicks, forms, navigation)
-- Records a browser session video
-- Submits a verdict with evidence
-
-The browser cycle is active by default for most code file types. Disable it with `ironbee browser disable`.
-
-### Node cycle
-
-The agent connects to a running Node.js process to verify backend changes via V8 inspector:
-
-- Connects to the Node inspector
-- Sets tracepoints or logpoints at changed code paths
-- Exercises those paths via API calls or UI interactions
-- Reads back execution snapshots or runtime logs
-- Submits verdict with backend evidence
-
-The Node cycle is opt-in and enable it with [`ironbee node enable`](/cli/guides/verification#enable-or-disable-a-platform).
-
-### Backend cycle
-
-The agent drives real HTTP, gRPC, GraphQL, or WebSocket requests against a running backend service and verifies the responses. Works for any backend runtime (Node, Java, Python, Go, Rust, and more). Evidence is collected across three domains:
-
-| Domain | Tools | What is captured |
-|--------|-------|-----------------|
-| Protocol calls | `bedt_http_*`, `bedt_grpc_*`, `bedt_graphql_*`, `bedt_ws_*` | Request/response pairs, status codes, payloads |
-| Observability logs | `bedt_log_*` | Runtime log lines emitted by the service during the call |
-| Database queries | `bedt_db_*` | SQL or NoSQL queries executed as a side effect |
-
-The backend cycle is opt-in and enable it with [`ironbee backend enable`](/cli/guides/verification#enable-or-disable-a-platform).
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/verifications-list-light.png" alt="A project's Verifications tab with Run instant verification, the date range, the Statuses, Results and Triggers filters, name search, and runs from Vercel, Netlify, the CLI and the API" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/verifications-list-dark.png" alt="A project's Verifications tab with Run instant verification, the date range, the Statuses, Results and Triggers filters, name search, and runs from Vercel, Netlify, the CLI and the API" />
 
 ---
 
-## Verification status
+## Filter and search
+
+- The date range at the top of the page shows runs started in that window. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range** down to the hour.
+- **Statuses**, **Results** and **Triggers** narrow the list. **Search name…** matches run names from 3 characters.
+- **Clear filters** resets them.
+
+---
+
+## Columns
+
+| Column | What it shows |
+|--------|---------------|
+| **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id |
+| **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **API**, **CLI** or **Console** |
+| **Source**, **Branch**, **Commit**, **PR** | The repository, branch, commit and pull request the run verified, for runs tied to a GitHub repository |
+| **Type** | **Web** or **API**. For CLI cycles: browser verification shows **Web**, backend shows **API**, other platforms show `-` |
+| **Status** | Where the run is |
+| **Result** | The verdict |
+| **Started**, **Duration** | When the run started and how long it took |
+| **Callbacks** | Whether the result was delivered back to Vercel, GitHub or Netlify |
+
+You can sort by **Name**, **Status** and **Started**. The newest runs come first. Times follow the **Time Format** in [Settings](/console/settings).
+
+---
+
+## Status
 
 | Status | Meaning |
 |--------|---------|
-| `in-progress` | The agent is actively running this cycle |
-| `pass` | All evidence checks passed |
-| `fail` | One or more checks failed |
-| `abandoned` | The cycle ended before a verdict was submitted |
+| Created | The run was created |
+| Queued | The run is waiting to start |
+| Starting | The run's environment is being prepared |
+| Running | The agent is verifying. A run on IronBee can be watched live |
+| Completed | The run ended with a verdict |
+| Failed | The run ended without a verdict, because of an error or a timeout |
+| Cancelled | The run was stopped before it finished |
+| Interrupted | CLI only: the cycle closed without a verdict |
+| Unknown | CLI only: the cycle never reported an end |
 
 ---
 
-## Retry behavior
+## Result
 
-If a verification fails, the agent must fix the issues and re-verify. By default, it gets 3 attempts (`maxRetries`). After the limit is reached, the session can complete but must report unresolved issues.
+| Result | Meaning |
+|--------|---------|
+| Pass | The change works as intended |
+| Fail | The verification found issues |
+| Not applicable | The change left nothing to verify. The run gives the reason |
+| Soft fail | A saved scenario ran to the end, but one of its soft assertions failed. It isn't a clean pass |
+| Unknown | No verdict was recorded |
 
-Each retry creates a new verification cycle, you can see the full history in the timeline.
+---
+
+## Callbacks
+
+A run started by Vercel or Netlify reports its result back to the provider, and to GitHub when the [GitHub App](/integrations/github) is installed. The **Callbacks** column shows one entry per destination (**Vercel**, **GitHub** or **Netlify**):
+
+| State | Meaning |
+|-------|---------|
+| Created | The report is prepared |
+| Queued | The report is waiting to be sent |
+| Delivered | The provider received the result |
+| Failed | The result couldn't be delivered |
+
+---
+
+## Run instant verification
+
+Owners, admins and members can start a one-off verification of a deployed environment from the console. Billing admins don't see the button.
+
+1. On the project's **Verifications** tab, click **Run instant verification**.
+2. Type a name in the **Name** field, which reads **Enter an instant verification name** while it's empty. This is how the run shows up in the list.
+3. Pick the **Environment** to run against. The dialog opens on the first environment, in the order of **Settings > Environments**, that has a URL. The run starts at the environment's **URL** property.
+   - If the environment has no URL, the dialog says **No URL to start from.** with an **Add one** link to its settings. A **Domain** property alone isn't enough.
+   - Below the picker, a line sums up what the run is given, for example **3 variables and 4 secrets**, or **No variables or secrets**. These are the project-wide variables and secrets plus the environment's own. The environment's own one wins when both share a name.
+   - Click the line to expand it: **Variables** with their values, **Secrets** by name and type with the values hidden, and the environment's **URL**, **OpenAPI** and **Domains** properties that are set.
+4. **Verification type** is always **Web**.
+5. Write the **Prompt**: what the run should check, the way you'd tell a teammate. It can use the environment's variables and secrets by name. The counter below the prompt shows its length.
+6. Click **Run verification**. The dialog closes and the run opens on its verification detail page, where you can follow it live. If the run can't start, the dialog stays open and says why.
+
+**Run verification** stays disabled until the run has a name, a prompt that isn't empty or over the length the counter allows, and an environment with a URL.
+
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/run-instant-verification-light.png" alt="Run instant verification dialog with a name, the staging environment, the Web verification type, the expanded list of 3 variables and 4 secrets with the environment URL, a prompt, and the Run verification button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/run-instant-verification-dark.png" alt="Run instant verification dialog with a name, the staging environment, the Web verification type, the expanded list of 3 variables and 4 secrets with the environment URL, a prompt, and the Run verification button" />
+
+The run appears in the list with the **Console** trigger.
+
+<Note>
+  - The button is disabled on an archived project, and on an API project: API verifications can't be started from the console yet. Hover it to see the reason.
+  - The environment needs a URL that a cloud run can reach. A local or private address is refused.
+  - If the project has no environments yet, the dialog says so and links to them with **Open environments**. Add one with the URL to verify. See [Environments](/console/environments).
+</Note>
+
+---
+
+## CLI verification cycles
+
+When your AI coding agent verifies a change with the IronBee CLI, each verification cycle appears in the list with the **CLI** trigger. Its detail page shows the recording, the actions and the verdict of that cycle. The recording arrives when the cycle finishes; see [The recording](/console/verification-detail#the-recording).
+
+How the CLI verifies, the platforms it uses and the retry behavior are covered in the [CLI docs](/cli/concepts/how-it-works).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verification detail" icon="clipboard-check" href="/console/verification-detail">
+    Read a run: the recording, the actions, the network and the result.
+  </Card>
+  <Card title="Environments" icon="server" href="/console/environments">
+    The deployments a project is verified against.
+  </Card>
+</CardGroup>

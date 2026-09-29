@@ -1,10 +1,10 @@
 ---
 title: Vercel
-description: Install the IronBee Vercel integration so every preview deployment is verified automatically, as a Vercel deployment check.
+description: Connect the IronBee Vercel integration so the preview deployments of your enabled projects are verified as a Vercel deployment check.
 icon: "/images/icons/vercel.svg"
 ---
 
-The Vercel integration puts IronBee on your deployments. Every preview deployment gets a check named **IronBee Verification**: a cloud agent reads what the commit changed, drives the preview in a real browser against your real backend, and reports the verdict back on the deployment - with the evidence behind it in the Console.
+The Vercel integration verifies your preview deployments. Every preview deployment of an enabled project gets an **IronBee Verification** check. A cloud agent reads what the commit changed, exercises the preview against your real backend, and reports the verdict on the deployment. The evidence behind it is in the IronBee Console.
 
 There is no workflow file to add and no test suite to maintain. Nothing waits on IronBee: the deployment completes as before, and the check reports on it.
 
@@ -12,82 +12,85 @@ There is no workflow file to add and no test suite to maintain. Nothing waits on
 
 ## Prerequisites
 
-- A Vercel project that builds **preview** deployments from a Git repository.
-- An IronBee account, and the **owner** or **admin** role on it - binding an installation to an account requires one of those roles.
-- The [IronBee GitHub App](/integrations/github), so the agent can check out your code and resolve the pull request behind the deployment. Without it a run still happens, but with no changeset to work from.
+- A Vercel **team** that builds preview deployments from a Git repository. Personal Vercel accounts can't install the integration.
+- The **owner** or **admin** role on your IronBee account.
+- The [IronBee GitHub App](/integrations/github). It's what lets the run check out a private repository and find the pull request behind a deployment. It's recommended for every repository and required for private ones.
 
 ---
 
-## Step 1: Install the Vercel integration
+## Step 1: Install and connect the integration
 
-Open the Console at **Settings → Integrations** and select **Install the Vercel integration** under the Vercel card. You can also install it from the [Vercel Marketplace](https://vercel.com/marketplace) listing.
+In the console, open **Integrations** in the sidebar, select **Vercel**, and click **Install the Vercel integration**. During onboarding, the same step is **Connect Vercel**. You can also start on Vercel: open the [IronBee integration on the Vercel Marketplace](https://vercel.com/marketplace/ironbee) and click **Connect Account**.
 
-On Vercel, choose the **team** and the **projects** the integration covers - all projects on the team, or a selected set. Only the projects in that scope are ever verified.
+<img className="ib-shot" src="/images/integrations/vercel-marketplace.png" alt="The IronBee integration on the Vercel Marketplace, with the Connect Account button" />
 
-Vercel then sends you back to IronBee, to the **Connect Vercel to IronBee** page:
+1. On Vercel, choose the **team** and the **projects** the integration can see: all projects on the team, or a selected set.
+2. Vercel sends you back to **Connect Vercel to IronBee**. Check the **Vercel team** and **Projects**, pick the **IronBee account**, and click **Connect**.
+3. **Vercel connected** opens the project list so you can enable projects right away. See the next step.
+4. When you close the list, IronBee takes you back to Vercel to complete the installation there. If it doesn't, click **Finish on Vercel**.
 
-1. Confirm the Vercel team and the project list shown.
-2. Pick the **IronBee account** the installation belongs to. Verification results for this team land in that account.
-3. Select **Connect**.
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/vercel-connect-light.png" alt="Connect Vercel to IronBee, showing the Vercel team, its projects, the IronBee account picker and the Connect button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/vercel-connect-dark.png" alt="Connect Vercel to IronBee, showing the Vercel team, its projects, the IronBee account picker and the Connect button" />
 
 <Note>
-  Only accounts where you hold the **owner** or **admin** role appear in the picker. If none do, ask an account owner to open the same link, or to grant you the admin role and reload the page.
+  Only accounts where you hold the **owner** or **admin** role appear in the picker. If the page says the installation is no longer pending, it expired or was already completed. Open your Vercel team, go to the IronBee integration and install it again.
 </Note>
 
-If the connect page reports that the installation is no longer pending, it expired or was already completed. Run the installation again from Vercel: open your Vercel team, go to the IronBee integration, and reinstall it.
+---
+
+## Step 2: Enable projects
+
+A deployment starts a run only once its project is enabled. Until then, the Integrations page shows **Nothing enabled: deployments start no runs**.
+
+1. The list is titled **Projects in** and your team's name. Every new project starts selected: clear the ones you don't want verified, or use **Select all** and **Select none**.
+2. Set each one's verification type, or set them all at once under **Verification type**:
+   - **Web** opens the deployment in a browser and exercises it as a user would.
+   - **API** calls the deployment over HTTP and checks the responses against its contract.
+3. Click **Create N projects**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/vercel-enable-projects-light.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web or API choice, the Verification type bar and the Create 5 projects button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/vercel-enable-projects-dark.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web or API choice, the Verification type bar and the Create 5 projects button" />
+
+You can enable more projects later: from **Integrations > Vercel**, expand the installation, open the actions menu (the three dots) next to a project and choose **Enable**. Or open **Projects** and click **New project**.
 
 ---
 
-## Step 2: Install the GitHub App
+## Step 3: Install the GitHub App
 
-The Vercel integration knows the deployment; the GitHub App knows the code behind it. Installing both is what gives the agent a diff to verify against, a live check on the pull request, and the result posted as a PR comment.
+The Vercel integration knows the deployment; the GitHub App knows the code behind it. With both, the run verifies the pull request's changes, and the result also lands on the pull request as a check and a comment.
 
-Install it from **Settings → Integrations → Install the GitHub App**, then follow [GitHub App](/integrations/github) for the setup and permissions.
+In **Integrations**, select **GitHub** and click **Install the GitHub App**. Then follow [GitHub App](/integrations/github).
 
 ---
 
-## Step 3: Give IronBee preview access
+## Preview access
 
-Preview deployments are usually behind Vercel deployment protection, which means IronBee cannot open the deployment it is meant to verify. Pick any **one** of the three options below - each is enough on its own. If your previews are already public, skip this step.
-
-Open **Settings → Integrations** in the Console and select the info icon next to **Preview access** to see the same three options with screenshots.
+Preview deployments are usually behind Vercel Deployment Protection, so IronBee can't open them. Pick one of the two options below. If your previews are public, skip this step.
 
 <Tabs>
-  <Tab title="Bypass secret">
-    The recommended option: previews stay protected, and IronBee sends the secret when it opens them.
+  <Tab title="Bypass token">
+    The recommended option: previews stay protected, and runs send the secret when they open them.
 
-    1. In the Vercel project, open **Settings → Deployment Protection → Protection Bypass for Automation** and select **Add Secret**.
-    2. The secret must be exactly **32 characters**. The one Vercel generates already is, so generating it is the easiest path.
-    3. Copy the secret, paste it into the **Preview access** field on the Console's Integrations page, and select **Save**.
+    1. In the Vercel project, open **Settings > Deployment Protection > Protection Bypass for Automation** and add a secret. Copy it.
+    2. In the IronBee Console, open the project and go to **Settings > Secrets**.
+    3. Click **New secret** and choose the **Bypass token** tab.
+    4. Paste the secret. The name defaults to `vercel-bypass`. Under **Applies to**, keep all environments, or choose the `preview` environment.
+    5. Save the secret.
 
-    <img src="/images/console/integrations/vercel-bypass.png" alt="Vercel - Protection Bypass for Automation" style={{borderRadius:'8px',width:'100%'}} />
+    <img src="/images/console/integrations/vercel-bypass.png" alt="Vercel: Protection Bypass for Automation" className="ib-shot" />
 
-    The secret can be set per project, or once for every project in the installation. Saved secrets are masked - only the first characters are shown back - and are never readable after they're stored.
+    Runs send the value as the `x-vercel-protection-bypass` header. IronBee never shows the value again. To change it, replace the secret's value.
+
+    Add a bypass token to each Vercel project that has protected previews.
   </Tab>
 
   <Tab title="Turn protection off">
-    1. In the Vercel project, open **Settings → Deployment Protection**.
+    1. In the Vercel project, open **Settings > Deployment Protection**.
     2. Turn off **Require Log In** under **Vercel Authentication** and save.
 
-    <img src="/images/console/integrations/vercel-required.png" alt="Vercel - Deployment Protection, Vercel Authentication" style={{borderRadius:'8px',width:'100%'}} />
+    <img src="/images/console/integrations/vercel-required.png" alt="Vercel: Deployment Protection, Vercel Authentication" className="ib-shot" />
 
-    Previews become publicly reachable: anyone with the link can open them.
-  </Tab>
-
-  <Tab title="Trusted source">
-    Nothing is pasted into IronBee and no secret is shared - Vercel verifies an OIDC token IronBee signs.
-
-    1. In the Vercel project, open **Settings → Deployment Protection → Trusted Sources** and select **Add trusted source**.
-    2. Choose **External Service**, then **Custom provider**.
-    3. Fill the form with the values below and apply it to the **preview** environment.
-
-    | Field | Value |
-    |-------|-------|
-    | Issuer URL | `https://integrations.ironbee.ai/oidc` |
-    | `aud` | The Vercel project ID (as shown on the Integrations page) |
-    | `sub` | `ironbee` |
-
-    <img src="/images/console/integrations/vercel-trusted-3.png" alt="Vercel - Trusted Sources, custom provider form" style={{borderRadius:'8px',width:'100%'}} />
+    Previews become public: anyone with the link can open them.
   </Tab>
 </Tabs>
 
@@ -97,16 +100,22 @@ Open **Settings → Integrations** in the Console and select the info icon next 
 
 <Steps>
   <Step title="The preview deploys">
-    Vercel builds exactly as before. IronBee registers a project-level check definition named **IronBee Verification** - scoped to **preview** targets, non-blocking, and re-requestable - the first time it sees a deployment for that project.
+    Vercel builds exactly as before. For every enabled project, IronBee keeps one check per verification type:
+    - **IronBee Verification** for Web, **IronBee Verification · API** for API
+    - scoped to preview deployments, non-blocking, and re-requestable
   </Step>
   <Step title="The check appears">
-    Once the deployment is ready, **IronBee Verification** shows up under **Deployment Checks** on the deployment page, with its own status and duration.
+    **IronBee Verification** shows up under **Deployment Checks** on the deployment page, with its own status and duration.
   </Step>
-  <Step title="The change is driven">
-    When Vercel starts the check, IronBee queues a verification job carrying the deployment URL and its Git metadata. With the GitHub App installed it also resolves the **pull request** behind the deployed commit, so the agent works from the full diff; on a push straight to a branch it falls back to the commit's own parent, a narrower changeset. The agent then writes a scenario for what changed and exercises it in a real browser against your real backend.
+  <Step title="The change is verified">
+    IronBee starts a verification run with the deployment URL and its Git metadata.
+    - **The changeset:** with the GitHub App, the run finds the pull request behind the deployed commit and works from its full diff. On a push straight to a branch, it compares against the commit's parent.
+    - **The environment:** the run is against the project's `preview` environment, which IronBee creates on the first deployment. Its variables and secrets apply.
+    - **Web projects:** the agent exercises the changed behavior in a real browser.
+    - **API projects:** the agent calls the endpoints and checks the responses.
   </Step>
   <Step title="The result comes back">
-    The verdict is written back onto the check, with the summary and any issues, and a link out to the session in the Console. When the GitHub App is installed, the same run also lands on the pull request.
+    The verdict is written onto the check, with the summary and any issues, and a link to the run in the console. With the GitHub App installed, the same result also lands on the pull request.
   </Step>
 </Steps>
 
@@ -118,41 +127,51 @@ The check moves through three states on the Vercel deployment page:
 
 | State | What it means |
 |-------|---------------|
-| Queued | The build is done and the preview has a URL. The check is waiting for its turn. |
-| Running | IronBee is driving the preview. The duration counts up, and the link opens the live session. |
-| Concluded | The verdict, with the evidence behind it in the Console. |
+| Queued | The preview is ready. The check is waiting for its run to start |
+| Running | IronBee is verifying the preview. The duration counts up, and the link opens the run live |
+| Concluded | The verdict, with the evidence behind it in the console |
 
-The conclusion Vercel shows maps to the verdict like this:
+The conclusion Vercel shows maps to the result like this:
 
-| IronBee verdict | Vercel conclusion |
-|-----------------|-------------------|
-| `pass` | Succeeded |
-| `fail` | Failed |
-| `not_applicable` | Neutral |
-| Verification could not run | Neutral |
+| Result | Vercel conclusion |
+|--------|-------------------|
+| Pass | Succeeded |
+| Fail | Failed |
+| Not applicable | Neutral |
+| The run couldn't complete | Neutral |
 | Cancelled | Canceled |
 
-The check's link opens the session in the Console. While the run is going, the session streams **live**: every action as it executes, the browser view, and the network requests behind it. Once it concludes, the recording replays the exact same workspace - the action timeline, the network payloads, the traces and logs, and the files a finding came from - synced to the replay. In the Console's verification list these runs carry the **Vercel** trigger, so you can filter for them.
+When IronBee doesn't start a run for a deployment, the check is **Canceled** with no output. The GitHub check, when the App is installed, gives the reason.
+
+The check's link opens the run in the console. While a Web run is going, you can watch it live: every action as it executes, the browser view and the network requests. Afterwards, the recording replays with the actions, network requests, traces and logs synced to it. API runs show the requests and responses, without a browser view. In the project's **Verifications** list, these runs carry the **Vercel** trigger. See [Verification detail](/console/verification-detail).
 
 ---
 
-## Scope and limits
+## Scope
 
-- **Preview deployments only.** Production deployments are ignored.
-- **Non-blocking.** The check never holds up a deployment or a promotion; it reports on a deployment that already finished.
-- **Re-requestable.** You can re-request **IronBee Verification** from the Vercel deployment page, which starts a fresh run.
-- **Scoped to the installation.** Deployments of projects outside the installation's project scope are ignored.
+- **Preview deployments only.** Production deployments aren't verified.
+- **Enabled projects only.** Deployments of projects that aren't enabled, are archived, or are outside the installation's scope are ignored.
+- **Non-blocking.** The check never holds up a deployment or a promotion.
+- **Re-requestable.** Re-request **IronBee Verification** from the Vercel deployment page to start a new run.
 
 ---
 
 ## Managing the installation
 
-**Settings → Integrations** in the Console lists every connected Vercel installation with its team, the projects it covers, its status (**Active** or **Suspended**), and the date it was connected. The external-link icon takes you to the installation on Vercel.
+**Integrations > Vercel** lists every connected installation with its **Team**, **Enabled projects**, **Status** and when it was **Connected**. **Manage on Vercel** opens Vercel's integrations dashboard. To add or remove projects, click **Manage access in Vercel** and use Vercel's **Manage Access**.
 
-Changes on Vercel's side flow back automatically:
+Expand an installation to manage its projects. Each project's actions menu (the three dots) holds:
+- **Enable** turns on verification for a project.
+- **Edit type** changes the verification type. The change takes effect on the next deployment.
+- **Disable** stops verification. The project keeps its history, and runs from the CLI or the API still report to it.
 
-- Adding or removing projects updates the covered project list.
-- Uninstalling the integration on Vercel marks the installation as uninstalled in IronBee; no further deployments are verified.
+The gear icon next to an enabled project, **Project settings**, opens the project's settings.
+
+When a project leaves the installation's scope, or you uninstall the integration on Vercel, its IronBee project becomes **Not active**. It keeps its history and settings, and **Enable again** in the **New project** dialog brings it back.
+
+<Warning>
+  Installing the integration again from the Vercel Marketplace replaces the current installation and disconnects its projects.
+</Warning>
 
 ---
 
@@ -160,11 +179,12 @@ Changes on Vercel's side flow back automatically:
 
 | Symptom | Likely cause |
 |---------|--------------|
-| No **IronBee Verification** entry on the deployment | The deployment is a production build, or the project is outside the installation's project scope. Check the project list under **Settings → Integrations**. |
-| The check concludes quickly, and the session shows the agent could not open the app | Preview access is missing. Complete [Step 3](#step-3-give-ironbee-preview-access) with any one of the three options. |
-| The run verifies broad behaviour instead of what the commit changed | The GitHub App isn't installed for that repository, so there was no diff to work from. See [GitHub App](/integrations/github). |
-| Neutral conclusion, "IronBee could not run this verification" | An infrastructure or agent error on our side. Re-request the check from the Vercel deployment page. |
-| The connect page says the installation is no longer pending | It expired or was already completed. Reinstall the integration from your Vercel team. |
+| No **IronBee Verification** check on the deployment | The project isn't enabled, the deployment is a production build, or the project is outside the installation's scope. Check the project list under **Integrations > Vercel** |
+| The check concludes quickly, and the run shows the agent couldn't open the app | Preview access is missing. See [Preview access](#preview-access) |
+| Neutral, "IronBee could not complete this verification" | The repository is private and the GitHub App doesn't cover it, or the run hit an error. Check the GitHub App, then re-request the check |
+| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or no pull request was found for the commit. See [GitHub App](/integrations/github) |
+| "This install link is incomplete" during installation | The integration was installed on a personal Vercel account. Install it again on a team |
+| The connect page says the installation is no longer pending | It expired or was already completed. Install the integration again from your Vercel team |
 
 ---
 
@@ -175,9 +195,9 @@ Changes on Vercel's side flow back automatically:
     Repository access, the check on the commit, and the pull request comment.
   </Card>
   <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
-    The same verification on Netlify deploy previews, via the Netlify extension.
+    The same verification on Netlify deploy previews.
   </Card>
-  <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
-    The same cloud verification, started from your shell or CI with `ironbee verify`.
+  <Card title="Verification detail" icon="clipboard-check" href="/console/verification-detail">
+    Read a run: the recording, the actions and the result.
   </Card>
 </CardGroup>

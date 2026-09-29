@@ -1,129 +1,195 @@
 ---
-title: IronBee Documentation
-description: Install the CLI, configure your project, and explore the console.
+title: IronBee documentation
+description: Your AI QA engineer. Connect GitHub, Vercel or Netlify, or install the CLI, and follow every verification run in the console.
 mode: custom
 ---
 
-<div data-product-guide-index className="flex w-full flex-col gap-8 max-w-5xl mx-auto px-4 md:px-8 lg:px-12 py-10 lg:gap-14 lg:py-16">
-  <div className="flex max-w-[540px] flex-col gap-2 self-center text-center">
-    <h1 className="text-[30px] font-medium leading-9 tracking-tight text-gray-900 dark:text-gray-50">
-      IronBee Documentation
-    </h1>
-    <p className="text-balance text-base leading-relaxed tracking-tight text-gray-600 dark:text-gray-400">
-      The verification and intelligence layer for agentic development. Install the CLI, ship with confidence, and understand exactly what your AI agent is doing.
-    </p>
-  </div>
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-    <a
-      href="/getting-started/quickstart"
-      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-    >
-      <Icon icon="rocket" color="rgb(var(--primary))" size={18} className="shrink-0" />
-      <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Getting Started</span>
-        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Install the CLI, set up a project, and run your first verification.
-        </span>
+<div data-product-guide-index>
+
+  <section className="ib-hero">
+    <div>
+      <p className="ib-eyebrow">IronBee documentation</p>
+      <h1 className="ib-title">Catch bugs before you ship</h1>
+      <p className="ib-lead">
+        IronBee is your AI QA engineer. It verifies every preview deployment and pull request, and gives your AI coding agent the tools to verify its own changes.
+      </p>
+      <div className="ib-actions">
+        <a className="ib-btn ib-btn-primary" href="/getting-started/quickstart">Get started <span aria-hidden="true">→</span></a>
+        <a className="ib-btn ib-btn-secondary" href="/getting-started/introduction">What is IronBee?</a>
+        <a className="ib-btn ib-btn-secondary" href="https://console.ironbee.ai">Open the console <span aria-hidden="true">↗</span></a>
       </div>
-    </a>
+    </div>
+    <div className="ib-hero-code">
 
-    <a
-      href="/cli/get-started/getting-started"
-      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-    >
-      <Icon icon="terminal" color="rgb(var(--primary))" size={18} className="shrink-0" />
-      <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">CLI</span>
-        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Install, configure, and use the IronBee CLI in any project.
-        </span>
-      </div>
-    </a>
+<CodeGroup>
 
-    <a
-      href="/github-action/get-started/getting-started"
-      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-    >
-      <Icon icon="git-branch" color="rgb(var(--primary))" size={18} className="shrink-0" />
-      <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">GitHub Action</span>
-        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Automated verification and fixing on every pull request.
-        </span>
-      </div>
-    </a>
+```bash CLI
+npm install -g @ironbee-ai/cli
+ironbee login
+cd your-project && ironbee install
+```
 
-    <a
-      href="/console/projects"
-      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-    >
-      <Icon icon="layout-dashboard" color="rgb(var(--primary))" size={18} className="shrink-0" />
-      <div className="flex flex-col gap-1">
-        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Console</span>
-        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-          Explore sessions, verifications, fixes, traces, and AI analysis.
-        </span>
-      </div>
-    </a>
-  </div>
+```yaml GitHub Action
+# .github/workflows/ironbee.yml
+- uses: ironbee-ai/ironbee-action@v1.1.0
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    app_url: https://preview.example.com
+```
 
-  <hr className="border-0 border-t border-border" />
+</CodeGroup>
 
-  <div className="flex flex-col gap-4">
-    <h2 className="font-serif text-xl font-medium leading-normal text-gray-900 dark:text-gray-50">Common tasks</h2>
-
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <a
-        href="/cli/get-started/getting-started"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="download" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Install the CLI</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Get IronBee running globally with a single npm command.
-          </span>
+      <div className="ib-callout">
+        <div className="ib-callout-logos">
+          <span><img src="/images/icons/vercel.svg" alt="Vercel" noZoom /></span>
+          <span><img src="/images/icons/netlify.svg" alt="Netlify" noZoom /></span>
         </div>
+        <p className="ib-callout-text"><strong>Using Vercel or Netlify?</strong> No code needed: connect it from the console and every preview is verified.</p>
+        <div className="ib-callout-links">
+          <a href="/integrations/vercel">Vercel <span aria-hidden="true">→</span></a>
+          <a href="/integrations/netlify">Netlify <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div className="ib-section-head">
+      <p className="ib-eyebrow">Two ways to verify</p>
+      <h2 className="ib-h2">Choose how IronBee verifies your changes</h2>
+      <p className="ib-sub">Verify what you deploy, verify while your agent codes, or both. Every run lands in the same console.</p>
+    </div>
+    <div className="ib-paths">
+      <div className="ib-path">
+        <div className="ib-path-art">
+          <div className="ib-logo-tile"><img src="/images/icons/github.svg" alt="GitHub" noZoom /></div>
+          <div className="ib-logo-tile"><img src="/images/icons/vercel.svg" alt="Vercel" noZoom /></div>
+          <div className="ib-logo-tile"><img src="/images/icons/netlify.svg" alt="Netlify" noZoom /></div>
+        </div>
+        <div className="ib-path-body">
+          <h3 className="ib-h3">Deployments and pull requests</h3>
+          <p className="ib-sub">IronBee verifies each preview deployment and pull request on its own infrastructure, and reports on the pull request, the deployment and in the console.</p>
+          <ul className="ib-links">
+            <li><a href="/github-action/get-started/getting-started"><span>Verify pull requests with the GitHub Action</span><span>→</span></a></li>
+            <li><a href="/integrations/vercel"><span>Verify Vercel preview deployments</span><span>→</span></a></li>
+            <li><a href="/integrations/netlify"><span>Verify Netlify deploy previews</span><span>→</span></a></li>
+            <li><a href="/integrations/overview"><span>How integrations work</span><span>→</span></a></li>
+          </ul>
+        </div>
+      </div>
+      <div className="ib-path">
+        <div className="ib-path-art">
+          <div className="ib-terminal">
+            <div><b>›</b> /ironbee-verify</div>
+            <div>verifying the checkout flow in a real browser…</div>
+            <div className="ib-ok">✓ pass · 6 checks · 0 issues</div>
+          </div>
+        </div>
+        <div className="ib-path-body">
+          <h3 className="ib-h3">Inside your AI coding agent</h3>
+          <div className="ib-chips">
+            <span className="ib-chip">Claude Code</span>
+            <span className="ib-chip">Cursor</span>
+            <span className="ib-chip">Codex</span>
+          </div>
+          <p className="ib-sub">The IronBee CLI gives your agent the tools to verify its own changes in a browser, a running backend or a terminal before it calls the work done.</p>
+          <ul className="ib-links">
+            <li><a href="/cli/get-started/getting-started"><span>Install the CLI</span><span>→</span></a></li>
+            <li><a href="/cli/concepts/how-it-works"><span>How verification works</span><span>→</span></a></li>
+            <li><a href="/cli/guides/verification"><span>Modes, platforms and checks</span><span>→</span></a></li>
+            <li><a href="/cli/guides/verification-jobs"><span>Run a verification from any shell</span><span>→</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="ib-split">
+    <div className="ib-section-head">
+      <p className="ib-eyebrow">Console</p>
+      <h2 className="ib-h2">Follow every run in the console</h2>
+      <p className="ib-sub">Watch runs live, replay the evidence, and give runs the URLs and credentials they need.</p>
+    </div>
+    <div className="ib-tiles">
+      <a className="ib-tile" href="/console/projects">
+        <span className="ib-tile-icon ib-icon"><Icon icon="layers" size={16} /></span>
+        <span className="ib-tile-title">Projects</span>
+        <span className="ib-tile-desc">Every repository, Vercel project and Netlify site you verify, with its recent runs.</span>
       </a>
-
-      <a
-        href="/cli/configuration/configuration"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="settings" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Configure verification</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Customize verify patterns, retry limits, and devtools settings.
-          </span>
-        </div>
+      <a className="ib-tile" href="/console/verifications">
+        <span className="ib-tile-icon ib-icon"><Icon icon="list-checks" size={16} /></span>
+        <span className="ib-tile-title">Verifications</span>
+        <span className="ib-tile-desc">Each run with its trigger, status and result, from every source in one list.</span>
       </a>
-
-      <a
-        href="/github-action/get-started/getting-started"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="git-pull-request" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Add to your CI pipeline</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Verify and fix pull requests automatically with the GitHub Action.
-          </span>
-        </div>
+      <a className="ib-tile" href="/console/verification-detail">
+        <span className="ib-tile-icon ib-icon"><Icon icon="circle-play" size={16} /></span>
+        <span className="ib-tile-title">Live view and replay</span>
+        <span className="ib-tile-desc">Watch a run as it happens, then replay the recording with its actions, network and logs.</span>
       </a>
-
-      <a
-        href="/console/session-details"
-        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
-      >
-        <Icon icon="chart-gantt" color="rgb(var(--primary))" size={18} className="shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Read a session</span>
-          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-            Understand what the agent did, what failed, and how it was fixed.
-          </span>
-        </div>
+      <a className="ib-tile" href="/console/secrets">
+        <span className="ib-tile-icon ib-icon"><Icon icon="lock" size={16} /></span>
+        <span className="ib-tile-title">Environments and secrets</span>
+        <span className="ib-tile-desc">The URLs, variables and credentials a run uses to reach and sign in to your app.</span>
+      </a>
+      <a className="ib-tile" href="/console/analysis">
+        <span className="ib-tile-icon ib-icon"><Icon icon="sparkles" size={16} /></span>
+        <span className="ib-tile-title">Analysis and findings</span>
+        <span className="ib-tile-desc">A daily quality analysis of your agent's sessions, with findings and recommendations.</span>
+      </a>
+      <a className="ib-tile" href="/console/team">
+        <span className="ib-tile-icon ib-icon"><Icon icon="users" size={16} /></span>
+        <span className="ib-tile-title">Team and roles</span>
+        <span className="ib-tile-desc">Invite teammates, and decide who manages integrations, projects and secrets.</span>
       </a>
     </div>
-  </div>
+  </section>
+
+  <section>
+    <div className="ib-section-head">
+      <p className="ib-eyebrow">Guides</p>
+      <h2 className="ib-h2">Popular guides</h2>
+    </div>
+    <div className="ib-guides">
+      <div>
+        <p className="ib-guide-title">GitHub Action</p>
+        <ul className="ib-links">
+          <li><a href="/github-action/concepts/verification-modes"><span>Platform and local verification</span><span>→</span></a></li>
+          <li><a href="/github-action/guides/verifying-your-app"><span>Choose what to verify</span><span>→</span></a></li>
+          <li><a href="/github-action/guides/comment-trigger"><span>Verify from a pull request comment</span><span>→</span></a></li>
+          <li><a href="/github-action/get-started/migrating"><span>Migrate from v1.0</span><span>→</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <p className="ib-guide-title">Console</p>
+        <ul className="ib-links">
+          <li><a href="/console/verification-detail"><span>Read a verification run</span><span>→</span></a></li>
+          <li><a href="/console/environments"><span>Set up environments</span><span>→</span></a></li>
+          <li><a href="/console/secrets"><span>Store credentials as secrets</span><span>→</span></a></li>
+          <li><a href="/console/verifications#run-instant-verification"><span>Run an instant verification</span><span>→</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <p className="ib-guide-title">CLI</p>
+        <ul className="ib-links">
+          <li><a href="/cli/guides/scenarios"><span>Saved scenarios</span><span>→</span></a></li>
+          <li><a href="/cli/guides/issue-tracking"><span>Verify against Jira, Linear and GitHub issues</span><span>→</span></a></li>
+          <li><a href="/cli/configuration/configuration"><span>Configure verification</span><span>→</span></a></li>
+          <li><a href="/cli/clients/claude-code"><span>Claude Code, Cursor and Codex setup</span><span>→</span></a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section className="ib-help">
+    <div className="ib-section-head" style={{marginBottom: 0}}>
+      <h2 className="ib-h2">Need a hand?</h2>
+      <p className="ib-sub">Ask the community, or reach the IronBee team directly.</p>
+    </div>
+    <div className="ib-actions">
+      <a className="ib-btn ib-btn-secondary" href="https://discord.gg/xqBJy53dyJ">Discord</a>
+      <a className="ib-btn ib-btn-secondary" href="https://join.slack.com/t/ironbeeai-community/shared_invite/zt-446h3zo13-KU7U_E711F4mjLfw1mHeyw">Slack</a>
+      <a className="ib-btn ib-btn-primary" href="/help/support">Contact support <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
 </div>

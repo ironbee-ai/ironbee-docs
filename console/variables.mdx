@@ -1,0 +1,74 @@
+---
+title: Variables
+description: Plain values a verification run is told, for every environment or for one.
+---
+
+Variables are plain values the run is told outright, such as a test account's email, a feature flag's name, or which region a deployment serves. The run reads the value directly, together with the variable's description.
+
+Open a project, go to **Settings**, and select **Variables**.
+
+<Warning>
+  Variables are shown to the model. For anything you wouldn't paste into a chat, such as a password or a token, use a [secret](/console/secrets).
+</Warning>
+
+---
+
+## Create a variable
+
+1. Click **New variable**.
+2. Enter a **Name**. Names use letters, digits, dot, underscore and dash.
+3. Under **Applies to**, choose **All environments**, or one [environment](/console/environments).
+4. Enter the **Value** and, optionally, a **Description** of what the value is for. The run sees both.
+5. Click **Create variable**.
+
+As you type, the dialog previews what the model is told in the runs the variable applies to.
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/new-variable-light.png" alt="New variable dialog with the name TEST_ACCOUNT_EMAIL, Applies to set to All environments, a value and description, and a preview of what the model is told" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/new-variable-dark.png" alt="New variable dialog with the name TEST_ACCOUNT_EMAIL, Applies to set to All environments, a value and description, and a preview of what the model is told" />
+
+A variable's name and scope are fixed once it's created. To use a different scope, create a new variable.
+
+---
+
+## Shared variables and overrides
+
+A variable that applies to **All environments** is shared. To use a different value in one environment, add a row with the same name scoped to that environment. From a shared variable's actions menu, choose **Add override for…**. The dialog opens with the name filled in and an environment picked.
+
+In that environment, the environment's row wins. Everywhere else, the shared value applies.
+
+---
+
+## The variables list
+
+The list shows each variable's **Name**, **Value**, where it **Applies In**, its **Description**, and when it was **Updated**. An override is indented under the shared row it overrides, and the shared row says where it's overridden.
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/variables-list-light.png" alt="Variables page with the name filter, the Every row filter and five variables, including API_BASE_PATH shared for all environments and overridden in staging" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/variables-list-dark.png" alt="Variables page with the name filter, the Every row filter and five variables, including API_BASE_PATH shared for all environments and overridden in staging" />
+
+Type in **Filter by name** to find a variable. Use the environment filter to see:
+- **Every row**
+- **Shared rows only**
+- **Effective in** one environment: the values that take effect there
+
+From a variable's actions menu you can **Edit** or **Delete** it. A shared variable's menu also offers **Add override for…**.
+
+Deleting a variable means runs stop being told its value. You can create the same name again at any time.
+
+---
+
+## Who can change variables
+
+Everyone in the account can read variables. Only owners and admins can create, edit or delete them. An archived project's configuration is read-only until the project is unarchived.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Secrets" icon="lock" href="/console/secrets">
+    Credentials a run can use without seeing them.
+  </Card>
+  <Card title="Environments" icon="server" href="/console/environments">
+    The deployments a project is verified against.
+  </Card>
+</CardGroup>

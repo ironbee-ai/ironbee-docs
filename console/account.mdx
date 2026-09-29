@@ -1,41 +1,64 @@
 ---
 title: Account
-description: Account name, API key, and your role within the account.
+description: Your workspace's name, your role in it, and the account API key.
 ---
 
-The Account page shows your IronBee account details and credentials. Access it from the bottom of the sidebar.
-<img src="/images/console/account/account-dark.png" alt="IronBee Console — Account Page" style={{borderRadius:'8px',width:'100%'}} />
+The **Account** page holds the settings of your workspace, the IronBee account your projects belong to. **Settings** opens on this page. You can also reach it with **Account settings** in the account switcher.
 
+<img className="ib-shot ib-shot-light" src="/images/console/settings/account-light.png" alt="Account page with the Account Name and Change Name button, the Owner, Your Role, the masked Account API Key with Rotate, and a Previous Key (Grace Window) with Deactivate now" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/account-dark.png" alt="Account page with the Account Name and Change Name button, the Owner, Your Role, the masked Account API Key with Rotate, and a Previous Key (Grace Window) with Deactivate now" />
+
+---
 
 ## Account name
 
-Displays the current account name. Account owners can click **Change Name** to edit it (letters, numbers, and spaces, max 50 characters).
+The page shows the **Account Name** and **Your Role** in it. Owners and admins also see the **Owner**.
 
-## Owner
+To rename the account, the owner clicks **Change Name**, enters the new name in **Change account name** and clicks **Save**. Names use letters, numbers and spaces, up to 64 characters.
 
-The email address of the account owner. Read-only.
+---
 
-## Your role
+## Account API key
 
-Your role within this account: Owner, Admin, Member, or Billing Admin.
+Owners and admins see the **Account API Key**: one shared key for the whole account. It identifies no user, which suits CI and deployment tooling.
 
-## API key
+- The **GitHub Action** takes it as the `ironbee_api_key` input.
+- The **CLI** reads it from `IRONBEE_SERVICE_API_KEY`.
 
-Your account API key, used for machine-to-machine authentication with the IronBee Collector for the [GitHub Action](/github-action/get-started/getting-started), CI pipelines, and scripts. For interactive CLI use, `ironbee login` issues a personal [OAuth token](/console/access-tokens) instead; see [Authentication](/cli/guides/authentication) for when to use each.
+Use the icons next to the key to show, hide or copy it.
 
-- The key is masked by default (first 8 + last 4 characters visible)
-- Click the **eye icon** to reveal the full key
-- Click **Copy** to copy it to the clipboard
+<Warning>
+  Never commit this key to git or share it in plain text. Store it as a secret in your CI provider, such as a GitHub repository secret named `IRONBEE_API_KEY`.
+</Warning>
 
-To use this key in CI, set it as an environment variable (it takes precedence over config):
+For your own machine, sign in with `ironbee login` instead. It creates a personal [OAuth token](/console/access-tokens) that you can revoke on its own.
 
-```bash
-export IRONBEE_API_KEY=<your-key>
-```
+---
 
-### Rotate the key
+## Rotate the API key
 
-Owners and admins can click **Rotate** to generate a new key. The previous key stays valid for a **24-hour grace window** so existing integrations keep working while you roll out the new one.
+Rotate the key when it may have leaked, or on a regular schedule:
 
-- Only one grace key exists at a time. Rotating again while a grace key is still active permanently disables the earlier one, the Console asks you to confirm first.
-- Click **Deactivate now** to end the grace window immediately, before the 24 hours are up.
+1. Click **Rotate** next to the key. **Rotate account API key?** asks you to confirm. Click **Rotate key**.
+2. **Copy the new API key** shows the new key once. Copy it, tick **I have copied the new key to a safe place.**, and click **Done**.
+3. Update the key wherever you use it.
+
+<img className="ib-shot ib-shot-light" src="/images/console/settings/rotate-key-dialog-light.png" alt="Rotate account API key? dialog explaining that the current key stays active for 24 hours, with Cancel and Rotate key buttons" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/rotate-key-dialog-dark.png" alt="Rotate account API key? dialog explaining that the current key stays active for 24 hours, with Cancel and Rotate key buttons" />
+
+The previous key keeps working for a 24-hour grace window, so running jobs and pipelines don't break while you update them. The page lists it as **Previous Key (Grace Window)**, with its expiry. Click **Deactivate now** to end the grace window early.
+
+If you rotate again while a previous key is still in its grace window, **Replace previous grace key?** asks you to confirm. Click **Replace and rotate**. The older grace key stops working at once.
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OAuth tokens" icon="key-round" href="/console/access-tokens">
+    Personal tokens for interactive and per-engineer use.
+  </Card>
+  <Card title="Team" icon="users" href="/console/team">
+    Invite teammates and manage their roles.
+  </Card>
+</CardGroup>

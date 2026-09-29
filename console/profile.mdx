@@ -1,24 +1,38 @@
 ---
 title: Profile
-description: Your identity, authentication provider, and avatar preferences.
+description: Your personal account details and how you sign in.
 ---
 
-The Profile page shows your personal account details. Access it from the bottom of the sidebar.
-<img src="/images/console/account/profile-dark.png" alt="IronBee Console — Profile Page" style={{borderRadius:'8px',width:'100%'}} />
+Your profile shows who you are in IronBee. Open **Settings** from the sidebar or from your user menu, then choose **Profile** under **Personal**.
 
-## Identity
+---
 
-- **Name** is your display name, or email if no name is set
-- **Status** shows as Active with a green indicator when you are logged in
+## Your details
 
-## Email
+<img className="ib-shot ib-shot-light" src="/images/console/settings/profile-light.png" alt="Profile card with the name, the email marked Verified by Google, Google OAuth as the authentication method, and the Show profile picture switch" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/profile-dark.png" alt="Profile card with the name, the email marked Verified by Google, Google OAuth as the authentication method, and the Show profile picture switch" />
 
-Your account email address with a verification badge showing which provider confirmed it.
+| Field | What it shows |
+|-------|---------------|
+| Name | The card's heading: your name as your sign-in provider reports it, or your email if there's none |
+| **Email** | Your email address, marked as verified by your sign-in provider |
+| **Authentication** | How you sign in: **Google OAuth**, **GitHub OAuth** or **Email & Password** |
 
-## Authentication
+---
 
-The provider you used to sign in: Google, GitHub, or Email & Password.
+## Avatar
 
-## Profile picture
+When your sign-in provider supplies a profile picture, the **Avatar** section offers a **Show profile picture** switch. It's off by default. Turn it on to show your picture in the user menu and on this page. The choice is saved in your browser.
 
-If your account has a profile picture (from OAuth), a toggle lets you show or hide it in the sidebar and other UI surfaces. When hidden, IronBee displays your initials instead.
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OAuth tokens" icon="key-round" href="/console/access-tokens">
+    Personal tokens the CLI uses on your behalf.
+  </Card>
+  <Card title="Sign in" icon="log-in" href="/console/sign-in">
+    Sign-in methods and joining a team.
+  </Card>
+</CardGroup>

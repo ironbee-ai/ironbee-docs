@@ -3,7 +3,11 @@ title: Recommendations
 description: Concrete directives generated from findings, injected into the AI agent's context automatically.
 ---
 
-**Recommendations** are actionable directives generated from findings. Every recommendation is tied to a specific finding (`concern` or `critical` severity) and grounded in observed session data.
+**Recommendations** are actionable directives generated from findings. Every recommendation is tied to a specific finding (**Concern** or **Critical** severity) and grounded in observed session data.
+
+Recommendations are tracked per project. Every daily [analysis](/console/analysis) replaces the project's recommendations, and the list shows the active ones.
+
+---
 
 ## What makes recommendations different
 
@@ -14,31 +18,65 @@ Example recommendations:
 - *"Always check contrast ratio, form validation, and error states before writing a verdict."* (quality finding)
 - *"After a fix, re-run all checks, not just the failing one."* (efficiency finding)
 - *"Button.tsx has a 70% fail rate, take extra care when modifying this file."* (patterns finding)
-- *"Prefer prompts with stable cached prefixes when working in src/auth/ and current cache hit rate is below 30%."* (cost finding)
 
-## Recommendation scope
+---
 
-| Scope | Injected when |
-|-------|---------------|
-| Project-scoped | Agent works in any session for that project |
-| Account-scoped | Agent works in any project for that account |
+## Open a project's recommendations
 
-Project-scoped recommendations come from Quality, Cost, and Session Insights analysis. Account-scoped recommendations come from Account Cost and Account Session Insights analysis.
+Open **Recommendations** in the sidebar and pick a project. You can also:
+- click the recommendations count on a [project card](/console/projects#card-view)
+- click **View linked recommendation** on a finding
+- open the notifications bell in the top bar. Its notification shows how many active recommendations your projects have, such as **5 recommendations to act on**. Click it to open **Recommendations**.
 
-## Recommendations list
+When a project has none, the page says **No recommendations yet, new ones will appear here after the next analysis run.**
 
-The Recommendations tab shows all active recommendations, linked to their source findings. Each recommendation includes:
+<img className="ib-shot ib-shot-light" src="/images/console/insights/recommendations-list-light.png" alt="The Recommendations page for a project, with the Search action field and the table of recommended actions and when each was created" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/recommendations-list-dark.png" alt="The Recommendations page for a project, with the Search action field and the table of recommended actions and when each was created" />
 
-- **Action:** what the agent should do, written as a clear directive
-- **Source finding:** the observation that generated it (title, area, severity)
-- **Status:** active or dismissed
+---
 
-## Dismissing recommendations
+## Search
 
-You can dismiss a recommendation if it is not relevant to your current work. Dismissed recommendations are not injected into the agent and are preserved separately from active recommendations.
+**Search action…** matches recommendation text from 3 characters. When you arrive from a link to one finding or one analysis, a **Finding** or **Analysis** chip pins the list to it. Remove the chip to see every recommendation.
 
-When a new analysis run supersedes the current one, previously-dismissed recommendations are preserved, they are not re-activated.
+---
 
-## Feedback
+## The recommendations table
 
-You can mark a recommendation as helpful or not helpful. This feedback helps improve analysis quality over time for your project.
+| Column | What it shows |
+|--------|---------------|
+| **Action** | The recommended directive |
+| **Created** | When the recommendation was generated |
+
+Sort by **Created**. The newest recommendations come first. Show 20, 50 or 100 rows per page.
+
+---
+
+## Recommendation details
+
+Click a row to open the recommendation:
+
+- Its status (**Active**), the project and when it was created.
+- The full directive, under **Action**.
+- The **Causal Chain**, which shows where the recommendation came from:
+  - the recommendation itself
+  - its **Source Finding**, with the finding's severity. Click it to open the finding.
+  - its **Source Analysis**. **View the analysis run that produced this** opens the project's analysis.
+
+The drawer shows a **Dismiss (coming soon)** button that is disabled for now: dismissing recommendations is coming soon.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/recommendation-detail-light.png" alt="An open recommendation with its Action text, the Causal Chain from the recommendation to its source finding and source analysis, and the disabled Dismiss (coming soon) button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/recommendation-detail-dark.png" alt="An open recommendation with its Action text, the Causal Chain from the recommendation to its source finding and source analysis, and the disabled Dismiss (coming soon) button" />
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Findings" icon="triangle-alert" href="/console/findings">
+    The observations recommendations come from.
+  </Card>
+  <Card title="Analysis" icon="sparkles" href="/console/analysis">
+    The daily quality analysis.
+  </Card>
+</CardGroup>

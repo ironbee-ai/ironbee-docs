@@ -1,9 +1,9 @@
 ---
-title: Privacy Mode
+title: Privacy mode
 description: Redact tool detail, screenshots, and recordings from the data the DevTools MCP servers ship to the Collector.
 ---
 
-Privacy mode is a single cross-cutting switch that controls how much detail leaves your machine. When it's on, the [IronBee DevTools MCP servers](/cli/configuration/configuration#devtools-mcp-overrides) stop shipping potentially sensitive payloads tool, input/output detail, screenshots, and recordings to the [Collector](/cli/configuration/configuration#collector), across **every** verification cycle at once.
+Privacy mode is a single cross-cutting switch that controls how much detail leaves your machine. When it's on, the [IronBee DevTools MCP servers](/cli/configuration/configuration#devtools-mcp-overrides) stop shipping potentially sensitive payloads (tool input and output detail, screenshots, and recordings) to the [Collector](/cli/configuration/configuration#collector), across **every** verification cycle at once.
 
 It's **opt-in and off by default**: a fresh install ships full detail so your Console sessions are as rich as possible. Turn it on when your code or browser sessions touch data you'd rather keep local.
 
@@ -12,7 +12,7 @@ It's **opt-in and off by default**: a fresh install ships full detail so your Co
 ## Enable or disable
 
 ```bash
-ironbee privacy enable    # redact — stop shipping detail/artifacts
+ironbee privacy enable    # redact - stop shipping detail/artifacts
 ironbee privacy disable   # back to the default (full detail)
 ```
 
@@ -26,7 +26,7 @@ ironbee privacy enable --local     # just you, not committed
 Both commands re-render your installed client artifacts so the change lands in the DevTools MCP env. Narrow that re-render to one client with `--client <name>` (or `--client all`); by default it applies to the clients detected in the project.
 
 <Warning>
-  Restart your editor or agent session after toggling privacy mode. The DevTools MCP servers read their config at session start, so the change takes effect on the **next** Claude Code / Cursor / Codex session — not the running one.
+  Restart your editor or agent session after toggling privacy mode. The DevTools MCP servers read their config at session start, so the change takes effect on the **next** Claude Code / Cursor / Codex session - not the running one.
 </Warning>
 
 ---
@@ -40,26 +40,26 @@ Enabling privacy mode injects two flags into every DevTools MCP server's environ
 | `COLLECTOR_EVENTS_TOOL_DETAILS_ENABLE=false` | Drops tool **input/output detail** from the events the DevTools send to the Collector. |
 | `COLLECTOR_ARTIFACTS_ENABLE=false` | Drops **screenshots and recordings** (browser and Android artifacts). |
 
-You still get the structural signal which tools ran, verdicts, timing, and the session lifecycle all keep flowing but the heavy, potentially-sensitive payloads stay on your machine. Disabling privacy mode removes both flags, so the DevTools resume their default reporting.
+You still get the structural signal: which tools ran, verdicts, timing, and the session lifecycle all keep flowing. The heavy, potentially sensitive payloads stay on your machine. Disabling privacy mode removes both flags, so the DevTools resume their default reporting.
 
 <Note>
-  This is a **DevTools-side** switch. The CLI's own event pipeline already whitelists tool input and strips tool responses before sending — shell commands, for example, are reduced to coarse binary/subcommand labels, and a command that can't be parsed confidently is dropped rather than guessed — so privacy mode is specifically about the extra detail and artifacts the DevTools MCP servers contribute.
+  This is a **DevTools-side** switch. The CLI's own event pipeline already whitelists tool input and strips tool responses before sending - shell commands, for example, are reduced to coarse binary/subcommand labels, and a command that can't be parsed confidently is dropped rather than guessed - so privacy mode is specifically about the extra detail and artifacts the DevTools MCP servers contribute.
 </Note>
 
 ---
 
 ## Tool-call reasons
 
-IronBee asks its verifier and scenario sub-agents to annotate each DevTools call with a one-sentence **reason** — *why this call, what it expects to see* — which is recorded on the `tool_call` event and rendered on the Console timeline. It's a readability feature: it never changes what a tool does or whether a cycle passes.
+IronBee asks its verifier and scenario sub-agents to annotate each DevTools call with a one-sentence **reason** - *why this call, what it expects to see* - which is recorded on the `tool_call` event and rendered on the Console timeline. It's a readability feature: it never changes what a tool does or whether a cycle passes.
 
 Because it's model-authored free text, it's worth knowing exactly where it sits:
 
 - **Privacy mode does not redact it.** The two flags above gate the DevTools' tool input/output detail and artifacts; the reason is a separate top-level field on the `tool_call` event that the CLI records itself.
-- **There's no switch for it.** The channel that carries it (`TOOL_INPUT_EXTRAS_ENABLE`) is one of the IronBee invariants that always wins last when the DevTools MCP env is rendered, so an `ironbeeDevTools.env` override can't turn it off. If you need it gone, suspend the [Collector](/cli/configuration/configuration#collector) (`collector.enable: false`) — then nothing ships at all.
+- **There's no switch for it.** The channel that carries it (`TOOL_INPUT_EXTRAS_ENABLE`) is one of the IronBee invariants that always wins last when the DevTools MCP env is rendered, so an `ironbeeDevTools.env` override can't turn it off. If you need it gone, suspend the [Collector](/cli/configuration/configuration#collector) (`collector.enable: false`) - then nothing ships at all.
 - **IronBee instructs the agent** to keep it to one sentence and to put no secrets, tokens, or personal data in it. The instruction lives in the sub-agent prompts, so it only reaches the modes that have one.
 
 <Note>
-  **Scope:** reasons come from the delegated sub-agents — Claude Code's verifier and scenario agents, and Codex in its default `sub-agent` mode. Where the main agent drives the tools itself (Cursor, and Codex in [`main-agent` mode](/cli/clients/codex#how-verification-is-delivered)) no annotation is requested, so no reason is recorded. On **Claude Code** there's one extra source: a `Bash` call the agent didn't annotate records the model's own `description` for the command (a field Claude Code already asks for) instead. Codex and Cursor shell tools carry no description.
+  **Scope:** reasons come from the delegated sub-agents - Claude Code's verifier and scenario agents, and Codex in its default `sub-agent` mode. Where the main agent drives the tools itself (Cursor, and Codex in [`main-agent` mode](/cli/clients/codex#how-verification-is-delivered)) no annotation is requested, so no reason is recorded. On **Claude Code** there's one extra source: a `Bash` call the agent didn't annotate records the model's own `description` for the command (a field Claude Code already asks for) instead. Codex and Cursor shell tools carry no description.
 </Note>
 
 ---
@@ -74,10 +74,12 @@ These three are independent knobs, privacy mode doesn't touch the other two:
 | [**Telemetry**](/cli/advanced/telemetry) (`telemetry.enable`) | Anonymous PostHog product analytics for the CLI itself | On |
 | [**Collector**](/cli/configuration/configuration#collector) (`collector.enable`) | Whether session data is sent to the Console at all | On when credentials are set |
 
-To stop sending your session data entirely, suspend the Collector (`collector.enable: false`) rather than reaching for privacy mode, privacy mode trims *what* is sent, not *whether* anything is sent.
+To stop sending your session data entirely, suspend the Collector (`collector.enable: false`) rather than reaching for privacy mode: privacy mode trims *what* is sent, not *whether* anything is sent.
 
 <Note>
   [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) sends **repository and branch names** through the CLI's own pipeline, which privacy mode doesn't touch (it gates the DevTools payloads). If branch names in your repos can carry sensitive text, opt out of the linkage itself with `ironbee config set vcs.enable false`.
+
+  For a checkout of a github.com repository, every event, including the DevTools events, also carries the repository's `owner/repo`, so the console can file it under the [GitHub project](/cli/concepts/projects). That's independent of `vcs.enable`. The only way to stop it is to suspend the Collector.
 </Note>
 
 ---
@@ -113,7 +115,7 @@ Here screenshots and recordings stay redacted (privacy mode), but tool detail is
 
 <CardGroup cols={2}>
   <Card title="Telemetry" icon="chart-line" href="/cli/advanced/telemetry">
-    The other data toggle — anonymous CLI telemetry.
+    The other data toggle - anonymous CLI telemetry.
   </Card>
   <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#privacy">
     The `privacy.enable` key and the DevTools env overrides in full.

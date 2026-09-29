@@ -1,89 +1,155 @@
 ---
-title: Verifying Your Application
-description: Tell the action how to install, build, start, and reach your app.
+title: Verifying your application
+description: Choose what the action verifies, an app it starts on the runner or a deployed URL, and how to reach it.
 ---
 
-Verification needs your application running, that's true for every [verification platform](/github-action/guides/verification-platforms), not just the browser. This guide covers how to point the action at your app's lifecycle commands, work in a monorepo, and focus the agent on what matters.
+Every run needs a target: the running application the verification exercises. You give the action one of two:
+
+- **An app on the runner.** The action starts your app during the workflow. IronBee reaches it through a reverse tunnel.
+- **A deployed URL.** Your app is already running at a public address, such as a preview deployment.
+
+Without a target, the run stops at the plan step, before verifying anything.
 
 ---
 
-## App lifecycle commands
+## An app on the runner
 
-Four inputs describe how to bring your app up. The first three (`install`, `build`, `start`) run in order before verification; `app_url` tells the browser where to reach it:
+Describe how your app is installed, built and started, and the port it listens on:
 
 | Input | Purpose | Example |
 |-------|---------|---------|
 | `app_install_command` | Install dependencies | `npm ci` |
 | `app_build_command` | Build the app | `npm run build` |
-| `app_start_command` | Start the server | `npm run start` |
-| `app_url` | Where to reach it (browser mode) | `http://localhost:3000` |
+| `app_start_command` | Start the app and keep it running | `npm run start` |
+| `app_port` | The port the app listens on | `3000` |
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-    app_install_command: 'npm ci'
-    app_build_command: 'npm run build'
-    app_start_command: 'npm run start'
-    app_url: 'http://localhost:3000'
+    app_install_command: npm ci
+    app_build_command: npm run build
+    app_start_command: npm run start
+    app_port: 3000
 ```
 
-<Info>
-  **All four are optional, but providing them is recommended.** If you leave them out, the agent still verifies, it just has to resolve how to install, build, start, and reach your app from the repository first. Spelling the commands out skips that guesswork, so runs are faster and more reliable. Omit only the steps that don't apply (e.g. `app_build_command` when there's no build).
-</Info>
+`app_port` is required with `app_start_command`. Instead of `app_port`, you can set a localhost URL with a port, such as `app_url: http://localhost:3000`. When both name a port, the one in `app_url` wins.
+
+**On IronBee**, the action runs the commands itself and waits for the port to accept connections, 60 seconds by default (`app_wait_seconds`). IronBee then verifies the app through a reverse tunnel, and the app's output is saved to the `ironbee-application-log` [artifact](/github-action/advanced/evidence).
+
+<Note>
+  The tunnel carries plain HTTP. Serve the app over HTTP on that port; a port that answers with TLS fails the run immediately.
+</Note>
+
+**On your runner**, the agent runs these commands itself as part of the verification.
+
+### Apps started through Docker Compose or a service
+
+When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again. That's right only when the command runs the app itself.
+
+When the command hands off to Docker Compose, a process manager or a service, set two more inputs:
+
+```yaml
+    app_start_command: docker compose up -d
+    app_restart_command: docker compose up -d --build
+    app_logs_command: docker compose logs --no-color --tail=2000
+    app_port: 3000
+```
+
+- `app_restart_command` restarts the app with the fix. Without it, the re-verification would test the code from before the fix.
+- `app_logs_command` prints the app's own logs into the evidence artifact. Without it, the artifact holds only the output of the command that started the app.
+
+---
+
+## A deployed URL
+
+Point `app_url` at a public address:
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1.1.0
+  with:
+    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    app_url: https://preview.example.com
+```
+
+The install, build and start commands aren't used. Before the verification starts, the action requests the URL once:
+- A `401` or `403` answer fails the run, because the verification would only see a login page.
+- An unreachable URL logs a warning, because IronBee may reach addresses your runner can't.
+
+A deployed URL isn't re-verified after a fix: the deployment still serves the code that was deployed. The loop closes when the fix is deployed and the workflow runs again.
+
+### Protected deployments
+
+A preview behind deployment protection or SSO needs a way in:
+
+- **A secret header.** If the protection can be bypassed with a header, pass it in `app_secret_headers`, one `Name: value` per line, from a GitHub secret. IronBee encrypts the value and never returns it.
+
+  ```yaml
+      app_url: https://preview.example.com
+      app_secret_headers: |
+        x-vercel-protection-bypass: ${{ secrets.VERCEL_BYPASS_SECRET }}
+  ```
+
+- **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access).
+- **Verify on the runner.** Leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
+
+An SSO redirect that answers `200` with a login page can't be told apart from your app by its status code. In that case, the verdict describes the login page.
+
+For headers that aren't secret, such as `x-e2e: 1`, use `app_headers`. Their values are stored as plain text.
+
+---
+
+## Environments
+
+On IronBee, `ironbee_environment` names the project environment the run is against, such as `staging` or `preview`. The run uses that environment's variables and secrets on top of the project-wide ones.
+
+```yaml
+    ironbee_environment: staging
+```
+
+- A name the project hasn't seen yet is created by the first run that uses it.
+- When the input is empty, `deployment` and `deployment_status` events fall back to the deployment's environment. Other events use the project-wide variables and secrets only.
+- When the environment has **Domain** properties, `app_url` must be inside those domains. Runs on the runner are refused for that environment, because a tunnel has no domain.
+
+If you pin `ironbee_cli_version`, use 0.44.0 or later for `ironbee_environment`.
 
 ---
 
 ## Monorepos
 
-Point the action at a subdirectory with `working_directory`. All commands, config, and verification run relative to it:
+Point the action at a subdirectory with `working_directory`. The commands, the configuration and the verification run relative to it:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
+- uses: ironbee-ai/ironbee-action@v1.1.0
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-    working_directory: 'packages/web-app'
-    app_install_command: 'npm ci'
-    app_start_command: 'npm run dev'
-    app_url: 'http://localhost:3000'
+    working_directory: packages/web-app
+    app_install_command: npm ci
+    app_start_command: npm run dev
+    app_port: 5173
 ```
 
 ---
 
-## Focusing the agent
+## Focusing the verification
 
-By default the agent decides what to verify from the diff. Steer it when you want specific coverage:
-
-| Input | Effect |
-|-------|--------|
-| `prompt` | Extra instructions appended to the verification prompt |
-| `max_turns` | Cap on Claude Code conversation turns (default `100`) |
-| `model` | Override the Claude model |
+The verification decides what to check from the changeset. Add instructions when you want specific coverage:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1
-  with:
-    ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-    prompt: 'Focus on the checkout flow and payment form validation'
-    max_turns: '30'
+    verification_prompt: 'Focus on the checkout flow and payment form validation'
 ```
 
-<Note>
-  Give the job enough headroom — verification, fixes, and re-verification can take a while. Set a generous `timeout-minutes` on the job (the examples use `45`).
-</Note>
+`verification_prompt` reaches the verification in both modes. When the verification runs on your runner, you can also set `claude_code_max_turns` (default `100`) and `claude_code_model`.
 
 ---
 
 ## What's next?
 
 <CardGroup cols={2}>
-  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
-    Verify through the browser, backend, and Node.js.
+  <Card title="Running in CI" icon="git-branch" href="/github-action/guides/running-in-ci">
+    Triggers, fixes and the report.
   </Card>
-  <Card title="All configuration options" icon="settings" href="/github-action/configuration/configuration">
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
     Every input and output, with defaults.
   </Card>
 </CardGroup>

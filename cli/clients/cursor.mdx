@@ -12,18 +12,18 @@ When you run `ironbee install` in a project where [Cursor](https://cursor.com) i
 | File | What it does |
 |------|--------------|
 | `.cursor/hooks.json` | Registers IronBee's lifecycle hooks |
-| `.cursor/skills/ironbee-verification.md` | The verification skill the agent follows |
+| `.cursor/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
 | `.cursor/skills/ironbee-verify/SKILL.md` | The `/ironbee-verify` command |
-| `.cursor/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools — Cursor has no sub-agent) |
-| `.cursor/skills/ironbee-issue-track/SKILL.md` | The `/ironbee-issue-track` command — written only when an [issue tracker](/cli/guides/issue-tracking) is connected (the main agent drives the tracker tools) |
-| `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`) |
-| `.cursor/mcp.json` | The devtools MCP server — a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`), plus the shared `ibdt_*` family (batch execute, scenario run/CRUD, o11y trace helpers, issue-tracker tools) |
+| `.cursor/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The [saved-scenario](/cli/guides/scenarios) commands (the main agent drives the scenario tools - Cursor has no sub-agent) |
+| `.cursor/skills/ironbee-issue-track/SKILL.md` | The `/ironbee-issue-track` command - written only when an [issue tracker](/cli/guides/issue-tracking) is connected (the main agent drives the tracker tools) |
+| `.cursor/rules/ironbee-verification.mdc` | An always-applied rule (`alwaysApply: true`), in enforce mode |
+| `.cursor/mcp.json` | The devtools MCP server - a single **`ironbee-devtools`** entry that serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`), plus the shared `ibdt_*` family (batch execute, scenario run/CRUD, o11y trace helpers, issue-tracker tools) |
 | `.cursor/permissions.json` | An allowlist so the agent isn't prompted on every devtools call or `ironbee` command (a single `ironbee-devtools:*` + `ironbee` in the terminal allowlist) |
 
 These are merged into your existing Cursor config, not overwritten.
 
 <Note>
-  Unlike Claude Code and Codex, Cursor **doesn't use a verifier sub-agent** — the main agent drives the devtools tools directly. (Cursor's sub-agents run in a separate conversation that can't share the verification session, so there's nowhere to delegate to.) The [`verification.model`](/cli/configuration/configuration#verification) setting is therefore a no-op for Cursor.
+  Unlike Claude Code and Codex, Cursor **doesn't use a verifier sub-agent** - the main agent drives the devtools tools directly. (Cursor's sub-agents run in a separate conversation that can't share the verification session, so there's nowhere to delegate to.) The [`verification.model`](/cli/configuration/configuration#verification) setting is therefore a no-op for Cursor.
 </Note>
 
 ---
@@ -48,12 +48,12 @@ After running `ironbee install`:
 
 The `/ironbee-verify` command from Claude Code is available in Cursor too:
 
-- **`/ironbee-verify`** run a verification cycle for the current changes. You can pass a **custom scenario** — inline text or a path to a scenario file — that defines exactly what to verify; when supplied it replaces the default "exercise the changed paths" flow. An optional leading `fix` switches it from the default verify-only behavior into a fix-and-re-verify loop — see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode).
+- **`/ironbee-verify`**: run a verification cycle for the current changes. You can pass a **custom scenario** - inline text or a path to a scenario file - that defines exactly what to verify; when supplied it replaces the default "exercise the changed paths" flow. An optional leading `fix` switches it from the default verify-only behavior into a fix-and-re-verify loop - see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode).
 
 See [Claude Code → Slash commands](/cli/clients/claude-code#slash-commands) for the full breakdown; it behaves the same in Cursor, except Cursor's main agent runs the verification itself rather than delegating to a sub-agent. The same goes for `/ironbee-issue-track` when an [issue tracker is connected](/cli/guides/issue-tracking).
 
 <Note>
-  Cursor's CLI can try to hand an IronBee skill to a **sub-agent** via its `Task` tool — but a Cursor sub-agent runs in a separate conversation that can't share the verification session, so its evidence would silently never register. IronBee installs a hook that denies exactly those delegations (your own unrelated sub-agents pass through), keeping the verify, scenario, and issue-track skills on the main agent where their evidence counts.
+  Cursor's CLI can try to hand an IronBee skill to a **sub-agent** via its `Task` tool - but a Cursor sub-agent runs in a separate conversation that can't share the verification session, so its evidence would silently never register. IronBee installs a hook that denies exactly those delegations (your own unrelated sub-agents pass through), keeping the verify, scenario, and issue-track skills on the main agent where their evidence counts.
 </Note>
 
 ---
@@ -67,14 +67,14 @@ Cursor's stop hook can't hard-deny completion the way Claude's can, so IronBee u
 </Info>
 
 <Note>
-  Cursor can also power IronBee's **LLM suggestions** — the `s` "suggest" key in the install platform picker and the [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command — by running a one-shot headless prompt via `cursor-agent`. When Claude Code or Codex is also present, IronBee prefers those (`claude > codex > cursor`).
+  Cursor can also power IronBee's **LLM suggestions** - the `s` "suggest" key in the install platform picker and the [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command - by running a one-shot headless prompt via `cursor-agent`. When Claude Code or Codex is also present, IronBee prefers those (`claude > codex > cursor`).
 </Note>
 
 ---
 
 ## What Cursor sessions ship
 
-Cursor sessions ship the same events as Claude Code and Codex — session lifecycle, agent turns, tool calls, file changes, verification cycles, and verdicts — through the [Collector](/cli/configuration/configuration#collector).
+Cursor sessions ship the same events as Claude Code and Codex - session lifecycle, agent turns, tool calls, file changes, verification cycles, and verdicts - through the [Collector](/cli/configuration/configuration#collector).
 
 IronBee also does one read-only lookup in Cursor's local SQLite store (`state.vscdb`): the signed-in user's cached email, so events can be attributed to you in the Console. Nothing is ever written there, and the read degrades silently when no SQLite driver is available. Point it elsewhere with [`IRONBEE_CURSOR_USER_DIR`](/cli/configuration/environment-variables#advanced) if your Cursor install isn't in the standard per-OS location.
 

@@ -1,5 +1,5 @@
 ---
-title: Getting Started
+title: Getting started
 description: Sign up, install the IronBee CLI, and set it up in your first project.
 ---
 
@@ -65,7 +65,7 @@ From any directory, run:
 ironbee login
 ```
 
-This opens [console.ironbee.ai](https://console.ironbee.ai) in your browser. Authorize the CLI, and it stores a personal OAuth access token locally. You only need to do this once per machine.
+This opens **Connect CLI** on [console.ironbee.ai](https://console.ironbee.ai) in your browser. Sign in if you're asked to; the console then authorizes the CLI on its own, and the CLI stores a personal OAuth access token locally. You only need to do this once per machine.
 
 When it completes, the terminal prints a confirmation:
 
@@ -94,23 +94,25 @@ cd your-project
 ironbee install
 ```
 
-IronBee detects your AI client (Claude Code, Cursor, or Codex) and sets it up automatically. If it can't detect one — or detects **more than one** — it asks which client(s) to install for: a checkbox multi-select where **space** toggles a client, **`a`** selects all, and **Enter** confirms (so you can set up several at once). When several were detected they come pre-checked; deselect any you don't want.
+IronBee detects your AI client (Claude Code, Cursor, or Codex) and sets it up automatically. If it can't detect one - or detects **more than one** - it asks which client(s) to install for: a checkbox multi-select where **space** toggles a client, **`a`** selects all, and **Enter** confirms (so you can set up several at once). When several were detected they come pre-checked; deselect any you don't want.
 
 <img src="/images/cli/client-selection.png" alt="Checkbox multi-select titled 'Which client(s) to install for?' with claude checked and cursor and codex unchecked" style={{borderRadius:'8px',width:'100%'}} />
 
-Then it walks you through two quick arrow-key pickers. First, **which verification mode** to run:
+Then it walks you through a few quick arrow-key pickers. First, **which verification mode** to run:
 
-- **`assist`** *(default)* the verifier and `/ironbee-verify` are installed so the agent can verify on demand, but nothing blocks task completion.
-- **`enforce`** changes must pass every active cycle before a task can complete.
-- **`monitor`** tracking only — sessions, activity, and tool calls are recorded to the Collector; no verification machinery is installed.
+- **`assist`** *(default)*: the verifier and `/ironbee-verify` are installed so the agent can verify on demand, but nothing blocks task completion.
+- **`enforce`**: changes must pass every active cycle before a task can complete. Enforce also asks how strict the gate is and whether a failed verification must be fixed.
+- **`monitor`**: tracking only. Sessions, activity, and tool calls are recorded to the Collector; no verification machinery is installed.
 
 <img src="/images/cli/verification-mode-selection_assist.png" alt="Arrow-key picker titled 'Which verification mode?' with auto verify (enforce), assist, and monitor only options, the cursor on assist" style={{borderRadius:'8px',width:'100%'}} />
 
 Then, unless you chose `monitor`, **which platforms to verify**:
 
-- **Browser** on by default covers most frontend work.
-- **Node**, **Backend**, **Android**, and **Terminal** opt-in; enable any you want gated.
-- Not sure which to pick? Press **`s`** to let IronBee analyze your project and suggest the set (Claude Code / Codex only).
+- **Browser**: on by default; covers most frontend work.
+- **Node**, **Python**, **Backend**, **Android**, and **Terminal**: opt-in; enable any you want gated.
+- Not sure which to pick? Press **`s`** to let IronBee analyze your project with your AI client (Claude Code, Codex or Cursor) and suggest the set.
+
+In enforce mode, the installer can also set up [project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) (beta): commands such as lint and tests that run first in every verification.
 
 <img src="/images/cli/platform-selection_browser.png" alt="Multi-select titled 'Which platforms should require verification?' with browser checked and node, backend, android, and terminal unchecked" style={{borderRadius:'8px',width:'100%'}} />
 
@@ -128,7 +130,7 @@ That's it. Your project is now connected to IronBee.
 
 ## What's next?
 
-Give your agent a task as you normally would. When it finishes editing code, IronBee steps in and has it verify the changes before the task can complete, and every session shows up in the [Console](https://console.ironbee.ai).
+Give your agent a task as you normally would. In assist mode, ask for a verification with `/ironbee-verify` when the change is ready. In enforce mode, IronBee has the agent verify the changes before the task can complete. Every session shows up in the [Console](https://console.ironbee.ai).
 
 <CardGroup cols={2}>
   <Card title="How verification works" icon="shield-check" href="/cli/concepts/how-it-works">

@@ -1,5 +1,5 @@
 ---
-title: Job Queue
+title: Job queue
 description: Inspect and manage the background queue that ships session data to the Collector.
 ---
 
@@ -39,7 +39,7 @@ ironbee queue drain
 
 ## Dead-letter queue
 
-Jobs whose failures are **permanent** land in a **dead-letter** queue so they don't block healthy traffic. Transient failures (network errors, `429`, `5xx`) are retried on the next drain; anything else — an auth rejection (`401`/`403`, e.g. an expired credential) or any other `4xx` — is dead-lettered on the **first** attempt rather than retried pointlessly. Events dead-lettered under a bad credential won't auto-deliver later: fix the credential, then re-queue them with `dead-letter retry` (`dead-letter stats` shows the `auth:*` category). Inspect and recover them:
+Jobs whose failures are **permanent** land in a **dead-letter** queue so they don't block healthy traffic. Transient failures (network errors, `429`, `5xx`) are retried on the next drain; anything else - an auth rejection (`401`/`403`, e.g. an expired credential) or any other `4xx` - is dead-lettered on the **first** attempt rather than retried pointlessly. Events dead-lettered under a bad credential won't auto-deliver later: fix the credential, then re-queue them with `dead-letter retry` (`dead-letter stats` shows the `auth:*` category). Inspect and recover them:
 
 ```bash
 ironbee queue dead-letter list                # list failed entries
@@ -53,7 +53,9 @@ ironbee queue dead-letter clear               # empty the dead-letter file
 | `list` | `--session <id>`, `--limit <n>` (default 50) |
 | `stats` | `--session <id>` |
 | `retry <job_id>` | `--session <id>` to force re-queue into a specific session |
-| `clear` | `--all` to also remove rotated `dead-letter-*.jsonl` archives |
+| `clear` | `--session <id>` to clear one session's entries; `--all` to also remove rotated `dead-letter-*.jsonl` archives |
+
+Every `queue` subcommand also takes `--project-dir <dir>` to target a specific project directory.
 
 ---
 
@@ -69,11 +71,11 @@ ironbee queue purge --sessions older-than=14d        # remove queue dirs older t
 | Option | Description |
 |--------|-------------|
 | `--snapshots` | Delete all snapshot files across sessions **without** processing them |
-| `--sessions <spec>` | Remove old `queue/` subdirs — `older-than=<duration>` (e.g. `older-than=14d`) |
+| `--sessions <spec>` | Remove old `queue/` subdirs: `older-than=<duration>` (e.g. `older-than=14d`). Directories that still hold undelivered work or dead-letter records are skipped |
 | `--project-dir <dir>` | Target a specific project directory |
 
 <Warning>
-  `purge` permanently drops queued data. `--snapshots` discards events that were never sent. Reach for `drain` first if you want to deliver pending events rather than throw them away.
+  `--snapshots` permanently discards events that were never sent. `--sessions` skips queue directories that still hold undelivered work. Reach for `drain` first if you want to deliver pending events rather than throw them away.
 </Warning>
 
 <Note>

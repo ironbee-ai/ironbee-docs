@@ -1,0 +1,63 @@
+---
+title: How IronBee identifies your project
+description: How the CLI names the project your sessions and verification jobs report to, and when it reports to a GitHub project.
+---
+
+Every session the CLI records, and every [`ironbee verify`](/cli/guides/verification-jobs) job it starts, reports to a project in the [IronBee Console](https://console.ironbee.ai). You don't create that project by hand: the CLI works out its name from your repository.
+
+---
+
+## The project name
+
+The CLI walks up from the directory you work in to the enclosing git repository, and takes the name from:
+
+1. the repository name in the `origin` remote's URL
+2. otherwise, the first remote's repository name
+3. otherwise, the name of the repository's folder
+
+A checkout without git uses the folder's name.
+
+**Worktrees** report under the main repository's name, not the worktree folder's. Parallel agents that work in separate worktrees land in one project. A **submodule** is its own project, named from its own remote.
+
+---
+
+## GitHub projects and CLI projects
+
+A project in the console belongs to a provider: GitHub, Vercel, Netlify, or the CLI. The same name under two providers makes two projects.
+
+When your checkout's remote is on **github.com**, and the derived name equals the repository's name, the CLI claims the repository's **GitHub project**. Your sessions and jobs then report to the same project as the [GitHub App](/integrations/github) and the [GitHub Action](/github-action/get-started/getting-started) runs for that repository. If that project doesn't exist yet, it's created.
+
+The claim works with HTTPS and SSH remotes, including `ssh.github.com` (SSH over port 443) and `git+ssh://` or `ssh+git://` URLs.
+
+In every other case, the CLI reports to a **CLI project** with the derived name:
+- a remote on another host
+- no remote
+- a name that doesn't match the repository
+
+<Note>
+  Before CLI 0.45, a github.com checkout reported to a CLI project with the repository's name. After upgrading, new sessions and jobs report to the repository's GitHub project instead. Earlier history stays in the CLI project.
+</Note>
+
+When a job resolves to a GitHub project that has none of the variables or secrets a same-named CLI project holds, `ironbee verify` prints a notice so you can move them.
+
+---
+
+## Naming the project yourself
+
+`ironbee verify --project <name>` reports the job to a CLI project with that name, and doesn't claim a GitHub project. In GitHub Actions, the job reports to the GitHub project of the repository the workflow runs in.
+
+---
+
+## What is sent
+
+For a github.com checkout, every event the CLI sends carries the repository's `owner/repo`, so the console can file it under the GitHub project. This includes the events of the devtools server. It happens whether or not [issue-tracker and VCS linking](/cli/guides/issue-tracking) is enabled. The only way to stop it is to suspend the [Collector](/cli/configuration/configuration#collector) with `collector.enable: false`, which stops sending anything at all. See [Privacy mode](/cli/advanced/privacy).
+
+---
+
+## Local bookkeeping
+
+The CLI also keeps a local inventory of the projects where you installed IronBee. These entries aren't console projects:
+- `~/.ironbee/projects.json` lists them.
+- `~/.ironbee/projects/<token>/` holds each one's runtime data.
+
+See [Managing projects](/cli/guides/managing-projects) and [Runtime files](/cli/advanced/runtime-files).

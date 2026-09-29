@@ -1,9 +1,9 @@
 ---
 title: Running in CI
-description: How the action behaves on each trigger - verification scope, fix strategy, and what it reports back.
+description: How the action behaves on each trigger, what it reports back, and how to limit when it runs.
 ---
 
-The IronBee Action adapts to what triggered the workflow: the verification scope and fix strategy change per event, and so does how results are reported back. This guide covers each trigger and the report the action produces.
+The IronBee Action adapts to what triggered the workflow. The event decides what gets verified and where a fix goes. The report and the job result work the same way on every event. This guide covers each trigger and what the action produces.
 
 ---
 
@@ -15,13 +15,13 @@ on:
     types: [opened, synchronize]
 ```
 
-**Verification scope:** Diff-based reviews changed files and verifies affected pages only.
+**What gets verified:** the whole pull request.
 
-**Fix behavior:** Fixes are committed directly to the PR branch. The agent re-verifies after each fix.
+**Fixes:** committed to the pull request branch.
 
-**Report:** A verification report is posted as a PR comment. If the comment already exists (re-run), it is updated in place.
+**Report:** a comment on the pull request, updated in place on later runs.
 
-This is the most common trigger and the recommended starting point for most projects.
+This is the most common trigger and the recommended starting point.
 
 ---
 
@@ -33,48 +33,61 @@ on:
     branches: [main]
 ```
 
-**Verification scope:** Diff-based reviews the commit diff and verifies affected pages.
+**What gets verified:** every commit in the push.
 
-**Fix behavior:** If issues are found, the action creates a new branch with fixes and opens a pull request targeting `main`.
+**Fixes:** committed to a new `ironbee/fix-<sha7>-<run_id>` branch, with a pull request targeting the branch that was pushed.
 
-Use this alongside the PR trigger to catch anything that merged without issues but broke in context.
+Use it alongside the pull request trigger to catch what broke after a merge.
 
 ---
 
-## Scheduled smoke test
+## Scheduled and manual runs
 
 ```yaml
 on:
   schedule:
     - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
-```
-
-**Verification scope:** Full tests the entire application, not just changed files.
-
-**Fix behavior:** Creates a fix PR if issues are found.
-
-Use this for regular regression checks or to catch drift between releases. The full scope means no change is required, the agent tests every meaningful page and flow it can find.
-
----
-
-## Manual verification
-
-```yaml
-on:
   workflow_dispatch:
 ```
 
-**Verification scope:** Full tests the entire application.
+**What gets verified:**
+- **On IronBee:** the latest commit against its parent.
+- **On your runner:** the whole application.
 
-**Fix behavior:** Creates a fix PR if issues are found.
+**Fixes:** committed to a new fix branch, with a pull request.
 
-Trigger from the **Actions** tab in GitHub. Useful for on-demand checks before a release or after a deployment.
+Start a manual run from the **Actions** tab on GitHub. It's useful to repeat a verification after a configuration change, or before a release.
+
+---
+
+## Pull request comments
+
+```yaml
+on:
+  issue_comment:
+    types: [created]
+```
+
+A `/ironbee-verify` comment on a pull request starts a verification of that pull request. Fixes are applied only when the comment asks for them with `--fix`. This trigger needs a guard in the workflow, so it has its own guide: [Verify from a pull request comment](/github-action/guides/comment-trigger).
+
+---
+
+## Trigger summary
+
+| Trigger | What gets verified | Fixes go to |
+|---------|--------------------|-------------|
+| `pull_request` | The pull request | The pull request branch |
+| `issue_comment` | The pull request the comment is on | The pull request branch, only with `--fix` |
+| `push` | The pushed commits | A new fix branch and pull request |
+| `schedule`, `workflow_dispatch` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and pull request |
+
+Fixes need `verification_apply_fix: true` (the default) and an Anthropic credential. Without a credential, every trigger verifies and reports only. A fix whose re-verification fails is not pushed.
 
 ---
 
 ## Combining triggers
 
-You can combine multiple triggers in one workflow:
+One workflow can listen to several events. Add a `concurrency` group so a new push cancels the run it replaces:
 
 ```yaml
 on:
@@ -85,42 +98,70 @@ on:
   schedule:
     - cron: '0 9 * * 1'
   workflow_dispatch:
+
+concurrency:
+  group: ironbee-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 ```
 
-Each trigger type uses the appropriate verification scope automatically, no additional configuration required.
+---
+
+## Turning automatic verification off
+
+To verify only when someone asks for it by name, with a comment command or a manual dispatch, turn off verification on pushes and pull requests. You have two ways to do it.
+
+**With a job-level `if:`.** GitHub evaluates it before a runner is assigned, so a skipped event costs nothing: no runner, no checkout, no builds.
+
+```yaml
+jobs:
+  verify:
+    if: >-
+      (github.event_name != 'issue_comment' && vars.IRONBEE_VERIFICATION_AUTO != 'false') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+       startsWith(github.event.comment.body, '/ironbee-verify'))
+```
+
+**With the `verification_auto` input.** The action resolves to "nothing to do" and the job ends green in seconds. The steps before the action, such as the checkout and your builds, still run.
+
+```yaml
+- uses: ironbee-ai/ironbee-action@v1.1.0
+  with:
+    verification_auto: ${{ vars.IRONBEE_VERIFICATION_AUTO }}   # 'false' switches it off
+```
+
+Use the `if:` when the job does expensive setup before the action, and the input otherwise. Neither stops a comment command or a manual dispatch.
 
 ---
 
-## Trigger summary
+## The report
 
-| Trigger | Scope | Fixes committed to | Fix PR created |
-|---------|-------|--------------------|----------------|
-| `pull_request` | Diff | PR branch (directly) | No |
-| `push` | Diff | New fix branch | Yes |
-| `schedule` | Full | New fix branch | Yes |
-| `workflow_dispatch` | Full | New fix branch | Yes |
+The action posts the report as a pull request comment and writes it to the workflow run's summary. When a comment from an earlier run exists, it's updated instead of duplicated. On a push, schedule or manual run, the report becomes the body of the fix pull request.
 
----
+A run on IronBee reports:
+- the verdict and a link to the run in the IronBee Console
+- the summary, and the **Checks**, **Issues** and **Suggested fixes** from the verdict
+- after a fix, a link to the verification before the fix
+- a **No verification ran** or **No verdict** banner, with the reason, when the run couldn't produce a verdict
 
-## The PR report
-
-On `pull_request` runs, the action posts a verification report as a PR comment. If a report comment already exists (a re-run on the same PR), it's updated in place rather than duplicated.
-
-The report contains:
-
-- **Verdict badge:** the final `pass` / `fail` / `unknown` result, with a cycle count when there was more than one.
-- **Session link:** a link to the full session in the IronBee Console.
-- **Per-cycle breakdown:** each verification cycle with its checks, issues, and fixes, plus a link straight to that verification in the Console.
-- **Early-exit banner:** if the session ended abnormally (for example, hitting `max_turns`), a banner and a collapsible diagnostics block explain why.
-- **Artifact download:** a link to the uploaded evidence bundle.
-
-For the self-host Console host override and the structure of the evidence bundle, see [Evidence](/github-action/advanced/evidence).
+A run on your runner reports:
+- the verdict, with the number of cycles when there was more than one
+- each verification cycle, with its checks, issues and fixes, and a link to that verification in the console
+- an early-exit banner, with a collapsible details block, when the agent stopped early (for example at `claude_code_max_turns`)
+- a link to download the [evidence artifact](/github-action/advanced/evidence)
 
 ---
 
-## Fix PRs
+## The job result
 
-On non-PR triggers (`push`, `workflow_dispatch`, `schedule`), there's no PR to comment on, so the same report becomes the **body of the fix PR** the action opens when verification produces changes, see the [trigger summary](#trigger-summary) above for when that happens.
+The last step of the action fails the job when the verification fails or ends without a verdict, so you can use the job as a required check. The `verdict` output (`pass`, `fail`, `not_applicable` or `unknown`) is available to later steps.
+
+---
+
+## Forks
+
+A pull request from a fork receives no secrets, so no verification can run on it. The action detects it and says so. Comment commands on fork pull requests are refused as well. See [Verify from a pull request comment](/github-action/guides/comment-trigger#forks).
 
 ---
 
@@ -128,9 +169,9 @@ On non-PR triggers (`push`, `workflow_dispatch`, `schedule`), there's no PR to c
 
 <CardGroup cols={2}>
   <Card title="Verifying your application" icon="play" href="/github-action/guides/verifying-your-app">
-    Configure build, start, and app URL for verification.
+    Choose the target: an app on the runner or a deployed URL.
   </Card>
-  <Card title="Verification platforms" icon="layers" href="/github-action/guides/verification-platforms">
-    Verify through the browser, backend, and Node.js.
+  <Card title="Verify from a comment" icon="message-square" href="/github-action/guides/comment-trigger">
+    Start a verification with `/ironbee-verify`.
   </Card>
 </CardGroup>

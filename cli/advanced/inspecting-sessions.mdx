@@ -1,5 +1,5 @@
 ---
-title: Inspecting Sessions
+title: Inspecting sessions
 description: Check verdict status and validate verdicts from the terminal.
 ---
 
@@ -15,7 +15,7 @@ Show the verdict status of the sessions in a project:
 ironbee status [project-dir]
 ```
 
-For each session it prints the verdict (`pass` / `fail`), the number of checks recorded, the retry count, and, for failures, the list of unresolved issues. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#assist-mode-default) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
+For each session it prints the verdict (`pass`, `fail` or `not_applicable`), the number of checks recorded, and, for failures, the list of unresolved issues. A verdict file that can't be read shows as `invalid JSON`. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#assist-mode-default) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
 
 ---
 
@@ -30,7 +30,7 @@ ironbee verdict [session-id]
 If only one session is active, the session ID is auto-detected. Use this to understand exactly why a session would pass or fail before the agent retries. Add `-p, --project-dir <dir>` to target a project other than the current directory.
 
 <Note>
-  This command used to be `ironbee verify [session-id]`. `ironbee verify` now runs a **cloud verification job** through the IronBee API — see [Verification Jobs](/cli/guides/verification-jobs). The local dry-run lives on unchanged as `ironbee verdict`.
+  This command used to be `ironbee verify [session-id]`. `ironbee verify` now runs a **cloud verification job** through the IronBee API - see [Verification Jobs](/cli/guides/verification-jobs). The local dry-run lives on unchanged as `ironbee verdict`.
 </Note>
 
 ---

@@ -38,7 +38,7 @@ ironbee config path                 # print the project config file path
 **Targeting a layer:**  `set`, `unset`, and the read commands accept `-g`/`--global` or `--local` to act on a specific layer (default is the project config). `list` and `get` also take `--project` to read one layer in isolation:
 
 ```bash
-ironbee config set collector.apiKey sk-... --global
+ironbee config set service.apiKey sk-... --global
 ironbee config set maxRetries 5
 ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
 ironbee config list --global
@@ -46,7 +46,7 @@ ironbee config list --global
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
 
-**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `service`, `collector`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `telemetry`, `privacy`, `codex`, `runtime`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines.
+**Automatic re-render:** when you change a key that affects installed client artifacts (anything under `verification`, `service`, `collector`, `browser`, `node`, `python`, `backend`, `android`, `terminal`, `telemetry`, `privacy`, `codex`, `runtime`, `integrations`, or the `*DevTools` overrides), the CLI automatically re-renders your hooks, MCP entries, skill, rule, and permissions. Pass `--no-rerender` to skip. After a global write on an artifact-affecting key, the CLI offers to propagate it to every registered project. `--apply-all` accepts without prompting, `--no-apply-all` declines. Nested keys that are read live, such as `verification.context`, `verification.changes`, `verification.checks` and the allow-lists, take effect without a re-render.
 
 <Info>
   Restart your editor or agent session after changing an artifact-affecting key; it takes effect on the next session.
@@ -58,8 +58,8 @@ ironbee config list --global
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ignoredVerifyPatterns` | `string[]` | `[]` *(plus always-on test-file defaults)* | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. Your patterns are **unioned on top of** a built-in default set that always excludes test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`), so a test-only edit never triggers a runtime-verification cycle even if you set nothing. |
-| `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). One global counter across all active cycles. |
+| `ignoredVerifyPatterns` | `string[]` | `[]` *(plus always-on test-file defaults)* | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. Your patterns are **unioned on top of** a built-in default set that always excludes test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`, `**/test_*.py`, `**/*_test.py`, `**/tests/**`, `**/conftest.py`), so a test-only edit never triggers a runtime-verification cycle even if you set nothing. |
+| `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). Caps both the gate's retry count across all active cycles and the streak of consecutive failed verdicts for one change. |
 | `params` | `object` | *(unset)* | User-defined string→string map consumed by [`${param:<name>}` placeholders](#placeholders-param-env-built-ins) elsewhere in the config. Merged per key across layers (local wins). Not artifact-affecting (read live). |
 
 ```json
@@ -70,12 +70,12 @@ ironbee config list --global
 ```
 
 <Note>
-  Test files are already excluded out of the box — `ignoredVerifyPatterns` is only for *additional* paths you want to skip on top of that built-in default.
+  Test files are already excluded out of the box - `ignoredVerifyPatterns` is only for *additional* paths you want to skip on top of that built-in default.
 </Note>
 
 ---
 
-## Placeholders — `${param:}`, `${env:}`, built-ins
+## Placeholders - `${param:}`, `${env:}`, built-ins
 
 Config **string** values can interpolate placeholders that IronBee resolves at **read time**, so one committed config can carry per-developer or per-environment values without hand-editing. Three forms are supported:
 
@@ -104,10 +104,10 @@ Each `${param:}` / `${env:}` reference takes an optional bash-style default afte
 ```
 
 <Note>
-  The `env:` / `param:` prefix is **implied and never written** — `${env:staging_url}` can only read `IRONBEE_ENV_STAGING_URL`, so arbitrary environment variables (`AWS_SECRET_ACCESS_KEY`, tokens, …) are structurally unreachable from config text. Write a literal `${` as `$${`. Upper-case shell forms like `${HOME}` in check arguments are left untouched.
+  The `env:` / `param:` prefix is **implied and never written** - `${env:staging_url}` can only read `IRONBEE_ENV_STAGING_URL`, so arbitrary environment variables (`AWS_SECRET_ACCESS_KEY`, tokens, …) are structurally unreachable from config text. Write a literal `${` as `$${`. Upper-case shell forms like `${HOME}` in check arguments are left untouched.
 </Note>
 
-Placeholders resolve for **runtime consumers** (checks, context injection, the collector). Values baked into **committed client artifacts** are read raw and kept as literal references, so a resolved value never lands in a shared artifact — the supported keys are the runtime-read ones (`verification.checks[]` command/args/env/cwd and `verification.context.message`). `ironbee config get <key>` (merged) prints the **resolved** value with a provenance note on stderr; a layer-scoped read (`--project` / `--global` / `--local`) shows the raw on-disk text.
+Placeholders resolve for **runtime consumers** (checks, context injection, the collector). Values baked into **committed client artifacts** are read raw and kept as literal references, so a resolved value never lands in a shared artifact - the supported keys are the runtime-read ones (`verification.checks[]` command/args/env/cwd and `verification.context.message`). `ironbee config get <key>` (merged) prints the **resolved** value with a provenance note on stderr; a layer-scoped read (`--project` / `--global` / `--local`) shows the raw on-disk text.
 
 ---
 
@@ -115,10 +115,10 @@ Placeholders resolve for **runtime consumers** (checks, context injection, the c
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `runtime.location` | `string` | `"external"` | Where per-session runtime data (the `sessions/` folder — `actions.jsonl`, verdicts, queue) is stored. `"external"` *(default)* keeps it **out of the project tree** at `~/.ironbee/projects/<token>/sessions/`, so a project never accumulates a growing `sessions/` folder even when it's gitignored. `"in-project"` stores it under `<project>/.ironbee/sessions/` (the legacy layout). Committed config, `scenarios/`, and `VERIFICATION.md` files always stay in-project regardless. The [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var overrides it per process. Takes effect on the next session. See [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives). |
+| `runtime.location` | `string` | `"external"` | Where per-session runtime data (the `sessions/` folder - `actions.jsonl`, verdicts, queue) is stored. `"external"` *(default)* keeps it **out of the project tree** at `~/.ironbee/projects/<token>/sessions/`, so a project never accumulates a growing `sessions/` folder even when it's gitignored. `"in-project"` stores it under `<project>/.ironbee/sessions/` (the legacy layout). Committed config, `scenarios/`, and `VERIFICATION.md` files always stay in-project regardless. The [`IRONBEE_RUNTIME_LOCATION`](/cli/configuration/environment-variables#advanced) env var overrides it per process. Takes effect on the next session. See [Runtime files](/cli/advanced/runtime-files#where-per-session-data-lives). |
 
 <Note>
-  Switching `runtime.location` doesn't move existing session data — it changes where *new* sessions are written. Old per-session folders under the previous location are left in place; you can delete them by hand if you don't need them.
+  Switching `runtime.location` doesn't move existing session data - it changes where *new* sessions are written. Old per-session folders under the previous location are left in place; you can delete them by hand if you don't need them.
 </Note>
 
 ---
@@ -128,11 +128,13 @@ Placeholders resolve for **runtime consumers** (checks, context injection, the c
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `verification.enable` | `boolean` | `true` | Master enforcement switch. `false` = monitoring-only (telemetry still flows, no verify gate). Equivalent to [`ironbee verification disable`](/cli/guides/verification#verification-modes). |
-| `verification.auto` | `boolean` | `false` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). Default `false` = [assist mode](/cli/guides/verification#assist-mode-default), the safer default: the `/ironbee-verify` command, the devtools MCP server, and permissions stay installed for manual verification, but nothing is enforced and no verify gate, non-blocking pre-edit hooks, and the skill/rule are omitted. Set `true` for full [enforce mode](/cli/guides/verification#enforce-mode) (blocking Stop gate + skill/rule installed). Equivalent to [`ironbee verification auto enable`/`disable`](/cli/guides/verification#enforce-mode). |
-| `verification.model` | `string` \| `object` | *(unset — inherit the session model)* | Model the [delegated verifier sub-agent](/cli/guides/verification#picking-the-verifier-model) runs on (Claude Code and Codex). Unset means the verifier inherits the main conversation's model. Set a **string** (e.g. `"sonnet"`, `"gpt-5.5"`) to apply to every client, or a **per-client object** `{ "claude": "sonnet", "codex": "gpt-5.5" }` when a project uses both. Cursor has no verifier sub-agent, so it's a no-op there. Equivalent to [`ironbee verification model <value>`](/cli/guides/verification#picking-the-verifier-model). |
-| `verification.fix` | `boolean` | `true` | [Fix enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it). Default `true`: in enforce mode a **fail** verdict blocks completion until the agent fixes the issues and re-verifies (counts toward `maxRetries`). Set `false` for **report-only**: the agent still must verify and submit a verdict, but a fail is reported (and recorded) rather than looped on — the turn may end with the issues stated plainly. Only meaningful in enforce mode; read live by the gate. A manual `/ironbee-verify fix` run escalates that one run to fix-until-pass regardless. Equivalent to `ironbee verification fix <enable\|disable>`. |
-| `verification.strict` | `boolean` | `false` | [Strict mode](/cli/guides/verification#strict-mode). When `true`, the verify gate **rejects all [N/A verdicts](/cli/guides/verification#when-a-change-has-nothing-to-verify-na-verdicts)** — the agent must produce real tool evidence for every active cycle. Default `false` accepts N/A (recorded and observable). Only meaningful in enforce mode (no gate runs in assist/monitoring). Read live by the gate. Equivalent to [`ironbee verification strict <enable\|disable>`](/cli/guides/verification#strict-mode). |
-| `verification.checks` | `array` | `[]` | [Project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) — deterministic commands (lint, tests, typecheck, build, format) run as the **first step** of every verification cycle, before any devtools verification. Each entry is `{ "name", "command", "args"?, "env"?, "cwd"?, "timeoutMs"?, "required"?, "kind"?, "conclusive"? }` (`kind` is an advisory `typecheck`/`lint`/`test`/`build`/`format`/`other` label). The verifier runs them via `ironbee hook run-checks`; in enforce mode a `required` check that fails (or never ran) **blocks the gate** so the agent fixes and re-runs (it counts toward `maxRetries`). `conclusive: true` (implies `required`; hand-set only, never suggested) makes a check the **arbiter** of the cycle — all conclusive checks passing auto-submits the pass verdict and **skips** devtools verification; a conclusive check failing defers to a devtools **diagnosis** before a findings-rich fail. See [Conclusive checks](/cli/guides/verification#conclusive-checks-let-a-check-decide-the-cycle). Trust is the recorded exit code, never the agent's claim. Can be [LLM-suggested](/cli/guides/verification#let-ironbee-suggest-your-checks) at install or via `ironbee checks suggest`. Read live (not artifact-affecting); results stay local (not shipped to the Collector). |
+| `verification.auto` | `boolean` | `false` | Automatic-enforcement sub-toggle (only meaningful when `verification.enable` is `true`). Default `false` = [assist mode](/cli/guides/verification#assist-mode-default), the safer default: the `/ironbee-verify` command, the devtools MCP server, and permissions stay installed for manual verification, but nothing is enforced: there's no verify gate, the pre-edit hooks don't block, and the skill/rule are omitted. Set `true` for full [enforce mode](/cli/guides/verification#enforce-mode) (blocking Stop gate + skill/rule installed). Equivalent to [`ironbee verification auto enable`/`disable`](/cli/guides/verification#enforce-mode). |
+| `verification.model` | `string` \| `object` | *(unset - inherit the session model)* | Model the [delegated verifier sub-agent](/cli/guides/verification#picking-the-verifier-model) runs on (Claude Code and Codex). Unset means the verifier inherits the main conversation's model. Set a **string** (e.g. `"sonnet"`, `"gpt-5.5"`) to apply to every client, or a **per-client object** `{ "claude": "sonnet", "codex": "gpt-5.5" }` when a project uses both. Cursor has no verifier sub-agent, so it's a no-op there. Equivalent to [`ironbee verification model <value>`](/cli/guides/verification#picking-the-verifier-model). |
+| `verification.fix` | `boolean` | `true` | [Fix enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it). Default `true`: in enforce mode a **fail** verdict blocks completion until the agent fixes the issues and re-verifies (counts toward `maxRetries`). Set `false` for **report-only**: the agent still must verify and submit a verdict, but a fail is reported (and recorded) rather than looped on - the turn may end with the issues stated plainly. Only meaningful in enforce mode; read live by the gate. A manual `/ironbee-verify fix` run escalates that one run to fix-until-pass regardless. Equivalent to `ironbee verification fix <enable\|disable>`. |
+| `verification.strict` | `boolean` | `false` | [Strict mode](/cli/guides/verification#strict-mode). When `true`, the verify gate **rejects all [N/A verdicts](/cli/guides/verification#when-a-change-has-nothing-to-verify-na-verdicts)** - the agent must produce real tool evidence for every active cycle. Default `false` accepts N/A (recorded and observable). Only meaningful in enforce mode (no gate runs in assist/monitoring). Read live by the gate. Equivalent to [`ironbee verification strict <enable\|disable>`](/cli/guides/verification#strict-mode). |
+| `verification.checks` | `array` | `[]` | [Project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) - deterministic commands (lint, tests, typecheck, build, format) run as the **first step** of every verification cycle, before any devtools verification. Each entry is `{ "name", "command", "args"?, "env"?, "cwd"?, "timeoutMs"?, "required"?, "kind"?, "conclusive"? }` (`kind` is an advisory `typecheck`/`lint`/`test`/`build`/`format`/`other` label). The verifier runs them via `ironbee hook run-checks`; in enforce mode a `required` check that fails (or never ran) **blocks the gate** so the agent fixes and re-runs (it counts toward `maxRetries`). `conclusive: true` (implies `required`; hand-set only, never suggested) makes a check the **arbiter** of the cycle - all conclusive checks passing auto-submits the pass verdict and **skips** devtools verification; a conclusive check failing defers to a devtools **diagnosis** before a findings-rich fail. See [Conclusive checks](/cli/guides/verification#conclusive-checks-let-a-check-decide-the-cycle). Trust is the recorded exit code, never the agent's claim. Can be [LLM-suggested](/cli/guides/verification#let-ironbee-suggest-your-checks) at install or via `ironbee checks suggest`. Read live (not artifact-affecting); results are sent to the Collector without their raw output. |
+| `verification.changes.source` | `string` | `actions` | [How IronBee detects changes](/cli/guides/verification#how-ironbee-detects-changes) for the enforce-mode gate. `actions` uses the agent's file-editing tools; `git` fingerprints the working tree, so it also sees edits made through shell commands; `shadow` decides with `actions` and logs where `git` would differ. Read live (not artifact-affecting). |
+| `verification.changes.gitTimeoutMs` | `number` | `2000` | How long the `git` source may take to fingerprint the tree before IronBee falls back to `actions`. Clamped to 200 to 60000. Read live. |
 
 ---
 
@@ -157,7 +159,9 @@ The six cycles: `browser`, `node`, `python`, `backend`, `android`, and `terminal
 | `python` | Opt-in | When enabled: server/api/app `.py` paths, Django (`views.py`/`urls.py`/`models.py`/`tasks.py`), Flask/FastAPI (`app.py`/`main.py`), WSGI/ASGI entry points |
 | `backend` | Opt-in | When enabled: 13 multi-language code defaults (ts/js/py/go/java/rb/cs/rs/kt/scala/ex/php/clj) |
 | `android` | Opt-in | When enabled: standard Android project layouts (Gradle, Kotlin/Java source trees, resources) |
-| `terminal` | Opt-in | When enabled: CLI / TUI / shell paths — `cli/`, `cmd/`, `commands/`, and `bin/` trees (at any depth), CLI entrypoints, and shell scripts |
+| `terminal` | Opt-in | When enabled: CLI / TUI / shell paths - `cli/`, `cmd/`, `commands/`, and `bin/` trees (at any depth), CLI entrypoints, and shell scripts |
+
+When the browser cycle is off, `node`, `python` and `backend` without their own `verifyPatterns` use a broad language glob instead of the lists above: every JS and TS file for `node` (`**/*.{ts,tsx,js,jsx,mjs,cjs}`), every `.py` file for `python`, and a multi-language code glob for `backend`.
 
 The exact default patterns each cycle uses when `verifyPatterns` is unset:
 
@@ -231,7 +235,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     ```
   </Accordion>
   <Accordion title="Android default verify patterns">
-    Covers standard Android project layouts Gradle modules, Kotlin/Java source trees, and resources (applies once the cycle is enabled):
+    Covers standard Android project layouts: Gradle modules, Kotlin/Java source trees, and resources (applies once the cycle is enabled):
 
     ```
     android/**/*.{kt,java}
@@ -245,7 +249,7 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     ```
   </Accordion>
   <Accordion title="Terminal default verify patterns">
-    Covers CLI entrypoints, command trees, and shell scripts (applies once the cycle is enabled). Note these are **extension-scoped** — a `README.md` or a fixture inside `cli/` doesn't activate the cycle:
+    Covers CLI entrypoints, command trees, and shell scripts (applies once the cycle is enabled). Note these are **extension-scoped** - a `README.md` or a fixture inside `cli/` doesn't activate the cycle:
 
     ```
     cli/**/*.{ts,js,mjs,cjs,py,go,rs,rb,java,kt}
@@ -260,12 +264,12 @@ The exact default patterns each cycle uses when `verifyPatterns` is unset:
     **/*.{sh,bash,zsh,fish}
     ```
 
-    `bin/**` is the one deliberately unscoped entry — a top-level `bin/` holds executables that often carry no extension at all.
+    `bin/**` is the one deliberately unscoped entry - a top-level `bin/` holds executables that often carry no extension at all.
   </Accordion>
 </AccordionGroup>
 
 <Note>
-  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. The only built-in **skip** list is the always-on test-file exclusion baked into [`ignoredVerifyPatterns`](#core-options) (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`); anything you add to `ignoredVerifyPatterns` is unioned on top. Non-code files simply don't match the patterns above.
+  These defaults are defined in the CLI (not written into `config.json`) and may grow with new CLI versions. Setting `verifyPatterns` replaces the list for that cycle; `additionalVerifyPatterns` appends to it. The only built-in **skip** list is the always-on test-file exclusion baked into [`ignoredVerifyPatterns`](#core-options) (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`, `**/test_*.py`, `**/*_test.py`, `**/tests/**`, `**/conftest.py`); anything you add to `ignoredVerifyPatterns` is unioned on top. Non-code files simply don't match the patterns above.
 </Note>
 
 <Note>
@@ -295,7 +299,7 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 | `verification.context.source` | `string` | `"git"` | Where the changed-path set comes from. `"git"` = working tree (staged + unstaged + untracked) ∪ the last `commitDepth` commits, with an `actions.jsonl` fallback when the project isn't a git repo. `"actions"` = IronBee's own `file_change` events only (no git subprocess). |
 | `verification.context.commitDepth` | `number` | `1` | How many recent commits join the working tree for the `git` source. `0` = uncommitted work only. Ignored when `source` is `"actions"`. |
 | `verification.context.maxBytes` | `number` | `65536` | Aggregate cap (64 KB) on the injected text. Past the cap, the least-specific (root-side) guidance is dropped first, keeping area-specific docs. |
-| `verification.context.message` | `string` | *(unset)* | A custom instruction injected into **every** verification cycle, independent of which files changed — so it reaches the verifier even on a manual no-change verify (where the path-scoped `VERIFICATION.md` injection is empty). Two forms: literal inline text, or a `file:<path>` reference whose contents are read (path relative to the project dir; a leading `~` expands to your home dir). Rendered first and **never truncated** (it reserves its bytes off the `maxBytes` budget). Layered across global / project / local. |
+| `verification.context.message` | `string` | *(unset)* | A custom instruction injected into **every** verification cycle, independent of which files changed - so it reaches the verifier even on a manual no-change verify (where the path-scoped `VERIFICATION.md` injection is empty). Two forms: literal inline text, or a `file:<path>` reference whose contents are read (path relative to the project dir; a leading `~` expands to your home dir). Rendered first and **never truncated** (it reserves its bytes off the `maxBytes` budget). Layered across global / project / local. |
 
 ```json
 {
@@ -316,17 +320,17 @@ Controls the [path-scoped verification guidance](/cli/guides/verification-contex
 
 ## Service identity
 
-The `service` section is the CLI's **shared identity**: one credential and one stage selector that every IronBee service — the event-ingest collector, the read-side API (used by [`ironbee verify`](/cli/guides/verification-jobs) and the o11y trace tools), and the Console links — resolves from. [`ironbee login`](/cli/guides/authentication) writes it for you; you'd only set it by hand to self-host or to run in CI. See [Authentication](/cli/guides/authentication) for the difference between the two credentials.
+The `service` section is the CLI's **shared identity**: one credential and one stage selector that every IronBee service - the event-ingest collector, the read-side API (used by [`ironbee verify`](/cli/guides/verification-jobs) and the o11y trace tools), and the Console links - resolves from. [`ironbee login`](/cli/guides/authentication) writes it for you; you'd only set it by hand to self-host or to run in CI. See [Authentication](/cli/guides/authentication) for the difference between the two credentials.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `service.domain` | `string` | `ironbee.ai` | The single **stage selector**. Every service URL derives from it when not set explicitly: the collector at `collector.service.<domain>`, the API at `api.service.<domain>`, the Console at `console.<domain>`. `ironbee login` persists the domain you authenticated against when the hosts are standard-shaped (a non-standard, self-hosted deployment keeps explicit URLs instead). Env: `IRONBEE_SERVICE_DOMAIN`. |
 | `service.oauthToken` | `string` | *(unset)* | Personal OAuth access token written by `ironbee login`. The CLI's default credential, shared by the collector and the API. Env: `IRONBEE_SERVICE_OAUTH_TOKEN`. |
 | `service.apiKey` | `string` | *(unset)* | Account API key, used for CI and machine-to-machine. When both credentials are set, the OAuth token is used. Env: `IRONBEE_SERVICE_API_KEY`. |
-| `api.url` | `string` | derived: `https://api.service.<domain>` | Explicit override for the read-side API base URL ([`ironbee verify`](/cli/guides/verification-jobs), trace lookups). Rarely set — `service.domain` covers the normal cases. |
+| `api.url` | `string` | derived: `https://api.service.<domain>` | Explicit override for the read-side API base URL ([`ironbee verify`](/cli/guides/verification-jobs), trace lookups). Rarely set - `service.domain` covers the normal cases. |
 
 <Note>
-  Older configs kept the credential under `collector.oauthToken` / `collector.apiKey`. Those keys (and their `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` env vars) still work as **read fallbacks**, so nothing breaks — but new logins write `service.*`, and the `service.*` keys win when both are present.
+  Older configs kept the credential under `collector.oauthToken` / `collector.apiKey`. Those keys (and their `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` env vars) still work as **read fallbacks**, so nothing breaks - but new logins write `service.*`, and the `service.*` keys win when both are present.
 </Note>
 
 ---
@@ -337,10 +341,10 @@ The collector is what ships your session data to the IronBee Console. Its endpoi
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `collector.url` | `string` | derived: `https://collector.service.<domain>` | Explicit endpoint override. Normally unset — it derives from `service.domain`. |
+| `collector.url` | `string` | derived: `https://collector.service.<domain>` | Explicit endpoint override. Normally unset - it derives from `service.domain`. |
 | `collector.oauthToken` | `string` | *(unset)* | **Deprecated read fallback** for `service.oauthToken` (configs written before the `service` section). Can come from `IRONBEE_OAUTH_TOKEN` instead. |
 | `collector.apiKey` | `string` | *(unset)* | **Deprecated read fallback** for `service.apiKey`. Can come from `IRONBEE_API_KEY` instead. |
-| `collector.enable` | `boolean` | implicit `true` when a credential is set | Set `false` to suspend sending while keeping credentials around. The collector activates on the **presence of a credential** (`service.*` preferred, `collector.*` fallback) — the URL always resolves via `service.domain`. |
+| `collector.enable` | `boolean` | implicit `true` when a credential is set | Set `false` to suspend sending while keeping credentials around. The collector activates on the **presence of a credential** (`service.*` preferred, `collector.*` fallback) - the URL always resolves via `service.domain`. |
 | `collector.batchSize` | `number` | `100` | Max events per POST. |
 
 ---
@@ -365,34 +369,34 @@ The collector is what ships your session data to the IronBee Console. Its endpoi
 
 ## Issue-tracker integrations
 
-Connect Jira, Linear, or GitHub Issues — see the [Issue Tracking guide](/cli/guides/issue-tracking) for the setup flows (`ironbee integrations <provider> setup`) and what the integration does. A provider activates by **configuration presence** (a configured credential turns it on; GitHub is on whenever the `gh` CLI is authenticated); its `enable` key is an opt-out kill-switch.
+Connect Jira, Linear, or GitHub Issues - see the [Issue Tracking guide](/cli/guides/issue-tracking) for the setup flows (`ironbee integrations <provider> setup`) and what the integration does. A provider activates by **configuration presence** (a configured credential turns it on; GitHub is on whenever the `gh` CLI is authenticated); its `enable` key is an opt-out kill-switch.
 
 <Warning>
-  **Secrets belong in the global config** (`~/.ironbee/config.json`) — `setup` writes them there for you. Installed artifacts carry only a `${file:…}` reference to the global config, so no token is ever baked into a committed file. In CI, supply them via the [credential env vars](/cli/configuration/environment-variables#issue-tracker-credentials) instead.
+  **Secrets belong in the global config** (`~/.ironbee/config.json`) - `setup` writes them there for you. Installed artifacts carry only a `${file:…}` reference to the global config, so no token is ever baked into a committed file. In CI, supply them via the [credential env vars](/cli/configuration/environment-variables#issue-tracker-credentials) instead.
 </Warning>
 
 ### Jira
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `integrations.jira.baseUrl` | `string` | *(unset — integration off)* | Jira base URL (e.g. `https://acme.atlassian.net`). Not a secret — can be team-shared (project config) or per-user (global, where `setup` writes it). Required for the integration to be configured. |
-| `integrations.jira.email` | `string` | *(unset)* | Jira **Cloud** identity, paired with `apiToken`. Per-user — keep it in the global config (Server/DC deployments leave it unset). |
-| `integrations.jira.apiToken` | `string` | *(unset)* | Jira **Cloud** API token — **secret**, global config only. CI: `IRONBEE_JIRA_API_TOKEN`. |
-| `integrations.jira.pat` | `string` | *(unset)* | Jira **Server/DC** personal access token — **secret**, global config only. CI: `IRONBEE_JIRA_PAT`. |
+| `integrations.jira.baseUrl` | `string` | *(unset - integration off)* | Jira base URL (e.g. `https://acme.atlassian.net`). Not a secret - can be team-shared (project config) or per-user (global, where `setup` writes it). Required for the integration to be configured. |
+| `integrations.jira.email` | `string` | *(unset)* | Jira **Cloud** identity, paired with `apiToken`. Per-user - keep it in the global config (Server/DC deployments leave it unset). |
+| `integrations.jira.apiToken` | `string` | *(unset)* | Jira **Cloud** API token - **secret**, global config only. CI: `IRONBEE_JIRA_API_TOKEN`. |
+| `integrations.jira.pat` | `string` | *(unset)* | Jira **Server/DC** personal access token - **secret**, global config only. CI: `IRONBEE_JIRA_PAT`. |
 | `integrations.jira.deployment` | `string` | *(inferred)* | `cloud` or `server`. Inferred from the credential shape; set explicitly to pin. |
 | `integrations.jira.defaultProject` | `string` | *(unset)* | Default Jira project key for creates and searches (e.g. `PROJ`). Committed. |
-| `integrations.jira.projectKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes accepted when [attributing issues](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) from branch/commit/PR text — kills `UTF-8` / `SHA-256`-style false positives. Read live. |
+| `integrations.jira.projectKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes accepted when [attributing issues](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) from branch/commit/PR text - kills `UTF-8` / `SHA-256`-style false positives. Read live. |
 | `integrations.jira.writeEnabled` | `boolean` | `false` | Whether the [write tiers](/cli/guides/issue-tracking#read-only-by-default-write-gating) (comment, attach, transition, create/link, report) are enabled. Read-only integrations still read, search, and attribute. |
-| `integrations.jira.enable` | `boolean` | `true` *(when configured)* | Opt-out kill-switch — `false` suspends the integration without deleting its config. Equivalent to `ironbee integrations jira disable`. |
+| `integrations.jira.enable` | `boolean` | `true` *(when configured)* | Opt-out kill-switch - `false` suspends the integration without deleting its config. Equivalent to `ironbee integrations jira disable`. |
 
 ### Linear
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `integrations.linear.apiKey` | `string` | *(unset — integration off)* | Linear API key (`lin_api_…`) — **secret**, global config only. CI: `IRONBEE_LINEAR_API_KEY`. |
+| `integrations.linear.apiKey` | `string` | *(unset - integration off)* | Linear API key (`lin_api_…`) - **secret**, global config only. CI: `IRONBEE_LINEAR_API_KEY`. |
 | `integrations.linear.oauth` | `boolean` | `false` | Set `true` when `apiKey` is an **OAuth access token** rather than a personal key (changes how it's sent). |
 | `integrations.linear.defaultTeam` | `string` | *(unset)* | Default Linear team key for creates and searches (e.g. `ENG`). Committed. |
-| `integrations.linear.teamKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes for attribution — same role as Jira's `projectKeys` (also disambiguates the two when both are configured). Read live. |
+| `integrations.linear.teamKeys` | `string[]` | `[]` | Allow-list of issue-key prefixes for attribution - same role as Jira's `projectKeys` (also disambiguates the two when both are configured). Read live. |
 | `integrations.linear.workspace` | `string` | *(unset)* | Workspace URL slug (the `acme` in `linear.app/acme`), used to build issue browse links in the attribution data. Unset → no browse URL (graceful). |
 | `integrations.linear.baseUrl` | `string` | Linear's cloud GraphQL endpoint | Rare override for a proxy endpoint. |
 | `integrations.linear.writeEnabled` | `boolean` | `false` | Same write gating as Jira. |
@@ -402,21 +406,21 @@ Connect Jira, Linear, or GitHub Issues — see the [Issue Tracking guide](/cli/g
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `integrations.github.enable` | `boolean` | `true` *(when `gh` is authenticated)* | Opt-out kill-switch. GitHub is driven through the `gh` CLI and auto-activates when `gh` is installed and authenticated — no credential is stored. `false` suspends it regardless. |
+| `integrations.github.enable` | `boolean` | `true` *(when `gh` is authenticated)* | Opt-out kill-switch. GitHub is driven through the `gh` CLI and auto-activates when `gh` is installed and authenticated - no credential is stored. `false` suspends it regardless. |
 | `integrations.github.writeEnabled` | `boolean` | `false` | Whether the write operations (`gh issue comment` / `close` / `edit`, the verification report) are allowed. Self-enforced by the agent (`gh` is always shell-reachable), unlike Jira/Linear's mechanical gate. Read live. |
 
 ---
 
 ## VCS linkage
 
-Links each agent turn to the pull request it produced and the issues that PR closes — the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+Links each agent turn to the pull request it produced and the issues that PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `vcs.enable` | `boolean` | implicit `true` when a collector is configured | Master switch for the linkage — the git-ref stamp, PR resolution, issue attribution, and the `vcs_link` events. **Note:** it sends repository and *branch names* to the Collector; branch names can carry sensitive text. Independent of [privacy mode](/cli/advanced/privacy). Read live. |
-| `vcs.issueTtlSeconds` | `number` | `600` | Cache TTL for successful / not-found resolutions. Short — a PR can be opened or an issue transitioned at any moment. |
+| `vcs.enable` | `boolean` | implicit `true` when a collector is configured | Master switch for the linkage - the git-ref stamp, PR resolution, issue attribution, and the `vcs_link` events. **Note:** it sends repository and *branch names* to the Collector; branch names can carry sensitive text. Independent of [privacy mode](/cli/advanced/privacy). Read live. |
+| `vcs.issueTtlSeconds` | `number` | `600` | Cache TTL for successful / not-found resolutions. Short - a PR can be opened or an issue transitioned at any moment. |
 | `vcs.resolveTtlSeconds` | `number` | `3600` | Cache TTL for resolutions that can't improve on retry (no token, no remote, rejected credentials). |
-| `vcs.stampDirty` | `boolean` | `false` | Probe the working tree for uncommitted changes during the git-ref stamp. Off by default — it's the most expensive part of the stamp and scales with repo size. |
+| `vcs.stampDirty` | `boolean` | `false` | Probe the working tree for uncommitted changes during the git-ref stamp. Off by default - it's the most expensive part of the stamp and scales with repo size. |
 | `vcs.timeoutMs` | `number` | `5000` | Per-request timeout for PR / issue resolution (always in a detached background worker, never a blocking hook). Clamped to `[1000, 60000]`. |
 
 ---
@@ -425,7 +429,7 @@ Links each agent turn to the pull request it produced and the issues that PR clo
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `console.url` | `string` | derived: `https://console.<domain>` | Explicit Console base URL override, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). Normally unset — it derives from [`service.domain`](#service-identity), which `ironbee login` persists, so self-hosted consoles link correctly. Read live. |
+| `console.url` | `string` | derived: `https://console.<domain>` | Explicit Console base URL override, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). Normally unset - it derives from [`service.domain`](#service-identity), which `ironbee login` persists, so self-hosted consoles link correctly. Read live. |
 
 ---
 
@@ -444,8 +448,8 @@ Two install-time behaviors that keep the verifier working with Claude Code's own
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` — takes effect on the next `ironbee install`. Claude-only. |
-| `claude.trustWorkspace.enable` | `boolean` | `true` | Whether `ironbee install` marks the project [trusted](/cli/clients/claude-code#workspace-trust) in Claude Code's machine-global `~/.claude.json` when it isn't already. Claude Code 2.1.x ignores a project's committed `permissions.allow` (the devtools + `Bash(ironbee *)` entries IronBee writes) until the workspace is trusted, and the trust dialog doesn't re-appear once onboarding has been seen — so without this the entries stay silently disabled and the agent gets prompted on every devtools/`ironbee` call. Best-effort and idempotent: it only ever flips a missing/false flag to `true` and never clobbers other `~/.claude.json` content. Opt out with `false`. Claude-only. |
+| `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` - takes effect on the next `ironbee install`. Claude-only. |
+| `claude.trustWorkspace.enable` | `boolean` | `true` | Whether `ironbee install` marks the project [trusted](/cli/clients/claude-code#workspace-trust) in Claude Code's machine-global `~/.claude.json` when it isn't already. Claude Code 2.1.x ignores a project's committed `permissions.allow` (the devtools + `Bash(ironbee *)` entries IronBee writes) until the workspace is trusted, and the trust dialog doesn't re-appear once onboarding has been seen - so without this the entries stay silently disabled and the agent gets prompted on every devtools/`ironbee` call. Best-effort and idempotent: it only ever flips a missing/false flag to `true` and never clobbers other `~/.claude.json` content. Opt out with `false`. Claude-only. |
 
 ---
 
@@ -455,7 +459,7 @@ Controls how the Codex verification cycle is driven. Manage with `ironbee codex 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `codex.verifier.mode` | `string` | `sub-agent` | How the Codex verification cycle runs. `"sub-agent"` (default) delegates to the [`ironbee-verifier`](/cli/clients/codex) custom agent (per-agent MCP, slim delegation skill/rule/command), keeping the heavy devtools output out of the main conversation. `"main-agent"` makes the **main** agent drive the devtools tools directly (session-level MCP server, no verifier sub-agent, inline skill/rule/command) — the Cursor-style fallback for when Codex's sub-agent machinery regresses. Re-renders the Codex client. Codex-only. |
+| `codex.verifier.mode` | `string` | `sub-agent` | How the Codex verification cycle runs. `"sub-agent"` (default) delegates to the [`ironbee-verifier`](/cli/clients/codex) custom agent (per-agent MCP, slim delegation skill/rule/command), keeping the heavy devtools output out of the main conversation. `"main-agent"` makes the **main** agent drive the devtools tools directly (session-level MCP server, no verifier sub-agent, inline skill/rule/command) - the Cursor-style fallback for when Codex's sub-agent machinery regresses. In `sub-agent` mode the devtools server is also written at session level in `.codex/config.toml`, because Codex 0.154 and later ignore the MCP servers in an agent file. Re-renders the Codex client. Codex-only. |
 
 ---
 
@@ -481,7 +485,7 @@ All cycles are served by a single **`ironbee-devtools`** compose MCP server, cus
 </Note>
 
 <Info>
-  The legacy per-cycle keys (`browserDevTools`, `nodeDevTools`, `pythonDevTools`, `backendDevTools`, `androidDevTools`, `terminalDevTools`) still exist for back-compat but **no longer feed the compose server** — use `ironbeeDevTools` to customize the one server that serves every cycle.
+  The legacy per-cycle keys (`browserDevTools`, `nodeDevTools`, `pythonDevTools`, `backendDevTools`, `androidDevTools`, `terminalDevTools`) still exist for back-compat but **no longer feed the compose server** - use `ironbeeDevTools` to customize the one server that serves every cycle.
 </Info>
 
 ---
@@ -491,7 +495,7 @@ All cycles are served by a single **`ironbee-devtools`** compose MCP server, cus
 These sections auto-enable when a collector is configured and rarely need manual tuning. Browse them with `ironbee config list` or the [TUI](/cli/guides/interactive-mode) Configuration area:
 
 - **`recording:`** session recording for the browser and Android cycles (`recording.enable`); the node, python, backend, and terminal cycles never trigger it.
-- **`jobQueue:`** the file-backed background queue that feeds the collector (`jobQueue.enable`, flush thresholds).
+- **`jobQueue:`** the file-backed background queue that feeds the collector: `jobQueue.enable`, and the flush thresholds `jobQueue.autoFlushSizeBytes` (default `32768`) and `jobQueue.autoFlushIntervalSeconds` (default `60`).
 
 ---
 
@@ -499,7 +503,7 @@ These sections auto-enable when a collector is configured and rarely need manual
 
 ### Ignore extra files
 
-Test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`) are **excluded by default** — you don't need to list them. Add `ignoredVerifyPatterns` only to skip *more* paths (e.g. generated code, fixtures); your entries are unioned with the built-in test-file defaults:
+Test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`, `**/test_*.py`, `**/*_test.py`, `**/tests/**`, `**/conftest.py`) are **excluded by default** - you don't need to list them. Add `ignoredVerifyPatterns` only to skip *more* paths (e.g. generated code, fixtures); your entries are unioned with the built-in test-file defaults:
 
 ```json
 {
@@ -516,7 +520,7 @@ Test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`) 
 }
 ```
 
-Or use the CLI: `ironbee browser disable && ironbee backend enable`.
+Or use the CLI: `ironbee browser disable && ironbee backend enable`. With the browser off and no `verifyPatterns` of its own, the backend cycle watches every code file, so it verifies on every code change.
 
 ### Monitoring only (no enforcement)
 

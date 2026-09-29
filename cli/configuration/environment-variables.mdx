@@ -1,5 +1,5 @@
 ---
-title: Environment Variables
+title: Environment variables
 description: Environment variables IronBee reads for CI, secrets, debugging, and project resolution.
 ---
 
@@ -14,10 +14,12 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 | `IRONBEE_SERVICE_API_KEY` | Supplies [`service.apiKey`](/cli/configuration/configuration#service-identity) (the shared account API key) without committing it. **Takes precedence over every config layer.** The credential of choice for CI and the [GitHub Action](/github-action/get-started/getting-started). |
 | `IRONBEE_SERVICE_OAUTH_TOKEN` | Supplies [`service.oauthToken`](/cli/configuration/configuration#service-identity) (the personal token from [`ironbee login`](/cli/guides/authentication)) without committing it. When both credentials are set, the OAuth token wins. |
 | `IRONBEE_SERVICE_DOMAIN` | Supplies [`service.domain`](/cli/configuration/configuration#service-identity), the stage selector every service URL derives from. |
-| `IRONBEE_API_KEY` | Legacy — supplies the deprecated `collector.apiKey` fallback, which is read **only when `service.apiKey` is unset** (a recent `ironbee login` writes `service.*`, which then wins). One exception: [`ironbee verify`](/cli/guides/verification-jobs#credentials) reads it as a deliberate top-priority override. |
-| `IRONBEE_OAUTH_TOKEN` | Legacy — supplies the deprecated `collector.oauthToken` fallback; same caveat as above. |
+| `IRONBEE_API_KEY` | Legacy - supplies the deprecated `collector.apiKey` fallback, which is read **only when `service.apiKey` is unset** (a recent `ironbee login` writes `service.*`, which then wins). One exception: [`ironbee verify`](/cli/guides/verification-jobs#credentials) reads it as a deliberate high-priority override, although an OAuth token still wins. |
+| `IRONBEE_OAUTH_TOKEN` | Legacy - supplies the deprecated `collector.oauthToken` fallback; same caveat as above. |
 | `IRONBEE_TELEMETRY` | Set to `false` to turn off [anonymous CLI telemetry](/cli/advanced/telemetry) for this shell/run, a per-session alternative to the `telemetry.enable` config key. |
-| `IRONBEE_LOG_LEVEL` | Logging verbosity. Set to `debug` to see detailed output when troubleshooting. |
+| `IRONBEE_LOG_LEVEL` | Logging verbosity: `debug`, `info` (default), `warn` or `error`. Set to `debug` to see detailed output when troubleshooting. |
+
+An override set to an empty string counts as unset.
 
 ```bash
 # CI: provide the API key from a secret, no file commit
@@ -33,7 +35,7 @@ ironbee install --mode enforce --yes
 
 ## Verification jobs
 
-[`ironbee verify`](/cli/guides/verification-jobs) — the cloud verification-job runner — reads two extra overrides of its own, plus the GitHub Actions context:
+[`ironbee verify`](/cli/guides/verification-jobs) - the cloud verification-job runner - reads two extra overrides of its own, plus the GitHub Actions context:
 
 | Variable | Effect |
 |----------|--------|
@@ -46,7 +48,7 @@ ironbee install --mode enforce --yes
 
 ## Issue-tracker credentials
 
-The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their secrets in your global config (`~/.ironbee/config.json`, written by `ironbee integrations <provider> setup`). In CI — or anywhere you'd rather source them from a vault — supply them via env instead. Like the collector credentials, these **take precedence over every config layer**:
+The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their secrets in your global config (`~/.ironbee/config.json`, written by `ironbee integrations <provider> setup`). In CI - or anywhere you'd rather source them from a vault - supply them via env instead. Like the collector credentials, these **take precedence over every config layer**:
 
 | Variable | Effect |
 |----------|--------|
@@ -54,17 +56,17 @@ The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their
 | `IRONBEE_JIRA_PAT` | Supplies `integrations.jira.pat` (Jira **Server/DC** personal access token). |
 | `IRONBEE_LINEAR_API_KEY` | Supplies `integrations.linear.apiKey` (Linear personal API key or OAuth token). |
 
-GitHub needs no credential variable — it rides the `gh` CLI's own auth (GitHub Actions ships a `GH_TOKEN`).
+GitHub needs no credential variable - it rides the `gh` CLI's own auth (GitHub Actions ships a `GH_TOKEN`).
 
 ---
 
 ## Config placeholder bridges
 
-[Config placeholders](/cli/configuration/configuration#placeholders-param-env-built-ins) let a committed config carry references that resolve from the environment — the way to override a team default per developer or per CI run without editing a file:
+[Config placeholders](/cli/configuration/configuration#placeholders-param-env-built-ins) let a committed config carry references that resolve from the environment - the way to override a team default per developer or per CI run without editing a file:
 
 | Variable pattern | Feeds | Notes |
 |------------------|-------|-------|
-| `IRONBEE_PARAM_<NAME>` | `${param:<name>}` references | Overrides the [`params`](/cli/configuration/configuration#core-options) block for that key. `<name>` maps case-insensitively — `IRONBEE_PARAM_API_URL` fills `${param:api_url}`. |
+| `IRONBEE_PARAM_<NAME>` | `${param:<name>}` references | Overrides the [`params`](/cli/configuration/configuration#core-options) block for that key. `<name>` maps case-insensitively - `IRONBEE_PARAM_API_URL` fills `${param:api_url}`. |
 | `IRONBEE_ENV_<NAME>` | `${env:<name>}` references | The **only** environment source a `${env:}` reference can read. `IRONBEE_ENV_STAGING_URL` fills `${env:staging_url}`. |
 
 ```bash
@@ -73,7 +75,7 @@ export IRONBEE_PARAM_API_URL=https://api.staging.internal
 ```
 
 <Note>
-  The `IRONBEE_PARAM_*` / `IRONBEE_ENV_*` prefixes are **reserved for placeholder input** — the implied prefix means arbitrary environment variables (secrets, tokens) are structurally unreachable from config text. An empty value counts as unset (the reference falls through to its `:-` default). IronBee's own operational env vars never use these prefixes.
+  The `IRONBEE_PARAM_*` / `IRONBEE_ENV_*` prefixes are **reserved for placeholder input** - the implied prefix means arbitrary environment variables (secrets, tokens) are structurally unreachable from config text. An empty value counts as unset (the reference falls through to its `:-` default). IronBee's own operational env vars never use these prefixes.
 </Note>
 
 ---
@@ -82,7 +84,7 @@ export IRONBEE_PARAM_API_URL=https://api.staging.internal
 
 When a hook or command needs to know which project it's acting on, IronBee resolves the directory in this order:
 
-1. The client's own variable — `CLAUDE_PROJECT_DIR` (Claude Code), `CURSOR_PROJECT_DIR` (Cursor), or `CODEX_PROJECT_DIR` (Codex) — set automatically by the host
+1. The client's own variable - `CLAUDE_PROJECT_DIR` (Claude Code), `CURSOR_PROJECT_DIR` (Cursor), or `CODEX_PROJECT_DIR` (Codex) - set automatically by the host
 2. `IRONBEE_PROJECT_DIR`, an explicit override you can set
 3. The current working directory
 
@@ -96,19 +98,19 @@ Rarely needed, mostly for internal wiring and test harnesses:
 
 | Variable | Effect |
 |----------|--------|
-| `IRONBEE_CLIENT` | Tells a hook runner which client it's acting as (the `--client` flag overrides it). Set by the installed hook config. |
-| `IRONBEE_RUNTIME_LOCATION` | Overrides [`runtime.location`](/cli/configuration/configuration#runtime) for this process — `external` (default, per-session data under `~/.ironbee/projects/<token>/`) or `in-project` (`<project>/.ironbee/sessions/`). Takes precedence over the config layers; mainly used by the test suite. |
+| `IRONBEE_CLIENT` | Tells a hook runner which client it's acting as, when the hook command doesn't pass `--client`. The installed hooks pass `--client`, so this is only a fallback. |
+| `IRONBEE_RUNTIME_LOCATION` | Overrides [`runtime.location`](/cli/configuration/configuration#runtime) for this process - `external` (default, per-session data under `~/.ironbee/projects/<token>/`) or `in-project` (`<project>/.ironbee/sessions/`). Takes precedence over the config layers; mainly used by the test suite. |
 | `IRONBEE_BIN` | Overrides the path to the `ironbee` binary used when spawning background workers. |
 | `IRONBEE_COLLECTOR` | Set to `false` to disable Collector sends entirely (used by the test harness). |
-| `IRONBEE_UPDATE_CHECK` | Set to `false` to skip the npm-registry version check (and its update banner) that runs after a command. Worth setting for scripts that spawn `ironbee` in a loop — each check keeps the event loop alive for up to a 3 s round trip. |
-| `IRONBEE_DEVTOOLS_MCP` | Points the `ironbee-devtools` MCP server at your own entry without writing an [`ironbeeDevTools.mcp`](/cli/configuration/configuration#devtools-mcp-overrides) block. A full JSON object: `{"command": "...", "args": [...], "env": {...}}`. Read at install / re-render time, so the resolved command is baked into the artifact — export it when you run `ironbee install`. Wins over the config block; IronBee's invariant env is still layered on top. Mainly for editor extensions that bundle DevTools. |
+| `IRONBEE_UPDATE_CHECK` | Set to `false` to skip the npm-registry version check (and its update banner) that runs after a command. Worth setting for scripts that spawn `ironbee` in a loop - each check keeps the event loop alive for up to a 3 s round trip. |
+| `IRONBEE_DEVTOOLS_MCP` | Points the `ironbee-devtools` MCP server at your own entry without writing an [`ironbeeDevTools.mcp`](/cli/configuration/configuration#devtools-mcp-overrides) block. A full JSON object: `{"command": "...", "args": [...], "env": {...}}`. Read at install / re-render time, so the resolved command is baked into the artifact - export it when you run `ironbee install`. Wins over the config block; IronBee's invariant env is still layered on top. Mainly for editor extensions that bundle DevTools. |
 | `IRONBEE_DEVTOOLS_ENTRY` | Simpler form of the above: a path, rendered as `node <path>`. Used only when `IRONBEE_DEVTOOLS_MCP` is unset or malformed. |
-| `IRONBEE_VCS_STAMP_BUDGET_MS` | Total budget (ms, default `3000`) for the git-ref stamp taken at the start of each agent turn. An ops escape hatch — raise it on a heavily loaded machine where the stamp would otherwise go partial and drop `repo`/`host` from the [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues). |
+| `IRONBEE_VCS_STAMP_BUDGET_MS` | Total budget (ms, default `3000`) for the git-ref stamp taken at the start of each agent turn. An ops escape hatch - raise it on a heavily loaded machine where the stamp would otherwise go partial and drop `repo`/`host` from the [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues). |
 | `IRONBEE_CURSOR_USER_DIR` | Overrides where IronBee looks for Cursor's local user data (the read-only `state.vscdb` store it reads the signed-in user's email from, for event attribution). Defaults to Cursor's standard per-OS location; mainly for non-standard installs and tests. |
 | `IRONBEE_NO_AUTO_RERENDER` | Disables the [auto re-render](/cli/guides/managing-projects#auto-re-rendering-after-an-upgrade) of registered projects after a structure-changing upgrade. A kill switch for CI and locked-down machines. |
-| `IRONBEE_NO_PREFETCH` | Global kill-switch for the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) — any value other than empty/`0`/`false` skips the npx cache warm on `install`, upgrade re-renders, `ironbee browser enable`, and `ironbee devtools prefetch`. |
-| `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically — `1`/`true` = active, `0`/`false` = inactive — bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |
-| `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render — belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
+| `IRONBEE_NO_PREFETCH` | Global kill-switch for the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) - any value other than empty/`0`/`false` skips the npx cache warm on `install`, upgrade re-renders, `ironbee browser enable`, and `ironbee devtools prefetch`. |
+| `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically - `1`/`true` = active, `0`/`false` = inactive - bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |
+| `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render - belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
 
 ---
 

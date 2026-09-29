@@ -1,0 +1,56 @@
+---
+title: Search
+description: Jump to a project with the command palette, or query your account's data with the query builder.
+---
+
+The console has two kinds of search:
+- the **command palette**, for jumping to a project
+- the **Search** page, for querying the data behind your projects
+
+---
+
+## Command palette
+
+Press `⌘K` (or `Ctrl+K`), or click **Search projects or anything...** in the top bar.
+
+- Type at least 3 characters to find a project by name. Picking one opens its [Verifications](/console/verifications) tab.
+- With an empty query, the palette shows your **Recent** projects and **Navigation** shortcuts: **Go to Projects**, **Go to Analyses**, **Go to Findings** and **Go to Recommendations**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/search-command-palette-light.png" alt="The command palette with an empty query, showing a Recent project and the Navigation shortcuts" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/search-command-palette-dark.png" alt="The command palette with an empty query, showing a Recent project and the Navigation shortcuts" />
+
+---
+
+## The Search page
+
+Open **Search** in the sidebar to build a query over your account's data.
+
+1. Under **Data Sources**, pick what to query: users, projects, sessions, verifications, fixes, findings, recommendations, pull requests or issues.
+2. Choose **List** to see rows, or **Aggregate** to count and summarize.
+3. Build the query:
+   - In **List** mode, pick the **Columns** to show.
+   - In **Aggregate** mode, add a **Group by** dimension and **Metrics** such as `COUNT(*)`.
+   - Add **Filters** to narrow the rows in either mode.
+4. Pick a time range. It starts at **Last 7 Days**.
+5. Click **Run query**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/search-query-builder-light.png" alt="The Search page with Verifications selected under Data Sources, an Aggregate query grouped by Project with a COUNT(*) metric, and its results as a table" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/search-query-builder-dark.png" alt="The Search page with Verifications selected under Data Sources, an Aggregate query grouped by Project with a COUNT(*) metric, and its results as a table" />
+
+The **Results** show as a **Table**. An **Aggregate** query that groups by one dimension, by a **Time bucket**, or by both can also show as a **Chart**. Click **Export** to download the results as **CSV** or **PDF**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/insights/search-results-chart-light.png" alt="Aggregate results grouped by Status shown as a Chart, with the Table and Chart toggle and the Export button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/search-results-chart-dark.png" alt="Aggregate results grouped by Status shown as a Chart, with the Table and Chart toggle and the Export button" />
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Projects" icon="layers" href="/console/projects">
+    Every project with its recent runs.
+  </Card>
+  <Card title="Verifications" icon="list-checks" href="/console/verifications">
+    Every verification run of a project.
+  </Card>
+</CardGroup>

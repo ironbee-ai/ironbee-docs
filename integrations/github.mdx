@@ -1,26 +1,63 @@
 ---
 title: GitHub App
-description: Install the IronBee GitHub App so verification runs can read your code, resolve the pull request behind a commit, and report back on it.
+description: Install the IronBee GitHub App so verification runs can read your code, find the pull request behind a deployment, and report back on it.
 icon: "/images/icons/github.svg"
 ---
 
-The IronBee GitHub App is what connects a verification run to the code it is verifying. It lets the cloud agent check out your repository during a run, resolve the pull request behind a deployed commit so there is a real changeset to work from, and report the verdict back on the commit and the pull request.
+The IronBee GitHub App connects your repositories to IronBee. It gives IronBee four things:
 
-It pairs with the [Vercel integration](/integrations/vercel) and the [Netlify extension](/integrations/netlify), and it is also what binds an [`ironbee verify`](/cli/guides/verification-jobs) run to your repository.
+- **Repository access.** A verification run checks out the commit it verifies. A private repository needs the App for that; a public one doesn't.
+- **The pull request behind a deployment.** For [Vercel](/integrations/vercel) and [Netlify](/integrations/netlify) deployments, the App finds the pull request behind the deployed commit. The run then verifies the pull request's changes.
+- **Checks and comments.** For Vercel and Netlify deployments, IronBee opens a check on the commit and posts the result as a pull request comment.
+- **Sign-in with GitHub.** You can create your IronBee account and sign in with your GitHub account.
+
+The [IronBee GitHub Action](/github-action/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same installation to check out private repositories.
 
 ---
 
 ## Install the App
 
-Open the Console at **Settings → Integrations** and select **Install the GitHub App** under the GitHub card, or install it directly from [github.com/apps/ironbee-ai](https://github.com/apps/ironbee-ai).
+Owners and admins can start from the console. Open **Integrations** in the sidebar, select **GitHub**, and click **Install the GitHub App**. During onboarding, the same step is **Connect GitHub**. You can also start on GitHub, from the [IronBee GitHub App](https://github.com/apps/ironbee-ai) page.
 
-1. On GitHub, choose the **organization or user account** to install into.
-2. Choose the repositories: **all repositories**, or a selected set. Only repositories in that scope are ever read.
-3. GitHub sends you back to IronBee, where you pick the **IronBee account** the installation belongs to, and select **Connect**.
+<img className="ib-shot" src="/images/integrations/github-app-page.png" alt="The IronBee AI GitHub App page on GitHub" />
+
+<Steps>
+  <Step title="Install on GitHub">
+    Choose the organization or user account to install into, and the repositories: all repositories, or a selected set. IronBee only reads repositories in that scope.
+  </Step>
+  <Step title="Connect it to your IronBee account">
+    GitHub sends you back to IronBee.
+    - If you aren't signed in, IronBee asks **Which IronBee account is this for?** **Sign in** connects the installation to your account. **Continue with GitHub** uses the IronBee user of your GitHub account and creates one if it has none.
+    - On **Connect GitHub to IronBee**, pick the **IronBee account** and click **Connect**. When you installed the App yourself and administer exactly one account, this happens automatically.
+
+    <img className="ib-shot ib-shot-light" src="/images/console/integrations/github-choose-account-light.png" alt="The Which IronBee account is this for? screen, with the Sign in and Continue with GitHub buttons" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/integrations/github-choose-account-dark.png" alt="The Which IronBee account is this for? screen, with the Sign in and Continue with GitHub buttons" />
+
+  </Step>
+  <Step title="Enable repositories">
+    **GitHub connected** asks which repositories to verify. Click **Enable projects** to pick them now, or **Later**. When the connection happened automatically, the console opens the repository list for you.
+  </Step>
+</Steps>
 
 <Note>
-  Binding an installation to an account requires the **owner** or **admin** role on it. If you install into an organization you don't administer on GitHub, an org admin has to approve the request before the installation exists.
+  Connecting an installation requires the **owner** or **admin** role in IronBee. If a different GitHub account installed the App, IronBee asks you to **Confirm this installation is yours**. Click **Confirm with GitHub** and authorize with the GitHub account that ran the installation.
 </Note>
+
+---
+
+## Enable repositories
+
+A repository becomes an IronBee project when you enable it. You can do it in two places:
+
+- **Integrations > GitHub**: expand the installation, open the actions menu (the three dots) next to a repository and choose **Enable**.
+- **Projects > New project**: pick the GitHub installation, then the repositories.
+
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/github-repositories-light.png" alt="Integrations, GitHub: the acme installation expanded, with its repositories marked Not enabled and a repository's actions menu open on Enable" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/github-repositories-dark.png" alt="Integrations, GitHub: the acme installation expanded, with its repositories marked Not enabled and a repository's actions menu open on Enable" />
+
+Each project gets a verification type, **Web** or **API**. The project is named after the repository. Runs from the GitHub Action and from `ironbee verify` in that repository report to it.
+
+Each repository's row shows its **Verification type** and its **Status**, **Enabled** or **Not enabled**. In the row's actions menu, **Edit type** changes the type and **Disable** stops verification while keeping the project and its history. The gear icon, **Project settings**, opens the project.
 
 ---
 
@@ -28,49 +65,53 @@ Open the Console at **Settings → Integrations** and select **Install the GitHu
 
 | Access | Why |
 |--------|-----|
-| Repository contents (read) | The agent checks out the commit under verification during a run. |
-| Pull requests (read and write) | Resolving the pull request behind a commit for the changeset, and posting the result as a comment. |
-| Checks (read and write) | Opening the live **IronBee Verification** check on the commit and completing it with the verdict. |
+| Repository contents (read) | Check out the commit under verification during a run |
+| Pull requests (read and write) | Find the pull request behind a commit, and post the result as a comment |
+| Checks (read and write) | Open the **IronBee Verification** check on the commit and complete it with the verdict |
+| Email addresses (read) | Sign up and sign in with GitHub |
 
-Access is read-only where it can be: IronBee never pushes to your repository, and never opens or merges a pull request.
+The App never pushes to your repository and never opens or merges a pull request. When the GitHub Action fixes a finding, the action commits the fix with your workflow's own token.
 
 ---
 
 ## What appears on the pull request
 
-**The check.** When a run is queued, IronBee opens a check run named **IronBee Verification** on the deployed commit, so the pull request shows a live in-progress state while the agent works. When the run finishes, that same check is completed with the verdict:
+This section applies to Vercel and Netlify deployments. Runs from the GitHub Action report through the workflow instead: the job result and the action's own report comment. See [Running in CI](/github-action/guides/running-in-ci#the-report).
 
-| IronBee verdict | Check conclusion | Check title |
-|-----------------|------------------|-------------|
-| `pass` | Success | Verification passed |
-| `fail` | Failure | Verification failed |
-| `not_applicable` | Neutral | Verification not applicable |
-| Verification could not run | Neutral | IronBee could not run this verification |
+**The check.** When a run starts, IronBee opens a check on the deployed commit:
+- It's named **IronBee Verification** for a Web project, and **IronBee Verification · API** for an API project.
+- While the agent works, it reads **IronBee is verifying this deployment**.
+- When the run ends, the same check is completed:
+
+| Result | Check conclusion | Check title |
+|--------|------------------|-------------|
+| Pass | Success | Verification passed |
+| Fail | Failure | Verification failed |
+| Not applicable | Neutral | Verification not applicable |
+| The run couldn't complete | Neutral | IronBee could not run this verification |
 | Cancelled | Cancelled | Verification canceled |
 
-The check's **Details** link opens the session in the Console, where the timeline, the replay, the network payloads, and the files behind each finding live.
+When IronBee doesn't start a run for a deployment, the check reads **IronBee did not verify this deployment** and gives the reason. The check's **Details** link opens the run's [verification detail](/console/verification-detail) page in the console.
 
-**The comment.** On top of the check, and only for a real verdict, IronBee posts a single comment on the open pull request for that commit - what was verified, what was found, and which files the findings came from. It is one comment, edited in place on every re-run, rather than a new comment per run. A cancelled run or an internal error gets the quiet neutral check and no comment.
+**The comment.** For a real verdict, IronBee also posts one comment on the open pull request for that commit, and edits it in place on every re-run. The comment contains:
+- the verdict headline
+- a **Summary**
+- the **Issues**
+- the pull request's **Important files changed**
+- a link to **View the full verification**
+
+A Web and an API project on the same commit each get their own check and comment. A cancelled run, or one that couldn't complete, gets the check only.
 
 ---
 
 ## Managing the installation
 
-**Settings → Integrations** lists every connected GitHub installation with its organization, the repositories it covers, its status (**Active** or **Suspended**), and the date it was connected. The external-link icon opens the installation's settings on GitHub.
+**Integrations > GitHub** lists every connected installation with its **Organization**, **Enabled repositories**, **Status** (**Active** or **Suspended**) and when it was **Connected**. **Manage on GitHub** opens the installation's settings on GitHub, and **Configure the GitHub App** changes its repositories.
 
-Changes on GitHub's side flow back automatically:
-
-- Adding or removing repositories refreshes the covered repository list.
-- Suspending the installation on GitHub shows it as **Suspended**; unsuspending restores it.
-- Uninstalling the App marks the installation as uninstalled in IronBee, and runs stop being reported to GitHub.
-
-If you change the repository selection from GitHub's own settings page, IronBee refreshes the list and confirms it with a **GitHub installation updated** notice when you return to the Console.
-
----
-
-## Beyond deployments
-
-The same installation is what lets [`ironbee verify`](/cli/guides/verification-jobs) bind a run to your repository and commit, so a verdict lands next to the right code. If a `verify` run fails with a repository-checkout error or the `NO_GITHUB_INSTALLATION` error code, the App is either not installed for that repository or the repository is outside its scope - grant it access, or re-run with `--no-repo`.
+Changes on GitHub flow back automatically:
+- Adding or removing repositories refreshes the list. The console confirms it with **GitHub installation updated** when you return.
+- Suspending the installation on GitHub shows it as **Suspended**. Unsuspending restores it.
+- When a repository leaves the installation's scope, or the App is uninstalled, its project becomes **Not active**. It keeps its history and settings, and you can enable it again later.
 
 ---
 
@@ -78,10 +119,12 @@ The same installation is what lets [`ironbee verify`](/cli/guides/verification-j
 
 | Symptom | Likely cause |
 |---------|--------------|
-| The run happens, but nothing appears on the pull request | The App isn't installed for that repository, or the repository is outside the installation's scope. |
-| The check appears, but there is no comment | Comments are posted only for a real verdict, and only when an open pull request heads the commit. A push straight to a branch gets the check alone. |
-| The verification works from a thin changeset | No pull request heads the commit, so the run falls back to the commit's own parent. |
-| `NO_GITHUB_INSTALLATION` from `ironbee verify` | No active installation covers the repository the run tried to bind to. |
+| A run fails with "repo checkout failed", or the action's report says the run couldn't read the repository | The repository is private and the App doesn't cover it. Grant the App access, or verify without the repository: `ironbee_bind_repository: false` in the GitHub Action, `--no-repo` with `ironbee verify` |
+| A GitHub Action run shows no IronBee check | Expected. Action runs report through the job result and the action's comment |
+| A Vercel or Netlify run shows nothing on the pull request | The App isn't installed for the repository, or the repository is outside the installation's scope |
+| The check appears, but there's no comment | Comments are posted only for a real verdict, and only when an open pull request heads the commit |
+| The verification works from a thin changeset | No pull request heads the commit, so the run compares against the commit's parent |
+| **Already connected elsewhere** | The installation is connected to another IronBee account. Uninstall and reinstall the App to move it |
 
 ---
 
@@ -89,12 +132,12 @@ The same installation is what lets [`ironbee verify`](/cli/guides/verification-j
 
 <CardGroup cols={2}>
   <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
-    Verify every preview deployment as a Vercel deployment check.
+    Verify preview deployments as a Vercel deployment check.
   </Card>
   <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
-    Verify every deploy preview, with the verdict on the deploy summary.
+    Verify deploy previews, with the result on the deploy page.
   </Card>
-  <Card title="Verification Jobs" icon="shield-check" href="/cli/guides/verification-jobs">
-    Start the same cloud verification from your shell or CI with `ironbee verify`.
+  <Card title="GitHub Action" icon="github" href="/github-action/get-started/getting-started">
+    Verify every push and pull request from your own workflow.
   </Card>
 </CardGroup>

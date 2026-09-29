@@ -5,3 +5,8 @@
 # Draft content
 drafts/
 *.draft.mdx
+
+# Internal files, not published
+AGENTS.md
+DOCUMENTATION_STRUCTURE.md
+.atlas-analysis.json
