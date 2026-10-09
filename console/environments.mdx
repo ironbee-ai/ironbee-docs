@@ -1,6 +1,7 @@
 ---
 title: Environments
 description: The deployments a project is verified against, and what a run is told about each one.
+keywords: ["staging", "preview", "production", "base URL"]
 ---
 
 An environment is one deployment of a project that runs are verified against, such as `preview`, `staging` or `production`. Each verification run is against one environment. The run uses:
@@ -96,6 +97,8 @@ Beside the editor, or below it on a narrow screen, the environment page shows th
 <img className="ib-shot ib-shot-dark" src="/images/console/projects/environment-briefing-dark.png" alt="Run briefing for staging, listing the environment description, the app URL property, three variables with their values, and four secrets named without their values" />
 
 No secret value appears in the briefing or in the run.
+
+A [scenario](/console/scenario-references#references) reads the variables, secrets and properties of the environment you run it against. Before a run starts, the run dialog checks that the environment defines every variable, secret and property the scenario's actions read.
 
 ---
 

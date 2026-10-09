@@ -1,6 +1,7 @@
 ---
 title: Verifications
 description: Every verification run of a project in one list, with its trigger, status and result.
+keywords: ["test runs", "verification jobs", "run history"]
 ---
 
 A project's **Verifications** tab lists every verification run of the project:
@@ -27,7 +28,7 @@ Open **Projects** and click a project. It opens on its **Verifications** tab. Cl
 
 | Column | What it shows |
 |--------|---------------|
-| **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id |
+| **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id. A [scenario](/console/scenarios) run is named after its scenario, with a **Scenario** mark under it |
 | **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **API**, **CLI** or **Console** |
 | **Source**, **Branch**, **Commit**, **PR** | The repository, branch, commit and pull request the run verified, for runs tied to a GitHub repository |
 | **Type** | **Web** or **API**. For CLI cycles: browser verification shows **Web**, backend shows **API**, other platforms show `-` |
@@ -49,7 +50,7 @@ You can sort by **Name**, **Status** and **Started**. The newest runs come first
 | Starting | The run's environment is being prepared |
 | Running | The agent is verifying. A run on IronBee can be watched live |
 | Completed | The run ended with a verdict |
-| Failed | The run ended without a verdict, because of an error or a timeout |
+| Failed | The run ended without a verdict, because of an error or a timeout. A scenario run shows **Run error** instead |
 | Cancelled | The run was stopped before it finished |
 | Interrupted | CLI only: the cycle closed without a verdict |
 | Unknown | CLI only: the cycle never reported an end |
@@ -63,7 +64,7 @@ You can sort by **Name**, **Status** and **Started**. The newest runs come first
 | Pass | The change works as intended |
 | Fail | The verification found issues |
 | Not applicable | The change left nothing to verify. The run gives the reason |
-| Soft fail | A saved scenario ran to the end, but one of its soft assertions failed. It isn't a clean pass |
+| Soft fail | A [scenario](/console/scenario-runs#the-outcome) ran to the end, but one of its soft asserts failed. It isn't a clean pass |
 | Unknown | No verdict was recorded |
 
 ---
@@ -107,6 +108,10 @@ The run appears in the list with the **Console** trigger.
   - The environment needs a URL that a cloud run can reach. A local or private address is refused.
   - If the project has no environments yet, the dialog says so and links to them with **Open environments**. Add one with the URL to verify. See [Environments](/console/environments).
 </Note>
+
+<Tip>
+  An instant verification runs once. To run the same flow again and again, step by step, write it as a [scenario](/console/scenarios).
+</Tip>
 
 ---
 

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
 :root {
   --default-border-color: var(--gray-200);
 }
@@ -18,18 +20,40 @@
   padding-left: 0 !important;
 }
 
+/* Header logo: the bee mark is the image; the wordmark is Orbitron text, so it
+   takes the theme's color. The second content line hides it from screen readers. */
 img.nav-logo {
-  max-width: 220px;
-  height: auto;
+  height: 48px !important;
+  width: auto;
 }
-/* Brand marks used as page icons (Vercel, GitHub): Mintlify renders a custom
-   SVG icon as a plain <img>, so the file's own fill can't follow the theme.
-   Force the mark black on light and white on dark, the way the site logo works. */
-img[src^='/images/icons/'] {
+
+a:has(> img.nav-logo) {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+a:has(> img.nav-logo)::after {
+  content: 'IronBee';
+  content: 'IronBee' / '';
+  font-family: 'Orbitron', sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #0a0b0b;
+}
+
+.dark a:has(> img.nav-logo)::after {
+  color: #f5f5f5;
+}
+/* Page icons render as <img>, so force them black on light and white on dark.
+   Substring match: production serves them from the CDN, not /images/icons/. */
+img[src*='/images/icons/'] {
   filter: brightness(0);
 }
 
-.dark img[src^='/images/icons/'] {
+.dark img[src*='/images/icons/'] {
   filter: brightness(0) invert(1);
 }
 
@@ -113,6 +137,94 @@ html:not(.dark) img.ib-shot-dark {
 #mobile-nav .rounded-xl,
 #mobile-nav .rounded-\[0\.85rem\] {
   border-radius: 4px !important;
+}
+
+/* On this page: a framed panel whose rail marks the section you're reading.
+   The label matches the home page eyebrows. */
+#table-of-contents > nav {
+  padding: 14px 12px 10px 14px;
+  border: 1px solid rgb(15 23 42 / 0.1);
+  border-radius: 4px;
+  background: rgb(15 23 42 / 0.02);
+}
+
+.dark #table-of-contents > nav {
+  border-color: rgb(255 255 255 / 0.09);
+  background: rgb(255 255 255 / 0.02);
+}
+
+#table-of-contents > nav > h2 button,
+#table-of-contents > nav > h2 button span {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #687180;
+}
+
+.dark #table-of-contents > nav > h2 button,
+.dark #table-of-contents > nav > h2 button span {
+  color: #9aa5b1;
+}
+
+#table-of-contents-content {
+  margin-top: 10px;
+  border-left: 1px solid rgb(15 23 42 / 0.12);
+}
+
+.dark #table-of-contents-content {
+  border-left-color: rgb(255 255 255 / 0.12);
+}
+
+#table-of-contents-content ul,
+#table-of-contents-content li {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+#table-of-contents-content a {
+  margin-left: -1px;
+  padding-left: 12px !important;
+  padding-right: 6px;
+  border-left: 2px solid transparent;
+  color: #5b6472;
+}
+
+#table-of-contents-content ul a {
+  padding-left: 24px !important;
+  color: #687180;
+}
+
+.dark #table-of-contents-content a {
+  color: #9aa5b1;
+}
+
+.dark #table-of-contents-content ul a {
+  color: #7d8794;
+}
+
+#table-of-contents-content a:hover {
+  color: #0b0c0e;
+}
+
+.dark #table-of-contents-content a:hover {
+  color: #f0f4f8;
+}
+
+#table-of-contents-content a.text-primary,
+#table-of-contents-content a.text-primary:hover {
+  border-left-color: #0b0c0e;
+  border-radius: 0 4px 4px 0;
+  background: rgb(15 23 42 / 0.05);
+  color: #0b0c0e;
+}
+
+.dark #table-of-contents-content a.text-primary,
+.dark #table-of-contents-content a.text-primary:hover {
+  border-left-color: #f0f4f8;
+  background: rgb(255 255 255 / 0.06);
+  color: #f0f4f8;
 }
 
 /* ────────────────────────────────────────────────────────────────────────

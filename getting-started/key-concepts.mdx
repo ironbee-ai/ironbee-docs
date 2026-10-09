@@ -11,6 +11,8 @@ IronBee organizes everything around **projects**. A project collects two kinds o
 flowchart TD
     A[Account] --> P[Project]
     P --> E[Environments, variables, secrets]
+    P --> SC[Scenarios]
+    SC --> R
     P --> R[Verification runs]
     R --> V[Result and evidence]
     P --> S[CLI sessions]
@@ -67,6 +69,17 @@ An **environment** is one deployment of a project that runs are verified against
 **Secrets** are credentials a run can use without seeing them: sign-in credentials, tokens, headers, a deployment protection bypass. They're written once and never shown again. See [Secrets](/console/secrets).
 
 Variables and secrets apply to all environments, or to one.
+
+---
+
+## Scenario
+
+A **scenario** is a flow written in plain words, such as "sign in, add a product to the cart and check the total", saved in a project. You write it once in the console and run it against one of the project's environments whenever you need:
+- **Setup** prepares the run, **Main** decides the verdict, and **Teardown** cleans up.
+- Each action is an **Act**, an **Assert**, an **Extract** or a **Wait**. A scenario can import another one to reuse it.
+- Each run is a verification run. Its result is **Soft fail** when only a soft assert failed.
+
+See [Scenarios](/console/scenarios). The CLI's [saved scenarios](/cli/guides/scenarios) are separate: your AI coding agent writes them into your repository.
 
 ---
 

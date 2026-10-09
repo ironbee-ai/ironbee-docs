@@ -1,0 +1,105 @@
+---
+title: Inputs, references and imports
+description: Pass values into a scenario, use variables and secrets in its actions, and reuse one scenario in another.
+---
+
+Most [scenarios](/console/scenarios) need values from outside their own rows: a secret to sign in with, a URL that differs by environment, a price read on one page and checked on the next, or a sign-in flow that another scenario already has.
+
+---
+
+## Inputs
+
+An input is a value a run passes in, such as a product name or a search term. Add inputs in **Scenario settings** with **Add input**:
+
+| Field | What it's for |
+|-------|---------------|
+| **Name** | How actions read it, with `@`. Letters, digits, underscore and dash |
+| **Description** | What the value is |
+| **Default value** | Used when a run doesn't pass one. Leave it empty and the input is required |
+
+An input without a default is required: **Run scenario** asks for it, and every scenario that imports this one must pass it. Renaming an input updates every row that reads it.
+
+When you [run a scenario](/console/scenario-runs#start-a-run), you type each input as plain text.
+
+---
+
+## Saved values
+
+An **Extract** reads a value from the app and saves it under the names in its **Save as** field. The actions after it can read the value with `@`. For example, an Extract saves `firstPrice` from the product list, and a later Assert checks that the cart total equals it.
+
+A value is available only to the rows after the one that writes it. If a row reads a value written later, the editor warns you, and a run that reaches that row ends in a run error.
+
+---
+
+## Outputs
+
+Outputs are the values a scenario gives back to the scenarios that import it. Add them in **Scenario settings** with **Add output**. An output is a value from an Extract in **Main**, or an output of an import in **Main**.
+
+---
+
+## References
+
+In an instruction, type `@` (or `{{`) at the start of a word. A picker lists everything the action can use, grouped as:
+- **Inputs**
+- **Saved values**
+- **Outputs of imported scenarios**
+- **Variables**
+- **Secrets**, with their fields
+- **Environment properties**
+
+Each entry says where it comes from, such as the row that writes a value, or the environments that define a variable. Keep typing to filter, then pick one with the arrow keys and Enter. The pick shows as one token in the instruction. Hover a token to see where its value comes from.
+
+<img className="ib-shot ib-shot-light" src="/images/console/scenarios/reference-picker-light.png" alt="Reference picker listing an input with its default, the outputs of imported scenarios with the section they come from, and variables with the environments that define them" />
+<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/reference-picker-dark.png" alt="Reference picker listing an input with its default, the outputs of imported scenarios with the section they come from, and variables with the environments that define them" />
+
+How a run gets the value:
+- A variable's or property's value is written into the action as text.
+- A secret is passed as a reference. Its value is never written into the agent's instructions. See [Secrets](/console/secrets#how-a-run-uses-a-secret).
+- An **HTTP headers** secret is applied to every request automatically, so it can't be used in an action. The picker lists it, turned off.
+
+Variables, secrets and properties come from the environment you run against. The editor warns you when a scenario reads one that no environment defines, or that some environments don't, and the [run dialog](/console/scenario-runs#start-a-run) checks the environment you pick.
+
+---
+
+## Imports
+
+An **Import** row runs another scenario of the same project in this one. Use it to write a flow once, such as signing in or resetting the app, and reuse it in the project's other scenarios.
+
+1. Add an **Import** row. The **Import a scenario** picker lists the project's scenarios with the inputs each one needs and the outputs it gives.
+2. Pick a scenario. The row's dialog opens.
+3. Set **Name in this scenario**. You read its outputs with it, for example `@customer.pageTitle`.
+4. Fill its **Inputs**, each with a value or one reference: an input, a saved value, an output or a secret. Leave an optional input empty to use its default. A required one must be filled.
+5. Click **Add**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/scenarios/import-row-light.png" alt="Import dialog for Sign in as customer: its account input set to the customer secret, the pageTitle and brandName outputs it gives back, its name in this scenario, and How it works" />
+<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/import-row-dark.png" alt="Import dialog for Sign in as customer: its account input set to the customer secret, the pageTitle and brandName outputs it gives back, its name in this scenario, and How it works" />
+
+How an import runs:
+- Only its **Main** runs. Its own **Setup** and **Teardown** don't.
+- Values go in only through its inputs, and come back only through its outputs.
+- The imported scenario is in the same project and of the same type. The run shares its secrets and variables.
+- When you edit it, every scenario that imports it runs the new version from its next run.
+
+On the canvas, click **Show contents** on an Import row to see what it runs. Its actions count toward the [limits](/console/scenario-editor#limits) of the scenario that imports it.
+
+The picker lists the scenarios you can't import under **Can't be imported here**, with the reason: for example, it's the scenario you're editing, it runs another verification type, it would import this one back, or it would bring more actions than the scenario has room for.
+
+### Reusable parts
+
+A scenario that another scenario imports is a reusable part. Its **Used By** count on the [scenarios list](/console/scenarios#a-projects-scenarios), and **Used by** on its page, show which scenarios import it.
+
+- You can't delete a scenario while another one imports it.
+- A save that would break a scenario that imports it is refused, for example removing an output it reads. The editor names the scenario it would break.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Run a scenario" icon="play" href="/console/scenario-runs">
+    Pick an environment, pass inputs and read the run.
+  </Card>
+  <Card title="Secrets" icon="lock" href="/console/secrets">
+    Credentials a run can use without seeing them.
+  </Card>
+</CardGroup>
