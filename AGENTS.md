@@ -26,6 +26,7 @@ IronBee verifies code changes the way a QA engineer would and keeps the evidence
 **The console** (console.ironbee.ai) shows:
 - projects
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
+- each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
 - the daily project Quality analysis, with its findings and recommendations
 
@@ -39,7 +40,8 @@ Use these terms. When you describe something on screen, quote the console label 
 | verification | test, check | Use "check" only for GitHub and Vercel checks and the **Checks** tab |
 | verification cycle | loop, iteration | CLI only: one verify pass inside an agent session |
 | session | run, task | CLI only: one AI client session |
-| activity | step, action | CLI only: one agent turn |
+| activity | step, action | CLI only: one agent turn. In the console scenario docs, **action** (an Act, Assert, Extract or Wait row) and **Step** (the grouping row) are console labels, so use them there |
+| scenario | test case, script, flow (as a noun for the feature) | Console: a saved flow in a project, run against an environment. CLI: a saved scenario in `.ironbee/scenarios/`. When both could apply, say which one |
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
 | finding | issue, problem | Findings come from analysis. **Issues** is a console tab label |
@@ -51,6 +53,8 @@ Console labels, quoted verbatim:
 - **Status:** Created, Queued, Starting, Running, Completed, Failed, Cancelled, Interrupted, Unknown
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
 - **Trigger:** Vercel, Netlify, GitHub Actions, API, CLI, Console
+- **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
+- **Scenario outcome:** Passed, Failed, Soft fail, Setup failed, Run error, Ran out of time, Browser tools lost, Stopped before it started, Stopped, Running, Starting. In the verification list a failed scenario run's status reads **Run error**
 
 ## Product components and their doc sections
 
@@ -87,7 +91,7 @@ Console labels, quoted verbatim:
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, verifications, insights (analysis, findings, recommendations), settings
+- **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), insights (analysis, findings, recommendations), settings
 
 When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep these inbound URLs working, because the product and the website link to them:
 - `/cli/get-started/getting-started`
@@ -95,6 +99,15 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - `/integrations/netlify`
 - `/console/access-tokens`
 - `/console/account`
+
+## SEO and GEO
+
+- Give every page a unique `title`. When pages share a sidebar label, keep the short label in `sidebarTitle` and make the `title` specific: `CLI configuration` with `sidebarTitle: Configuration`
+- Write `description` as plain text of 50-160 characters, with no Markdown. It is the meta description and the page's line in `llms.txt`
+- Use `keywords` only for search synonyms the prose avoids on purpose, such as "test case" on the scenario pages
+- Mintlify generates the sitemap, `robots.txt`, canonical URLs, OG images, JSON-LD, `llms.txt` and `llms-full.txt`. Don't add custom versions
+- `seo.organization` in `docs.json` points at the ironbee.ai organization entity. Keep its `sameAs` list in sync with the website
+- `markdown.instructions` is appended to every page's Markdown and to `llms.txt`. Keep it short and factual
 
 ## Style preferences
 
@@ -142,7 +155,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - The console docs cover the verification list and the verification detail. Don't document agent session pages (session timeline, activities, fixes)
 - Never mention human take-over in the live view
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead
-- The public REST API has no reference docs for now
+- The public REST API has no reference docs for now. That includes running a saved scenario through the API
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`
 - A feature that hasn't reached production yet is written on a branch and published together with its release

@@ -13,9 +13,13 @@
     "dark": "/favicon-dark.svg"
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg",
+    "light": "/logo/mark.svg",
+    "dark": "/logo/mark.svg",
     "width": 328
+  },
+  "thumbnails": {
+    "appearance": "dark",
+    "background": "/images/og-background.png"
   },
   "icons": {
     "library": "lucide"
@@ -30,6 +34,37 @@
       "assistant",
       "mcp",
       "add-mcp"
+    ]
+  },
+  "seo": {
+    "organization": {
+      "id": "https://ironbee.ai#organization",
+      "name": "IronBee",
+      "legalName": "IronBee Inc",
+      "url": "https://ironbee.ai",
+      "logo": "https://ironbee.ai/ironbee-logo-circle-black.png",
+      "sameAs": [
+        "https://x.com/ironbee_ai",
+        "https://github.com/ironbee-ai",
+        "https://www.linkedin.com/company/ironbee-ai",
+        "https://www.youtube.com/channel/UCgytgiir5mQEWEpfPqJ4ZAw",
+        "https://discord.gg/xqBJy53dyJ",
+        "https://join.slack.com/t/ironbeeai-community/shared_invite/zt-446h3zo13-KU7U_E711F4mjLfw1mHeyw",
+        "https://medium.com/ironbee"
+      ]
+    },
+    "metatags": {
+      "twitter:site": "@ironbee_ai"
+    }
+  },
+  "markdown": {
+    "instructions": [
+      "IronBee (ironbee.ai) is an AI QA engineer: it verifies code changes against the running app and keeps the evidence. It is not related to the IronBee open-source web application firewall.",
+      "The console is at https://console.ironbee.ai.",
+      "Install the CLI with `npm install -g @ironbee-ai/cli`, sign in with `ironbee login`, and set up a project with `ironbee install`.",
+      "In GitHub workflows, pin the action to `ironbee-ai/ironbee-action@v1.1.0` and pass the `IRONBEE_API_KEY` secret as the `ironbee_api_key` input.",
+      "Console scenarios (https://docs.ironbee.ai/console/scenarios) and CLI saved scenarios (https://docs.ironbee.ai/cli/guides/scenarios) are separate features.",
+      "For plans and prices, link to https://ironbee.ai/pricing; the website is the source of truth for them."
     ]
   },
   "navigation": {
@@ -205,6 +240,16 @@
             "pages": [
               "console/verifications",
               "console/verification-detail"
+            ]
+          },
+          {
+            "group": "Scenarios",
+            "icon": "file-play",
+            "pages": [
+              "console/scenarios",
+              "console/scenario-editor",
+              "console/scenario-references",
+              "console/scenario-runs"
             ]
           },
           {

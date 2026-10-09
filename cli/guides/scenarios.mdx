@@ -1,9 +1,14 @@
 ---
-title: Scenarios
+title: CLI saved scenarios
+sidebarTitle: Scenarios
 description: Author, search, and re-run reusable verification scenarios so the agent verifies the right flows the same way every time.
 ---
 
 A **scenario** is a reusable, saved verification script - "log in as admin, open billing, confirm the invoice total updates" - captured once and replayed on demand. Instead of re-describing what to verify (or letting the agent re-discover it) on every run, you build up a small library of scenarios the verifier can run directly. Scenarios are **committed to the repo**, so your whole team (and CI) shares them.
+
+<Info>
+  This page covers the CLI's scenarios, which your AI coding agent writes and runs. The scenarios you write and run in the IronBee console are a separate feature. See [Console scenarios](/console/scenarios).
+</Info>
 
 A scenario drives one or more [verification platforms](/cli/guides/verification#verification-platforms) - a browser scenario drives the browser, an Android scenario the device, a cross-platform one both - and is stored as a script (or a list of [typed steps](#steps-setup-and-teardown)) the `ironbee-devtools` server can execute.
 

@@ -1,6 +1,7 @@
 ---
 title: Verification detail
 description: Follow a verification run live, replay its recording, and read its actions, network, traces, logs and result.
+keywords: ["recording", "screenshots", "network requests", "traces", "logs"]
 ---
 
 Every verification run has a **Verification Details** page. Open it by clicking a row in a project's [Verifications](/console/verifications) list, or by following the link in a GitHub check, a Vercel check, a Netlify deploy card or the GitHub Action's report.
@@ -73,6 +74,8 @@ The left panel lists what the run did:
 - **Screenshots** shows every screenshot the run took.
 
 Selecting a step moves the recording, the network and the logs to that moment.
+
+A [scenario](/console/scenarios) run opens on **Steps** instead, which lists the scenario's actions with their status. Its **Actions** list is called **Tool calls**. A band under the header gives the run's outcome, and the result panel adds an **Action** tab for the selected action. See [Run a scenario](/console/scenario-runs#the-run-page).
 
 ---
 
