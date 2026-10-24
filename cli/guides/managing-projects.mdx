@@ -239,8 +239,8 @@ To suppress the auto re-render entirely (CI, locked-down machines), set [`IRONBE
 Each CLI release drives one **exact, pinned** version of the `@ironbee-ai/devtools` package - the pin is baked into every rendered MCP server entry (`npx -y @ironbee-ai/devtools@<version>`), so a given CLI build always runs one immutable devtools build. The pin is a build-time constant, deliberately **not** a config key (point `ironbeeDevTools.mcp` at your own entry if you need a different build). Read it programmatically:
 
 ```bash
-ironbee devtools version          # bare version on stdout, script-friendly: 0.48.0
-ironbee devtools version --json   # {"name":"@ironbee-ai/devtools","version":"0.48.0","spec":"@ironbee-ai/devtools@0.48.0"}
+ironbee devtools version          # bare version on stdout, script-friendly: 0.51.0
+ironbee devtools version --json   # {"name":"@ironbee-ai/devtools","version":"0.51.0","spec":"@ironbee-ai/devtools@0.51.0"}
 ```
 
 The output carries nothing else (no banner, no update notice), so `V=$(ironbee devtools version)` is safe in scripts - it's the contract for downstream tooling that bundles or pre-fetches devtools at its own build time.

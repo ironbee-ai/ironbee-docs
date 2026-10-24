@@ -1,6 +1,6 @@
 ---
 title: Claude Code
-description: How IronBee integrates with Claude Code - slash commands, rules, hooks, tools, the verifier sub-agent, and workspace trust.
+description: How IronBee integrates with Claude Code - slash commands, hooks, tools, the verifier sub-agent, the in-app view, and workspace trust.
 ---
 
 When you run `ironbee install` in a project where [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is detected, IronBee writes everything Claude needs to verify your agent's work. This page covers what gets installed and the agent-facing commands.
@@ -21,6 +21,7 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/commands/ironbee-issue-track.md` | The `/ironbee-issue-track` command - written only when an [issue tracker](/cli/guides/issue-tracking) is connected |
 | `.claude/agents/ironbee-issue-tracker.md` | The **issue-tracker sub-agent** `/ironbee-issue-track` delegates to (Jira/Linear tools scoped to it; GitHub driven via `gh`) - written only when an issue tracker is connected |
 | `.claude/settings.local.json` | The [auto-mode allowlist carve-out](#auto-mode-and-the-verifier) for the verifier - written only when verification is active and `claude.autoModeAllowlist.enable` isn't `false`. Merged into any existing local settings |
+| `.claude/skills/ironbee/` | The [in-app view](#in-app-view): a Claude Code mod that draws IronBee's line above the prompt and the `/ironbee` pane. Written in enforce and assist modes, on Claude Code 2.1.287 and later. Gitignored, because each machine renders its own |
 
 These are merged into your existing Claude settings, not overwritten.
 
@@ -92,6 +93,63 @@ IronBee installs a **Stop hook** that fires when the agent tries to finish a tas
 When the fail streak reaches `maxRetries`, the reply reads `RETRY LIMIT REACHED`, and the agent reports the unresolved issues instead of looping. Issues listed on a **pass** verdict are advisory: only a fail's issues have to be fixed.
 
 When the agent fixes something after a failed verdict, it can record what it repaired with `ironbee hook record-fix` so the next passing verdict describes the fix. If it doesn't, IronBee fills in the `fixes` from the files that changed since the failure - so a delegated verifier that didn't author the edit never blocks on a missing fix description.
+
+---
+
+## In-app view
+
+The verifier works in a sub-agent, and Claude Code doesn't stream a sub-agent's output into your conversation. On Claude Code **2.1.287 and later**, IronBee therefore draws its own view of the session inside Claude Code, so you can watch a verification while it runs.
+
+### The line above the prompt
+
+One line above the prompt, starting with `IronBee`, says where verification stands. It stays empty when there's nothing to say:
+
+| State | Example |
+|-------|---------|
+| A cycle is running | `● checkout flow · browser 3/4 · node ✓ · 0:42` |
+| Passed | `✓ verified · 5 checks`, or `· 2 findings` when the pass lists advisory findings |
+| Failed | `✗ failed · 2 issues · round 1/3` |
+| The gate blocked | `! blocked: browser missing get-console-messages` |
+| Edits waiting, in assist mode | `1 unverified file (browser)  [ Verify ]` |
+| Released without a verification | `! unverified: verification could not run this session …` |
+| A scenario run | `● scenario checkout · step 3/5 · 0:42`, then `✓ scenario checkout passed · 12 assertions · 1:05` |
+
+In enforce mode the line says `✓ verified` once the gate has accepted the pass, or when nothing the gate checks is still missing. Until then it reads `! pass submitted · the gate still wants …`. A cycle that has recorded nothing for several minutes, typically one you interrupted, reads `! verification idle · no activity since 14:05`. A verdict landing, or a scenario run ending, also raises a notification.
+
+### The /ironbee pane
+
+Type `/ironbee`, or press **Details** on the line, to open the pane. In a wide fullscreen terminal it docks beside the transcript; otherwise it opens above the prompt. **Now** and **Verdict** are always there; **Evidence** appears once a run captured something, and **Scenario** after a scenario run:
+
+| Tab | Shows |
+|-----|-------|
+| **Now** | The edits waiting, the project checks, every verification tool call tagged with its platform, and what the gate still wants from each platform |
+| **Verdict** | The issues, checks and fixes, the gate's last decision, and a failed check's output |
+| **Evidence** | The Console link to the run, the recording, and the screenshots |
+| **Scenario** | A scenario run's steps |
+
+Each screenshot is a row that unfolds its picture in the pane. kitty and Ghostty draw the real picture, outside tmux or screen and not over SSH. Every other terminal draws a low-resolution preview. Each item has a letter: on a screenshot it unfolds or folds the picture in the pane, and on any other file it opens the file outside the terminal. `o` opens the unfolded screenshot at full size, and `t` opens the run in the IronBee Console.
+
+The pane's controls never send anything on their own. **Verify**, **Re-verify** and **Verify & fix** put `/ironbee-verify` or `/ironbee-verify fix` in the prompt for you to send, and **Copy issues** copies the verdict's issues (**Copy findings** on a pass).
+
+### When the view appears
+
+The view only displays what IronBee records. Verification works the same without it, and it never approves or blocks anything. You don't get the view in these cases, and nothing else changes:
+- Claude Code is older than 2.1.287.
+- The workspace isn't [trusted](#workspace-trust).
+- The session runs in the VS Code panel, through `claude -p`, or in the cloud.
+- Claude Code runs with `--safe-mode`, or your organization's settings block user mods or hooks.
+- The session started in a subdirectory of the project. Claude Code loads the view only from the session's main working directory.
+
+`ironbee install` writes the view into `.claude/skills/ironbee/` and adds that folder to `.gitignore`. If the folder already holds a skill of your own, IronBee leaves it alone and skips the view. A re-install updates the view in place, and a running session picks up the change. If the view can't read what an upgraded CLI prints, it shows a notification asking you to run `ironbee install` again. Monitoring-only mode and `ironbee uninstall` remove the view.
+
+The view is on by default when install detects Claude Code 2.1.287 or later. Control it with [`claude.mod.enable`](/cli/configuration/configuration#claude-claude-code-only), then re-run `ironbee install`:
+
+```bash
+ironbee config set claude.mod.enable false   # never install the view
+ironbee config set claude.mod.enable true    # install it even when the Claude Code version can't be detected
+```
+
+Set it to `true` when you use the Claude Code desktop app, which ships its own copy of Claude Code that install can't find. [`ironbee session view`](/cli/advanced/inspecting-sessions#ironbee-session-view) prints the same view in any terminal.
 
 ---
 

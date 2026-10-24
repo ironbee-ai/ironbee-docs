@@ -24,6 +24,10 @@ Precedence is **local > project > global**. A key set in the local layer wins ov
 
 Secrets can also come from the environment: setting `IRONBEE_SERVICE_API_KEY` (or the legacy `IRONBEE_API_KEY`) supplies the account API key without committing it to any file.
 
+Credentials can't be written inside the checkout: `ironbee config set` refuses `service.oauthToken`, `service.apiKey`, `collector.oauthToken` and `collector.apiKey` on the project and local layers. Write them with `-g` (the global config) or `--personal` (the repository's [personal file](#the-personal-file)). `ironbee review` also reads its switches, endpoints and credential from the personal file, and never from a file inside the checkout.
+
+The CLI never writes a config file inside the checkout through a symbolic link: `ironbee config set`, the toggle commands and the TUI refuse when `.ironbee/` or the file is a link. The global config is written readable by you only (`0600`).
+
 ---
 
 ## Editing config from the CLI
@@ -43,6 +47,12 @@ ironbee config set service.apiKey sk-... --global
 ironbee config set maxRetries 5
 ironbee config set browser.verifyPatterns '["*.ts", "*.tsx", "*.css"]'
 ironbee config list --global
+```
+
+**The personal file:** `set` and `unset` also take `--personal`, which writes the repository's [personal file](#the-personal-file) outside the checkout. Add `--remote <name>` to pick the remote whose repository the file is for (default: the one the branch is pushed to):
+
+```bash
+ironbee config set --personal review.includeUntracked true
 ```
 
 **Type coercion:** `set` parses values as JSON when it can (`true`, `42`, `[...]`, `{...}`) and falls back to a plain string otherwise. Pass `--json` to force strict JSON parsing.
@@ -334,6 +344,8 @@ The `service` section is the CLI's **shared identity**: one credential and one s
   Older configs kept the credential under `collector.oauthToken` / `collector.apiKey`. Those keys (and their `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` env vars) still work as **read fallbacks**, so nothing breaks - but new logins write `service.*`, and the `service.*` keys win when both are present.
 </Note>
 
+The credentials go only in the global config or the [personal file](#the-personal-file); the project and local layers refuse them. [`ironbee review`](/cli/guides/code-review#where-the-review-goes-and-as-whom) reads the credentials, `service.domain`, `api.url`, `collector.url` and `console.url` only from a flag, the environment, the personal file or the global config. When you set an endpoint in the project or local layer, `config set` notes that `ironbee review` won't read it there.
+
 ---
 
 ## Collector
@@ -347,6 +359,37 @@ The collector is what ships your session data to the IronBee Console. Its endpoi
 | `collector.apiKey` | `string` | *(unset)* | **Deprecated read fallback** for `service.apiKey`. Can come from `IRONBEE_API_KEY` instead. |
 | `collector.enable` | `boolean` | implicit `true` when a credential is set | Set `false` to suspend sending while keeping credentials around. The collector activates on the **presence of a credential** (`service.*` preferred, `collector.*` fallback) - the URL always resolves via `service.domain`. |
 | `collector.batchSize` | `number` | `100` | Max events per POST. |
+
+---
+
+## Code review
+
+These keys tune [`ironbee review`](/cli/guides/code-review). None of them is artifact-affecting.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `review.exclude` | `string[]` | `[]` | Paths that never leave your machine, deletions included. `*` matches within a segment and `**` across segments; a trailing `/` names a folder and everything below it, as in `.gitignore`. The union of every layer and of every tracked nested `.ironbee/config.json`, each matched under its own folder. See [Exclude paths](/cli/guides/code-review#exclude-paths). |
+| `review.includeUnstaged` | `boolean` | `false` | Also send unstaged edits to tracked files. Read only from the personal file or the global config; the project and local layers refuse it. |
+| `review.includeUntracked` | `boolean` | `false` | Also send untracked files (never ignored ones). Read only from the personal file or the global config, like `review.includeUnstaged`. |
+| `review.settings.depth` | `string` | *(unset)* | `auto`, `quick`, `standard` or `deep`. Flag: `--depth`. |
+| `review.settings.focusAreas` | `string[]` | *(unset)* | `security`, `editorial`. Flag: `--focus`. |
+| `review.settings.extraChecks` | `string[]` | *(unset)* | `lint`, `style`, `defensive`, `tests`, `cleanup`, `pitfalls`. Flag: `--checks`. |
+| `review.settings.language` | `string` | *(unset)* | The language the review is written in. Flag: `--language`. |
+| `review.settings.summary` | `boolean` | *(unset, on)* | Whether the review writes a summary. Flag: `--no-summary`. |
+| `review.settings.suggestedFixes` | `boolean` | *(unset, on)* | Whether findings come with suggested fixes. Flag: `--no-fixes`. |
+| `review.settings.diagrams` | `boolean` | *(unset)* | Whether findings come with diagrams. Flag: `--no-diagrams`. |
+| `review.settings.repositoryKnowledge` | `boolean` | *(unset)* | Whether the review reads the repository's knowledge. Flag: `--no-knowledge`. |
+
+A `review.settings.*` key resolves on its own: the flag, then the personal file, then the local, project and global layers. A setting set nowhere isn't sent, so the repository's setting, the account's or the default applies.
+
+### The personal file
+
+The personal file holds one repository's settings outside the checkout, at `~/.ironbee/projects/<token>/personal.json`. Every linked worktree of the repository shares it. Write it with `ironbee config set --personal`, or with **`P`** in the [TUI](/cli/guides/interactive-mode)'s Configuration area. `P` always targets the remote the branch is pushed to; for another remote, use `--remote <name>`. With several remotes and none chosen, the write asks for `--remote`.
+
+- It holds only what `ironbee review` reads: the two switches, the endpoints, the credentials, `review.exclude`, `review.settings.*` and `params.*`.
+- It records the remote's `owner/repo` and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
+- It's written readable by you only (`0600`, in a `0700` folder).
+- There's one per repository, for one `owner/repo`. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
 
 ---
 
@@ -445,10 +488,11 @@ Links each agent turn to the pull request it produced and the issues that PR clo
 
 ## Claude (Claude Code only)
 
-Two install-time behaviors that keep the verifier working with Claude Code's own host-side guardrails. See [Claude Code](/cli/clients/claude-code).
+Install-time behaviors for Claude Code: two keep the verifier working with Claude Code's own host-side guardrails, and one controls the in-app view. See [Claude Code](/cli/clients/claude-code).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| `claude.mod.enable` | `boolean` | *(unset - on when Claude Code 2.1.287+ is detected)* | Whether `ironbee install` writes the [in-app view](/cli/clients/claude-code#in-app-view), a Claude Code mod in `.claude/skills/ironbee/` (gitignored) that draws a line above the prompt and the `/ironbee` pane. Unset renders it only when install detects Claude Code 2.1.287 or later. `false` never renders it and removes it on the next install. `true` renders it even when the version can't be detected, as with the desktop app. The view only displays; verification never depends on it. Enforce and assist modes only. Takes effect on the next `ironbee install`. Claude-only. |
 | `claude.autoModeAllowlist.enable` | `boolean` | `true` | Whether IronBee writes the [auto-mode allowlist carve-out](/cli/clients/claude-code#auto-mode-and-the-verifier) for the verifier into `.claude/settings.local.json`. Claude Code's auto-mode "Content Integrity" classifier can false-positive on IronBee's legitimate verdict submissions; when enabled (default), install adds one narrow rule that exempts **only** that command from the block (every other auto-mode protection stays in force). Written only when verification is active (enforce/assist) and inert when the host isn't in auto mode. Opt out with `false` - takes effect on the next `ironbee install`. Claude-only. |
 | `claude.trustWorkspace.enable` | `boolean` | `true` | Whether `ironbee install` marks the project [trusted](/cli/clients/claude-code#workspace-trust) in Claude Code's machine-global `~/.claude.json` when it isn't already. Claude Code 2.1.x ignores a project's committed `permissions.allow` (the devtools + `Bash(ironbee *)` entries IronBee writes) until the workspace is trusted, and the trust dialog doesn't re-appear once onboarding has been seen - so without this the entries stay silently disabled and the agent gets prompted on every devtools/`ironbee` call. Best-effort and idempotent: it only ever flips a missing/false flag to `true` and never clobbers other `~/.claude.json` content. Opt out with `false`. Claude-only. |
 
@@ -521,7 +565,7 @@ Test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`, 
 }
 ```
 
-Or use the CLI: `ironbee browser disable && ironbee backend enable`. With the browser off and no `verifyPatterns` of its own, the backend cycle watches every code file, so it verifies on every code change.
+Or use the CLI: `ironbee browser disable && ironbee backend enable`. With the browser off and no `verifyPatterns` of its own, the backend cycle watches every file in its languages: `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `py`, `go`, `java`, `rb`, `cs`, `rs`, `kt`, `scala`, `ex`, `exs`, `php` and `clj`.
 
 ### Monitoring only (no enforcement)
 

@@ -1,9 +1,42 @@
 ---
 title: Inspecting sessions
-description: Check verdict status and validate verdicts from the terminal.
+description: Watch a session's verification live, check verdict status, and validate verdicts from the terminal.
 ---
 
-Most of the time you'll review sessions in the [Console](https://console.ironbee.ai). But two commands let you inspect sessions straight from the terminal, useful for quick checks and debugging a session that won't pass.
+Most of the time you'll review sessions in the [Console](https://console.ironbee.ai). But three commands let you inspect sessions straight from the terminal, useful for watching a verification, quick checks, and debugging a session that won't pass.
+
+---
+
+## ironbee session view
+
+Show what IronBee knows about a session right now:
+
+```bash
+ironbee session view                     # the most recently active session
+ironbee session view --session <id>      # one session
+```
+
+It prints:
+- the one-line state: edits waiting, the running cycle with each platform's progress, the verdict, or why the gate blocked
+- the running or last cycle: the project checks, every verification tool call tagged with its platform, and in enforce mode what the gate still wants from each platform
+- the verdict: issues, checks, fixes, and a warning when the code changed after it
+- the evidence: captured screenshots and recordings, and the Console link to the run
+- a scenario run's steps and result
+
+It's the same view the [Claude Code in-app view](/cli/clients/claude-code#in-app-view) draws, so you can run it in a second terminal pane with any client. It only reads, so it's safe to run at any moment, even while a delegated verifier is mid-cycle. It never shows what the agent typed, such as a password it entered in the app under test, and it masks credentials in URLs and commands.
+
+The view counts the edits made with the agent's file-editing tools, whatever [`verification.changes.source`](/cli/guides/verification#how-ironbee-detects-changes) is set to. With `git`, an edit made through a shell command isn't shown as waiting, although the gate still asks for its verification.
+
+| Flag | Description |
+|------|-------------|
+| `-p, --project <dir>` | Project directory (default: the current directory) |
+| `--session <id>` | The session to show (default: the most recently active one). A session IronBee has never seen shows an empty view |
+| `--json` | Print the view as a JSON document, for a tool that draws it |
+| `--host-working` | For a tool that draws the view: a model turn is running, so an open cycle is never shown as idle |
+
+Two helper commands serve the in-app view, and work in any terminal:
+- `ironbee session thumbnail <file>` draws a PNG screenshot as terminal cells, a low-resolution preview. `--columns` sets the width (default `72`) and `--max-rows` the height (default `30`).
+- `ironbee session open <target>` opens a screenshot or recording in its viewer, or an `http(s)` link in the browser. It opens nothing else.
 
 ---
 

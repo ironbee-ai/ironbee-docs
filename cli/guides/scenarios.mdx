@@ -29,7 +29,7 @@ Four agent-invoked slash commands manage scenarios. On Claude Code and Cursor th
 | `/ironbee-run-scenario` | **Run** a saved scenario - see [Run a saved scenario](#run-a-saved-scenario). |
 | `/ironbee-sync-scenario` | **Re-validate and repair** saved scenarios that have drifted as the code changed. |
 
-Like the verifier, on Claude Code and Codex these **delegate to a dedicated `ironbee-scenario` sub-agent** that owns the scenario tools (and, like the verifier, can't edit your code - the scenario store is written server-side). On Cursor (and Codex in `main-agent` mode) the main agent drives the tools directly.
+Like the verifier, on Claude Code and Codex these **delegate to a dedicated `ironbee-scenario` sub-agent**. The scenario store is written server-side, and on Claude Code the sub-agent, like the verifier, can't edit your code. On Codex it's held read-only only on versions before 0.154. On Claude Code it alone owns the scenario tools; on Codex the main agent can see them too, because IronBee registers the devtools server for the whole session. On Cursor (and Codex in `main-agent` mode) the main agent drives the tools directly.
 
 ### Author a scenario
 
