@@ -1,0 +1,110 @@
+---
+title: Credits for code reviews and verifications
+sidebarTitle: Credits
+description: How ironbee review and ironbee verify spend your team's monthly credits, how to check the balance, and what happens when credits run out.
+---
+
+[Code reviews](/cli/guides/code-review) and [verification jobs](/cli/guides/verification-jobs) spend one pool of credits per team, each month. The CLI tells you what a run used, and `ironbee credits` shows what your team has left. Your plan sets the monthly allowance; see [Pricing](/console/pricing).
+
+---
+
+## What a run costs
+
+- **A code review** is priced by its size and its depth. The size counts the reviewable lines of the change. Lock files, generated, vendored, minified and binary files, and data files under a test or fixture folder don't count.
+- **A verification job** is priced by how long it runs, up to its timeout.
+
+Every price the CLI prints is in credits.
+
+---
+
+## ironbee credits
+
+```bash
+ironbee credits          # this month's credits for your team
+ironbee credits --json   # the API's answer as JSON
+```
+
+It prints the month's use, the use by product, and the date the credits reset:
+
+```
+credits   <used> of <allowance> used this month · <left> left · resets <date>
+          code review <n> · verification <n>
+          an owner or a billing admin can add seats
+```
+
+The last line says how to raise the allowance, when there's a way. An unlimited allowance reads `unlimited`, with no such line.
+
+| Flag | Description |
+|------|-------------|
+| `-C, --project-dir <dir>` | Where the credential is resolved from (default `.`) |
+| `--remote <name>` | The remote whose [personal file](/cli/configuration/configuration#the-personal-file) the credential comes from |
+| `--api-url <url>` | API base URL (default: the configured service domain) |
+| `--json` | Print the API's answer on stdout and nothing else |
+
+The credential is resolved the same way as for [`ironbee review`](/cli/guides/code-review#where-the-review-goes-and-as-whom): the flags, the environment, the personal file and the global config, never a file inside the checkout. Outside a checkout, the flags, the environment and the global config are used. `ironbee credits` prints the balance under `CI` too. It exits `0`, or `1` on an error.
+
+---
+
+## Credits on each run
+
+### Code reviews
+
+| When | What the CLI prints |
+|------|---------------------|
+| `ironbee review --dry-run` | The price, with the depth, the size class and the reviewable lines, and what's left this month: `credits     <n> (Standard · L, <lines> lines) · <left> left this month` |
+| The review is created | `review <id> created · <n> credits` |
+| The review ends | The final line adds the credits used and what's left: `… · <n> credits · <left> left` |
+| `ironbee review status` | The credits a finished review used, what's left, and the reset date |
+
+A review cancelled after it started shows `(half price)` next to its credits, and a review that failed shows `not charged`. The text and TUI headers show the review's credits next to its depth, and the SARIF and JSON forms carry them too.
+
+### Verification jobs
+
+- With `--timeout`, the `created job <id>` line also says the most credits the job can use at that timeout.
+- The finished job's report, and `ironbee verify status`, add a `credits` line: the credits used and what's left this month, `not charged`, or `unlimited`.
+
+---
+
+## In CI
+
+When `CI` is set, a run's lines carry only the job's own credits, never your team's balance, because a public repository's job log is public. The JSON forms keep every field, and `ironbee credits` still prints the balance.
+
+---
+
+## When credits run out
+
+When your team is out of credits, the API refuses to create the job with `402 CREDITS_EXHAUSTED`. The CLI says when the credits reset, how many are left, and how to raise the allowance, then exits `1`:
+
+| The line ends with | Who can act |
+|--------------------|-------------|
+| `an owner or a billing admin can add seats` | An owner or billing admin, on the console's [Pricing](/console/pricing#change-seats) page |
+| `an owner or a billing admin can upgrade to Team` | An owner or billing admin, on the console's [Pricing](/console/pricing#upgrade-to-team) page |
+| `an owner or a billing admin can pay the open invoice` | An owner or billing admin |
+| `ask IronBee to raise the allowance` | Contact [support@ironbee.ai](mailto:support@ironbee.ai) |
+
+A review the team can't afford in full reads `not enough credits left this month for this review`. A job that's refused for credits when it starts fails with `credits_exhausted` and says why. Under `CI`, the numbers are left out, and so is a hint about an unpaid invoice.
+
+With `--json`, the failure envelope carries the numbers as `error.credits`, next to `error.code`. `ironbee verify` and `ironbee credits` also give the HTTP `status`; `ironbee review` doesn't:
+
+```json
+{ "error": { "status": 402, "code": "CREDITS_EXHAUSTED", "message": "…",
+             "credits": { "left": 0, "allowance": "…", "resetsAt": "…", "topUp": "add_seats" } } }
+```
+
+- `needed` appears only on a code review, whose price is known before it's created.
+- `topUp` is `add_seats`, `upgrade`, `pay_invoice`, `contact`, or `null` when there's no way up.
+
+A code review can also fail with `local_size_mismatch`: the size the CLI declared didn't match the change, so the review couldn't be priced.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Code review" icon="git-pull-request" href="/cli/guides/code-review">
+    Review your branch before you open a pull request.
+  </Card>
+  <Card title="Verification jobs" icon="shield-check" href="/cli/guides/verification-jobs">
+    Verify a deployed app or API from any shell or CI pipeline.
+  </Card>
+</CardGroup>

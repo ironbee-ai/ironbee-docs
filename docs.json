@@ -184,6 +184,8 @@
               "cli/guides/verification",
               "cli/guides/verification-context",
               "cli/guides/verification-jobs",
+              "cli/guides/code-review",
+              "cli/guides/credits",
               "cli/guides/scenarios",
               "cli/guides/issue-tracking",
               "cli/guides/interactive-mode"

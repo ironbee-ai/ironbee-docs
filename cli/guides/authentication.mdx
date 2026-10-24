@@ -54,6 +54,8 @@ export IRONBEE_SERVICE_API_KEY=<your-account-api-key>
 
 The CLI reads it into [`service.apiKey`](/cli/configuration/configuration#service-identity). You can also set it on disk with `ironbee config set service.apiKey <key> --global`, but the environment variable is preferred for CI because it [overrides every config layer](/cli/configuration/environment-variables).
 
+A credential never goes in a file inside the checkout: `ironbee config set` refuses it on the project and local layers. Keep it in the global config, in the environment, or in the repository's [personal file](/cli/configuration/configuration#the-personal-file) with `--personal`.
+
 Find and manage the account API key on the [Account page](/console/account) in the Console. Owners and admins can view, copy, and rotate it.
 
 ### Rotation and the grace window
@@ -77,6 +79,8 @@ If both are present, the OAuth token takes priority on the wire. In practice:
 | Scripted or headless machine | API key | `IRONBEE_SERVICE_API_KEY` or `service.apiKey` |
 
 Both `IRONBEE_SERVICE_OAUTH_TOKEN` and `IRONBEE_SERVICE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. The legacy `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` forms fill only the deprecated `collector.*` fallback keys - they're used **only when the matching `service.*` key is unset** (except by [`ironbee verify`](/cli/guides/verification-jobs#credentials), which treats `IRONBEE_API_KEY` as a high-priority override, although an OAuth token still wins over it), so on a machine that has run a recent `ironbee login` (which writes `service.oauthToken`) prefer the `IRONBEE_SERVICE_*` forms. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
+
+[`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) use the same credentials as `ironbee verify`, read only from the flags, the environment, the repository's personal file and the global config.
 
 ---
 

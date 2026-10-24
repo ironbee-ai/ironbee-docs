@@ -1,0 +1,277 @@
+---
+title: Code review of your local checkout
+sidebarTitle: Code review
+description: Review your branch with ironbee review before you open a pull request, and read the findings in the terminal UI, as text, JSON or SARIF.
+---
+
+`ironbee review` reviews your branch against the repository's default branch, the way a pull request of it would be reviewed, without opening one. The review runs on IronBee: the CLI sends what the remote doesn't have yet, the reviewer reads the change, and the findings come back to your terminal.
+
+```bash
+ironbee review                                 # the Review area on a terminal, the text form in CI
+ironbee review --dry-run                       # what would be sent, what is left out, and the price
+ironbee review --plain --fail-on high          # exit 4 when a finding at or above high exists
+ironbee review --format sarif > review.sarif   # for GitHub code scanning
+ironbee review show                            # this worktree's newest review again
+```
+
+---
+
+## Before you start
+
+- The repository is on **github.com** and connected through the [IronBee GitHub App](/integrations/github). Otherwise the API refuses the review with `PROJECT_NOT_BOUND`.
+- Code review is turned on for the repository in the console. Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
+- The GitHub App is installed for the repository the review targets. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING`, and the CLI lists your checkout's github.com remotes so you can pick another with `--remote`.
+- You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
+- Your team has [credits](/cli/guides/credits) left this month.
+- git 2.25 or later, and the full history: in a shallow clone, run `git fetch --unshallow` first.
+
+---
+
+## What gets reviewed
+
+The review covers your branch against the remote's default branch, as you last fetched it: the remote's `HEAD`, else its `main`, else its `master`. Run `git fetch` first if the default branch has moved. If the remote's `HEAD` isn't recorded (a remote added with `git remote add`, for example) and the default branch is neither `main` nor `master`, run `git remote set-head <remote> -a` or pass `--base`.
+
+- **Commits already pushed:** the reviewer fetches them itself.
+- **What the remote doesn't have yet:** your unpushed commits, flattened into one, and your staged changes. The CLI sends them as one patch over a commit the remote has.
+
+After a local rebase or merge, the diff is the same one a pull request would show.
+
+| Flag | Description |
+|------|-------------|
+| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository |
+| `--base <ref>` | Review against this ref instead of the default branch. It must be on the remote |
+| `-C, --project-dir <dir>` | Where to start looking for the repository root (default `.`) |
+
+When the branch has no change against the default branch and nothing local is sent, the command says `nothing to review` and exits `0`.
+
+---
+
+## What leaves your machine
+
+By default, only what `git push` would send, plus your staged changes:
+
+| Content | Sent |
+|---------|------|
+| Unpushed commits | Yes, flattened into one patch |
+| Staged changes | Yes |
+| Unstaged edits to tracked files | Only with `review.includeUnstaged` |
+| Untracked files | Only with `review.includeUntracked`. Ignored files are never sent |
+| Files your ignore rules match | No. They're reviewed at their pushed state, and a deletion is sent |
+| Anything under a `.ironbee/` folder | Never |
+| Paths `review.exclude` matches | Never, including deletions and renames out of them |
+| Links pointing outside the repository | No |
+
+Turn the two switches on in your repository's [personal file](/cli/configuration/configuration#the-personal-file) or in the global config. A file inside the checkout can't set them:
+
+```bash
+ironbee config set --personal review.includeUnstaged true
+ironbee config set --personal review.includeUntracked true
+```
+
+### Exclude paths
+
+`review.exclude` lists paths that never leave your machine:
+- `*` matches within one path segment, and `**` across segments.
+- A trailing `/` names a folder and everything below it, as in `.gitignore`: `secrets/` is the same as `secrets/**`.
+- Every other character is literal.
+
+```json
+{
+  "review": {
+    "exclude": ["secrets/", "**/*.pem", "fixtures/customers/**"]
+  }
+}
+```
+
+A pattern with no `*` in its last segment that matches a folder of a changed file, such as `secrets` for `secrets/key.pem`, refuses the run: write `secrets/` instead. A pattern whose last segment has a `*` and matches a folder only gets a warning, since its files are still sent. The run also refuses:
+- a `review.exclude` that isn't a list, or a `review` value that isn't an object
+- more than 100 patterns in total, across all layers
+- a pattern longer than 500 characters, or with more than 10 `**`
+- a pattern that starts with `/` or has a `..` segment
+
+The list is the union of every layer: the global config, the personal file, `config.json`, `config.local.json`, and every tracked nested `.ironbee/config.json`. A nested file's patterns match under its own folder. A file renamed from an excluded path, or with the same content as one, is left out with it.
+
+### Check before you send
+
+Before anything is sent, the command prints what it sends and where it goes:
+
+```
+sending:
+  repository  acme/shop (remote origin)
+  base        3f2a9c1e7b4d (origin/main)   apply point 9e8d7c6b5a43   merge-base 3f2a9c1e7b4d
+  unpushed    2 commits, flattened
+  patch       5 paths, 18342 bytes gzipped (inline in the create)
+  size        5 files, +212 -40, 236 reviewable lines (merge-base → snapshot)
+  settings    none set: the repository's, the account's or the defaults
+  api         https://api.service.ironbee.ai  (source: derived from the service domain ironbee.ai, set in the global layer)
+  credential  source: the global layer
+  switches    includeUnstaged=false (the default), includeUntracked=false (the default)
+```
+
+Under that, it names every path it left out and why:
+- matched by `review.exclude`, or renamed from or identical to a path it matched
+- matched by your ignore rules
+- IronBee's own files
+- a link pointing outside the repository
+
+It also lists the nested `.ironbee/config.json` files whose exclusions joined, the folders a starred pattern matched while their files are sent, and `not sent` lines that count the files with unstaged changes and the untracked files the switches would send.
+
+`--dry-run` stops there. It prints the block, the files in the patch and the price, and starts no review. To get the price it sends only the repository, the size and the settings. With `--json`, it prints the same as one JSON document, whose `estimate` holds `credits`, `sizeClass`, `depth`, `reviewableLines` and `left`. `sizeClass` is the API's code, so `XXXL` there reads `3XL` in the text form. When the price can't be looked up, `estimate` is `null`, `estimateError` holds its `code` and `message`, and the command still exits `0`.
+
+### Size limits
+
+The run is refused before anything is sent when the change has:
+- more than 1,000 files, or more than 100,000 changed lines
+- a patch of more than 1,000 paths, more than 16 MiB gzipped, or more than 64 MiB uncompressed
+- a binary file over 16 MiB, or binary files over 64 MiB in all
+
+Use `review.exclude` to bring it down. A large patch is uploaded through the collector first, and a small one travels with the request. When the API URL is set explicitly (`--api-url`, `IRONBEE_API_URL` or `api.url`) and the collector URL isn't, a patch too large to travel with the request is refused. Give the collector's URL too: `--collector-url`, or `collector.url` in the personal file or the global config. No environment variable sets it.
+
+### Symlinks in IronBee's folders
+
+The run is refused when a `.ironbee` folder at any level, or anything inside one, is a symbolic link, whether it's tracked, untracked or ignored. Such a link could move IronBee's files outside the paths the review leaves out. Replace it with a real folder or file.
+
+---
+
+## Where the review goes, and as whom
+
+The endpoints, the credential and the two switches decide where your code goes, and as which team. `ironbee review` reads them only from these sources, first winning:
+
+1. the flags `--api-url` and `--collector-url`
+2. the environment, as for [`ironbee verify`](/cli/guides/verification-jobs#credentials): `IRONBEE_ACCESS_TOKEN`, `IRONBEE_API_KEY`, `IRONBEE_API_URL`, and the `IRONBEE_SERVICE_*` variables
+3. the repository's [personal file](/cli/configuration/configuration#the-personal-file)
+4. the global config, `~/.ironbee/config.json`
+
+It never reads them from a file inside the checkout, such as the committed `config.json`, `config.local.json` or a nested `.ironbee/` file. A value it finds there is ignored with a warning. That way a repository you cloned can't send your code to another endpoint, or under another team's credential.
+
+- A personal file that exists but can't be used refuses the run, rather than falling back to the global config. That's the case when it was written for another repository, or when it, or a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
+- A global config that isn't owned by you or is world-writable loses these keys. The warning prints the `chmod` command that fixes it.
+
+---
+
+## Review settings
+
+| Flag | Config key | Effect |
+|------|------------|--------|
+| `--depth <depth>` | `review.settings.depth` | `auto`, `quick`, `standard` or `deep` |
+| `--focus <list>` | `review.settings.focusAreas` | Comma list of `security` and `editorial`, or `none` |
+| `--checks <list>` | `review.settings.extraChecks` | Comma list of `lint`, `style`, `defensive`, `tests`, `cleanup` and `pitfalls`, or `none` |
+| `--language <code>` | `review.settings.language` | The language the review is written in: `en`, `de`, `es`, `fr`, `pt-BR`, `ja`, `ko`, `zh-CN`, `tr` or `ru` |
+| `--no-summary` | `review.settings.summary` | No summary |
+| `--no-fixes` | `review.settings.suggestedFixes` | No suggested fixes |
+| `--no-diagrams` | `review.settings.diagrams` | No diagrams |
+| `--no-knowledge` | `review.settings.repositoryKnowledge` | Don't read the repository's knowledge |
+
+Each setting resolves on its own: the flag, then the personal file, then `config.local.json`, then `config.json`, then the global config. A setting set nowhere isn't sent, so the repository's setting, the account's or the default applies. A flag with a value outside its list is an error, and the run exits `1`. A config value outside its list is warned about and not sent.
+
+---
+
+## Output
+
+| Flag | Form |
+|------|------|
+| `--format tui` | The [Review area](#the-review-area). The default on an interactive terminal outside CI |
+| `--format text`, `--plain` | The text form. The default anywhere else, such as CI or a pipe |
+| `--format json`, `--json` | The review job as JSON on stdout |
+| `--format sarif` | SARIF on stdout, for GitHub code scanning |
+
+| Flag | Description |
+|------|-------------|
+| `--min-severity <severity>` | Show only findings at or above `low`, `medium`, `high` or `critical`, in the TUI and text forms |
+| `--fail-on <severity>` | Exit `4` when a finding at or above it exists. Every finding counts, whatever `--min-severity` hides |
+| `--no-wait` | Create the review, print its id, and exit |
+| `--queue-wait <seconds>` | Cancel the review if it hasn't started within this (default `900`). The command then exits `2`, and with `--json` the job carries `error.type` `queue_wait` |
+| `--collector-url <url>` | Collector base URL, for a patch too large to travel with the request |
+
+The text form starts with a header: the repository, the branch, the commit range, the depth with the review's credits, and the counts by severity. Then come the summary and the findings, grouped by file. Each finding reads `severity  path:line  claim`, followed by its explanation, the reviewed code around the line, the suggested fix as a diff, and a diagram's source. Findings the reviewer only lists come last, one line each.
+
+The summary and the findings' texts are Markdown. They're rendered on a colour terminal and printed as written for a log. `--json` and `--format sarif` keep them raw. Set `NO_COLOR` to drop every colour.
+
+When the command itself fails:
+- `--json` prints an error envelope: `{ "error": { "code": "…", "message": "…" } }`. `code` is the API's error code, `REFUSED` when the CLI refused the run, or `ERROR` otherwise. A credits refusal adds the numbers as `error.credits`, see [When credits run out](/cli/guides/credits#when-credits-run-out).
+- `--format sarif` prints a SARIF document with `executionSuccessful: false` and the error as a `cli_error` notification.
+
+### Progress
+
+Progress goes to stderr in every form, so stdout carries the document alone:
+- **On a terminal:** a live block with the repository, the branch, a progress bar, the `preparing → reviewing → checking → writing` steps and the elapsed time. It collapses into one line when the review ends.
+- **In CI or a pipe:** one line per status or phase, such as `review queued` or `reviewing 45% (12/27)`, then a final line such as `✓ review done in 02:41 · <counts>`.
+
+`Ctrl-C` cancels a running review.
+
+---
+
+## The Review area
+
+On a terminal, `ironbee review` opens the review in the **Review** area of the [TUI](/cli/guides/interactive-mode) when it succeeds. `ironbee tui review` opens the area with the stored reviews, this worktree's first.
+
+The left pane lists the findings, grouped by file. The right pane shows the selected finding:
+- the reviewed code around the line, with the line marked and syntax colour
+- the explanation
+- the diagram's Mermaid source
+- the suggested fix as a word-level diff
+
+| Key | Action |
+|-----|--------|
+| `a` | Apply the suggested fix to the working tree, after a confirmation that shows the exact bytes |
+| `e` | Open the file at the line in `$VISUAL`, `$EDITOR` or `vi` |
+| `c` | Copy the finding |
+| `S` | Show the whole summary |
+| `g` | Group by file or by severity |
+| `f` | Step the minimum severity |
+| `/` | Filter by path or claim |
+| `l` | Hide or show the listed findings |
+| `n` / `p` | Next or previous finding |
+| `Tab` | Focus the right pane to scroll it |
+| `b` | Back to the list of reviews |
+
+`a` writes the fix to the working tree and stages nothing. It works on this worktree's reviews only, and a fix you already applied isn't offered again. It refuses when:
+- the file changed since the review, or the reviewed version is gone or can't be read
+- the reviewer marked the fix's indentation as differing from the file's. Copy the fix with `c`, or open the file with `e`
+- the fix's lines fall outside the reviewed file
+- the finding is on a symlink
+- the text holds hidden control characters
+
+---
+
+## Read a review again
+
+`ironbee review` is short for `ironbee review run`, which takes every flag above. The other subcommands read a review back:
+
+```bash
+ironbee review show [<job-id>]            # render a review again (default: this worktree's newest)
+ironbee review status <job-id>            # read a review back from the API
+ironbee review cancel <job-id> [reason]   # ask a review to stop
+```
+
+- `show` and `status` take the output flags above (`--format`, `--plain`, `--json`, `--min-severity`, `--fail-on`), plus `-C`, `--remote` and `--api-url`.
+- `cancel` takes `-C`, `--remote` and `--api-url`.
+- `show` renders the stored copy of a finished review, else asks the API.
+- `status` exits `3` while the review is still going. It also works outside a checkout, with a credential from the flags, the environment or the global config.
+
+The CLI stores each review under `~/.ironbee/projects/<token>/reviews/`, keeping the newest 20 per worktree. Linked worktrees of one repository share the folder. See [Runtime files](/cli/advanced/runtime-files).
+
+---
+
+## Exit codes
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | The review succeeded, with no finding at or above `--fail-on` |
+| `1` | An error, or the review failed |
+| `2` | Cancelled, including `Ctrl-C` |
+| `3` | `show` or `status` only: the review is still going |
+| `4` | A finding at or above `--fail-on` exists |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Credits" icon="coins" href="/cli/guides/credits">
+    What a review costs, and how to see what your team has left.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/cli/configuration/configuration#code-review">
+    The `review.*` keys and the personal file.
+  </Card>
+</CardGroup>

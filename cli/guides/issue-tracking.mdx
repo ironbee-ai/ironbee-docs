@@ -84,7 +84,7 @@ Same for `linear` and `github`. Both re-render the installed client artifacts an
 
 ## Using it: /ironbee-issue-track
 
-Once a tracker is connected (and verification is in enforce or assist mode), install renders the issue-tracking surface into your client: the `/ironbee-issue-track` command in Claude Code, `$ironbee-issue-track` in Codex, and the matching skill in Cursor. On Claude Code and Codex it delegates to a dedicated **`ironbee-issue-tracker` sub-agent** (like the verifier - the tracker tools stay out of the main conversation); on Cursor the main agent drives the tools.
+Once a tracker is connected (and verification is in enforce or assist mode), install renders the issue-tracking surface into your client: the `/ironbee-issue-track` command in Claude Code, `$ironbee-issue-track` in Codex, and the matching skill in Cursor. On Claude Code and Codex it delegates to a dedicated **`ironbee-issue-tracker` sub-agent**; on Cursor the main agent drives the tools. On Claude Code the tracker tools stay out of the main conversation, like the verifier's. On Codex the main agent can see them too, and on Codex 0.154 and later so can the verifier, because IronBee registers them for the whole session.
 
 One command, four modes:
 

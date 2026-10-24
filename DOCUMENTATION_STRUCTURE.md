@@ -25,6 +25,8 @@ Current structure as of the `docs.json` navigation configuration.
 | `cli/guides/verification.mdx` | Verification | ✅ |
 | `cli/guides/verification-context.mdx` | Verification Context | ✅ |
 | `cli/guides/verification-jobs.mdx` | Verification Jobs | ✅ |
+| `cli/guides/code-review.mdx` | Code Review | ✅ |
+| `cli/guides/credits.mdx` | Credits | ✅ |
 | `cli/guides/scenarios.mdx` | Saved Scenarios | ✅ |
 | `cli/guides/issue-tracking.mdx` | Issue Tracking | ✅ |
 | `cli/guides/interactive-mode.mdx` | Interactive Mode | ✅ |

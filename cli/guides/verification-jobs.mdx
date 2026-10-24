@@ -57,7 +57,7 @@ The command authenticates with your IronBee account. Run [`ironbee login`](/cli/
 |--------|-----------|
 | `ironbee login` | Personal OAuth access token, stored under [`service.oauthToken`](/cli/configuration/configuration#service-identity) |
 | `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY` | The standard [config env overrides](/cli/configuration/environment-variables). They work here too |
-| `IRONBEE_ACCESS_TOKEN` | OAuth access token, a verify-specific override that beats everything above |
+| `IRONBEE_ACCESS_TOKEN` | OAuth access token, an override that beats everything above. `ironbee review` and `ironbee credits` read it too |
 | `IRONBEE_API_KEY` | Account API key (the legacy CI form). It also beats the config |
 
 When both an OAuth token and an API key are available, the OAuth token wins. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
@@ -128,6 +128,8 @@ When the API refuses a job over the environment, the error line ends with how to
 
 See [Environments](/console/environments).
 
+The same goes for an archived project: `PROJECT_ARCHIVED` ends with a hint to unarchive the project in the console, or to enable the repository again.
+
 ---
 
 ## Binding the run to your repository
@@ -168,13 +170,16 @@ Once the job is created, the CLI prints every status change (`queued`, `starting
 
 ## Output and exit codes
 
-When the job is created, the CLI prints `created job <id>`. Any **notices** from the service follow as warnings, for example when the project the job resolved to has none of the variables or secrets a same-named project holds.
+When the job is created, the CLI prints `created job <id>`. With `--timeout`, the line also says the most [credits](/cli/guides/credits) the job can use at that timeout. Any **notices** from the service follow as warnings, for example when the project the job resolved to has none of the variables or secrets a same-named project holds.
 
 A finished run prints:
 - the job's summary
 - its `checks`, `issues`, `fixes` and `reason` lists
+- a `credits` line: the credits the job used and what your team has left this month, `not charged`, or `unlimited`. Under `CI`, the team's balance is left out
 - a warning when the run **refused** or narrowed part of the request
 - a final banner: `PASS`, `FAIL`, `NOT APPLICABLE`, or `no verdict` with the job's status
+
+When your team is out of credits, the job isn't created: the command says when the credits reset and how to raise the allowance, and exits `1`. See [When credits run out](/cli/guides/credits#when-credits-run-out).
 
 | Exit code | Meaning |
 |-----------|---------|
@@ -199,12 +204,14 @@ With `--json`, stdout carries exactly one JSON document, and all decoration goes
     "status": "pass",
     "checks": ["…"], "issues": [], "fixes": [], "reason": [],
     "summary": "…"
-  }
+  },
+  "credits": { "estimated": "…", "charged": "…", "reason": "…" }
 }
 ```
 
 - `status` is one of `queued`, `starting`, `running`, `succeeded`, `failed` or `cancelled`.
 - `result.status` is `pass`, `fail` or `not_applicable`.
+- `credits.estimated` is the most the job can use, and `credits.charged` what it used once it ended. Each is `null` until it's known.
 - The body also carries the resolved `environment`, the project, the target type in `input.type`, the trigger, and the created, started and ended timestamps.
 - The result may carry `refused: true` with a `reasonCode` when the run declined or narrowed part of the request. A refused run can still be `succeeded`, so a caller should check it.
 - The job may carry an `error: { type, message }`.
@@ -220,6 +227,7 @@ A failure that produced **no job** prints a machine-readable error envelope inst
 `error.code` is the API's own error code, and the field to branch on. Codes worth handling include:
 - `UNAUTHORIZED` and `ACCOUNT_INACTIVE`
 - `PROJECT_ARCHIVED`
+- `CREDITS_EXHAUSTED` (status `402`), whose numbers come as `error.credits`. See [When credits run out](/cli/guides/credits#when-credits-run-out)
 - the [environment codes](#environments) above
 
 `status` and `details` appear only when the failure came from the API. A purely local failure, such as flag validation or a missing credential, carries only `message`.
@@ -238,7 +246,7 @@ ironbee verify status <job-id> --watch    # poll until the job is terminal
 ironbee verify cancel <job-id> [reason]   # ask the job to stop, with an optional reason for the record
 ```
 
-`status` accepts the same `--json`, `--api-url` and `-C, --project-dir` flags as `run`, plus `--queue-wait <seconds>` with `--watch`. As an observer it never cancels: if the queue wait elapses, it just warns that the job is still queued.
+`status` accepts the same `--json`, `--api-url` and `-C, --project-dir` flags as `run`, plus `--queue-wait <seconds>` with `--watch`. As an observer it never cancels: if the queue wait elapses, it just warns that the job is still queued. For a finished job, it also prints the `credits` line.
 
 ---
 
@@ -250,5 +258,11 @@ ironbee verify cancel <job-id> [reason]   # ask the job to stop, with an optiona
   </Card>
   <Card title="Authentication" icon="key" href="/cli/guides/authentication">
     OAuth tokens for interactive use, API keys for CI.
+  </Card>
+  <Card title="Credits" icon="coins" href="/cli/guides/credits">
+    What a job costs, and how to see what your team has left.
+  </Card>
+  <Card title="Code review" icon="git-pull-request" href="/cli/guides/code-review">
+    Review your branch before you open a pull request.
   </Card>
 </CardGroup>

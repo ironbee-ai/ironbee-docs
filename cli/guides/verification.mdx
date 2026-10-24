@@ -218,7 +218,7 @@ Two more flags apply to every platform command:
   Enabling a platform applies sensible built-in file patterns automatically; you don't have to list which files to verify. To fine-tune *which* files trigger each cycle (custom verify patterns, ignored paths, devtools settings), see [Configuration](/cli/configuration/configuration#verification-cycles).
 </Note>
 
-When the browser cycle is off, an enabled Node, Python or Backend cycle without its own `verifyPatterns` watches every code file of its language instead of its usual server-layout list: for example `**/*.{ts,tsx,js,jsx,mjs,cjs}` for Node and `**/*.py` for Python. A backend-only setup therefore verifies on every code change.
+When the browser cycle is off, an enabled Node, Python or Backend cycle without its own `verifyPatterns` watches every code file of its language instead of its usual server-layout list: for example `**/*.{ts,tsx,js,jsx,mjs,cjs}` for Node and `**/*.py` for Python. A backend-only setup therefore verifies on every change to a `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `py`, `go`, `java`, `rb`, `cs`, `rs`, `kt`, `scala`, `ex`, `exs`, `php` or `clj` file.
 
 In a git repository, `ironbee install` and `ironbee <platform> enable` warn you when an enabled platform matches no tracked file, so a cycle that would never run doesn't go unnoticed.
 
@@ -238,7 +238,7 @@ The gate verifies only when the agent changed files a cycle watches. `verificati
 ironbee config set verification.changes.source git
 ```
 
-The setting is read live and applies to the enforce-mode completion gate only. Blocking edits before a verification still follows the file-editing tools. Don't confuse it with `verification.context.source`, which picks the change set used to find [area guidance](/cli/guides/verification-context).
+The setting is read live and applies to the enforce-mode completion gate only. Blocking edits before a verification still follows the file-editing tools. Don't confuse it with `verification.context.source`, which picks the change set used to find [area guidance](/cli/guides/verification-context). The [session view](/cli/advanced/inspecting-sessions#ironbee-session-view) and the Claude Code in-app view always count the edits from the file-editing tools, whatever this setting says.
 
 ---
 
@@ -324,7 +324,7 @@ Each entry takes:
 The verifier runs the checks via `ironbee hook run-checks` at the **start** of the cycle, and IronBee trusts the **recorded exit codes**, not the agent's word for it. In **enforce mode**, a `required` check that exits non-zero or times out **blocks completion** - the agent has to fix it and re-run - and a `required` check that *never ran* blocks too, so the agent can't quietly skip it. Non-required checks are recorded but don't gate. A failed check counts toward [`maxRetries`](/cli/configuration/configuration#core-options) like any other block.
 
 <Note>
-  Check results are recorded in the session's runtime directory, and sent to the Collector **without their raw output**: the check's name, status, exit code, whether it's required or conclusive, its duration, and whether it timed out. `verification.checks` is read live, so editing it takes effect on the next session without re-rendering artifacts. In assist and monitoring-only mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block.
+  Check results are recorded in the session's runtime directory, with a long output cut to about 8 KB that keeps its first and last part. They're sent to the Collector **without their raw output**: the check's name, status, exit code, whether it's required or conclusive, its duration, and whether it timed out. `verification.checks` is read live, so editing it takes effect on the next session without re-rendering artifacts. In assist and monitoring-only mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block.
 </Note>
 
 ### Conclusive checks (let a check decide the cycle)
@@ -357,7 +357,9 @@ Because it can *replace* the devtools cycle, `conclusive` is **hand-set only** -
 
 ## How verification runs (the verifier sub-agent)
 
-On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools (plus read-only `Read` / `Grep` / `Glob` so it can understand the change it's verifying - but **no edit tools**), and the main agent **delegates** the verification cycle to it - automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
+On **Claude Code** and **Codex**, IronBee doesn't let the main agent drive the devtools tools directly. Instead it installs a dedicated **`ironbee-verifier` sub-agent** that owns those tools, and the main agent **delegates** the verification cycle to it - automatically at the completion gate, or manually via `/ironbee-verify`. The verifier runs every active cycle, submits the verdict, and hands back a short summary.
+
+On Claude Code the verifier also gets read-only `Read` / `Grep` / `Glob`, so it can understand the change it's verifying, but **no edit tools**. On Codex it runs in a read-only sandbox on versions before 0.154; later versions give it the session's sandbox instead, and in enforce mode IronBee refuses an edit made after devtools calls until a verdict is submitted.
 
 The point is to keep the heavy devtools output (DOM snapshots, console logs, screenshots) inside the sub-agent's context instead of the main conversation. The sub-agent shares the session, so its events still flow to the Collector, each tagged with its `agent_name` so the Console can tell the verifier's work from the main agent's.
 
@@ -368,7 +370,7 @@ A **pass** verdict can still list issues. They're advisory: the change counts as
 <Note>
   **Cursor** has no verifier sub-agent: its main agent runs the verification itself, because Cursor's sub-agents can't share the verification session.
 
-  On **Codex 0.154 and later**, Codex ignores the MCP servers and sandbox settings in an agent file, so IronBee also registers the devtools server for the whole session. The main agent can then see the devtools tools; IronBee's rule, and in enforce mode its hook, keep it delegating. The verifier's read-only sandbox applies only on earlier Codex versions.
+  On **Codex**, IronBee also registers the devtools server for the whole session, because Codex 0.154 and later ignore the MCP servers and sandbox settings in an agent file. The main agent can then see the devtools tools. IronBee's rule keeps the main agent delegating, and in enforce mode its pre-tool hook refuses a devtools call made outside a verification cycle. The verifier's read-only sandbox applies only on Codex versions before 0.154.
 </Note>
 
 ### Picking the verifier model
