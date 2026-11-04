@@ -4,9 +4,10 @@ description: Install the IronBee GitHub App so IronBee can review your pull requ
 icon: "/images/icons/github.svg"
 ---
 
-The IronBee GitHub App connects your repositories to IronBee. It gives IronBee five things:
+The IronBee GitHub App connects your repositories to IronBee. It gives IronBee six things:
 
 - **Code review.** IronBee reviews the pull requests of the repositories the App covers, comments on what it finds and sets the **IronBee review** check. See [Code review of pull requests](/code-review/overview).
+- **Code wiki.** IronBee writes a wiki of each repository the App covers, from its default branch, and keeps it current as pull requests merge. See [Code wiki of a repository](/console/code-wiki).
 - **Repository access.** A verification run checks out the commit it verifies. A private repository needs the App for that; a public one doesn't.
 - **The pull request behind a deployment.** For [Vercel](/integrations/vercel) and [Netlify](/integrations/netlify) deployments, the App finds the pull request behind the deployed commit. The run then verifies the pull request's changes.
 - **Checks and comments.** For Vercel and Netlify deployments, IronBee opens a check on the commit and posts the result as a pull request comment.

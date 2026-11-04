@@ -31,6 +31,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 **The console** (console.ironbee.ai) shows:
 - projects
 - code review: pull requests, findings, rules, memories and settings
+- each GitHub project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
@@ -102,7 +103,7 @@ Console labels, quoted verbatim:
 - **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
 - **Code review:** overview, on the pull request, then the console pages (pull requests, rules and memories, settings)
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
+- **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
 When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep these inbound URLs working, because the product and the website link to them:
 - `/cli/get-started/getting-started`

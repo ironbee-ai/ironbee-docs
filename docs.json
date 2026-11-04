@@ -260,6 +260,14 @@
             ]
           },
           {
+            "group": "Code wiki",
+            "icon": "book-open",
+            "pages": [
+              "console/code-wiki",
+              "console/code-wiki-settings"
+            ]
+          },
+          {
             "group": "Verifications",
             "icon": "list-checks",
             "pages": [

@@ -170,6 +170,13 @@ Current structure as of the `docs.json` navigation configuration.
 | `console/variables.mdx` | Variables | ✅ |
 | `console/secrets.mdx` | Secrets | ✅ |
 
+### Code wiki
+
+| File | Title | Status |
+|------|-------|--------|
+| `console/code-wiki.mdx` | Code wiki of a repository | ✅ |
+| `console/code-wiki-settings.mdx` | Code wiki settings | ✅ |
+
 ### Verifications
 
 | File | Title | Status |

@@ -12,11 +12,13 @@ IronBee reviews the pull requests of every GitHub repository the IronBee GitHub 
 
 To review a branch before you open a pull request, run `ironbee review` from the CLI. See [Code review of your local checkout](/cli/guides/code-review).
 
+The same App also gives each repository a [code wiki](#code-wiki), on the project's **Code wiki** tab next to **Code review**.
+
 ---
 
 ## Turn it on
 
-Install the [IronBee GitHub App](/integrations/github) on your repositories. Every repository the App covers becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default.
+Install the [IronBee GitHub App](/integrations/github) on your repositories. Every repository the App covers becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default. The repository's [code wiki](/console/code-wiki) starts at the same time, unless **Write a wiki for newly connected repositories** is off in [Code wiki settings](/console/code-wiki-settings).
 
 To stop reviewing one repository, an owner or admin opens the project's **Settings > Code review** and turns off **Review pull requests in this repository**. See [Code review settings](/code-review/settings).
 
@@ -49,6 +51,14 @@ Every finding has a severity, **Critical**, **High**, **Medium** or **Low**, and
 
 ---
 
+## Code wiki
+
+IronBee writes a [code wiki](/console/code-wiki) of each repository the GitHub App covers, from its default branch: what the code does, where to start, how its parts depend on each other, and one page for each area, with every claim linked to the lines it comes from. It's written again as pull requests merge, and it uses no credits.
+
+The wiki starts when the repository is connected, like code review, and you read it on the project's **Code wiki** tab. To choose which repositories get one and in which language, see [Code wiki settings](/console/code-wiki-settings).
+
+---
+
 ## Credits
 
 Each review uses credits by the size of the change and the depth it runs at. Answers to questions, replies, rechecks and retractions use none. When the account's credits run out, the **IronBee review** check says so instead of reviewing. See [Pricing](/console/pricing) for the rates and each plan's credits.
@@ -69,5 +79,11 @@ Each review uses credits by the size of the change and the depth it runs at. Ans
   </Card>
   <Card title="Settings" icon="settings" href="/code-review/settings">
     Triggers, depth, focus, comments and merge blocking.
+  </Card>
+  <Card title="Code wiki" icon="book-open" href="/console/code-wiki">
+    Pages that explain each repository's code, kept current as pull requests merge.
+  </Card>
+  <Card title="Review from the CLI" icon="terminal" href="/cli/guides/code-review">
+    Review a local branch with `ironbee review` before you open a pull request.
   </Card>
 </CardGroup>
