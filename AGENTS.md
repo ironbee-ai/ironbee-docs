@@ -28,7 +28,7 @@ IronBee verifies code changes the way a QA engineer would and keeps the evidence
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
-- the daily project Quality analysis, with its findings and recommendations
+- Search: the command palette and the query builder
 
 ## Terminology
 
@@ -44,8 +44,7 @@ Use these terms. When you describe something on screen, quote the console label 
 | scenario | test case, script, flow (as a noun for the feature) | Console: a saved flow in a project, run against an environment. CLI: a saved scenario in `.ironbee/scenarios/`. When both could apply, say which one |
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
-| finding | issue, problem | Findings come from analysis. **Issues** is a console tab label |
-| recommendation | suggestion | Recommendations are directives derived from findings |
+| finding | issue, problem | A problem a code review or the GitHub Action reports. On a verification run's detail the console tab is **Issues** |
 | span | trace item, event | OpenTelemetry spans in the **Traces** tab |
 | environment, variable, secret | stage, env var, credential | Project settings |
 
@@ -91,7 +90,7 @@ Console labels, quoted verbatim:
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), insights (analysis, findings, recommendations), settings
+- **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
 When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep these inbound URLs working, because the product and the website link to them:
 - `/cli/get-started/getting-started`
@@ -151,7 +150,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
   - Don't document internal API endpoints or the database schema.
 - Verification evidence (video, screenshots) is for the customer's use. Explain how to access and read it, not how it's stored
 - Document only what customers can see or use in the product
-  - Flag features that are visible but disabled as "coming soon" (e.g., **Dismiss** on recommendations)
+  - Flag features that are visible but disabled as "coming soon"
 - The console docs cover the verification list and the verification detail. Don't document agent session pages (session timeline, activities, fixes)
 - Never mention human take-over in the live view
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead

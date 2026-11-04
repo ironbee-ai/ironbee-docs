@@ -13,11 +13,11 @@ The console has two kinds of search:
 
 Press `⌘K` (or `Ctrl+K`), or click **Search projects or anything...** in the top bar.
 
-- Type at least 3 characters to find a project by name. Picking one opens its [Verifications](/console/verifications) tab.
-- With an empty query, the palette shows your **Recent** projects and **Navigation** shortcuts: **Go to Projects**, **Go to Analyses**, **Go to Findings** and **Go to Recommendations**.
+- Type at least 3 characters to find a project by name. Picking one opens its **Code review** tab.
+- With an empty query, the palette shows your **Recent** projects and the **Navigation** shortcut **Go to Projects**. Picking a recent project opens its [Verifications](/console/verifications) tab.
 
-<img className="ib-shot ib-shot-light" src="/images/console/insights/search-command-palette-light.png" alt="The command palette with an empty query, showing a Recent project and the Navigation shortcuts" />
-<img className="ib-shot ib-shot-dark" src="/images/console/insights/search-command-palette-dark.png" alt="The command palette with an empty query, showing a Recent project and the Navigation shortcuts" />
+<img className="ib-shot ib-shot-light" src="/images/console/insights/search-command-palette-light.png" alt="The command palette with an empty query, showing a Recent project and the Go to Projects shortcut" />
+<img className="ib-shot ib-shot-dark" src="/images/console/insights/search-command-palette-dark.png" alt="The command palette with an empty query, showing a Recent project and the Go to Projects shortcut" />
 
 ---
 
@@ -25,13 +25,13 @@ Press `⌘K` (or `Ctrl+K`), or click **Search projects or anything...** in the t
 
 Open **Search** in the sidebar to build a query over your account's data.
 
-1. Under **Data Sources**, pick what to query: users, projects, sessions, verifications, fixes, findings, recommendations, pull requests or issues.
+1. Under **Data Sources**, pick what to query: users, projects, sessions, verifications, fixes, pull requests or issues.
 2. Choose **List** to see rows, or **Aggregate** to count and summarize.
 3. Build the query:
    - In **List** mode, pick the **Columns** to show.
    - In **Aggregate** mode, add a **Group by** dimension and **Metrics** such as `COUNT(*)`.
    - Add **Filters** to narrow the rows in either mode.
-4. Pick a time range. It starts at **Last 7 Days**.
+4. Pick a time range. It starts at **Last 30 Days**, or at the range you last picked in the console.
 5. Click **Run query**.
 
 <img className="ib-shot ib-shot-light" src="/images/console/insights/search-query-builder-light.png" alt="The Search page with Verifications selected under Data Sources, an Aggregate query grouped by Project with a COUNT(*) metric, and its results as a table" />

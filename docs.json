@@ -255,12 +255,9 @@
             ]
           },
           {
-            "group": "Insights",
-            "icon": "sparkles",
+            "group": "Search",
+            "icon": "search",
             "pages": [
-              "console/analysis",
-              "console/findings",
-              "console/recommendations",
               "console/search"
             ]
           },
@@ -317,27 +314,27 @@
     },
     {
       "source": "/console/analysis-account-cost",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-account-session-insights",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-project-cost",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-project-session-insights",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/findings-account",
-      "destination": "/console/findings"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/recommendations-account",
-      "destination": "/console/recommendations"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/traces",
@@ -345,15 +342,27 @@
     },
     {
       "source": "/console/analysis-quality",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/findings-project",
-      "destination": "/console/findings"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/recommendations-project",
-      "destination": "/console/recommendations"
+      "destination": "/console/projects"
+    },
+    {
+      "source": "/console/analysis",
+      "destination": "/console/projects"
+    },
+    {
+      "source": "/console/findings",
+      "destination": "/console/projects"
+    },
+    {
+      "source": "/console/recommendations",
+      "destination": "/console/projects"
     },
     {
       "source": "/cli/installation",

@@ -156,15 +156,6 @@ See [Verification modes](/cli/guides/verification#verification-modes).
 
 ---
 
-## Analysis, findings and recommendations
-
-Once a day, IronBee analyzes each project's recent sessions:
-- The [Quality analysis](/console/analysis) measures how well the agent verifies.
-- [Findings](/console/findings) are observations grounded in that data, such as a file with a high fix rate or a pattern of retries. They aren't necessarily bugs.
-- [Recommendations](/console/recommendations) are directives generated from findings.
-
----
-
 ## Config files
 
 The CLI reads its config from three layers, deep-merged (project-local wins over project, which wins over global):
