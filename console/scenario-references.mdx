@@ -13,11 +13,13 @@ An input is a value a run passes in, such as a product name or a search term. Ad
 
 | Field | What it's for |
 |-------|---------------|
-| **Name** | How actions read it, with `@`. Letters, digits, underscore and dash |
+| **Name** | How actions read it, with `@`. It starts with a letter or underscore, then letters, digits, underscore and dash, up to 64 characters. Otherwise the dialog says **Start with a letter or underscore, then letters, digits, underscore and dash.** |
 | **Description** | What the value is |
-| **Default value** | Used when a run doesn't pass one. Leave it empty and the input is required |
+| **Default value** | Used when a run doesn't pass one. Leave it empty and the input is required. It can't contain `{{` |
 
-An input without a default is required: **Run scenario** asks for it, and every scenario that imports this one must pass it. Renaming an input updates every row that reads it.
+An input without a default is required: **Run scenario** asks for it, and every scenario that imports this one must pass it. Renaming an input updates every row that reads it. Removing it leaves those rows reading nothing, and the editor flags them.
+
+**Save as** names on an Extract and the **Name in this scenario** of an import follow the same naming rule.
 
 When you [run a scenario](/console/scenario-runs#start-a-run), you type each input as plain text.
 
@@ -82,7 +84,7 @@ How an import runs:
 
 On the canvas, click **Show contents** on an Import row to see what it runs. Its actions count toward the [limits](/console/scenario-editor#limits) of the scenario that imports it.
 
-The picker lists the scenarios you can't import under **Can't be imported here**, with the reason: for example, it's the scenario you're editing, it runs another verification type, it would import this one back, or it would bring more actions than the scenario has room for.
+The picker lists the scenarios you can't import under **Can't be imported here**, with the reason: for example, it's the scenario you're editing, it runs another verification type, it would import this one back, its Main reads values written in its own Setup or Teardown, or it would bring more actions than the scenario has room for.
 
 ### Reusable parts
 

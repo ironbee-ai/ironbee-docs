@@ -64,6 +64,20 @@ Because it's model-authored free text, it's worth knowing exactly where it sits:
 
 ---
 
+## Who a session belongs to
+
+Every event the CLI sends to the Collector names whose session it is, so the Console can attribute it:
+
+| Field | What it holds |
+|-------|---------------|
+| `user_email` | The email of the account you're signed in to in your AI client: Claude Code's from `~/.claude.json`, Codex's from `~/.codex/auth.json`, Cursor's from the hook input or Cursor's local `state.vscdb`. For Claude Code on a GitHub Actions runner with no sign-in, it's `<github-actions:<actor>>`, with the GitHub user that started the run |
+| `usage_type` | `api` or `subscription`: how the Claude Code or Codex session is billed, when the CLI can tell. Absent for Cursor |
+| `usage_plan` | The subscription plan, such as `pro`, `max` or `team`, when it's known |
+
+A field the CLI can't work out is left out. Privacy mode doesn't remove these fields; suspending the [Collector](/cli/configuration/configuration#collector) (`collector.enable: false`) stops them along with everything else.
+
+---
+
 ## How it relates to telemetry and the collector
 
 These three are independent knobs, privacy mode doesn't touch the other two:

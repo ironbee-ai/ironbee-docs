@@ -91,10 +91,10 @@ The **Definition** tab shows the scenario section by section. Each row shows its
 
 An Import row names the scenario it runs, the name it has in this scenario, the values it passes to the imported scenario's inputs, and what it gives back. Click **Expand all** to see what each import runs.
 
-The panel on the right sums the scenario up: its **Inputs**, **Outputs**, **Imports** (with the section each one runs in), **Used by** and **Tags**, then when it was **Created** and **Updated**.
+The panel on the right sums the scenario up: its **Inputs**, **Outputs**, **Imports** (with the section each one runs in), **Used by** and **Tags**, then its **Schema**, the version of the scenario format it's saved in, and when it was **Created** and **Updated**.
 
-<img className="ib-shot ib-shot-light" src="/images/console/scenarios/scenario-definition-light.png" alt="Definition tab of a scenario: Setup imports Sign in as customer, Main has asserts, two imports of Add product to cart and a wait, Teardown imports Reset app state and logs out; the right panel lists its inputs, outputs, imports, Used by and tags" />
-<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/scenario-definition-dark.png" alt="Definition tab of a scenario: Setup imports Sign in as customer, Main has asserts, two imports of Add product to cart and a wait, Teardown imports Reset app state and logs out; the right panel lists its inputs, outputs, imports, Used by and tags" />
+<img className="ib-shot ib-shot-light" src="/images/console/scenarios/scenario-definition-light.png" alt="Definition tab of a scenario: Setup imports Sign in as customer, Main has asserts, two imports of Add product to cart and a wait, Teardown imports Reset app state and logs out; the right panel lists its inputs, outputs, imports, Used by, tags, schema and dates" />
+<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/scenario-definition-dark.png" alt="Definition tab of a scenario: Setup imports Sign in as customer, Main has asserts, two imports of Add product to cart and a wait, Teardown imports Reset app state and logs out; the right panel lists its inputs, outputs, imports, Used by, tags, schema and dates" />
 
 ### Runs
 
@@ -121,13 +121,18 @@ Click a run to open it. See [Run a scenario](/console/scenario-runs).
 <img className="ib-shot ib-shot-light" src="/images/console/scenarios/new-scenario-light.png" alt="New scenario dialog with a name, the Web type, From a template selected, and the Sign in, add to cart and check the total template" />
 <img className="ib-shot ib-shot-dark" src="/images/console/scenarios/new-scenario-dark.png" alt="New scenario dialog with a name, the Web type, From a template selected, and the Sign in, add to cart and check the total template" />
 
-A project can have up to 100 scenarios. The dialog shows how many the project has.
+A project can have up to 100 scenarios. The dialog shows how many the project has, such as **12 of 100 scenarios in this project**. Once a project has 100:
+- **New scenario** is turned off, and the **Scenarios** tab says **This project has 100 scenarios, the most it can have. Delete one to add another.**
+- **Duplicate** is turned off in the **...** menus, with the note **The project is at its 100 scenario limit.**
+
+<img className="ib-shot ib-shot-light" src="/images/console/scenarios/scenarios-limit-light.png" alt="A project's Scenarios tab at 100 scenarios, with the warning that the project has the most it can have and copies named (copy 2), (copy 3) and (copy 4)" />
+<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/scenarios-limit-dark.png" alt="A project's Scenarios tab at 100 scenarios, with the warning that the project has the most it can have and copies named (copy 2), (copy 3) and (copy 4)" />
 
 ---
 
 ## Duplicate or delete a scenario
 
-**Duplicate** opens the editor on a copy, named after the original with **(copy)** at the end. The copy is saved when you click **Save changes**.
+**Duplicate** opens the editor on a copy, named after the original with **(copy)** at the end. If that name is taken, the copy is named **(copy 2)**, then **(copy 3)**, and so on. The copy is saved when you click **Save changes**.
 
 **Delete** asks you to confirm with **Delete scenario**. Deleting can't be undone:
 - The scenario's past runs keep their copy of it and stay in **Verifications**.
@@ -142,7 +147,9 @@ A project can have up to 100 scenarios. The dialog shows how many the project ha
 | Owner, Admin, Member | Create, edit, duplicate, delete and run scenarios |
 | Billing Admin | See scenarios, their definitions and their runs, and open the editor read-only |
 
-On an archived project, scenarios are read-only and can't be run. See [Roles](/console/roles).
+A Billing Admin doesn't see **New scenario**, **Edit**, **Run scenario** or the **...** menus. The **Scenarios** tab, the scenario page and the editor say **Only owners, admins and members can change scenarios.** In the editor, **Discard** and **Save changes** are gone and the rows can't be changed.
+
+On an archived project, scenarios are read-only and can't be run. The same places say **This project is archived. Unarchive it to edit or run scenarios.** See [Roles](/console/roles).
 
 ---
 

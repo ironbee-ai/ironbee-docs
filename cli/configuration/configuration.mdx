@@ -24,7 +24,7 @@ Precedence is **local > project > global**. A key set in the local layer wins ov
 
 Secrets can also come from the environment: setting `IRONBEE_SERVICE_API_KEY` (or the legacy `IRONBEE_API_KEY`) supplies the account API key without committing it to any file.
 
-Credentials can't be written inside the checkout: `ironbee config set` refuses `service.oauthToken`, `service.apiKey`, `collector.oauthToken` and `collector.apiKey` on the project and local layers. Write them with `-g` (the global config) or `--personal` (the repository's [personal file](#the-personal-file)). `ironbee review` also reads its switches, endpoints and credential from the personal file, and never from a file inside the checkout.
+Credentials can't be written inside the checkout: `ironbee config set` refuses `service.oauthToken`, `service.apiKey`, `collector.oauthToken` and `collector.apiKey` on the project and local layers. Write them with `-g` (the global config) or `--personal` (the repository's [personal file](#the-personal-file)). `ironbee review` and `ironbee credits` also read their endpoints and credential from the personal file, and never from a file inside the checkout. No other command reads the personal file, so keep the credential that `ironbee verify` and your sessions use in the global config or the environment.
 
 The CLI never writes a config file inside the checkout through a symbolic link: `ironbee config set`, the toggle commands and the TUI refuse when `.ironbee/` or the file is a link. The global config is written readable by you only (`0600`).
 
@@ -387,6 +387,7 @@ A `review.settings.*` key resolves on its own: the flag, then the personal file,
 The personal file holds one repository's settings outside the checkout, at `~/.ironbee/projects/<token>/personal.json`. Every linked worktree of the repository shares it. Write it with `ironbee config set --personal`, or with **`P`** in the [TUI](/cli/guides/interactive-mode)'s Configuration area. `P` always targets the remote the branch is pushed to; for another remote, use `--remote <name>`. With several remotes and none chosen, the write asks for `--remote`.
 
 - It holds only what `ironbee review` reads: the two switches, the endpoints, the credentials, `review.exclude`, `review.settings.*` and `params.*`.
+- Only `ironbee review` and `ironbee credits` read it. `ironbee verify`, the hooks that send your sessions to the Collector, and the devtools servers don't, so a credential stored only in the personal file doesn't reach them.
 - It records the remote's `owner/repo` and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
 - It's written readable by you only (`0600`, in a `0700` folder).
 - There's one per repository, for one `owner/repo`. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.

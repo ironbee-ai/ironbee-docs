@@ -108,6 +108,8 @@ sending:
   switches    includeUnstaged=false (the default), includeUntracked=false (the default)
 ```
 
+The `size` line counts every changed file and line. Its reviewable lines are what the review is [priced](/cli/guides/credits#what-a-run-costs) by: they leave out lock, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes.
+
 Under that, it names every path it left out and why:
 - matched by `review.exclude`, or renamed from or identical to a path it matched
 - matched by your ignore rules
@@ -121,7 +123,7 @@ It also lists the nested `.ironbee/config.json` files whose exclusions joined, t
 ### Size limits
 
 The run is refused before anything is sent when the change has:
-- more than 1,000 files, or more than 100,000 changed lines
+- more than 1,000 files, or more than 100,000 changed lines. These count every changed file, deleted files included, although deleted files add nothing to the price
 - a patch of more than 1,000 paths, more than 16 MiB gzipped, or more than 64 MiB uncompressed
 - a binary file over 16 MiB, or binary files over 64 MiB in all
 

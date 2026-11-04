@@ -41,6 +41,8 @@ ironbee verify run web --url https://preview.example.com \
 
 ironbee verify run web --port 3000 --name "checkout smoke"
 
+ironbee verify run web --url https://preview.example.com --project shop-web
+
 ironbee verify run api --url https://api.preview.example.com \
   --prompt "check the orders endpoints, including a missing order and a bad token"
 ```
@@ -57,10 +59,21 @@ The command authenticates with your IronBee account. Run [`ironbee login`](/cli/
 |--------|-----------|
 | `ironbee login` | Personal OAuth access token, stored under [`service.oauthToken`](/cli/configuration/configuration#service-identity) |
 | `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY` | The standard [config env overrides](/cli/configuration/environment-variables). They work here too |
-| `IRONBEE_ACCESS_TOKEN` | OAuth access token, an override that beats everything above. `ironbee review` and `ironbee credits` read it too |
-| `IRONBEE_API_KEY` | Account API key (the legacy CI form). It also beats the config |
+| `IRONBEE_ACCESS_TOKEN` | OAuth access token, read only by `ironbee verify`, `ironbee review` and `ironbee credits` |
+| `IRONBEE_API_KEY` | Account API key, the legacy CI form |
 
-When both an OAuth token and an API key are available, the OAuth token wins. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
+An OAuth token from any source wins over an API key from any source. The command takes the first credential it finds, in this order:
+
+1. `IRONBEE_ACCESS_TOKEN`
+2. `IRONBEE_SERVICE_OAUTH_TOKEN`, else `service.oauthToken` in the config files
+3. the legacy `IRONBEE_OAUTH_TOKEN`, else `collector.oauthToken` in the config files
+4. `IRONBEE_API_KEY`
+5. `IRONBEE_SERVICE_API_KEY`, else `service.apiKey` in the config files
+6. `collector.apiKey` in the config files
+
+So on a machine where you ran `ironbee login`, the stored OAuth token wins over an `IRONBEE_API_KEY` or `IRONBEE_SERVICE_API_KEY` you export. Export `IRONBEE_ACCESS_TOKEN` or `IRONBEE_SERVICE_OAUTH_TOKEN` to override it.
+
+`ironbee verify` reads the global, project and local config files. It doesn't read the repository's [personal file](/cli/configuration/configuration#the-personal-file), so a credential kept only there doesn't reach it. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
 
 ---
 
@@ -175,7 +188,7 @@ When the job is created, the CLI prints `created job <id>`. With `--timeout`, th
 A finished run prints:
 - the job's summary
 - its `checks`, `issues`, `fixes` and `reason` lists
-- a `credits` line: the credits the job used and what your team has left this month, `not charged`, or `unlimited`. Under `CI`, the team's balance is left out
+- a `credits` line: the credits the job used and what your team has left this month, `not charged`, or `unlimited`. When `CI` is set to any non-empty value, the team's balance is left out
 - a warning when the run **refused** or narrowed part of the request
 - a final banner: `PASS`, `FAIL`, `NOT APPLICABLE`, or `no verdict` with the job's status
 

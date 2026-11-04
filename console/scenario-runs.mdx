@@ -51,7 +51,13 @@ The run opens on its verification detail page, with the scenario's steps in fron
 
 ### The outcome
 
-The band under the header gives the run's outcome in one line, links to the scenario, and counts the actions that passed, failed, soft failed, ended in a run error, were skipped or weren't reached. It also says whether **Teardown** ran: **Cleanup ran**, **No teardown**, or **Cleanup didn't run**, which means the app may still have data the run created.
+The band under the header gives the run's outcome in one line, links to the scenario, and counts the actions that passed, failed, soft failed, ended in a run error, were skipped or weren't reached. A run that ended without a verdict shows **No verdict** instead of the counts. The band also says whether **Teardown** ran:
+- **Cleanup ran**: every Teardown action passed.
+- **Cleanup ran, 2 problems** (with the actual count): Teardown ran, but some of its actions didn't pass. Teardown actions never change the verdict.
+- **No teardown**: the scenario has no Teardown.
+- **Cleanup didn't run**: the app may still have data the run created.
+
+If the run's details were too large to keep in full, the band adds **Some details were left out to fit the size limit.**
 
 | Outcome | What it means |
 |---------|---------------|

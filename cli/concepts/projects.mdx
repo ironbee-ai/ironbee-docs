@@ -44,7 +44,11 @@ When a job resolves to a GitHub project that has none of the variables or secret
 
 ## Naming the project yourself
 
-`ironbee verify --project <name>` reports the job to a CLI project with that name, and doesn't claim a GitHub project. In GitHub Actions, the job reports to the GitHub project of the repository the workflow runs in.
+`--project <name>` on `ironbee verify run web` or `ironbee verify run api` reports the job to a CLI project with that name, and doesn't claim a GitHub project. In GitHub Actions, the job reports to the GitHub project of the repository the workflow runs in.
+
+```bash
+ironbee verify run web --url https://preview.example.com --project shop-web
+```
 
 ---
 

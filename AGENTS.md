@@ -93,7 +93,8 @@ Console labels, quoted verbatim:
   - Global: `~/.ironbee/config.json`
   - Project: `.ironbee/config.json`, committed
   - Project-local: `.ironbee/config.local.json`, gitignored
-- Credentials: `service.apiKey` or `IRONBEE_SERVICE_API_KEY`. `collector.apiKey` and `IRONBEE_API_KEY` are legacy aliases
+- Credentials: `service.oauthToken` / `service.apiKey`, or `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY`. `IRONBEE_ACCESS_TOKEN` is read only by `verify`, `review` and `credits`. An OAuth token always wins over an API key. `collector.*`, `IRONBEE_OAUTH_TOKEN` and `IRONBEE_API_KEY` are legacy aliases
+- Personal file: `~/.ironbee/projects/<token>/personal.json`, read only by `ironbee review` and `ironbee credits`
 
 ## Navigation
 

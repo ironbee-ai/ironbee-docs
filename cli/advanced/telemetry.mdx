@@ -9,16 +9,18 @@ IronBee collects anonymous usage telemetry (via PostHog) to improve the CLI. It 
 
 ## What is sent
 
-Each event carries the CLI version, the Node.js version, and your operating system and architecture, under an anonymous ID stored in `~/.ironbee/telemetry.json`.
+Each event carries the CLI version, the Node.js version, your operating system and architecture, your time zone and the time of the event, under an anonymous ID stored in `~/.ironbee/telemetry.json`. Some events add a few fields of their own:
 
-| Event | When |
-|-------|------|
-| `cli_installed`, `cli_uninstalled` | IronBee is installed in, or removed from, a project |
-| `cli_registered`, `cli_unregistered` | A project is added to, or removed from, the inventory |
-| `npm_installed`, `npm_uninstalled` | The CLI package itself is installed or removed |
-| `session_start` | An agent session starts |
-| `verdict_write` | A verdict is submitted, with its status |
-| `verification_requested` | The gate asks for a verification, with its action and reason |
+| Event | When | Also carries |
+|-------|------|--------------|
+| `cli_installed`, `cli_uninstalled` | IronBee is installed in, or removed from, a project | The AI clients involved |
+| `cli_registered`, `cli_unregistered` | A project is added to, or removed from, the inventory | The AI clients involved |
+| `npm_installed`, `npm_uninstalled` | The CLI package itself is installed or removed | Nothing more |
+| `session_start` | An agent session starts | The AI client, the session ID, and whether verification is on |
+| `verdict_write` | A verdict is submitted | The session ID and the verdict's status |
+| `verification_requested` | The gate asks for a verification | The session ID, the gate's action and its reason |
+
+Telemetry carries no email address and no project or repository name. The events your sessions send to the Collector are a different stream, and they do identify you: see [Who a session belongs to](/cli/advanced/privacy#who-a-session-belongs-to).
 
 The `npm_installed` and `npm_uninstalled` events follow only the global config and `IRONBEE_TELEMETRY`, because they run outside any project. An older `telemetryEnabled: false` in `telemetry.json` is still honored.
 

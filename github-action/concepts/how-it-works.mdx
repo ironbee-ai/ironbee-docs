@@ -69,7 +69,7 @@ The action binds each run to the change behind the event, so the verification lo
 | `pull_request` | The whole pull request |
 | `issue_comment` | The pull request the comment is on. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
 | `push` | Every commit in the push, from the event's `before` commit, or the commit against its parent when that base isn't usable |
-| `workflow_dispatch`, `schedule` | On IronBee: the commit against its parent. On your runner: the whole application |
+| `workflow_dispatch`, `schedule`, `deployment_status` and other events | On IronBee: the commit against its parent. On your runner: the whole application |
 
 To verify the application without the repository, for example a private repository that the IronBee GitHub App doesn't cover, set `ironbee_bind_repository: false`.
 
