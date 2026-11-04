@@ -1,11 +1,12 @@
 ---
 title: GitHub App
-description: Install the IronBee GitHub App so verification runs can read your code, find the pull request behind a deployment, and report back on it.
+description: Install the IronBee GitHub App so IronBee can review your pull requests, verify your code, and report back on the pull request.
 icon: "/images/icons/github.svg"
 ---
 
-The IronBee GitHub App connects your repositories to IronBee. It gives IronBee four things:
+The IronBee GitHub App connects your repositories to IronBee. It gives IronBee five things:
 
+- **Code review.** IronBee reviews the pull requests of the repositories the App covers, comments on what it finds and sets the **IronBee review** check. See [Code review of pull requests](/code-review/overview).
 - **Repository access.** A verification run checks out the commit it verifies. A private repository needs the App for that; a public one doesn't.
 - **The pull request behind a deployment.** For [Vercel](/integrations/vercel) and [Netlify](/integrations/netlify) deployments, the App finds the pull request behind the deployed commit. The run then verifies the pull request's changes.
 - **Checks and comments.** For Vercel and Netlify deployments, IronBee opens a check on the commit and posts the result as a pull request comment.
@@ -66,8 +67,8 @@ Each repository's row shows its **Verification type** and its **Status**, **Enab
 | Access | Why |
 |--------|-----|
 | Repository contents (read) | Check out the commit under verification during a run |
-| Pull requests (read and write) | Find the pull request behind a commit, and post the result as a comment |
-| Checks (read and write) | Open the **IronBee Verification** check on the commit and complete it with the verdict |
+| Pull requests (read and write) | Find the pull request behind a commit, post the result as a comment, and post code reviews, their replies and the summary in the description |
+| Checks (read and write) | Open the **IronBee Verification** check on the commit and complete it with the verdict, and set the **IronBee review** check |
 | Email addresses (read) | Sign up and sign in with GitHub |
 
 The App never pushes to your repository and never opens or merges a pull request. When the GitHub Action fixes a finding, the action commits the fix with your workflow's own token.
@@ -76,7 +77,7 @@ The App never pushes to your repository and never opens or merges a pull request
 
 ## What appears on the pull request
 
-This section applies to Vercel and Netlify deployments. Runs from the GitHub Action report through the workflow instead: the job result and the action's own report comment. See [Running in CI](/github-action/guides/running-in-ci#the-report).
+This section applies to verification runs of Vercel and Netlify deployments. For code review, see [Code review on GitHub](/code-review/on-github). Runs from the GitHub Action report through the workflow instead: the job result and the action's own report comment. See [Running in CI](/github-action/guides/running-in-ci#the-report).
 
 **The check.** When a run starts, IronBee opens a check on the deployed commit:
 - It's named **IronBee Verification** for a Web project, and **IronBee Verification · API** for an API project.

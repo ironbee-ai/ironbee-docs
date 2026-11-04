@@ -1,6 +1,6 @@
 ---
 title: IronBee documentation
-description: Your AI QA engineer. Connect GitHub, Vercel or Netlify, or install the CLI, and follow every verification run in the console.
+description: Your AI QA engineer. It reviews every pull request, verifies deployments and agent changes, and keeps every run in the console.
 mode: custom
 ---
 
@@ -11,7 +11,7 @@ mode: custom
       <p className="ib-eyebrow">IronBee documentation</p>
       <h1 className="ib-title">Catch bugs before you ship</h1>
       <p className="ib-lead">
-        IronBee is your AI QA engineer. It verifies every preview deployment and pull request, and gives your AI coding agent the tools to verify its own changes.
+        IronBee is your AI QA engineer. It reviews every pull request, verifies every preview deployment, and gives your AI coding agent the tools to verify its own changes.
       </p>
       <div className="ib-actions">
         <a className="ib-btn ib-btn-primary" href="/getting-started/quickstart">Get started <span aria-hidden="true">→</span></a>
@@ -101,6 +101,36 @@ cd your-project && ironbee install
           </ul>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section className="ib-split">
+    <div className="ib-section-head">
+      <p className="ib-eyebrow">Code review</p>
+      <h2 className="ib-h2">Review every pull request</h2>
+      <p className="ib-sub">Install the GitHub App, and every pull request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
+    </div>
+    <div className="ib-tiles">
+      <a className="ib-tile" href="/code-review/overview">
+        <span className="ib-tile-icon ib-icon"><Icon icon="message-square-code" size={16} /></span>
+        <span className="ib-tile-title">How code review works</span>
+        <span className="ib-tile-desc">What starts a review, what it reads, and what it reports.</span>
+      </a>
+      <a className="ib-tile" href="/code-review/on-github">
+        <span className="ib-tile-icon ib-icon"><Icon icon="git-pull-request" size={16} /></span>
+        <span className="ib-tile-title">On the pull request</span>
+        <span className="ib-tile-desc">Inline comments, suggested fixes, the summary, the check and the commands.</span>
+      </a>
+      <a className="ib-tile" href="/code-review/pull-requests">
+        <span className="ib-tile-icon ib-icon"><Icon icon="list-filter" size={16} /></span>
+        <span className="ib-tile-title">Pull requests and findings</span>
+        <span className="ib-tile-desc">Every review and finding in the console, with the code behind it.</span>
+      </a>
+      <a className="ib-tile" href="/code-review/rules-and-memories">
+        <span className="ib-tile-icon ib-icon"><Icon icon="book-marked" size={16} /></span>
+        <span className="ib-tile-title">Rules and memories</span>
+        <span className="ib-tile-desc">Tell the review what your team expects, from the console or the repository.</span>
+      </a>
     </div>
   </section>
 

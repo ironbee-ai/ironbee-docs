@@ -82,6 +82,25 @@ Current structure as of the `docs.json` navigation configuration.
 
 ---
 
+## Code review
+
+### Code review
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-review/overview.mdx` | Code review of pull requests | ✅ |
+| `code-review/on-github.mdx` | Code review on GitHub pull requests | ✅ |
+
+### In the console
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-review/pull-requests.mdx` | Pull requests and findings in the console | ✅ |
+| `code-review/rules-and-memories.mdx` | Code review rules and memories | ✅ |
+| `code-review/settings.mdx` | Code review settings | ✅ |
+
+---
+
 ## CLI
 
 ### Get started

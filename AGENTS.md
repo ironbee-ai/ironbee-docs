@@ -11,7 +11,12 @@
 
 ## What IronBee is
 
-IronBee verifies code changes the way a QA engineer would and keeps the evidence. There are two ways in.
+IronBee reviews pull requests and verifies code changes the way a QA engineer would, and keeps the evidence. There are three ways in.
+
+**Code review.** Once the IronBee GitHub App covers a repository, IronBee reviews its pull requests.
+- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a `@ironbee-ai` comment command, or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
+- It posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check.
+- The console shows pull requests and findings under **Code review** (**Pull requests**, **Rules**, **Memories**, **Settings**) and on each project's **Code review** tab.
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
 - A run is started by the IronBee GitHub Action, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
@@ -25,6 +30,7 @@ IronBee verifies code changes the way a QA engineer would and keeps the evidence
 
 **The console** (console.ironbee.ai) shows:
 - projects
+- code review: pull requests, findings, rules, memories and settings
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
@@ -44,7 +50,9 @@ Use these terms. When you describe something on screen, quote the console label 
 | scenario | test case, script, flow (as a noun for the feature) | Console: a saved flow in a project, run against an environment. CLI: a saved scenario in `.ironbee/scenarios/`. When both could apply, say which one |
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
+| code review | PR review, review bot | IronBee's review of a pull request. "Review" alone is fine once the context is clear |
 | finding | issue, problem | A problem a code review or the GitHub Action reports. On a verification run's detail the console tab is **Issues** |
+| rule, memory | guideline, instruction, knowledge | Code review: a rule says what must or must not happen (kinds **Check** and **Skip**); a memory says what is true and never raises a finding |
 | span | trace item, event | OpenTelemetry spans in the **Traces** tab |
 | environment, variable, secret | stage, env var, credential | Project settings |
 
@@ -53,17 +61,20 @@ Console labels, quoted verbatim:
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
 - **Trigger:** Vercel, Netlify, GitHub Actions, API, CLI, Console
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
+- **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
+- **Finding severity:** Critical, High, Medium, Low
 - **Scenario outcome:** Passed, Failed, Soft fail, Setup failed, Run error, Ran out of time, Browser tools lost, Stopped before it started, Stopped, Running, Starting. In the verification list a failed scenario run's status reads **Run error**
 
 ## Product components and their doc sections
 
 | Component | Docs | Notes |
 |-----------|------|-------|
-| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, checks and PR comments for Vercel and Netlify runs |
+| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, code review, checks and PR comments for Vercel and Netlify runs |
+| Code review | Code review (`code-review/*`) | The GitHub side and the console pages. The CLI's `ironbee review` stays under CLI |
 | `ironbee-ai/ironbee-action` | Integrations > GitHub Action (`github-action/*`) | Pin examples to `@v1.1.0`. The workflow secret `IRONBEE_API_KEY` is passed as the `ironbee_api_key` input |
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
-| `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs |
+| `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use |
 | IronBee Console | Console | Web UI at console.ironbee.ai |
 
 ## CLI conventions
@@ -89,6 +100,7 @@ Console labels, quoted verbatim:
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
+- **Code review:** overview, on the pull request, then the console pages (pull requests, rules and memories, settings)
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
 - **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
@@ -142,6 +154,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - Clip each shot to the part the text explains, a card, table, dialog or panel about 600-1000 px wide. A full-window capture is unreadable in the content column.
 - Keep the console's top bar out of the frame, since it shows the plan name. Never show real people's names or emails, prices, plans, seats, limits, or a take-over control.
 - Capture from the console running on mock data, not from a real account.
+- On GitHub, code review shows severity, kind and pre-existing marks and the **Open in IronBee** button as the console's own SVG badges, not emoji. The docs use copies of them from `images/code-review/badges/`, shown inline with the `ib-mark` classes in `style.css`. Re-copy them from the console frontend's `public/badges/` when they change.
 
 ## Content boundaries
 

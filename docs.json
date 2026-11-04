@@ -157,6 +157,29 @@
         ]
       },
       {
+        "tab": "Code review",
+        "icon": "git-pull-request",
+        "groups": [
+          {
+            "group": "Code review",
+            "icon": "git-pull-request",
+            "pages": [
+              "code-review/overview",
+              "code-review/on-github"
+            ]
+          },
+          {
+            "group": "In the console",
+            "icon": "layout-dashboard",
+            "pages": [
+              "code-review/pull-requests",
+              "code-review/rules-and-memories",
+              "code-review/settings"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "CLI",
         "icon": "terminal",
         "groups": [
@@ -330,7 +353,7 @@
     },
     {
       "source": "/console/findings-account",
-      "destination": "/console/projects"
+      "destination": "/code-review/pull-requests"
     },
     {
       "source": "/console/recommendations-account",
@@ -346,7 +369,7 @@
     },
     {
       "source": "/console/findings-project",
-      "destination": "/console/projects"
+      "destination": "/code-review/pull-requests"
     },
     {
       "source": "/console/recommendations-project",
@@ -358,7 +381,7 @@
     },
     {
       "source": "/console/findings",
-      "destination": "/console/projects"
+      "destination": "/code-review/pull-requests"
     },
     {
       "source": "/console/recommendations",

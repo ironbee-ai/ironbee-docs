@@ -19,7 +19,7 @@ ironbee review show                            # this worktree's newest review a
 ## Before you start
 
 - The repository is on **github.com** and connected through the [IronBee GitHub App](/integrations/github). Otherwise the API refuses the review with `PROJECT_NOT_BOUND`.
-- Code review is turned on for the repository in the console. Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
+- Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
 - The GitHub App is installed for the repository the review targets. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING`, and the CLI lists your checkout's github.com remotes so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
 - Your team has [credits](/cli/guides/credits) left this month.
@@ -161,6 +161,11 @@ It never reads them from a file inside the checkout, such as the committed `conf
 | `--no-fixes` | `review.settings.suggestedFixes` | No suggested fixes |
 | `--no-diagrams` | `review.settings.diagrams` | No diagrams |
 | `--no-knowledge` | `review.settings.repositoryKnowledge` | Don't read the repository's knowledge |
+
+These are the console's [code review settings](/code-review/settings#review), under other names:
+- `--focus`: `security` is **Security**, and `editorial` is **Docs, names and tests**.
+- `--checks`: `lint`, `style`, `defensive`, `tests`, `cleanup` and `pitfalls` are the **Extra checks** **Linter rules**, **Style and typos**, **Input checks and error handling**, **Missing tests**, **Duplication and dead code** and **Language and framework gotchas**.
+- `--no-knowledge` turns off **Rules and memories from the repository**. See [Rules and memories](/code-review/rules-and-memories#in-ironbee-review).
 
 Each setting resolves on its own: the flag, then the personal file, then `config.local.json`, then `config.json`, then the global config. A setting set nowhere isn't sent, so the repository's setting, the account's or the default applies. A flag with a value outside its list is an error, and the run exits `1`. A config value outside its list is warned about and not sent.
 

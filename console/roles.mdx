@@ -19,10 +19,16 @@ Everyone in an IronBee account has one role. The account's creator is its **Owne
 | Capability | Who can do it |
 |------------|---------------|
 | View projects, verifications and scenarios | Everyone |
+| View pull requests and findings under [Code review](/code-review/pull-requests), and the code review settings | Everyone |
+| View [rules and memories](/code-review/rules-and-memories) | Owner, Admin, Member |
 | Use Search, and manage your own profile, OAuth tokens and visual settings | Everyone |
 | Read project settings: environments, variables and secret names | Everyone |
 | Run an instant verification | Owner, Admin, Member |
 | Create, edit, duplicate, delete and run [scenarios](/console/scenarios) | Owner, Admin, Member |
+| Ask for a code review with **Review now**, and cancel a running job | Owner, Admin, Member |
+| Create and change [rules and memories](/code-review/rules-and-memories) | Owner and Admin apply the change; a Member's change becomes a proposal |
+| Approve or reject proposals | Owner, Admin |
+| Change [code review settings](/code-review/settings), for the account or one repository | Owner, Admin |
 | Change project settings: verification type, environments, variables and secrets | Owner, Admin |
 | Create, archive and unarchive projects | Owner, Admin |
 | Connect and manage integrations, and use **Getting started** | Owner, Admin |
