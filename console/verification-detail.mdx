@@ -12,8 +12,8 @@ The page brings together everything the run did:
 - what went over the network, in the requests, traces and logs
 - what it concluded, in the result
 
-<img className="ib-shot ib-shot-light" src="/images/console/verifications/verification-detail-light.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
-<img className="ib-shot ib-shot-dark" src="/images/console/verifications/verification-detail-dark.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/verification-detail-light.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip with the credits it used, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/verification-detail-dark.png" alt="Verification Details page of a Netlify run with a Fail result: the summary strip with the credits it used, the actions list with a step selected, its screenshot above the recording controls, the Issues tab of the result, and the network requests up to that step" />
 
 ---
 
@@ -25,8 +25,12 @@ The strip below the title summarizes the run:
 
 - The result, the run's name, and its type, trigger and attempt, for example **Web · Vercel · attempt 1**.
 - The [callbacks](/console/verifications#callbacks) that report the result back to Vercel, GitHub or Netlify.
-- **Run details**, the info icon, which opens the run's facts: its name and id, project, trigger, type, attempts, duration, why it ended, when it was created, started and ended, any error, and the delivery of each callback.
-- The duration, and how many actions, requests and screenshots the run recorded.
+- **Run details**, the info icon, which opens the run's facts: its name and id, project, trigger, type, attempts, duration, credits, why it ended, when it was created, started and ended, any error, and the delivery of each callback.
+- The duration, the credits, and how many actions, requests and screenshots the run recorded.
+
+The credits read as in the [Credits column](/console/verifications#credits) of the list: the credits the run used once it ended, or `≤` and the most it can use while it runs. When the run wasn't charged, **Run details** adds the reason after the number, such as "not charged: the run never started".
+
+A run refused because the team's credits for the month were used up shows **Refused** in **Run details**, with the date the credits reset, instead of an error. See [When credits run out](/console/usage#when-credits-run-out).
 
 ---
 

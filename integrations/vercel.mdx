@@ -20,7 +20,7 @@ There is no workflow file to add and no test suite to maintain. Nothing waits on
 
 ## Step 1: Install and connect the integration
 
-In the console, open **Integrations** in the sidebar, select **Vercel**, and click **Install the Vercel integration**. During onboarding, the same step is **Connect Vercel**. You can also start on Vercel: open the [IronBee integration on the Vercel Marketplace](https://vercel.com/marketplace/ironbee) and click **Connect Account**.
+In the console, open **Integrations** in the sidebar, select **Vercel**, and click **Install the Vercel integration**. On **Settings > Getting started**, the same step is **Connect Vercel**. You can also start on Vercel: open the [IronBee integration on the Vercel Marketplace](https://vercel.com/marketplace/ironbee) and click **Connect Account**.
 
 <img className="ib-shot" src="/images/integrations/vercel-marketplace.png" alt="The IronBee integration on the Vercel Marketplace, with the Connect Account button" />
 
@@ -40,16 +40,17 @@ In the console, open **Integrations** in the sidebar, select **Vercel**, and cli
 
 ## Step 2: Enable projects
 
-A deployment starts a run only once its project is enabled. Until then, the Integrations page shows **Nothing enabled: deployments start no runs**.
+A deployment starts a run only once its project is enabled with a verification type. Until a project is enabled, the Integrations page shows **Nothing enabled: deployments start no runs**.
 
-1. The list is titled **Projects in** and your team's name. Every new project starts selected: clear the ones you don't want verified, or use **Select all** and **Select none**.
-2. Set each one's verification type, or set them all at once under **Verification type**:
+1. The list is titled **Projects in** and your team's name. Under **New projects**, every project starts selected: clear the ones you don't want verified, or use **Select all** and **Select none**. Projects that are **Not active** are listed under **Enable again**, unselected.
+2. Pick each project's verification type. Each project has its own, and **Web** is selected to start with:
    - **Web** opens the deployment in a browser and exercises it as a user would.
    - **API** calls the deployment over HTTP and checks the responses against its contract.
-3. Click **Create N projects**.
+   - **None** makes it a project that starts nothing on a deployment until you set a type in its settings.
+3. Click **Create N projects**. With projects under **Enable again** selected too, the button reads **Create N, enable N**.
 
-<img className="ib-shot ib-shot-light" src="/images/console/integrations/vercel-enable-projects-light.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web or API choice, the Verification type bar and the Create 5 projects button" />
-<img className="ib-shot ib-shot-dark" src="/images/console/integrations/vercel-enable-projects-dark.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web or API choice, the Verification type bar and the Create 5 projects button" />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/vercel-enable-projects-light.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web, API or None choice, and the Create 5 projects button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/vercel-enable-projects-dark.png" alt="Projects in Acme Web: five Vercel projects selected, each with a Web, API or None choice, and the Create 5 projects button" />
 
 You can enable more projects later: from **Integrations > Vercel**, expand the installation, open the actions menu (the three dots) next to a project and choose **Enable**. Or open **Projects** and click **New project**.
 
@@ -140,8 +141,13 @@ The conclusion Vercel shows maps to the result like this:
 | Not applicable | Neutral |
 | The run couldn't complete | Neutral |
 | Cancelled | Canceled |
+| Your team is out of credits | Neutral |
 
-When IronBee doesn't start a run for a deployment, the check is **Canceled** with no output. The GitHub check, when the App is installed, gives the reason.
+When a run ends, the check's output closes with the credits it used: "Used N IronBee credits." or "No IronBee credits were used."
+
+When your team's credits for the month are used up, a deployment gets no run. The check concludes **Neutral**, and its output reads **IronBee did not run this verification · out of credits this month**: "This team's IronBee credits for this month are used up. Verifications start again when the credits reset or the team's allowance is raised." See [Credit usage](/console/usage) and [Pricing](/console/pricing).
+
+When IronBee doesn't start a run for a deployment for another reason, the check is **Canceled** with no output. The GitHub check, when the App is installed, gives the reason.
 
 The check's link opens the run in the console. While a Web run is going, you can watch it live: every action as it executes, the browser view and the network requests. Afterwards, the recording replays with the actions, network requests, traces and logs synced to it. API runs show the requests and responses, without a browser view. In the project's **Verifications** list, these runs carry the **Vercel** trigger. See [Verification detail](/console/verification-detail).
 
@@ -150,7 +156,7 @@ The check's link opens the run in the console. While a Web run is going, you can
 ## Scope
 
 - **Preview deployments only.** Production deployments aren't verified.
-- **Enabled projects only.** Deployments of projects that aren't enabled, are archived, or are outside the installation's scope are ignored.
+- **Enabled projects with a type.** Deployments of projects that aren't enabled, have the type **None**, are archived, or are outside the installation's scope are ignored.
 - **Non-blocking.** The check never holds up a deployment or a promotion.
 - **Re-requestable.** Re-request **IronBee Verification** from the Vercel deployment page to start a new run.
 
@@ -161,8 +167,8 @@ The check's link opens the run in the console. While a Web run is going, you can
 **Integrations > Vercel** lists every connected installation with its **Team**, **Enabled projects**, **Status** and when it was **Connected**. **Manage on Vercel** opens Vercel's integrations dashboard. To add or remove projects, click **Manage access in Vercel** and use Vercel's **Manage Access**.
 
 Expand an installation to manage its projects. Each project's actions menu (the three dots) holds:
-- **Enable** turns on verification for a project.
-- **Edit type** changes the verification type. The change takes effect on the next deployment.
+- **Enable** turns on verification for a project, with the verification type you pick.
+- **Edit type** changes the verification type: **Web**, **API** or **None**. The change takes effect on the next deployment.
 - **Disable** stops verification. The project keeps its history, and runs from the CLI or the API still report to it.
 
 The gear icon next to an enabled project, **Project settings**, opens the project's settings.
@@ -179,7 +185,7 @@ When a project leaves the installation's scope, or you uninstall the integration
 
 | Symptom | Likely cause |
 |---------|--------------|
-| No **IronBee Verification** check on the deployment | The project isn't enabled, the deployment is a production build, or the project is outside the installation's scope. Check the project list under **Integrations > Vercel** |
+| No **IronBee Verification** check on the deployment | The project isn't enabled, its verification type is **None**, the deployment is a production build, or the project is outside the installation's scope. Check the project list under **Integrations > Vercel** |
 | The check concludes quickly, and the run shows the agent couldn't open the app | Preview access is missing. See [Preview access](#preview-access) |
 | Neutral, "IronBee could not complete this verification" | The repository is private and the GitHub App doesn't cover it, or the run hit an error. Check the GitHub App, then re-request the check |
 | The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or no pull request was found for the commit. See [GitHub App](/integrations/github) |

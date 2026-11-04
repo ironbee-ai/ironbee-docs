@@ -210,6 +210,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `console/account.mdx` | Account | ✅ |
 | `console/team.mdx` | Team | ✅ |
 | `console/pricing.mdx` | Pricing | ✅ |
+| `console/usage.mdx` | Credit usage | ✅ |
 | `console/roles.mdx` | Roles and permissions | ✅ |
 
 ---

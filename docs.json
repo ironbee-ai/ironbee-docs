@@ -303,6 +303,7 @@
               "console/account",
               "console/team",
               "console/pricing",
+              "console/usage",
               "console/roles"
             ]
           }

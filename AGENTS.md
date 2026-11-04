@@ -20,7 +20,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
 - A run is started by the IronBee GitHub Action, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
-- A project is verified only after it's enabled with a verification type, **Web** or **API**.
+- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**.
 - Results appear in three places:
   - a GitHub check and pull request comment (Vercel and Netlify runs)
   - the Netlify deploy page
@@ -35,6 +35,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
+- **Settings > Usage**: the team's credits this month, what code review and verification used, and the rate card
 - Search: the command palette and the query builder
 
 ## Terminology
@@ -168,6 +169,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - The console docs cover the verification list and the verification detail. Don't document agent session pages (session timeline, activities, fixes)
 - Never mention human take-over in the live view
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead
+  - The same goes for credits: other pages say what uses credits and what's free, never how many a plan gets or a job costs
 - The public REST API has no reference docs for now. That includes running a saved scenario through the API
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`

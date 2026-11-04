@@ -29,10 +29,11 @@ The **Run scenario** dialog opens:
 <img className="ib-shot ib-shot-light" src="/images/console/scenarios/run-scenario-light.png" alt="Run scenario dialog with the production environment, the optional firstProduct input with its default, and the Preflight checklist: the start URL, the secret the environment defines, the imports and the usual duration" />
 <img className="ib-shot ib-shot-dark" src="/images/console/scenarios/run-scenario-dark.png" alt="Run scenario dialog with the production environment, the optional firstProduct input with its default, and the Preflight checklist: the start URL, the secret the environment defines, the imports and the usual duration" />
 
-If preflight finds a problem, such as a secret the environment doesn't have, it lists it with a link to the environment, and the button reads **Run anyway**. If the problem is still there when the run starts, the run stops before its first action and still counts as one run this month.
+If preflight finds a problem, such as a secret the environment doesn't have, it lists it with a link to the environment, and the button reads **Run anyway**. If the problem is still there when the run starts, the run stops before its first action and costs no credits.
 
 <Note>
-  - Each run counts as one verification run this month. See [Pricing](/console/pricing).
+  - A run uses credits for each started minute, up to its time limit. The note next to the button says so. See [What uses credits](/console/usage#verification).
+  - When the team's credits for this month are used up, **Run scenario** and **Run again** are disabled; hover one to see the date they reset. From the **...** menu on the **Scenarios** tab, the dialog still opens, says so at the top, and keeps its button disabled. See [When credits run out](/console/usage#when-credits-run-out).
   - Web and API scenarios can both be run from the console. The project must run the scenario's type, and it can't be archived.
   - If the project has no environments yet, the dialog links to them with **Open environments**. The environment needs a URL that a cloud run can reach.
 </Note>
@@ -61,7 +62,7 @@ The band under the header gives the run's outcome in one line, links to the scen
 | **Run error** | An action couldn't run. This isn't a verdict on the app |
 | **Ran out of time** | The run used its whole time budget before it finished |
 | **Browser tools lost** | The browser tools stopped during an action. The browser session and its recording are lost |
-| **Stopped before it started** | The run was refused before its first action, for example because the scenario reads something the environment doesn't define. It still counts as one run this month |
+| **Stopped before it started** | The run was refused before its first action, for example because the scenario reads something the environment doesn't define, or the team's credits for the month were used up. It costs no credits |
 | **Stopped** | The run stopped before it finished. Actions it didn't reach show as **Not reached** |
 | **Starting**, **Running** | The run is in progress |
 

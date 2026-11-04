@@ -1,10 +1,10 @@
 ---
 title: How integrations work
-description: Connect GitHub, Vercel or Netlify, enable the projects to verify, and see where the results land.
+description: Connect GitHub, Vercel or Netlify, turn repositories, projects and sites into IronBee projects, and see where the results land.
 keywords: ["GitHub", "Vercel", "Netlify", "preview deployments"]
 ---
 
-Integrations connect IronBee to where your code is built and deployed. Once a project is enabled, IronBee verifies its changes without a workflow to maintain:
+Integrations connect IronBee to where your code lives and deploys. The GitHub App makes your repositories projects, so IronBee reviews their pull requests. Once a project has a verification type, IronBee also verifies its changes without a workflow to maintain:
 - every deployment on Vercel or Netlify
 - every push and pull request, with the GitHub Action
 
@@ -21,7 +21,7 @@ Owners and admins open **Integrations** in the console's sidebar. The page lists
 
 | Provider | What you install | What starts a run |
 |----------|------------------|-------------------|
-| [GitHub](/integrations/github) | The IronBee GitHub App | Nothing on its own. It gives runs access to your repositories and pull requests |
+| [GitHub](/integrations/github) | The IronBee GitHub App | No verification run on its own. It reviews pull requests, and gives runs access to your repositories and pull requests |
 | [GitHub Action](/github-action/get-started/getting-started) | A workflow file in your repository | Pushes, pull requests, `/ironbee-verify` comments, schedules and manual runs |
 | [Vercel](/integrations/vercel) | The IronBee Vercel integration | Preview deployments of enabled projects |
 | [Netlify](/integrations/netlify) | The IronBee Netlify extension | Deploy previews and branch deploys of enabled sites |
@@ -37,7 +37,7 @@ You can connect more than one. A common setup is Vercel or Netlify for deploymen
     Install the integration on the provider's side and connect it to your IronBee account. Connecting needs the **owner** or **admin** role.
   </Step>
   <Step title="Enable projects">
-    A deployment starts a run only once its project is enabled. Until then, the Integrations page shows **Nothing enabled: deployments start no runs**. Enable projects from the provider's page, with **Enable** in a project's actions menu, or from **Projects > New project**.
+    A Vercel or Netlify deployment starts a run only once its project is enabled with a verification type. After you connect Vercel or Netlify, the console opens the list of projects or sites to enable. Until one is enabled, the Integrations page shows **Nothing enabled: deployments start no runs**. Enable more later with **Enable** in a project's actions menu on the provider's page, or from **Projects > New project**.
   </Step>
   <Step title="Give IronBee access to your previews">
     If your previews are protected, store the way in as a secret in the project's settings: a Vercel **Bypass token** or a Netlify site **Password**.
@@ -51,24 +51,25 @@ You can connect more than one. A common setup is Vercel or Netlify for deploymen
 
 ## Projects and verification types
 
-Each enabled GitHub repository, Vercel project or Netlify site becomes an IronBee project. It keeps its runs, its settings and its history.
+Each GitHub repository the App covers becomes an IronBee project when the App is installed; there's nothing to enable. Each Vercel project or Netlify site becomes one when you enable it. A project keeps its runs, its settings and its history.
 
 Every project has a verification type:
 - **Web** opens the deployment in a browser and exercises it as a user would.
 - **API** calls the deployment over HTTP and checks the responses against its contract.
+- **None** starts nothing on a deployment until a type is set in the project's settings.
 
-Set the type when you enable a project. Change it later with **Edit type** on the Integrations page, or in the project's settings. The change takes effect on the next deployment.
+A GitHub repository starts with **None**. Runs from the GitHub Action and from `ironbee verify` name their own type. For a Vercel project or Netlify site, pick the type when you enable it; **Web** is selected to start with. Change it later with **Edit type** on the Integrations page, or in the project's settings. The change takes effect on the next deployment.
 
-<img className="ib-shot ib-shot-light" src="/images/console/integrations/enable-project-dialog-light.png" alt="The Enable dialog for a repository, with the Web and API verification types and the Enable button" />
-<img className="ib-shot ib-shot-dark" src="/images/console/integrations/enable-project-dialog-dark.png" alt="The Enable dialog for a repository, with the Web and API verification types and the Enable button" />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/enable-project-dialog-light.png" alt="The Enable dialog for a Vercel project, with the Web, API and None verification types and the Enable button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/enable-project-dialog-dark.png" alt="The Enable dialog for a Vercel project, with the Web, API and None verification types and the Enable button" />
 
 A project can be in one of three states:
 
 | State | Meaning |
 |-------|---------|
-| Enabled | Its deployments start runs |
-| Disabled | You clicked **Disable**. Deployments stop starting runs; the project keeps its history, and runs from the CLI or the API still report to it |
-| **Not active** | The project left the installation's scope, or the integration was uninstalled. It keeps its id, runs and settings, and **Enable again** in **New project** brings it back |
+| Enabled | It's a project of the installation. On Vercel and Netlify, its deployments start runs of its verification type |
+| Disabled | Vercel and Netlify only: you clicked **Disable**. Deployments stop starting runs; the project keeps its history, and runs from the CLI or the API still report to it |
+| **Not active** | The project left the installation's scope, or the integration was uninstalled. It keeps its id, runs and settings. **Enable again** in **New project** brings back a Vercel project or Netlify site; adding a repository back to the GitHub App brings back its project |
 
 ---
 

@@ -5,7 +5,7 @@ description: A project's identity, its verification type, and archiving.
 
 Every project has a **Settings** tab, after **Scenarios**. Its menu has two parts:
 
-- **Project**: **General**, covered on this page, [Code review](/code-review/settings) and [Code wiki](/console/code-wiki-settings#repository-settings), for a GitHub repository.
+- **Project**: **General**, covered on this page, [Code review](/code-review/settings) and [Code wiki](/console/code-wiki-settings#repository-settings). On a project that isn't a GitHub repository, the last two show how to connect it with the GitHub App.
 - **Configuration**: [Environments](/console/environments), [Variables](/console/variables) and [Secrets](/console/secrets).
 
 Everyone in the account can read a project's settings. Only owners and admins can change them.
@@ -34,12 +34,13 @@ The **Verification** card sets what a deployment of this project starts:
 
 - **Web** opens the deployment in a browser and exercises it as a user would.
 - **API** calls the deployment over HTTP and checks the responses against its contract.
+- **None** starts nothing on a deployment until a type is set here.
 
-Pick one and click **Save**. The change takes effect on the next deployment. With nothing selected, deployments of the project aren't verified until you pick a type.
+Pick one and click **Save**. The change takes effect on the next deployment. A GitHub repository starts with **None**, and so does a Vercel project or Netlify site enabled with **None**.
 
 <Note>
-  - The type applies to deployments from Vercel and Netlify. Runs started from the API or the CLI name their own type, so on a CLI project the selection has no effect.
-  - If a project is **Not active**, the card says its deployments aren't verified. Click **Open Vercel integration** (or the Netlify or GitHub one) to enable it again.
+  - The type applies to deployments from Vercel and Netlify. Runs started from the GitHub Action, the API or the CLI name their own type, so on a CLI project the selection has no effect.
+  - If a project is **Not active**, the card says it isn't verified, and the type can't be changed. Click **Open Vercel integration** (or the Netlify or GitHub one) to enable it again. A GitHub repository also comes back when you add it to the App's repositories on GitHub again.
 </Note>
 
 ---
