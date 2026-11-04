@@ -43,6 +43,16 @@ Describe how your app is installed, built and started, and the port it listens o
 
 **On your runner**, the agent runs these commands itself as part of the verification.
 
+### Which URLs count as on the runner
+
+An `app_url` whose host IronBee can't reach from outside is treated as an app on the runner. On IronBee, it's reached through the tunnel. These hosts count:
+- `localhost`, and any name ending in `.localhost`
+- a loopback or private IPv4 address: `127.x`, `0.x`, `10.x`, `172.16.x` to `172.31.x`, `192.168.x`, and link-local `169.254.x`
+- an IPv6 loopback (`::1`), unspecified (`::`), link-local (`fe80::/10`) or unique local (`fc00::/7`) address
+- a name without a dot, such as a container name or a Docker Compose service
+
+Any other host is verified as a deployed URL. The tunnel connects to the port on the runner's own loopback address, whatever host the URL names. So for `http://web:3000`, the app has to accept connections on `localhost:3000` on the runner, for example a container that publishes port 3000.
+
 ### Apps started through Docker Compose or a service
 
 When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again. That's right only when the command runs the app itself.
@@ -108,7 +118,7 @@ On IronBee, `ironbee_environment` names the project environment the run is again
 ```
 
 - A name the project hasn't seen yet is created by the first run that uses it.
-- When the input is empty, `deployment` and `deployment_status` events fall back to the deployment's environment. Other events use the project-wide variables and secrets only.
+- When the input is empty, `deployment` and `deployment_status` events fall back to the deployment's environment. Other events use the project-wide variables and secrets only. See [Deployments](/github-action/guides/running-in-ci#deployments) for a `deployment_status` workflow.
 - When the environment has **Domain** properties, `app_url` must be inside those domains. Runs on the runner are refused for that environment, because a tunnel has no domain.
 
 If you pin `ironbee_cli_version`, use 0.44.0 or later for `ironbee_environment`.
@@ -139,7 +149,7 @@ The verification decides what to check from the changeset. Add instructions when
     verification_prompt: 'Focus on the checkout flow and payment form validation'
 ```
 
-`verification_prompt` reaches the verification in both modes. When the verification runs on your runner, you can also set `claude_code_max_turns` (default `100`) and `claude_code_model`.
+`verification_prompt` reaches the verification in both modes. A [comment command](/github-action/guides/comment-trigger#the-command) with an instruction replaces it for that run. When the verification runs on your runner, you can also set `claude_code_max_turns` (default `100`) and `claude_code_model`.
 
 ---
 

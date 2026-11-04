@@ -324,7 +324,7 @@ Each entry takes:
 The verifier runs the checks via `ironbee hook run-checks` at the **start** of the cycle, and IronBee trusts the **recorded exit codes**, not the agent's word for it. In **enforce mode**, a `required` check that exits non-zero or times out **blocks completion** - the agent has to fix it and re-run - and a `required` check that *never ran* blocks too, so the agent can't quietly skip it. Non-required checks are recorded but don't gate. A failed check counts toward [`maxRetries`](/cli/configuration/configuration#core-options) like any other block.
 
 <Note>
-  Check results are recorded in the session's runtime directory, with a long output cut to about 8 KB that keeps its first and last part. They're sent to the Collector **without their raw output**: the check's name, status, exit code, whether it's required or conclusive, its duration, and whether it timed out. `verification.checks` is read live, so editing it takes effect on the next session without re-rendering artifacts. In assist and monitoring-only mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block.
+  Check results are recorded in the session's runtime directory, with a long output cut to about 8 KB that keeps its first and last part. They're sent to the Collector **without their raw output**: the check's name, status, exit code, whether it's required or conclusive, its duration, and whether it timed out. `verification.checks` is read live, so editing it takes effect on the next session without re-rendering artifacts. In assist mode there's no gate, so the checks run during a manual `/ironbee-verify` but never block. Monitoring-only mode runs no checks.
 </Note>
 
 ### Conclusive checks (let a check decide the cycle)

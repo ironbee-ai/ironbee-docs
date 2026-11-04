@@ -15,6 +15,10 @@ The editor has:
 - the **Outline** on the left, to jump to a section or a row
 - the **Setup**, **Main** and **Teardown** sections. See [How a scenario is built](/console/scenarios#how-a-scenario-is-built)
 
+The editor opens read-only, with a note that says why, when:
+- you're a Billing Admin, or the project is archived. See [Who can change scenarios](/console/scenarios#who-can-change-scenarios).
+- the scenario is saved on a schema version the editor doesn't read, for example **This scenario is on schema 2.0; the editor reads 1.0, so it opens read-only.**
+
 ---
 
 ## Kinds of rows
@@ -76,7 +80,7 @@ Inputs and outputs are covered in [Inputs, references and imports](/console/scen
 
 ## Problems and warnings
 
-The editor checks the scenario as you type, the same way a save does. What it finds shows on the rows, in the outline and above the sections.
+The editor checks the scenario as you type, the same way a save does. What it finds shows on the rows, in the outline and above the sections, and while there are errors the save status reads, for example, **2 problems to fix before saving**.
 
 - **Errors** break the scenario's rules, and IronBee refuses to save them. For example: **Main** has no action, a Step is empty, the scenario has more than 60 actions, or two scenarios would import each other.
 - **Warnings** don't stop saving, but a run that reaches the row ends in a run error, or stops before it starts. For example:

@@ -3,13 +3,16 @@ title: Key concepts
 description: The terms you'll meet across IronBee, from projects and verification runs to sessions and verdicts.
 ---
 
-IronBee organizes everything around **projects**. A project collects two kinds of work:
+IronBee organizes everything around **projects**. A project collects three kinds of work:
+- **code reviews** of the pull requests in a GitHub repository
 - **verification runs**, which IronBee executes on its own infrastructure for your deployments and pull requests
 - **sessions**, which your AI coding agent records with the IronBee CLI
 
 ```mermaid actions={false}
 flowchart TD
     A[Account] --> P[Project]
+    P --> CR[Code reviews]
+    CR --> F[Findings]
     P --> E[Environments, variables, secrets]
     P --> SC[Scenarios]
     SC --> R
@@ -43,6 +46,23 @@ Every project has a **verification type**:
 - **API**: call the deployment over HTTP and check the responses against its contract.
 
 A project that is no longer enabled on its provider is **Not active**: it keeps its history, and its deployments aren't verified. A project can also be archived. See [Project settings](/console/project-settings).
+
+---
+
+## Code review
+
+A **code review** is IronBee's review of a pull request in a GitHub repository the IronBee GitHub App covers. It runs when the pull request opens or gets a push, or when you ask for one, and posts its comments, a summary and the **IronBee review** check on the pull request.
+
+- A **finding** is one problem a review reports, with a severity (**Critical**, **High**, **Medium** or **Low**) and a category. A later review marks it addressed once a push fixes it.
+- A **rule** tells the review what must or must not happen in your code, and can raise a finding. A **memory** tells it what is true in a part of the code.
+
+Pull requests and their findings appear under **Code review** in the console and on the project's **Code review** tab. See [Code review of pull requests](/code-review/overview).
+
+---
+
+## Code wiki
+
+The **code wiki** is a set of pages IronBee writes about a GitHub repository from its default branch: an overview, where to start, the architecture, and one page for each area of the code. It's written again as pull requests merge, and every claim links to the lines it comes from. It's on the project's **Code wiki** tab. See [Code wiki of a repository](/console/code-wiki).
 
 ---
 
@@ -153,15 +173,6 @@ The CLI runs in one of three modes:
 | **Monitor** | Nothing is verified. Sessions, tool calls and timing are still recorded |
 
 See [Verification modes](/cli/guides/verification#verification-modes).
-
----
-
-## Analysis, findings and recommendations
-
-Once a day, IronBee analyzes each project's recent sessions:
-- The [Quality analysis](/console/analysis) measures how well the agent verifies.
-- [Findings](/console/findings) are observations grounded in that data, such as a file with a high fix rate or a pattern of retries. They aren't necessarily bugs.
-- [Recommendations](/console/recommendations) are directives generated from findings.
 
 ---
 

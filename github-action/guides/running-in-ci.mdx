@@ -60,6 +60,36 @@ Start a manual run from the **Actions** tab on GitHub. It's useful to repeat a v
 
 ---
 
+## Deployments
+
+```yaml
+on:
+  deployment_status:
+
+jobs:
+  verify:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ironbee-ai/ironbee-action@v1.1.0
+        with:
+          ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+          app_url: ${{ github.event.deployment_status.environment_url }}
+```
+
+**What gets verified:**
+- **On IronBee:** the deployed commit against its parent.
+- **On your runner:** the whole application.
+
+**Fixes:** committed to a new fix branch, with a pull request, as for a manual run.
+
+**Environment:** with `ironbee_environment` empty, the run uses the deployment's environment. See [Environments](/github-action/guides/verifying-your-app#environments).
+
+`deployment_status` fires for every status a deployment reports, such as pending and then success, so the `if:` keeps the run to a deployment that finished. The action doesn't read the deployment's URL from the event: pass it in `app_url`, here the `environment_url` the deployment reported. A deployed URL isn't re-verified after a fix, because it still serves the code that was deployed.
+
+---
+
 ## Pull request comments
 
 ```yaml
@@ -80,6 +110,7 @@ A `/ironbee-verify` comment on a pull request starts a verification of that pull
 | `issue_comment` | The pull request the comment is on | The pull request branch, only with `--fix` |
 | `push` | The pushed commits | A new fix branch and pull request |
 | `schedule`, `workflow_dispatch` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and pull request |
+| `deployment_status` | On IronBee: the deployed commit. On your runner: the whole application | A new fix branch and pull request |
 
 Fixes need `verification_apply_fix: true` (the default) and an Anthropic credential. Without a credential, every trigger verifies and reports only. A fix whose re-verification fails is not pushed.
 
@@ -116,12 +147,15 @@ To verify only when someone asks for it by name, with a comment command or a man
 jobs:
   verify:
     if: >-
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name != 'issue_comment' && vars.IRONBEE_VERIFICATION_AUTO != 'false') ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
        startsWith(github.event.comment.body, '/ironbee-verify'))
 ```
+
+The first line keeps a manual dispatch running when the variable is `false`. Without it, the second line skips the dispatch too.
 
 **With the `verification_auto` input.** The action resolves to "nothing to do" and the job ends green in seconds. The steps before the action, such as the checkout and your builds, still run.
 

@@ -1,13 +1,16 @@
 ---
 title: What is IronBee?
-description: IronBee verifies code changes against your running app before you ship, on your pull requests or inside your AI coding agent, and keeps the evidence.
+description: IronBee reviews your pull requests and verifies code changes against your running app before you ship, inside your AI coding agent too.
 keywords: ["AI QA engineer", "AI code verification", "AI-generated code testing", "end-to-end testing", "QA automation"]
 ---
 
 IronBee is your AI QA engineer. It verifies code changes the way a QA engineer would: it opens the running application, exercises what changed, and reports what works and what doesn't, with the evidence to prove it.
 
-There are two ways in, and you can use both:
+It also reviews your pull requests the way a careful teammate would, reading each change against the rest of the code.
 
+You can use any of these, or all of them:
+
+- **Code review on your pull requests.** Install the IronBee GitHub App, and IronBee reviews every pull request in the repositories it covers. Its findings land as comments on the pull request and in the console.
 - **On your deployments and pull requests.** Connect GitHub, Vercel or Netlify, and IronBee verifies each preview deployment or pull request on its own infrastructure. The result lands on the pull request, on the deployment, and in the console.
 - **Inside your AI coding agent.** The IronBee CLI gives Claude Code, Cursor and Codex the tools to verify their own changes in a real browser, a running backend or a terminal before they call the work done.
 
@@ -23,6 +26,9 @@ Teams using agentic development today face:
 ## What IronBee does
 
 <CardGroup cols={2}>
+  <Card title="Code review on every pull request" icon="message-square-code" href="/code-review/overview">
+    Every pull request gets a review with inline comments, suggested fixes, a summary and a check that can hold a merge. Your team's rules and memories steer it.
+  </Card>
   <Card title="Verification on every change" icon="shield-check">
     Every preview deployment on Vercel or Netlify, and every push or pull request with the GitHub Action, starts a verification run. An agent reads the change and exercises it against your running app.
   </Card>
@@ -35,18 +41,20 @@ Teams using agentic development today face:
   <Card title="Results where you work" icon="git-pull-request">
     Results land as a check and a comment on the pull request, as a Vercel deployment check or on the Netlify deploy page, and in the console. The GitHub Action can also fix what it finds.
   </Card>
-  <Card title="AI-powered analysis" icon="sparkles">
-    Every day, IronBee runs an LLM analysis over each project's recent sessions to surface findings and recommendations: what went wrong, what patterns keep appearing, and what to do next.
-  </Card>
-  <Card title="Automatic recommendations" icon="wand">
-    Findings are turned into directives that are automatically injected into the agent's context on future sessions, it learns from past mistakes without manual intervention.
-  </Card>
   <Card title="Security" icon="lock">
     Never collects prompt content, file content, tool output, credentials (API keys and authentication tokens), or any PII beyond your org-configured email. Your code and secrets stay on your machine.
   </Card>
 </CardGroup>
 
 ## How it works
+
+### Code review on your pull requests
+
+1. A pull request opens or gets a push in a repository the IronBee GitHub App covers.
+2. IronBee reads the change against the rest of the repository, with your rules and memories.
+3. It posts a review with a comment for each finding, adds a summary to the pull request description, and sets the **IronBee review** check. Every review and finding also appears under **Code review** in the console.
+
+See [Code review of pull requests](/code-review/overview).
 
 ### On your deployments and pull requests
 

@@ -11,11 +11,16 @@
 
 ## What IronBee is
 
-IronBee verifies code changes the way a QA engineer would and keeps the evidence. There are two ways in.
+IronBee reviews pull requests and verifies code changes the way a QA engineer would, and keeps the evidence. There are three ways in.
+
+**Code review.** Once the IronBee GitHub App covers a repository, IronBee reviews its pull requests.
+- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a `@ironbee-ai` comment command, or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
+- It posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check.
+- The console shows pull requests and findings under **Code review** (**Pull requests**, **Rules**, **Memories**, **Settings**) and on each project's **Code review** tab.
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
 - A run is started by the IronBee GitHub Action, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
-- A project is verified only after it's enabled with a verification type, **Web** or **API**.
+- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**.
 - Results appear in three places:
   - a GitHub check and pull request comment (Vercel and Netlify runs)
   - the Netlify deploy page
@@ -25,10 +30,13 @@ IronBee verifies code changes the way a QA engineer would and keeps the evidence
 
 **The console** (console.ironbee.ai) shows:
 - projects
+- code review: pull requests, findings, rules, memories and settings
+- each GitHub project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
-- the daily project Quality analysis, with its findings and recommendations
+- **Settings > Usage**: the team's credits this month, what code review and verification used, and the rate card
+- Search: the command palette and the query builder
 
 ## Terminology
 
@@ -44,8 +52,9 @@ Use these terms. When you describe something on screen, quote the console label 
 | scenario | test case, script, flow (as a noun for the feature) | Console: a saved flow in a project, run against an environment. CLI: a saved scenario in `.ironbee/scenarios/`. When both could apply, say which one |
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
-| finding | issue, problem | Findings come from analysis. **Issues** is a console tab label |
-| recommendation | suggestion | Recommendations are directives derived from findings |
+| code review | PR review, review bot | IronBee's review of a pull request. "Review" alone is fine once the context is clear |
+| finding | issue, problem | A problem a code review or the GitHub Action reports. On a verification run's detail the console tab is **Issues** |
+| rule, memory | guideline, instruction, knowledge | Code review: a rule says what must or must not happen (kinds **Check** and **Skip**); a memory says what is true and never raises a finding |
 | span | trace item, event | OpenTelemetry spans in the **Traces** tab |
 | environment, variable, secret | stage, env var, credential | Project settings |
 
@@ -54,17 +63,20 @@ Console labels, quoted verbatim:
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
 - **Trigger:** Vercel, Netlify, GitHub Actions, API, CLI, Console
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
+- **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
+- **Finding severity:** Critical, High, Medium, Low
 - **Scenario outcome:** Passed, Failed, Soft fail, Setup failed, Run error, Ran out of time, Browser tools lost, Stopped before it started, Stopped, Running, Starting. In the verification list a failed scenario run's status reads **Run error**
 
 ## Product components and their doc sections
 
 | Component | Docs | Notes |
 |-----------|------|-------|
-| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, checks and PR comments for Vercel and Netlify runs |
+| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, code review, checks and PR comments for Vercel and Netlify runs |
+| Code review | Code review (`code-review/*`) | The GitHub side and the console pages. The CLI's `ironbee review` stays under CLI |
 | `ironbee-ai/ironbee-action` | Integrations > GitHub Action (`github-action/*`) | Pin examples to `@v1.1.0`. The workflow secret `IRONBEE_API_KEY` is passed as the `ironbee_api_key` input |
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
-| `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs |
+| `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use |
 | IronBee Console | Console | Web UI at console.ironbee.ai |
 
 ## CLI conventions
@@ -81,7 +93,8 @@ Console labels, quoted verbatim:
   - Global: `~/.ironbee/config.json`
   - Project: `.ironbee/config.json`, committed
   - Project-local: `.ironbee/config.local.json`, gitignored
-- Credentials: `service.apiKey` or `IRONBEE_SERVICE_API_KEY`. `collector.apiKey` and `IRONBEE_API_KEY` are legacy aliases
+- Credentials: `service.oauthToken` / `service.apiKey`, or `IRONBEE_SERVICE_OAUTH_TOKEN` / `IRONBEE_SERVICE_API_KEY`. `IRONBEE_ACCESS_TOKEN` is read only by `verify`, `review` and `credits`. An OAuth token always wins over an API key. `collector.*`, `IRONBEE_OAUTH_TOKEN` and `IRONBEE_API_KEY` are legacy aliases
+- Personal file: `~/.ironbee/projects/<token>/personal.json`, read only by `ironbee review` and `ironbee credits`
 
 ## Navigation
 
@@ -90,8 +103,9 @@ Console labels, quoted verbatim:
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
+- **Code review:** overview, on the pull request, then the console pages (pull requests, rules and memories, settings)
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, verifications, scenarios (scenarios, editor, references and imports, runs), insights (analysis, findings, recommendations), settings
+- **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
 When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep these inbound URLs working, because the product and the website link to them:
 - `/cli/get-started/getting-started`
@@ -143,6 +157,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - Clip each shot to the part the text explains, a card, table, dialog or panel about 600-1000 px wide. A full-window capture is unreadable in the content column.
 - Keep the console's top bar out of the frame, since it shows the plan name. Never show real people's names or emails, prices, plans, seats, limits, or a take-over control.
 - Capture from the console running on mock data, not from a real account.
+- On GitHub, code review shows severity, kind and pre-existing marks and the **Open in IronBee** button as the console's own SVG badges, not emoji. The docs use copies of them from `images/code-review/badges/`, shown inline with the `ib-mark` classes in `style.css`. Re-copy them from the console frontend's `public/badges/` when they change.
 
 ## Content boundaries
 
@@ -151,10 +166,12 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
   - Don't document internal API endpoints or the database schema.
 - Verification evidence (video, screenshots) is for the customer's use. Explain how to access and read it, not how it's stored
 - Document only what customers can see or use in the product
-  - Flag features that are visible but disabled as "coming soon" (e.g., **Dismiss** on recommendations)
+  - Flag features that are visible but disabled as "coming soon"
 - The console docs cover the verification list and the verification detail. Don't document agent session pages (session timeline, activities, fixes)
 - Never mention human take-over in the live view
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead
+  - The same goes for credits: other pages say what uses credits and what's free, never how many a plan gets or a job costs
+  - Plans are priced in credits. Leave out the website's session limits (its sessions row and session lines) when you mirror it
 - The public REST API has no reference docs for now. That includes running a saved scenario through the API
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`

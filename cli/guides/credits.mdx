@@ -10,7 +10,7 @@ description: How ironbee review and ironbee verify spend your team's monthly cre
 
 ## What a run costs
 
-- **A code review** is priced by its size and its depth. The size counts the reviewable lines of the change. Lock files, generated, vendored, minified and binary files, and data files under a test or fixture folder don't count.
+- **A code review** is priced by its size and its depth. The size counts the reviewable lines of the change. Lock files, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes don't count.
 - **A verification job** is priced by how long it runs, up to its timeout.
 
 Every price the CLI prints is in credits.
@@ -67,7 +67,7 @@ A review cancelled after it started shows `(half price)` next to its credits, an
 
 ## In CI
 
-When `CI` is set, a run's lines carry only the job's own credits, never your team's balance, because a public repository's job log is public. The JSON forms keep every field, and `ironbee credits` still prints the balance.
+When `CI` is set to any non-empty value, `false` and `0` included, a run's lines carry only the job's own credits, never your team's balance, because a public repository's job log is public. The JSON forms keep every field, and `ironbee credits` still prints the balance.
 
 ---
 
@@ -94,7 +94,7 @@ With `--json`, the failure envelope carries the numbers as `error.credits`, next
 - `needed` appears only on a code review, whose price is known before it's created.
 - `topUp` is `add_seats`, `upgrade`, `pay_invoice`, `contact`, or `null` when there's no way up.
 
-A code review can also fail with `local_size_mismatch`: the size the CLI declared didn't match the change, so the review couldn't be priced.
+A code review can also fail with `local_size_mismatch`: the size the CLI declared didn't match the change, so the review couldn't be priced. CLI versions before 0.48 counted the lines of deleted files, which the platform doesn't price. If a change that deletes files fails this way, update the CLI.
 
 ---
 

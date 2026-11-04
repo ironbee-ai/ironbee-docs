@@ -157,6 +157,29 @@
         ]
       },
       {
+        "tab": "Code review",
+        "icon": "git-pull-request",
+        "groups": [
+          {
+            "group": "Code review",
+            "icon": "git-pull-request",
+            "pages": [
+              "code-review/overview",
+              "code-review/on-github"
+            ]
+          },
+          {
+            "group": "In the console",
+            "icon": "layout-dashboard",
+            "pages": [
+              "code-review/pull-requests",
+              "code-review/rules-and-memories",
+              "code-review/settings"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "CLI",
         "icon": "terminal",
         "groups": [
@@ -237,6 +260,14 @@
             ]
           },
           {
+            "group": "Code wiki",
+            "icon": "book-open",
+            "pages": [
+              "console/code-wiki",
+              "console/code-wiki-settings"
+            ]
+          },
+          {
             "group": "Verifications",
             "icon": "list-checks",
             "pages": [
@@ -255,12 +286,9 @@
             ]
           },
           {
-            "group": "Insights",
-            "icon": "sparkles",
+            "group": "Search",
+            "icon": "search",
             "pages": [
-              "console/analysis",
-              "console/findings",
-              "console/recommendations",
               "console/search"
             ]
           },
@@ -275,6 +303,7 @@
               "console/account",
               "console/team",
               "console/pricing",
+              "console/usage",
               "console/roles"
             ]
           }
@@ -317,27 +346,27 @@
     },
     {
       "source": "/console/analysis-account-cost",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-account-session-insights",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-project-cost",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/analysis-project-session-insights",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/findings-account",
-      "destination": "/console/findings"
+      "destination": "/code-review/pull-requests"
     },
     {
       "source": "/console/recommendations-account",
-      "destination": "/console/recommendations"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/traces",
@@ -345,15 +374,27 @@
     },
     {
       "source": "/console/analysis-quality",
-      "destination": "/console/analysis"
+      "destination": "/console/projects"
     },
     {
       "source": "/console/findings-project",
-      "destination": "/console/findings"
+      "destination": "/code-review/pull-requests"
     },
     {
       "source": "/console/recommendations-project",
-      "destination": "/console/recommendations"
+      "destination": "/console/projects"
+    },
+    {
+      "source": "/console/analysis",
+      "destination": "/console/projects"
+    },
+    {
+      "source": "/console/findings",
+      "destination": "/code-review/pull-requests"
+    },
+    {
+      "source": "/console/recommendations",
+      "destination": "/console/projects"
     },
     {
       "source": "/cli/installation",

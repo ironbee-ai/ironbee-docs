@@ -15,7 +15,7 @@ Most configuration lives in [config files](/cli/configuration/configuration), bu
 | `IRONBEE_SERVICE_OAUTH_TOKEN` | Supplies [`service.oauthToken`](/cli/configuration/configuration#service-identity) (the personal token from [`ironbee login`](/cli/guides/authentication)) without committing it. When both credentials are set, the OAuth token wins. |
 | `IRONBEE_SERVICE_DOMAIN` | Supplies [`service.domain`](/cli/configuration/configuration#service-identity), the stage selector every service URL derives from. |
 | `IRONBEE_API_KEY` | Legacy - supplies the deprecated `collector.apiKey` fallback, which is read **only when `service.apiKey` is unset** (a recent `ironbee login` writes `service.*`, which then wins). One exception: [`ironbee verify`](/cli/guides/verification-jobs#credentials), [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) read it as a deliberate high-priority override, although an OAuth token still wins. |
-| `IRONBEE_OAUTH_TOKEN` | Legacy - supplies the deprecated `collector.oauthToken` fallback; same caveat as above. |
+| `IRONBEE_OAUTH_TOKEN` | Legacy - supplies the deprecated `collector.oauthToken` fallback, which is read **only when `service.oauthToken` is unset**. Unlike `IRONBEE_API_KEY`, no command reads it ahead of the config. |
 | `IRONBEE_TELEMETRY` | Set to `false` to turn off [anonymous CLI telemetry](/cli/advanced/telemetry) for this shell/run, a per-session alternative to the `telemetry.enable` config key. |
 | `IRONBEE_LOG_LEVEL` | Logging verbosity: `debug`, `info` (default), `warn` or `error`. Set to `debug` to see detailed output when troubleshooting. |
 
@@ -35,7 +35,7 @@ ironbee install --mode enforce --yes
 
 ## Verification jobs, code reviews and credits
 
-[`ironbee verify`](/cli/guides/verification-jobs) - the cloud verification-job runner - reads two extra overrides of its own, plus the GitHub Actions context. [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) read the same two overrides, and like `verify` they also read `IRONBEE_API_KEY` ahead of the config:
+[`ironbee verify`](/cli/guides/verification-jobs) - the cloud verification-job runner - reads two extra overrides of its own, plus the GitHub Actions context. [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) read the same two overrides, and like `verify` they also read `IRONBEE_API_KEY` ahead of the config. An OAuth token still wins over any API key; see [Credentials](/cli/guides/verification-jobs#credentials) for the full order.
 
 | Variable | Effect |
 |----------|--------|
@@ -43,11 +43,11 @@ ironbee install --mode enforce --yes
 | `IRONBEE_API_URL` | API base URL, overriding `api.url` (the `--api-url` flag wins over both). |
 | `GITHUB_ACTIONS` | When exactly `"true"`, a created job is declared with the `github_actions` trigger (Console visibility only) and secret-header values are masked with `::add-mask::`. |
 | `GITHUB_REPOSITORY` / `GITHUB_SHA` / `GITHUB_REF` | Fill the run's repository binding: the `owner/repo`, the authoritative commit, and the pull-request number on a PR run. |
-| `CI` | When set, `ironbee review` uses the text form instead of the Review area, and the lines of a review or verification carry only the job's own credits, never the team's balance. |
+| `CI` | When set to any non-empty value, `false` and `0` included, `ironbee review` uses the text form instead of the Review area, and the lines of a review or verification carry only the job's own credits, never the team's balance. |
 | `NO_COLOR` | When set, `ironbee review` draws no colour in the Review area or the text form. |
 | `VISUAL` / `EDITOR` | The editor the Review area's `e` key opens a finding in (falls back to `vi`). |
 
-`ironbee review` and `ironbee credits` read the credential and the endpoints from the environment, the flags, the personal file and the global config only, never from a file inside the checkout. See [Where the review goes, and as whom](/cli/guides/code-review#where-the-review-goes-and-as-whom).
+`ironbee review` and `ironbee credits` read the credential and the endpoints from the environment, the flags, the personal file and the global config only, never from a file inside the checkout. They're the only commands that read the [personal file](/cli/configuration/configuration#the-personal-file). See [Where the review goes, and as whom](/cli/guides/code-review#where-the-review-goes-and-as-whom).
 
 ---
 
@@ -61,7 +61,9 @@ The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their
 | `IRONBEE_JIRA_PAT` | Supplies `integrations.jira.pat` (Jira **Server/DC** personal access token). |
 | `IRONBEE_LINEAR_API_KEY` | Supplies `integrations.linear.apiKey` (Linear personal API key or OAuth token). |
 
-GitHub needs no credential variable - it rides the `gh` CLI's own auth (GitHub Actions ships a `GH_TOKEN`).
+GitHub needs no IronBee credential variable:
+- The [GitHub issue tracker](/cli/guides/issue-tracking#github-issues) runs the `gh` CLI, which uses its own auth: `gh auth login`, or a `GH_TOKEN` in the environment. In GitHub Actions, set `GH_TOKEN` yourself, for example to `${{ github.token }}`.
+- [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) calls the GitHub API with the first token it finds: `GH_TOKEN`, then `GITHUB_TOKEN`, then `gh auth token`. For a GitHub Enterprise host named in `GH_HOST`, `GH_ENTERPRISE_TOKEN` and `GITHUB_ENTERPRISE_TOKEN` come first.
 
 ---
 
@@ -116,7 +118,7 @@ Rarely needed, mostly for internal wiring and test harnesses:
 | `IRONBEE_NO_PREFETCH` | Global kill-switch for the [devtools prefetch](/cli/guides/managing-projects#devtools-prefetch-warming-the-first-mcp-start) - any value other than empty/`0`/`false` skips the npx cache warm on `install`, upgrade re-renders, `ironbee browser enable`, and `ironbee devtools prefetch`. |
 | `IRONBEE_CLAUDE_VERSION` | Replaces the `claude --version` probe `ironbee install` uses to decide whether to write the [Claude Code in-app view](/cli/clients/claude-code#in-app-view) while `claude.mod.enable` is unset. A version string is used as-is; `none` means not detectable. For a wrapper that knows the Claude Code version without `claude` on `PATH`. An explicit `claude.mod.enable` decides regardless. |
 | `IRONBEE_GH_AUTHENTICATED` | Forces the [GitHub issue-tracker](/cli/guides/issue-tracking#github-issues) activation probe deterministically - `1`/`true` = active, `0`/`false` = inactive - bypassing the `gh auth status` check. For CI/test environments where a deterministic result is wanted. `integrations.github.enable: false` still suspends it regardless. |
-| `CI` | When truthy (`true` / `1`), also short-circuits the upgrade auto re-render - belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. |
+| `CI` | Any non-empty value other than `0` or `false` (in any case) also short-circuits the upgrade auto re-render - belt-and-suspenders so a CI that allocates a pseudo-TTY can't hang on the confirmation prompt. This rule differs from the one `ironbee review` and the credits lines use, where any non-empty value counts. |
 
 ---
 

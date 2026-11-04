@@ -1,6 +1,6 @@
 ---
 title: Verifications
-description: Every verification run of a project in one list, with its trigger, status and result.
+description: Every verification run of a project in one list, with its trigger, status, result and the credits it used.
 keywords: ["test runs", "verification jobs", "run history"]
 ---
 
@@ -35,6 +35,7 @@ Open **Projects** and click a project. It opens on its **Verifications** tab. Cl
 | **Status** | Where the run is |
 | **Result** | The verdict |
 | **Started**, **Duration** | When the run started and how long it took |
+| **Credits** | The credits the run used, or the most it can use while it runs. See [Credits](#credits) |
 | **Callbacks** | Whether the result was delivered back to Vercel, GitHub or Netlify |
 
 You can sort by **Name**, **Status** and **Started**. The newest runs come first. Times follow the **Time Format** in [Settings](/console/settings).
@@ -82,6 +83,25 @@ A run started by Vercel or Netlify reports its result back to the provider, and 
 
 ---
 
+## Credits
+
+Every verification run on IronBee uses credits by the minutes it runs. The **Credits** column shows:
+
+| The cell shows | When |
+|----------------|------|
+| `-` | The run hasn't started yet, or it's a verification cycle from the CLI, which uses no credits |
+| `≤` and a number | The run is in progress. The number is the most it can use, set by its time limit |
+| A number | The run ended. It's the credits the run used |
+
+A run that ended without being charged shows `0`. Hover it to see why: "not charged: the run never started", or "not charged: IronBee's own failure" when something on IronBee's side failed before the agent started working.
+
+<img className="ib-shot ib-shot-light" src="/images/console/verifications/verifications-credits-light.png" alt="The Status, Result, Started, Duration and Credits columns of the verification list, with a running run's upper bound, ended runs' credits and dashes for CLI cycles" />
+<img className="ib-shot ib-shot-dark" src="/images/console/verifications/verifications-credits-dark.png" alt="The Status, Result, Started, Duration and Credits columns of the verification list, with a running run's upper bound, ended runs' credits and dashes for CLI cycles" />
+
+What a run costs, and the team's credits this month, are on [Credit usage](/console/usage).
+
+---
+
 ## Run instant verification
 
 Owners, admins and members can start a one-off verification of a deployed environment from the console. Billing admins don't see the button.
@@ -96,7 +116,7 @@ Owners, admins and members can start a one-off verification of a deployed enviro
 5. Write the **Prompt**: what the run should check, the way you'd tell a teammate. It can use the environment's variables and secrets by name. The counter below the prompt shows its length.
 6. Click **Run verification**. The dialog closes and the run opens on its verification detail page, where you can follow it live. If the run can't start, the dialog stays open and says why.
 
-**Run verification** stays disabled until the run has a name, a prompt that isn't empty or over the length the counter allows, and an environment with a URL.
+**Run verification** stays disabled until the run has a name, a prompt that isn't empty or over the length the counter allows, and an environment with a URL. The note next to it says how the run uses credits: for each started minute of the run. See [What uses credits](/console/usage#verification).
 
 <img className="ib-shot ib-shot-light" src="/images/console/verifications/run-instant-verification-light.png" alt="Run instant verification dialog with a name, the staging environment, the Web verification type, the expanded list of 3 variables and 4 secrets with the environment URL, a prompt, and the Run verification button" />
 <img className="ib-shot ib-shot-dark" src="/images/console/verifications/run-instant-verification-dark.png" alt="Run instant verification dialog with a name, the staging environment, the Web verification type, the expanded list of 3 variables and 4 secrets with the environment URL, a prompt, and the Run verification button" />
@@ -105,6 +125,7 @@ The run appears in the list with the **Console** trigger.
 
 <Note>
   - The button is disabled on an archived project, and on an API project: API verifications can't be started from the console yet. Hover it to see the reason.
+  - The button is also disabled when the team's credits for this month are used up. Hover it to see the date they reset. See [When credits run out](/console/usage#when-credits-run-out).
   - The environment needs a URL that a cloud run can reach. A local or private address is refused.
   - If the project has no environments yet, the dialog says so and links to them with **Open environments**. Add one with the URL to verify. See [Environments](/console/environments).
 </Note>

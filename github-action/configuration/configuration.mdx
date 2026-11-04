@@ -88,9 +88,9 @@ A run on IronBee that only verifies needs no Anthropic credential.
 
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
-| `verification_prompt` | Empty | Both | Additional instructions for the verification |
+| `verification_prompt` | Empty | Both | Additional instructions for the verification. A comment command's instruction replaces it for that run |
 | `verification_auto` | `true` | Both | Set `false` to verify only when asked by name, with a comment command or a manual dispatch. Pushes and pull requests then do nothing. See [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off) |
-| `verification_command` | `/ironbee-verify` | Both | The comment command that starts a run on an `issue_comment` event. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
+| `verification_command` | `/ironbee-verify` | Both | The comment command that starts a run on an `issue_comment` event. Its instruction can be up to 4,000 characters. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
 | `verification_apply_fix` | `true` | Both | Fix the issues a failing verification reports. Needs an Anthropic credential; without one the run verifies and reports only |
 
 ---
@@ -102,8 +102,8 @@ A run on IronBee that only verifies needs no Anthropic credential.
 | `app_install_command` | Empty | Both | Command that installs dependencies, such as `npm ci` |
 | `app_build_command` | Empty | Both | Command that builds the app, such as `npm run build` |
 | `app_start_command` | Empty | Both | Command that starts the app, such as `npm run start` |
-| `app_url` | Empty | Both | A public URL is verified as a deployment. A `localhost` URL means the app runs on the runner |
-| `app_port` | Empty | Both | Port the app listens on, for an app on the runner. Required with `app_start_command` unless `app_url` names a localhost port |
+| `app_url` | Empty | Both | A public URL is verified as a deployment. A `localhost`, private-network or dotless host means the app runs on the runner. See [Which URLs count as on the runner](/github-action/guides/verifying-your-app#which-urls-count-as-on-the-runner) |
+| `app_port` | Empty | Both | Port the app listens on, for an app on the runner. Required for an app on the runner unless `app_url` names its port |
 | `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Needed when `app_start_command` hands off, such as `docker compose up -d --build` |
 | `app_logs_command` | Empty | Platform | Prints the app's own logs into the evidence artifact, such as `docker compose logs --no-color --tail=2000` |
 | `app_wait_seconds` | Empty | Platform | How long to wait for the app to accept connections. Empty waits 60 seconds |

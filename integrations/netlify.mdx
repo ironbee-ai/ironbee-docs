@@ -33,7 +33,7 @@ In the console, open **Integrations** in the sidebar, select **Netlify**, and cl
 <img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-not-connected-light.png" alt="The Integrations page with Netlify selected under Available: Not connected, with the Install the Netlify extension button" />
 <img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-not-connected-dark.png" alt="The Integrations page with Netlify selected under Available: Not connected, with the Install the Netlify extension button" />
 
-During onboarding, the same step is **Connect Netlify**. The console detects the installation and moves you forward automatically.
+On **Settings > Getting started**, the same step is **Connect Netlify**. The console detects the installation and moves you forward automatically.
 
 ---
 
@@ -41,7 +41,8 @@ During onboarding, the same step is **Connect Netlify**. The console detects the
 
 1. On Netlify, open your team's **Extensions > IronBee** and click **Connect to IronBee**, then **Open IronBee**.
 2. On **Connect Netlify to IronBee**, check the **Netlify team**, pick the **IronBee account** its results go to, and click **Connect**.
-3. **You are connected** confirms it. Click **Back to Netlify**, then **I have connected, refresh** on the extension. To pick the sites to verify in the console right away, click **Enable sites** instead.
+3. Once the extension has synced the team's sites, the site list opens on its own: keep the sites to verify checked, pick each one's verification type, **Web**, **API** or **None**, and click **Create N projects**. Closing the list leaves **You are connected**, where **Enable sites** opens it again.
+4. Click **Back to Netlify**, then **I have connected, refresh** on the extension.
 
 <img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-connect-light.png" alt="Connect Netlify to IronBee, showing the Netlify team, the IronBee account picker and the Connect button" />
 <img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-connect-dark.png" alt="Connect Netlify to IronBee, showing the Netlify team, the IronBee account picker and the Connect button" />
@@ -65,7 +66,11 @@ On Netlify, open the IronBee panel from a site's menu and click **Turn on verifi
 Under **Which deploys**, choose the deploy contexts to verify. **Deploy previews** and **Branch deploys** are on by default. **Production deploys** is off unless you turn it on.
 
 <Warning>
-  IronBee has to be able to open your previews. If a site's deploy previews are private and production is public, **Turn on verification** makes the deploy previews public. If the whole site is private, the panel asks first: **Make the project public** makes production and previews reachable by anyone with the link. To keep previews private, protect them with a password instead. See [Preview access](#preview-access).
+  IronBee has to be able to open your previews.
+  - If a site's deploy previews are private and production is public, **Turn on verification** makes the deploy previews public. The panel says **Deploy previews of this project were private; they are now public so IronBee can open them. Production was already public and is unchanged.**
+  - If the whole site is private, verification turns on but nothing is made public. The panel warns that IronBee can't open private previews, and that making them public also makes production public on Netlify. Click **Make the project public** to make production and previews reachable by anyone with the link, or, on a Netlify Pro plan, protect the site with a password instead.
+
+  See [Preview access](#preview-access).
 </Warning>
 
 To verify a site's API instead of its web UI, change its type in the console: **Integrations > Netlify**, expand the team, open the actions menu (the three dots) next to the site and choose **Edit type**.
@@ -92,6 +97,12 @@ Public previews need nothing. For protected previews:
   3. Click **New secret**, choose the **Password** tab and enter the same password as the **Site password**.
 
   IronBee signs in to the password page once and keeps only the cookie Netlify answers with. The password itself is never stored. After you change the password on Netlify, save the new one here.
+
+  If the secret can't be saved, the dialog says why:
+  - **Netlify did not accept this password. Check it in the project's Visitor access settings on Netlify and try again.**
+  - **This project is not password-protected on Netlify, or its site is not connected here. Turn password protection on there first, or choose another type.**
+
+  While the site has a password, its panel on Netlify shows **This project is password protected.** as a reminder to add the password to IronBee.
 - **Basic authentication:** add an **HTTP headers** secret with an `Authorization` header in the project's **Settings > Secrets**.
 - **Team login (SSO)** can't be bypassed. Use a password, Basic authentication or public previews.
 
@@ -101,7 +112,7 @@ Public previews need nothing. For protected previews:
 
 | Access | Why |
 |--------|-----|
-| `site:read`, `site:write` | Read the site and, when you turn on verification, make its previews public |
+| `site:read`, `site:write` | Read the site, make its previews public when you turn on verification, and make the whole site public when you click **Make the project public** |
 | `deploy:read` | Know which deploy a notification is about |
 | `hook:read`, `hook:write`, `hook:delete` | Create and remove the site's deploy notification |
 
@@ -146,12 +157,21 @@ The deploy page on Netlify gets an **IronBee verification** card. It shows one h
 | IronBee could not reach a verdict for this deploy. | The run ended without a verdict |
 | The verification was cancelled. | The run was cancelled |
 
-Below it are the summary, the **Issues** and **View details in IronBee**, which opens the full report in the console. The report has the actions, the recording synced to them, the network requests, traces and logs, and each issue with the evidence behind it and suggested fixes.
+When there's no run to show, the card has one line instead:
+
+| Message | Meaning |
+|---------|---------|
+| Verification is not turned on for this project. Enable it in the project's IronBee panel. | The site's verification is off. Turn it on in the site panel |
+| IronBee has not verified this deploy. Only deploy previews and branch deploys are verified, and only after the deploy went live. | No run was started for this deploy: its context isn't selected under **Which deploys**, or the deploy hasn't gone live |
+
+Below the headline are the summary, the **Issues** and **View details in IronBee**, which opens the full report in the console. The report has the actions, the recording synced to them, the network requests, traces and logs, and each issue with the evidence behind it and suggested fixes.
 
 <img className="ib-shot ib-shot-light" src="/images/console/integrations/netlify-run-report-light.png" alt="The report of a Netlify run with a Fail result: the summary strip marked Web and Netlify, a step's screenshot above the recording controls, and the Issues tab" />
 <img className="ib-shot ib-shot-dark" src="/images/console/integrations/netlify-run-report-dark.png" alt="The report of a Netlify run with a Fail result: the summary strip marked Web and Netlify, a step's screenshot above the recording controls, and the Issues tab" />
 
 In the project's **Verifications** list, these runs carry the **Netlify** trigger. See [Verification detail](/console/verification-detail).
+
+With the GitHub App installed, the check on the commit closes with the credits the run used: "Used N IronBee credits." or "No IronBee credits were used." When your team's credits for the month are used up, a deploy gets no run, and that check closes neutral as **IronBee did not run this verification · out of credits this month**. See [Credit usage](/console/usage) and [Pricing](/console/pricing).
 
 ---
 
@@ -172,13 +192,16 @@ In the project's **Verifications** list, these runs carry the **Netlify** trigge
 - **Site** (from a site's menu):
   - **Turn off verification**
   - **Which deploys**
-  - the health of the deploy notification. If Netlify paused it after repeated failures, click **Resume notification**. If it's missing, turn verification off and on again.
+  - the health of the deploy notification: **Deploy notification is active.** If Netlify paused it after repeated failures, click **Resume notification**. If it's missing, turn verification off and on again.
+  - **Last deploy notification:** with its time, or **No deploy notification received yet.**
+  - whether IronBee can open the previews: **Previews are public; IronBee can open them.**, or a note that the site is private or password protected. See [Preview access](#preview-access).
+  - **Preview access**, with **Open preview access settings**, which opens **Integrations > Netlify** in the console. Add a preview password as a project secret, as described in [Preview access](#preview-access).
 
 To remove the extension, **Disconnect** first, then uninstall it from the team's extension page. Uninstalling alone doesn't tell IronBee.
 
 **In the console**, **Integrations > Netlify** lists the connected team with its **Enabled sites**, **Status** and when it was **Connected**. **Manage on Netlify** and **Configure the Netlify extension** open the extension. Expand the team to manage its sites. Each site's actions menu (the three dots) holds:
-- **Enable** turns on verification for a site.
-- **Edit type** changes its verification type.
+- **Enable** turns on verification for a site, with the verification type you pick.
+- **Edit type** changes its verification type: **Web**, **API** or **None**.
 - **Disable** stops verification and keeps the project's history.
 
 The gear icon next to an enabled site, **Project settings**, opens the project's settings.
@@ -192,9 +215,10 @@ The gear icon next to an enabled site, **Project settings**, opens the project's
 
 | Symptom | Likely cause |
 |---------|--------------|
-| The IronBee card shows no result for the deploy | Verification isn't on for the site, the deploy context isn't selected under **Which deploys**, or the deploy never went live |
-| The card says verification isn't turned on | Open the site's IronBee panel on Netlify and click **Turn on verification** |
-| Deploys stopped being verified | Netlify paused or lost the deploy notification. Click **Resume notification** in the site panel, or turn verification off and on again |
+| The card says **IronBee has not verified this deploy.** | The deploy context isn't selected under **Which deploys**, or the deploy never went live |
+| The card says **Verification is not turned on for this project.** | Open the site's IronBee panel on Netlify and click **Turn on verification** |
+| The site panel says **This team is not connected to IronBee yet.** | Connect the team first. See [Step 2](#step-2-connect-the-team-to-your-ironbee-account) |
+| Deploys stopped being verified | Netlify paused or lost the deploy notification. Click **Resume notification** in the site panel, or turn verification off and on again. If the GitHub check reads **out of credits this month**, your team's credits are used up; see [Credit usage](/console/usage) |
 | The run shows the agent stuck on a password page | Add the site password as a **Password** secret. See [Preview access](#preview-access) |
 | The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or the GitHub App doesn't cover it. See [GitHub App](/integrations/github) |
 | **This Netlify team is already connected** | Another IronBee account holds the team. Ask an owner of that account to invite you, or connect a different team |

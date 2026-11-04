@@ -1,9 +1,9 @@
 ---
 title: Pricing
-description: IronBee's Free, Team and Enterprise plans, and how owners and billing admins manage the plan, seats and invoices in the console.
+description: IronBee's Free, Team and Enterprise plans and credits, and how owners and billing admins manage the plan, seats and invoices in the console.
 ---
 
-IronBee has three plans: **Free**, **Team** and **Enterprise**. Every plan ships with the full verification and intelligence core.
+IronBee has three plans: **Free**, **Team** and **Enterprise**. Start free, upgrade when your team needs more. Every plan includes code review, verification and Code wiki.
 
 The plans and prices on this page mirror [ironbee.ai/pricing](https://ironbee.ai/pricing), the current source. If this page and the website ever differ, go by the website.
 
@@ -11,35 +11,26 @@ The plans and prices on this page mirror [ironbee.ai/pricing](https://ironbee.ai
 
 ## Plans
 
-The tables quote the website. In them, **Jobs** are verification runs, and a session is a single AI agent run that IronBee observes end to end, from the first change to the final verdict, including its timeline and telemetry.
+The tables quote the website.
 
 | | Free | Team | Enterprise |
 |---|---|---|---|
-| For | Everything you need to start observing agent sessions with a small team. | Unlimited sessions and project-level analyses for your whole team. | Custom limits, security and support for large organizations. |
+| For | Everything you need to start observing agent sessions with a small team. | Unlimited sessions and credits that grow with every seat. | Custom limits, security and support for large organizations. |
 | Price | \$0 /month | \$15 /seat/month | Custom |
-| Verification runs | 100 Jobs/mo | 100 Jobs/mo per seat | Unlimited Jobs |
-| Sessions | 100 sessions/mo | Unlimited sessions | Unlimited sessions |
+| Credits | 100 credits/mo | 100 credits/mo per seat | Credits by contract |
 | Seats | 3 seats included | Seats as purchased | Custom pricing |
 | Team management | No | Yes | Yes |
 | Retention | 30-day retention | 90-day retention | Custom retention |
 
-- Team costs \$15 per seat per month billed monthly, or \$12 per seat per month billed yearly (\$144 per seat a year). The **Annual** switch says **Save 20%**.
-- On Team, you pay only for the seats you purchase. Every seat adds 100 verification runs a month.
-- Free needs no credit card.
-- You can upgrade, downgrade or cancel at any time. Moving back to Free keeps your account within the Free plan limits.
-
-### Analyses
+### Products
 
 | | Free | Team | Enterprise |
 |---|---|---|---|
 | AI coding verification | Yes | Yes | Yes |
+| AI code review, Quick to Deep | Yes | Yes | Yes |
+| Code review concurrency | 1 review at a time | 10 reviews at a time | Concurrency by contract |
+| Code wiki, no credits | Yes | Yes | Yes |
 | AI coding visibility & intelligence | Yes | Yes | Yes |
-| Account-level analyses | Yes | Yes | Yes |
-| Account level findings and recommendations | Yes | Yes | Yes |
-| Project-level analyses | No | Yes | Yes |
-| Project level findings and recommendations | No | Yes | Yes |
-| User-level analyses | No | No | Yes |
-| User level findings and recommendations | No | No | Yes |
 | Advanced search and analytics | Yes | Yes | Yes |
 
 ### Security and support
@@ -51,6 +42,22 @@ The tables quote the website. In them, **Jobs** are verification runs, and a ses
 | Security and procurement support | No | No | Yes |
 | Onboarding session | No | Yes | Yes |
 | Support | Community support | Priority email support, and a dedicated Slack and Discord support channel | Dedicated support with SLA options |
+
+### Credits
+
+- Credits are one monthly pool per account, shared by code review and verification. A small Quick review costs about 1 credit, and so does one minute of a verification run. Credits reset each month on your plan date and do not carry over.
+- A review is priced by the lines it reads and the depth you choose. Up to 400 lines it costs 1 credit at Quick, 2 at Standard and 3 at Deep, and larger changes cost more. A follow-up push is priced on the new lines only, and a review that fails is free.
+- Verification costs one credit for each started minute of a run, setup included. A run that fails on our side before the agent first answers is free.
+- When credits run out, new reviews and verifications wait until your credits reset, and a run that has already started always finishes. On Team, each seat you add brings 100 more credits a month. Code wiki keeps working: it uses no credits.
+
+In the console, **Settings > Usage** shows what your team spent and what a job costs. See [Credit usage](/console/usage).
+
+### Seats and billing
+
+- Team costs \$15 per seat per month billed monthly, or \$12 per seat per month billed annually, about 20% less. You can switch between the two at any time. The **Annual** switch says **Save 20%**.
+- On Team, you pay only for the seats you purchase, from 4 seats, and can change them as your team changes. Every seat adds 100 credits a month to the pool code review and verification share.
+- Free needs no credit card.
+- You can upgrade, downgrade, or cancel at any time, and moving back to Free keeps your account within the Free plan limits.
 
 On the website, **Start for free** and **Get started** open the console's sign-up page. See [Sign in and team access](/console/sign-in). For Enterprise, click **Contact sales** or email [support@ironbee.ai](mailto:support@ironbee.ai) to scope your setup.
 
@@ -68,11 +75,12 @@ The header shows the account's name and its current plan. The page has two tabs:
 
 The **Pricing Plans** tab shows:
 - **Sessions this period**: your session usage. See [Session usage](#session-usage)
+- **Credits this month**: the credits used, how many are left and when they reset. See [Credits this month](#credits-this-month)
 - the **Monthly** and **Annual** switch, which shows Team's price for each billing interval
 - a card for each plan. **Current plan** marks yours. On Team, the Team card also shows your seats and billing interval, such as **15 seats · Monthly**
 
-<img className="ib-shot ib-shot-light" src="/images/console/settings/pricing-plans-light.png" alt="Pricing Plans tab on the Free plan, with the Sessions this period meter, the Monthly and Annual switch, and the Free, Team and Enterprise cards" />
-<img className="ib-shot ib-shot-dark" src="/images/console/settings/pricing-plans-dark.png" alt="Pricing Plans tab on the Free plan, with the Sessions this period meter, the Monthly and Annual switch, and the Free, Team and Enterprise cards" />
+<img className="ib-shot ib-shot-light" src="/images/console/settings/pricing-plans-light.png" alt="Pricing Plans tab on the Free plan, with the Sessions this period and Credits this month meters, the Monthly and Annual switch, and the Free, Team and Enterprise cards" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/pricing-plans-dark.png" alt="Pricing Plans tab on the Free plan, with the Sessions this period and Credits this month meters, the Monthly and Annual switch, and the Free, Team and Enterprise cards" />
 
 The buttons on the Free and Team cards depend on your plan:
 
@@ -141,6 +149,12 @@ When you've used 80% of the limit, the meter turns to a warning. On Free, the wa
 
 Until the first usage snapshot, the meter shows **Usage data is being collected**. The first snapshot appears within an hour.
 
+### Credits this month
+
+**Credits this month**, next to **Sessions this period**, shows how many of the month's credits your team used, how many are left, and **Resets** with the date. On Enterprise with credits by contract, it can read **Unlimited**.
+
+When the team has used most of its credits, the meter warns with the share used. When none are left, it reads **No credits left**: new reviews and verifications are refused until the credits reset. A run that already started finishes. To get more, an owner or a billing admin can add seats on Team, upgrade to Team, or pay an open invoice, depending on the plan. See [Credit usage](/console/usage).
+
 ### Banners across the console
 
 A plan problem also shows as a banner at the top of every console page, one at a time:
@@ -148,6 +162,8 @@ A plan problem also shows as a banner at the top of every console page, one at a
 | Banner | When | Button |
 |--------|------|--------|
 | **Session limit reached** | The account used its sessions for the period. New telemetry is rejected until the period resets | **Upgrade**, for owners and billing admins |
+| "This team has used all of its IronBee credits for this month." | No credits are left. New reviews and verifications are refused until the credits reset | The way to add credits for owners and billing admins. Others read who can add them |
+| "This team has used 80% of its IronBee credits for this month." | 80% of the month's credits are used | The same as above, and **Dismiss** |
 | **Payment past due** | IronBee couldn't charge your card | **Update payment method**, for owners and billing admins |
 | **More people than seats** | More people use the account than its plan has seats | **Manage team** for owners and admins, **View pricing** for billing admins |
 

@@ -19,7 +19,7 @@ ironbee review show                            # this worktree's newest review a
 ## Before you start
 
 - The repository is on **github.com** and connected through the [IronBee GitHub App](/integrations/github). Otherwise the API refuses the review with `PROJECT_NOT_BOUND`.
-- Code review is turned on for the repository in the console. Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
+- Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
 - The GitHub App is installed for the repository the review targets. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING`, and the CLI lists your checkout's github.com remotes so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
 - Your team has [credits](/cli/guides/credits) left this month.
@@ -108,6 +108,8 @@ sending:
   switches    includeUnstaged=false (the default), includeUntracked=false (the default)
 ```
 
+The `size` line counts every changed file and line. Its reviewable lines are what the review is [priced](/cli/guides/credits#what-a-run-costs) by: they leave out lock, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes.
+
 Under that, it names every path it left out and why:
 - matched by `review.exclude`, or renamed from or identical to a path it matched
 - matched by your ignore rules
@@ -121,7 +123,7 @@ It also lists the nested `.ironbee/config.json` files whose exclusions joined, t
 ### Size limits
 
 The run is refused before anything is sent when the change has:
-- more than 1,000 files, or more than 100,000 changed lines
+- more than 1,000 files, or more than 100,000 changed lines. These count every changed file, deleted files included, although deleted files add nothing to the price
 - a patch of more than 1,000 paths, more than 16 MiB gzipped, or more than 64 MiB uncompressed
 - a binary file over 16 MiB, or binary files over 64 MiB in all
 
@@ -161,6 +163,11 @@ It never reads them from a file inside the checkout, such as the committed `conf
 | `--no-fixes` | `review.settings.suggestedFixes` | No suggested fixes |
 | `--no-diagrams` | `review.settings.diagrams` | No diagrams |
 | `--no-knowledge` | `review.settings.repositoryKnowledge` | Don't read the repository's knowledge |
+
+These are the console's [code review settings](/code-review/settings#review), under other names:
+- `--focus`: `security` is **Security**, and `editorial` is **Docs, names and tests**.
+- `--checks`: `lint`, `style`, `defensive`, `tests`, `cleanup` and `pitfalls` are the **Extra checks** **Linter rules**, **Style and typos**, **Input checks and error handling**, **Missing tests**, **Duplication and dead code** and **Language and framework gotchas**.
+- `--no-knowledge` turns off **Rules and memories from the repository**. See [Rules and memories](/code-review/rules-and-memories#in-ironbee-review).
 
 Each setting resolves on its own: the flag, then the personal file, then `config.local.json`, then `config.json`, then the global config. A setting set nowhere isn't sent, so the repository's setting, the account's or the default applies. A flag with a value outside its list is an error, and the run exits `1`. A config value outside its list is warned about and not sent.
 

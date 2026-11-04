@@ -76,6 +76,28 @@ html:not(.dark) img.ib-shot-dark {
   display: none;
 }
 
+/* Code review marks: the console's own badge images, which GitHub shows in
+   place of the reviewer's emoji. Inline at text height, one per theme. */
+img.ib-mark {
+  display: inline-block;
+  width: auto;
+  height: 16px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  vertical-align: -3px;
+}
+
+img.ib-mark-button {
+  height: 28px;
+  vertical-align: middle;
+}
+
+.dark img.ib-mark-light,
+html:not(.dark) img.ib-mark-dark {
+  display: none;
+}
+
 /* Top tabs (Get started, Integrations, CLI, Console). Mintlify draws them as
    dim text over a hairline underline, which reads more like a caption than a
    menu. Give each tab an icon, a hit area and a hover state, and mark the

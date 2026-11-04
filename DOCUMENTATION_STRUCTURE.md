@@ -4,128 +4,214 @@ Current structure as of the `docs.json` navigation configuration.
 
 ---
 
-## Getting Started
+## Overview
 
 | File | Title | Status |
 |------|-------|--------|
-| `getting-started/introduction.mdx` | Introduction | ✅ |
+| `index.mdx` | IronBee documentation | ✅ |
+
+---
+
+## Get started
+
+### Introduction
+
+| File | Title | Status |
+|------|-------|--------|
+| `getting-started/introduction.mdx` | What is IronBee? | ✅ |
 | `getting-started/quickstart.mdx` | Quickstart | ✅ |
-| `getting-started/key-concepts.mdx` | Key Concepts | ✅ |
+
+### Concepts
+
+| File | Title | Status |
+|------|-------|--------|
+| `getting-started/key-concepts.mdx` | Key concepts | ✅ |
+
+### Help
+
+| File | Title | Status |
+|------|-------|--------|
+| `help/support.mdx` | Support and contact | ✅ |
+| `help/legal.mdx` | Legal | ✅ |
+| `help/compliance.mdx` | Compliance | ✅ |
+
+---
+
+## Integrations
+
+### Integrations
+
+| File | Title | Status |
+|------|-------|--------|
+| `integrations/overview.mdx` | How integrations work | ✅ |
+| `integrations/github.mdx` | GitHub App | ✅ |
+| `integrations/vercel.mdx` | Vercel | ✅ |
+| `integrations/netlify.mdx` | Netlify | ✅ |
+
+### GitHub Action
+
+| File | Title | Status |
+|------|-------|--------|
+| `github-action/get-started/getting-started.mdx` | Get started with the GitHub Action | ✅ |
+| `github-action/get-started/migrating.mdx` | Migrate from v1.0 | ✅ |
+| `github-action/configuration/configuration.mdx` | GitHub Action configuration | ✅ |
+
+#### Concepts
+
+| File | Title | Status |
+|------|-------|--------|
+| `github-action/concepts/how-it-works.mdx` | How it works | ✅ |
+| `github-action/concepts/verification-modes.mdx` | Platform and local verification | ✅ |
+
+#### Guides
+
+| File | Title | Status |
+|------|-------|--------|
+| `github-action/guides/running-in-ci.mdx` | Running in CI | ✅ |
+| `github-action/guides/comment-trigger.mdx` | Verify from a pull request comment | ✅ |
+| `github-action/guides/verifying-your-app.mdx` | Verifying your application | ✅ |
+| `github-action/guides/verification-platforms.mdx` | Local-mode platforms | ✅ |
+
+#### Advanced
+
+| File | Title | Status |
+|------|-------|--------|
+| `github-action/advanced/custom-configuration.mdx` | Custom configuration | ✅ |
+| `github-action/advanced/evidence.mdx` | Evidence | ✅ |
+| `github-action/advanced/diagnostics.mdx` | Diagnostics | ✅ |
+
+---
+
+## Code review
+
+### Code review
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-review/overview.mdx` | Code review of pull requests | ✅ |
+| `code-review/on-github.mdx` | Code review on GitHub pull requests | ✅ |
+
+### In the console
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-review/pull-requests.mdx` | Pull requests and findings in the console | ✅ |
+| `code-review/rules-and-memories.mdx` | Code review rules and memories | ✅ |
+| `code-review/settings.mdx` | Code review settings | ✅ |
 
 ---
 
 ## CLI
 
+### Get started
+
 | File | Title | Status |
 |------|-------|--------|
-| `cli/get-started/getting-started.mdx` | Getting Started | ✅ |
-| `cli/concepts/how-it-works.mdx` | How It Works | ✅ |
+| `cli/get-started/getting-started.mdx` | Get started with the IronBee CLI | ✅ |
+
+### Concepts
+
+| File | Title | Status |
+|------|-------|--------|
+| `cli/concepts/how-it-works.mdx` | How verification works | ✅ |
+| `cli/concepts/projects.mdx` | How IronBee identifies your project | ✅ |
+
+### Guides
+
+| File | Title | Status |
+|------|-------|--------|
 | `cli/guides/authentication.mdx` | Authentication | ✅ |
-| `cli/guides/managing-projects.mdx` | Managing Projects | ✅ |
+| `cli/guides/managing-projects.mdx` | Managing projects | ✅ |
 | `cli/guides/verification.mdx` | Verification | ✅ |
-| `cli/guides/verification-context.mdx` | Verification Context | ✅ |
-| `cli/guides/verification-jobs.mdx` | Verification Jobs | ✅ |
-| `cli/guides/code-review.mdx` | Code Review | ✅ |
-| `cli/guides/credits.mdx` | Credits | ✅ |
-| `cli/guides/scenarios.mdx` | Saved Scenarios | ✅ |
-| `cli/guides/issue-tracking.mdx` | Issue Tracking | ✅ |
-| `cli/guides/interactive-mode.mdx` | Interactive Mode | ✅ |
-| `cli/configuration/configuration.mdx` | Configuration | ✅ |
-| `cli/configuration/environment-variables.mdx` | Environment Variables | ✅ |
-| `cli/advanced/inspecting-sessions.mdx` | Inspecting Sessions | ✅ |
-| `cli/advanced/job-queue.mdx` | Job Queue | ✅ |
-| `cli/advanced/privacy.mdx` | Privacy Mode | ✅ |
+| `cli/guides/verification-context.mdx` | Verification context | ✅ |
+| `cli/guides/verification-jobs.mdx` | Verification jobs | ✅ |
+| `cli/guides/code-review.mdx` | Code review of your local checkout | ✅ |
+| `cli/guides/credits.mdx` | Credits for code reviews and verifications | ✅ |
+| `cli/guides/scenarios.mdx` | CLI saved scenarios | ✅ |
+| `cli/guides/issue-tracking.mdx` | Issue tracking | ✅ |
+| `cli/guides/interactive-mode.mdx` | Interactive mode (TUI) | ✅ |
+
+### Configuration
+
+| File | Title | Status |
+|------|-------|--------|
+| `cli/configuration/configuration.mdx` | CLI configuration | ✅ |
+| `cli/configuration/environment-variables.mdx` | Environment variables | ✅ |
+
+### Advanced
+
+| File | Title | Status |
+|------|-------|--------|
+| `cli/advanced/inspecting-sessions.mdx` | Inspecting sessions | ✅ |
+| `cli/advanced/job-queue.mdx` | Job queue | ✅ |
+| `cli/advanced/privacy.mdx` | Privacy mode | ✅ |
 | `cli/advanced/telemetry.mdx` | Telemetry | ✅ |
-| `cli/advanced/runtime-files.mdx` | Runtime Files | ✅ |
+| `cli/advanced/runtime-files.mdx` | Runtime files | ✅ |
+
+### AI clients
+
+| File | Title | Status |
+|------|-------|--------|
 | `cli/clients/claude-code.mdx` | Claude Code | ✅ |
 | `cli/clients/cursor.mdx` | Cursor | ✅ |
 | `cli/clients/codex.mdx` | Codex | ✅ |
 
 ---
 
-## Integrations
-
-| File | Title | Status |
-|------|-------|--------|
-| `integrations/vercel.mdx` | Vercel | ✅ |
-| `integrations/netlify.mdx` | Netlify | ✅ |
-| `integrations/github.mdx` | GitHub App | ✅ |
-
----
-
 ## Console
 
-### Projects & Sessions
+### Projects
 
 | File | Title | Status |
 |------|-------|--------|
 | `console/projects.mdx` | Projects | ✅ |
-| `console/sessions.mdx` | Sessions | ✅ |
-| `console/session-details.mdx` | Session Details | ✅ |
-| `console/session-timeline.mdx` | Session Timeline | ✅ |
-| `console/session-analytics.mdx` | Session Analytics | ✅ |
-| `console/activities.mdx` | Activities | ✅ |
+| `console/project-settings.mdx` | Project settings | ✅ |
+| `console/environments.mdx` | Environments | ✅ |
+| `console/variables.mdx` | Variables | ✅ |
+| `console/secrets.mdx` | Secrets | ✅ |
+
+### Code wiki
+
+| File | Title | Status |
+|------|-------|--------|
+| `console/code-wiki.mdx` | Code wiki of a repository | ✅ |
+| `console/code-wiki-settings.mdx` | Code wiki settings | ✅ |
+
+### Verifications
+
+| File | Title | Status |
+|------|-------|--------|
 | `console/verifications.mdx` | Verifications | ✅ |
-| `console/verification-detail.mdx` | Verification Detail | ✅ |
-| `console/fixes.mdx` | Fixes | ✅ |
-| `console/fix-detail.mdx` | Fix Detail | ✅ |
-| `console/other.mdx` | Other | ✅ |
+| `console/verification-detail.mdx` | Verification detail | ✅ |
 
-### Analysis
+### Scenarios
 
 | File | Title | Status |
 |------|-------|--------|
-| `console/analysis.mdx` | Analysis | ✅ |
-| `console/analysis-account-cost.mdx` | Account Cost Analysis | ✅ |
-| `console/analysis-account-session-insights.mdx` | Account Session Insights | ✅ |
-| `console/analysis-project-cost.mdx` | Project Cost Analysis | ✅ |
-| `console/analysis-project-session-insights.mdx` | Project Session Insights | ✅ |
-| `console/analysis-quality.mdx` | Project Quality Analysis | ✅ |
+| `console/scenarios.mdx` | Scenarios | ✅ |
+| `console/scenario-editor.mdx` | Write a scenario | ✅ |
+| `console/scenario-references.mdx` | Inputs, references and imports | ✅ |
+| `console/scenario-runs.mdx` | Run a scenario | ✅ |
 
-### Findings
+### Search
 
 | File | Title | Status |
 |------|-------|--------|
-| `console/findings-account.mdx` | Account Findings | ✅ |
-| `console/findings-project.mdx` | Project Findings | ✅ |
+| `console/search.mdx` | Search | ✅ |
 
-### Recommendations
-
-| File | Title | Status |
-|------|-------|--------|
-| `console/recommendations-account.mdx` | Account Recommendations | ✅ |
-| `console/recommendations-project.mdx` | Project Recommendations | ✅ |
-
-### Traces
+### Settings
 
 | File | Title | Status |
 |------|-------|--------|
-| `console/traces.mdx` | Traces | ✅ |
-
-### Others
-
-| File | Title | Status |
-|------|-------|--------|
+| `console/settings.mdx` | Settings | ✅ |
+| `console/sign-in.mdx` | Sign in and team access | ✅ |
 | `console/profile.mdx` | Profile | ✅ |
+| `console/access-tokens.mdx` | OAuth tokens | ✅ |
 | `console/account.mdx` | Account | ✅ |
 | `console/team.mdx` | Team | ✅ |
-| `console/settings.mdx` | Settings | ✅ |
-
----
-
-## GitHub Action
-
-| File | Title | Status |
-|------|-------|--------|
-| `github-action/get-started/getting-started.mdx` | Getting Started | ✅ |
-| `github-action/concepts/how-it-works.mdx` | How It Works | ✅ |
-| `github-action/guides/running-in-ci.mdx` | Running in CI | ✅ |
-| `github-action/guides/verifying-your-app.mdx` | Verifying Your App | ✅ |
-| `github-action/guides/verification-platforms.mdx` | Verification Platforms | ✅ |
-| `github-action/configuration/configuration.mdx` | Configuration | ✅ |
-| `github-action/advanced/custom-configuration.mdx` | Custom Configuration | ✅ |
-| `github-action/advanced/evidence.mdx` | Evidence | ✅ |
-| `github-action/advanced/diagnostics.mdx` | Diagnostics | ✅ |
+| `console/pricing.mdx` | Pricing | ✅ |
+| `console/usage.mdx` | Credit usage | ✅ |
+| `console/roles.mdx` | Roles and permissions | ✅ |
 
 ---
 
@@ -133,7 +219,4 @@ Current structure as of the `docs.json` navigation configuration.
 
 These files exist on disk but are not in the current `docs.json` navigation:
 
-| File | Notes |
-|------|-------|
-| `console/findings.mdx` | Old overview page — content moved into findings-account/project |
-| `console/recommendations.mdx` | Old single page — content moved into recommendations-account/project |
+None.

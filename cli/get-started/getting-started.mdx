@@ -114,7 +114,7 @@ Then, unless you chose `monitor`, **which platforms to verify**:
 - **Node**, **Python**, **Backend**, **Android**, and **Terminal**: opt-in; enable any you want gated.
 - Not sure which to pick? Press **`s`** to let IronBee analyze your project with your AI client (Claude Code, Codex or Cursor) and suggest the set.
 
-In enforce mode, the installer can also set up [project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) (beta): commands such as lint and tests that run first in every verification.
+Unless you chose `monitor`, the installer can also set up [project checks](/cli/guides/verification#project-checks-run-first-lint-tests-types) (beta): commands such as lint and tests that run first in every verification. In enforce mode a failing required check blocks completion. In assist mode the checks run when the agent verifies, but never block.
 
 <img src="/images/cli/platform-selection_browser.png" alt="Multi-select titled 'Which platforms should require verification?' with browser checked and node, backend, android, and terminal unchecked" style={{borderRadius:'8px',width:'100%'}} />
 

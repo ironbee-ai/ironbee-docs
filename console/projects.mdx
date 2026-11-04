@@ -1,31 +1,29 @@
 ---
 title: Projects
-description: Every project your account verifies, with its recent runs and pass rate at a glance.
+description: Every project in your account, with its code reviews, verification runs and code wiki at a glance.
 ---
 
-**Projects** is the console's home page. It lists every project in your account with its recent verification runs.
+**Projects** is the console's home page. It lists every project in your account with its code reviews, its verification runs and its code wiki.
 
 A project is one of:
 
-- a **GitHub** repository, a **Vercel** project or a **Netlify** site that an owner or admin enabled from [Integrations](/integrations/overview)
+- a **GitHub** repository. Installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project
+- a **Vercel** project or a **Netlify** site that an owner or admin enabled from [Integrations](/integrations/overview)
 - a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a github.com repository reports to that repository's GitHub project instead
 
-Click a project to open its [Verifications](/console/verifications) tab. A project that hasn't run yet opens on its **Settings** tab. Its [Scenarios](/console/scenarios) tab lists the flows written for it.
+Click a project to open its **Code review** tab. Its other tabs are [Code wiki](/console/code-wiki), [Verifications](/console/verifications), [Scenarios](/console/scenarios) and [Settings](/console/project-settings).
 
 ---
 
-## Bands
+## Not active projects
 
-When a project is waiting for its first run or is no longer active, the page groups projects into these bands. Otherwise all projects show in one group.
+A project that's no longer enabled on its provider is listed last, under the **Not active** band. Its card says **Deployments are not verified** and has a **Settings** button.
 
-| Band | What's in it |
-|------|--------------|
-| **Waiting for the first verification** | Projects that are enabled but haven't run yet. The card says what starts the first run |
-| **Active** | Projects with verification runs |
-| **Not active** | Projects that are no longer enabled on their provider, so their deployments aren't verified. Enable them again from the provider's integration |
+- For a Vercel project or a Netlify site, enable it again from the provider's integration.
+- For a GitHub repository, enable it again from the GitHub integration, or add the repository back to the App on GitHub if it left the App's repositories.
 
-<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-bands-light.png" alt="Projects page in card view with three bands: Waiting for the first verification with a Vercel project whose card says the next Vercel deployment starts a web verification, Active with two projects, and Not active with a Netlify project" />
-<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-bands-dark.png" alt="Projects page in card view with three bands: Waiting for the first verification with a Vercel project whose card says the next Vercel deployment starts a web verification, Active with two projects, and Not active with a Netlify project" />
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-bands-light.png" alt="Projects page in card view with a GitHub project, then the Not active band with a Netlify project whose card says Deployments are not verified" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-bands-dark.png" alt="Projects page in card view with a GitHub project, then the Not active band with a Netlify project whose card says Deployments are not verified" />
 
 Archived projects aren't listed here. Owners and admins find them under **Settings > Archived projects**. See [Project settings](/console/project-settings#archive-a-project).
 
@@ -42,18 +40,25 @@ The date filter in the page header sets the window every number on the page cove
 
 ## Card view
 
-<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-cards-light.png" alt="Projects page header with the sort, view toggle, New project and date filter, above two project cards with a pass rate ring, run strip and last 5 runs" />
-<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-cards-dark.png" alt="Projects page header with the sort, view toggle, New project and date filter, above two project cards with a pass rate ring, run strip and last 5 runs" />
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-cards-light.png" alt="Projects page header with the sort, view toggle, New project and date filter, above project cards with Code review, Verifications and Code wiki rows" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-cards-dark.png" alt="Projects page header with the sort, view toggle, New project and date filter, above project cards with Code review, Verifications and Code wiki rows" />
 
 Each project card shows:
 
-- **The name and the provider**: GitHub, Vercel, Netlify or CLI. A **Live** badge means a run is in progress; otherwise the card shows when the project was last active.
-- **The verification type**: **Web**, **API**, or **No verification type declared**. CLI projects leave this line empty, and a project that's no longer enabled shows **Not active**.
-- **The pass rate**: a ring and a percentage. Hover the ring for the counts. Below it, the trend against the previous window, such as **vs previous 7d**. With too few runs, the card says it's too early for a trend.
-- **Counts**: verifications and fixes in the window.
-- **A run strip**: the window laid out as a time axis. Click a slot to open that run, or the runs in that slice of time.
-- **Findings and recommendations**: the counts link to the project's [Findings](/console/findings) and [Recommendations](/console/recommendations).
-- **The last runs**: a rail of the last five results, labeled **Last 5 runs**, or **Running now** while a run is in progress. Click it to open those runs.
+- **The header**: the provider's logo, the project's name and where it lives. A GitHub project shows its repository, such as **GitHub · acme/shop**. A Vercel or Netlify project shows its verification type, such as **Vercel · Web**. On the right, the card shows when the project was last active, when it was created if it hasn't run yet, or **nothing in this window**. The menu offers **Project settings** and, for a GitHub project, **Open on GitHub**.
+- **Code review**: the open findings, with critical and high named, such as **1 critical · 1 high open**, or **No open findings**. While a review runs, the row says **Reviewing #N**. The bars below count the pull requests reviewed in each slice of the window, by their state now: open, merged and closed. Click the row to open the project's pull requests, or click a bar to open the pull requests of that slice.
+- **Verifications**: the pass rate and the latest result, such as **92% · passed 2h ago**, or **Running** with the run's name while a run is in progress. The bars below count the runs in each slice of the window, with how many failed. Click the row to open the project's verifications, or click a bar to open that run or the runs in that slice.
+- **Code wiki**: how many pages the [wiki](/console/code-wiki) has and when it was built, such as **38 pages · built 3h ago**, or where it stands: **Writing the first version**, **Refreshing**, **Not built yet** or **Off**.
+
+Some rows say why there's nothing to show yet:
+
+| Row | It says | What it means |
+|-----|---------|---------------|
+| **Code review** | **Off**, with **Turn on** for owners and admins | Code review is turned off for this repository |
+| **Code review**, **Code wiki** | **GitHub only** | Code review and the code wiki run on GitHub repositories. Vercel, Netlify and CLI projects don't have them |
+| **Code review** | **Not connected**, with **Install the GitHub App** | The repository isn't covered by the IronBee GitHub App |
+| **Verifications** | **Not set up**, with **Install the IronBee Action** | A GitHub repository that hasn't run a verification yet. If you've already added the action, the next pull request starts the first run |
+| **Verifications** | **No runs yet** | A Vercel, Netlify or CLI project that hasn't run yet. The card says what starts its first run, such as **The next Vercel deployment starts a web verification of shop-web.** |
 
 ---
 
@@ -61,8 +66,8 @@ Each project card shows:
 
 Switch to the list with the toolbar's view toggle.
 
-<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-list-light.png" alt="Projects list view with the Project, Provider, Runs, Success Rate, Verifications, Fixes, Findings and Recs columns" />
-<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-list-dark.png" alt="Projects list view with the Project, Provider, Runs, Success Rate, Verifications, Fixes, Findings and Recs columns" />
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-list-light.png" alt="Projects list view with the Project, Provider, Code Review, Runs, Success Rate, Verifications, Fixes, Last Run, Code Wiki and Last Active columns" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-list-dark.png" alt="Projects list view with the Project, Provider, Code Review, Runs, Success Rate, Verifications, Fixes, Last Run, Code Wiki and Last Active columns" />
 
 The list has these columns:
 
@@ -70,14 +75,15 @@ The list has these columns:
 |--------|---------------|
 | **Project** | The project name |
 | **Provider** | GitHub, Vercel, Netlify or CLI, with the verification type below it |
+| **Code Review** | Open pull requests and their critical and high findings, such as **3 open · 1 high**, or **Reviewing #N**, **No open pull requests** or **Off** |
 | **Runs** | The run strip: the window laid out as a time axis. Click a slot to open its runs |
 | **Success Rate** | The share of verifications that passed |
 | **Verifications**, **Fixes** | Counts in the window |
-| **Findings**, **Recs** | Open findings, split by severity, and open recommendations |
 | **Last Run** | The latest run's result, name and duration. Click it to open the run |
+| **Code Wiki** | **Ready**, **Writing**, **Refreshing**, **Failed**, **Refresh failed**, **Not built yet** or **Off** |
 | **Last Active** | When the project was last active |
 
-Click a column header to sort, except **Provider**, **Runs** and **Last Run**. In card view, the sort menu offers **Project Name**, **Success Rate**, **Verifications**, **Fixes**, **Findings**, **Recommendations** and **Last Activity**.
+Click **Project**, **Success Rate**, **Verifications**, **Fixes** or **Last Active** to sort. In card view, the sort menu offers **Project Name**, **Success Rate**, **Verifications**, **Fixes** and **Last Activity**.
 
 The view you pick lasts until you reload the page. To change the default view, open **Settings > Visual** and set **Default View**. On a phone, projects always show as cards.
 
@@ -86,24 +92,26 @@ The view you pick lasts until you reload the page. To change the default view, o
 ## Quick search
 
 Press `⌘K` (or `Ctrl+K`), or click **Search projects or anything...** in the top bar.
-- Type at least 3 characters to find a project by name. Picking one opens its **Verifications** tab.
-- With an empty query, the palette shows your **Recent** projects and **Navigation** shortcuts.
+- Type at least 3 characters to find a project by name. Picking one opens its **Code review** tab.
+- With an empty query, the palette shows your **Recent** projects and the **Go to Projects** shortcut.
 
-For queries across sessions, verifications, findings and more, use [Search](/console/search).
+For queries across sessions, verifications, fixes and more, use [Search](/console/search).
 
 ---
 
 ## Create a project
 
-Owners and admins click **New project** in the page header:
+GitHub repositories don't need this step: installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project.
 
-1. Under **Where does it deploy?**, pick a connected integration: a GitHub installation, a Vercel team or a Netlify team. Click **Continue**.
+To add a Vercel project or a Netlify site, an owner or admin clicks **New project** in the page header:
+
+1. Under **Where does it deploy?**, pick a connected Vercel team or Netlify team. Click **Continue**.
 2. Select what to verify. **New projects** lists what isn't a project yet. **Enable again** lists **Not active** projects, which come back with their history and settings.
-3. Set each project's verification type: **Web** or **API**. Under **Verification type**, **All Web** and **All API** set every row at once.
-4. Click **Create N projects** (or **Enable N projects**).
+3. Set each project's verification type: **Web**, **API** or **None**. **None** starts nothing on a deployment until you set a type in the project's settings.
+4. Click **Create N projects**, **Enable N projects**, or **Create N, enable N** when you picked both.
 
-<img className="ib-shot ib-shot-light" src="/images/console/projects/new-project-pick-light.png" alt="New project dialog listing two Vercel projects to create, each with a Web or API choice, and the Create 2 projects button" />
-<img className="ib-shot ib-shot-dark" src="/images/console/projects/new-project-pick-dark.png" alt="New project dialog listing two Vercel projects to create, each with a Web or API choice, and the Create 2 projects button" />
+<img className="ib-shot ib-shot-light" src="/images/console/projects/new-project-pick-light.png" alt="New project dialog for a Vercel team, with two of its five projects selected, each with a Web, API or None choice, and the Create 2 projects button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/new-project-pick-dark.png" alt="New project dialog for a Vercel team, with two of its five projects selected, each with a Web, API or None choice, and the Create 2 projects button" />
 
 For Vercel, the dialog reminds you that protected preview deployments need a **Bypass token** secret. Add it in the new project's [Secrets](/console/secrets) once the project exists.
 
