@@ -171,6 +171,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - Never mention human take-over in the live view
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead
   - The same goes for credits: other pages say what uses credits and what's free, never how many a plan gets or a job costs
+  - Plans are priced in credits. Leave out the website's session limits (its sessions row and session lines) when you mirror it
 - The public REST API has no reference docs for now. That includes running a saved scenario through the API
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`
