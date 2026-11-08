@@ -80,7 +80,7 @@ A session usually has more than one actor: the **main** agent, and the delegated
 |------|---------------|
 | `actions.jsonl` | That agent's event log: file edits, tool calls, and verification markers. The main conversation writes `agents/main/actions.jsonl`. |
 | `cycle.json` | The agent's one open verification cycle (id, kind - gated or scenario - start time, trace id). |
-| `verdict.json` | The agent's latest verdict (`status`, `checks`, `issues`, `fixes`). |
+| `verdict.json` | The agent's latest verdict (`status`, `checks`, `issues`, `fixes`, and the optional `summary`). |
 | `aux.json` | Auxiliary cycle flags (recording, conclusive checks, context injection, the [scenario](/cli/guides/scenarios) pause marker). |
 | `steps.json` | The open [scenario step](/cli/guides/scenarios) stack. |
 | `queue/jobs.jsonl` | The agent's live Collector queue producer file. |

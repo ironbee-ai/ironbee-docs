@@ -368,9 +368,10 @@ These keys tune [`ironbee review`](/cli/guides/code-review). None of them is art
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `review.exclude` | `string[]` | `[]` | Paths that never leave your machine, deletions included. `*` matches within a segment and `**` across segments; a trailing `/` names a folder and everything below it, as in `.gitignore`. The union of every layer and of every tracked nested `.ironbee/config.json`, each matched under its own folder. See [Exclude paths](/cli/guides/code-review#exclude-paths). |
-| `review.includeUnstaged` | `boolean` | `false` | Also send unstaged edits to tracked files. Read only from the personal file or the global config; the project and local layers refuse it. |
-| `review.includeUntracked` | `boolean` | `false` | Also send untracked files (never ignored ones). Read only from the personal file or the global config, like `review.includeUnstaged`. |
+| `review.exclude` | `string[]` | `[]` | Paths that never leave your machine, deletions included. `*` matches within a segment and `**` across segments; a trailing `/` names a folder and everything below it, as in `.gitignore`. The union of every layer and of every tracked nested `.ironbee/config.json`, each matched under its own folder. `--exclude` adds patterns for one run. See [Exclude paths](/cli/guides/code-review#exclude-paths). |
+| `review.includeUnstaged` | `boolean` | `false` | Also send unstaged edits to tracked files. Read only from the personal file or the global config; the project and local layers refuse it. `--include-unstaged` turns it on for one run. |
+| `review.includeUntracked` | `boolean` | `false` | Also send untracked files (never ignored ones). Read only from the personal file or the global config, like `review.includeUnstaged`. `--include-untracked` turns it on for one run. |
+| `review.fix.maxRounds` | `number` | `5` | The most rounds of review and fix one [`/ironbee-review fix loop`](/cli/guides/code-review#from-a-coding-agent) makes. An integer from 1 to 20: `config set` and the TUI refuse anything else, and a hand-edited value out of range is ignored, with a warning on a terminal. `rounds:<n>` on the command overrides it for one run. Set it in the global, project or local layer, not the personal file. |
 | `review.settings.depth` | `string` | *(unset)* | `auto`, `quick`, `standard` or `deep`. Flag: `--depth`. |
 | `review.settings.focusAreas` | `string[]` | *(unset)* | `security`, `editorial`. Flag: `--focus`. |
 | `review.settings.extraChecks` | `string[]` | *(unset)* | `lint`, `style`, `defensive`, `tests`, `cleanup`, `pitfalls`. Flag: `--checks`. |
@@ -388,9 +389,9 @@ The personal file holds one repository's settings outside the checkout, at `~/.i
 
 - It holds only what `ironbee review` reads: the two switches, the endpoints, the credentials, `review.exclude`, `review.settings.*` and `params.*`.
 - Only `ironbee review` and `ironbee credits` read it. `ironbee verify`, the hooks that send your sessions to the Collector, and the devtools servers don't, so a credential stored only in the personal file doesn't reach them.
-- It records the remote's `owner/repo` and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
+- It records the remote's `owner/repo`, or a gitlab.com project's full path, and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
 - It's written readable by you only (`0600`, in a `0700` folder).
-- There's one per repository, for one `owner/repo`. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
+- There's one per repository, for one `owner/repo` or GitLab project. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
 
 ---
 
@@ -458,7 +459,7 @@ Connect Jira, Linear, or GitHub Issues - see the [Issue Tracking guide](/cli/gui
 
 ## VCS linkage
 
-Links each agent turn to the pull request it produced and the issues that PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+Links each agent turn to the pull request it produced, or the merge request on gitlab.com, and the issues the turn is attributed to, such as those a GitHub PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|

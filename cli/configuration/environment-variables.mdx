@@ -35,14 +35,18 @@ ironbee install --mode enforce --yes
 
 ## Verification jobs, code reviews and credits
 
-[`ironbee verify`](/cli/guides/verification-jobs) - the cloud verification-job runner - reads two extra overrides of its own, plus the GitHub Actions context. [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) read the same two overrides, and like `verify` they also read `IRONBEE_API_KEY` ahead of the config. An OAuth token still wins over any API key; see [Credentials](/cli/guides/verification-jobs#credentials) for the full order.
+[`ironbee verify`](/cli/guides/verification-jobs) - the cloud verification-job runner - reads two extra overrides of its own, plus the GitHub Actions or GitLab CI context. [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) read the same two overrides, and like `verify` they also read `IRONBEE_API_KEY` ahead of the config. An OAuth token still wins over any API key; see [Credentials](/cli/guides/verification-jobs#credentials) for the full order.
 
 | Variable | Effect |
 |----------|--------|
 | `IRONBEE_ACCESS_TOKEN` | OAuth access token for the API, overriding `service.oauthToken`. |
 | `IRONBEE_API_URL` | API base URL, overriding `api.url` (the `--api-url` flag wins over both). |
-| `GITHUB_ACTIONS` | When exactly `"true"`, a created job is declared with the `github_actions` trigger (Console visibility only) and secret-header values are masked with `::add-mask::`. |
-| `GITHUB_REPOSITORY` / `GITHUB_SHA` / `GITHUB_REF` | Fill the run's repository binding: the `owner/repo`, the authoritative commit, and the pull-request number on a PR run. |
+| `GITHUB_ACTIONS` | When exactly `"true"`, a created job is declared with the `github_actions` trigger, shown as **GitHub Actions** in the console, and secret-header values are masked with `::add-mask::`. The API refuses that trigger on a job bound to a gitlab.com project; see [Binding the run to your repository](/cli/guides/verification-jobs#binding-the-run-to-your-repository). |
+| `GITHUB_REPOSITORY` / `GITHUB_SHA` / `GITHUB_REF` | Fill the run's repository binding: the `owner/repo`, the authoritative commit, and the pull-request number on a PR run. A checkout whose remote is on gitlab.com is never bound through them. |
+| `GITLAB_CI` | When exactly `"true"`, and `GITHUB_ACTIONS` isn't, a created job is declared with the `gitlab_ci` trigger, shown as **GitLab CI** in the console. The API refuses that trigger on a job bound to a GitHub repository. With no Claude Code sign-in, it also names the session's user `<gitlab-ci:<login>>`, from `GITLAB_USER_LOGIN`; see [Who a session belongs to](/cli/advanced/privacy#who-a-session-belongs-to). |
+| `CI_SERVER_HOST` / `CI_PROJECT_PATH` | In a gitlab.com CI job, the project the job runs for. The job's merge request and commit bind the run only when that project is the checkout's remote, or when there's no remote. |
+| `CI_MERGE_REQUEST_IID` / `CI_MERGE_REQUEST_PROJECT_PATH` | Bind a GitLab CI run to its merge request, when the merge request belongs to the bound project. |
+| `CI_COMMIT_SHA` | The commit a GitLab CI run binds to when there's no merge request to bind. |
 | `CI` | When set to any non-empty value, `false` and `0` included, `ironbee review` uses the text form instead of the Review area, and the lines of a review or verification carry only the job's own credits, never the team's balance. |
 | `NO_COLOR` | When set, `ironbee review` draws no colour in the Review area or the text form. |
 | `VISUAL` / `EDITOR` | The editor the Review area's `e` key opens a finding in (falls back to `vi`). |
@@ -61,9 +65,18 @@ The [issue-tracker integrations](/cli/guides/issue-tracking) normally keep their
 | `IRONBEE_JIRA_PAT` | Supplies `integrations.jira.pat` (Jira **Server/DC** personal access token). |
 | `IRONBEE_LINEAR_API_KEY` | Supplies `integrations.linear.apiKey` (Linear personal API key or OAuth token). |
 
-GitHub needs no IronBee credential variable:
+GitHub and GitLab need no IronBee credential variable:
 - The [GitHub issue tracker](/cli/guides/issue-tracking#github-issues) runs the `gh` CLI, which uses its own auth: `gh auth login`, or a `GH_TOKEN` in the environment. In GitHub Actions, set `GH_TOKEN` yourself, for example to `${{ github.token }}`.
-- [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) calls the GitHub API with the first token it finds: `GH_TOKEN`, then `GITHUB_TOKEN`, then `gh auth token`. For a GitHub Enterprise host named in `GH_HOST`, `GH_ENTERPRISE_TOKEN` and `GITHUB_ENTERPRISE_TOKEN` come first.
+- [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) calls the GitHub API only with a token meant for the host it asks, the first one set:
+  - for github.com: `GH_TOKEN`, then `GITHUB_TOKEN`. On a GitHub Actions runner of another server, `GITHUB_TOKEN` belongs to that server and isn't sent to github.com.
+  - for the runner's own server, the host in `GITHUB_SERVER_URL`: `GH_ENTERPRISE_TOKEN`, then `GITHUB_ENTERPRISE_TOKEN`, then `GITHUB_TOKEN`.
+  - for the GitHub Enterprise host `GH_HOST` names: `GH_ENTERPRISE_TOKEN`, then `GITHUB_ENTERPRISE_TOKEN`. A GitHub Enterprise Cloud tenant on `ghe.com` works the same way, and is read at its `api.` host.
+  - then, for any host, the login `gh` stored for it with `gh auth login`.
+- For gitlab.com merge requests, VCS linkage uses `GITLAB_TOKEN` when it's set and asks anonymously otherwise. A private project then reports `unauthenticated`.
+
+<Note>
+  Since CLI 0.49, an environment token goes only to the host it's meant for: `GH_TOKEN` to github.com, and `GITHUB_TOKEN` to the runner's own server, or to github.com outside a runner. For any other GitHub Enterprise host, name it in `GH_HOST` and set `GH_ENTERPRISE_TOKEN`, or run `gh auth login` for that host.
+</Note>
 
 ---
 
