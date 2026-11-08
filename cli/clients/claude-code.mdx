@@ -15,6 +15,7 @@ When you run `ironbee install` in a project where [Claude Code](https://docs.ant
 | `.claude/skills/ironbee-verification.md` | The verification skill the agent follows (enforce mode) |
 | `.claude/rules/ironbee-verification.md` | The always-on verification rule that enforces the gate (enforce mode) |
 | `.claude/commands/ironbee-verify.md` | The `/ironbee-verify` slash command |
+| `.claude/commands/ironbee-review.md` | The `/ironbee-review` slash command, for a [code review](/cli/guides/code-review#from-a-coding-agent) of your working tree. Only you can run it |
 | `.claude/commands/ironbee-{manage,search,run,sync}-scenario.md` | The [saved-scenario](/cli/guides/scenarios) slash commands |
 | `.claude/agents/ironbee-scenario.md` | The **scenario sub-agent** that authors, searches, and re-runs [saved scenarios](/cli/guides/scenarios) (like the verifier, it owns the scenario tools and can't edit your code) |
 | `.claude/agents/ironbee-verifier.md` | The **verifier sub-agent** that actually runs the cycles. A single **`ironbee-devtools`** MCP server - it serves every enabled cycle's tools (`bdt_*` / `ndt_*` / `pdt_*` / `bedt_*` / `adt_*` / `tdt_*`), plus the shared `ibdt_*` family (batch execute, scenario run/CRUD, o11y trace helpers), under one entry - is rendered **inline** into this file so it's scoped to the sub-agent. It also gets read-only `Read` / `Grep` / `Glob` (to understand the change) but **no edit tools** |
@@ -37,7 +38,7 @@ These are merged into your existing Claude settings, not overwritten.
 
 ## Slash commands
 
-IronBee installs the `/ironbee-verify` slash command, which the agent (or you) can invoke directly in Claude Code:
+IronBee installs the `/ironbee-verify` slash command, which the agent (or you) can invoke directly in Claude Code, and the `/ironbee-review` command, which only you can run:
 
 ### ironbee-verify
 
@@ -58,6 +59,19 @@ An optional leading word picks what happens on a fail: the default is **verify-o
   `/ironbee-verify` **delegates to the `ironbee-verifier` sub-agent** rather than verifying in the main conversation - see [Verification runs in a sub-agent](#verification-runs-in-a-sub-agent).
 </Note>
 
+### ironbee-review
+
+Review your working tree with [`ironbee review`](/cli/guides/code-review) and report the findings. `fix` also fixes the blocking findings, `fix loop` reviews again after each fix pass, and `price` only asks what the review would cost:
+
+```bash
+/ironbee-review                  # review the working tree and report it
+/ironbee-review fix              # review, then fix the blocking findings once
+/ironbee-review fix loop high    # fix and review again, with high and above blocking
+/ironbee-review price            # what the review would cost
+```
+
+The main agent runs it in the conversation, without a sub-agent. A review spends your team's credits, so the command carries `disable-model-invocation: true` in every mode, and the model never starts a review on its own. See [From a coding agent](/cli/guides/code-review#from-a-coding-agent) for every mode and option.
+
 ### Scenario commands
 
 IronBee also installs `/ironbee-manage-scenario`, `/ironbee-search-scenario`, `/ironbee-run-scenario`, and `/ironbee-sync-scenario` for authoring, finding, running, and repairing [saved verification scenarios](/cli/guides/scenarios). Like `/ironbee-verify`, they delegate to a dedicated sub-agent (`ironbee-scenario`). They're installed in enforce and assist modes, alongside the verifier.
@@ -68,7 +82,7 @@ When an [issue tracker is connected](/cli/guides/issue-tracking) (Jira, Linear, 
 
 ### Assist mode: commands are user-only
 
-In [assist mode](/cli/guides/verification#assist-mode-default) - which is manual-trigger-only by design - install marks every IronBee command (`/ironbee-verify`, the four scenario commands, and `/ironbee-issue-track` when present) with `disable-model-invocation: true`. You can still type them, but the model can't auto-invoke them and their descriptions stop costing context tokens (they show as *user-only* in Claude's `/skills` viewer). The sub-agents' descriptions likewise switch to a **non-proactive stance** in assist mode, so the model doesn't spawn the verifier or scenario agent on its own - a user-driven `/ironbee-verify` still spawns it explicitly. Enforce mode keeps auto-invocation on, since the verification mandate may route the model through the command.
+In [assist mode](/cli/guides/verification#assist-mode-default) - which is manual-trigger-only by design - install marks every IronBee command (`/ironbee-verify`, the four scenario commands, and `/ironbee-issue-track` when present) with `disable-model-invocation: true`. You can still type them, but the model can't auto-invoke them and their descriptions stop costing context tokens (they show as *user-only* in Claude's `/skills` viewer). The sub-agents' descriptions likewise switch to a **non-proactive stance** in assist mode, so the model doesn't spawn the verifier or scenario agent on its own - a user-driven `/ironbee-verify` still spawns it explicitly. Enforce mode keeps auto-invocation on, since the verification mandate may route the model through the command. `/ironbee-review` is the exception: it's user-only in enforce mode too.
 
 ---
 

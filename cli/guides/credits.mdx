@@ -11,6 +11,7 @@ description: How ironbee review and ironbee verify spend your team's monthly cre
 ## What a run costs
 
 - **A code review** is priced by its size and its depth. The size counts the reviewable lines of the change. Lock files, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes don't count.
+- **A follow-up review** is priced by the reviewable lines changed since the review it [follows](/cli/guides/code-review#follow-up-reviews). When the earlier round left files unread, or most of the change is new since, it's priced as the whole change again. A round that read nothing new isn't charged, and when nothing changed since the last review, no review is created, unless you pass `--fresh`.
 - **A verification job** is priced by how long it runs, up to its timeout.
 
 Every price the CLI prints is in credits.
@@ -51,7 +52,7 @@ The credential is resolved the same way as for [`ironbee review`](/cli/guides/co
 
 | When | What the CLI prints |
 |------|---------------------|
-| `ironbee review --dry-run` | The price, with the depth, the size class and the reviewable lines, and what's left this month: `credits     <n> (Standard · L, <lines> lines) · <left> left this month` |
+| `ironbee review --dry-run` | The price, with the depth, the size class and the reviewable lines, and what's left this month: `credits     <n> (Standard · L, <lines> lines) · <left> left this month`. On a follow-up, the size class and the lines are those priced, and the parenthesis adds what the price is on, such as `read delta` |
 | The review is created | `review <id> created · <n> credits` |
 | The review ends | The final line adds the credits used and what's left: `… · <n> credits · <left> left` |
 | `ironbee review status` | The credits a finished review used, what's left, and the reset date |

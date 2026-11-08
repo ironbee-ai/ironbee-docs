@@ -151,20 +151,24 @@ By default the run is bound to your repository and current commit, so the verdic
 
 | Flag | Description |
 |------|-------------|
-| `--commit <sha>` | Bind to this full 40-character commit SHA (default: derived from the repo, or `GITHUB_SHA`) |
-| `--base <ref>` | Measure the changeset from this ref or SHA |
-| `--pr <number>` | Bind to this pull request instead of a commit (default: from `GITHUB_REF` on a pull request run) |
+| `--commit <sha>` | Bind to this full 40-character commit SHA (default: derived from the repo, or the CI job's commit). It wins over the CI job's pull or merge request |
+| `--base <ref>` | Measure the changeset from this ref or SHA. A pull or merge request takes its base from the host, so `--base` is then not used |
+| `--pr <number>` | Bind to this pull request, or on GitLab this merge request, instead of a commit (default: the CI job's pull or merge request) |
 | `--no-diff` | Bind the commit but declare no changeset. Can't be combined with `--base` |
 | `--no-repo` | Don't bind the run to a repository at all |
 
 The binding attaches only when it would actually work:
-- The remote must be **GitHub**.
-- A commit derived from local HEAD must be **reachable from a remote-tracking branch**. An unpushed HEAD produces a warning, and the run proceeds **unbound** rather than pointing at code the service can't read. An explicit `--commit`, or `GITHUB_SHA` in CI, is taken at face value.
-- A dirty working tree only warns. The run stays bound to the committed SHA, so what the agent reads and what's on your disk may differ.
+- The remote must be on **GitHub** or **gitlab.com**. A gitlab.com project is bound by its full path, such as `acme/platform/backend`, through its group connected in the IronBee console. A self-managed GitLab server isn't supported.
+- A commit derived from local HEAD must be **reachable from a remote-tracking branch**. An unpushed HEAD produces a warning, and the run proceeds **unbound** rather than pointing at code the service can't read. An explicit `--commit`, or the CI job's commit, is taken at face value.
+- A dirty working tree only warns. The run stays bound to the committed SHA, which it reads from GitHub or GitLab, so what the agent reads and what's on your disk may differ.
 
-In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository, or re-run with `--no-repo`.
+In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository (on GitLab, connect the project's group in the console), or re-run with `--no-repo`.
 
-**Which project.** Without `--project`, the project name comes from your repository. That's the `origin` remote's repository name, else the first remote's, else the repository folder's name. A checkout of a github.com repository whose name matches reports to that repository's GitHub project. `--project <name>` names the project explicitly and doesn't claim a GitHub project. See [How IronBee identifies your project](/cli/concepts/projects).
+In a gitlab.com CI job of the same project, the binding is automatic too, even on a detached checkout. The run binds to the merge request in `CI_MERGE_REQUEST_IID` when it's that project's, else to the commit in `CI_COMMIT_SHA`. The job is declared with a `gitlab_ci` trigger, so the console shows it as **GitLab CI**. A gitlab.com remote is never bound through `GITHUB_REPOSITORY`. See [Environment variables](/cli/configuration/environment-variables#verification-jobs-code-reviews-and-credits).
+
+A CI trigger has to match the repository's host. The API refuses a GitHub Actions job bound to, or claiming, a gitlab.com project, and a GitLab CI job bound to, or claiming, a GitHub repository. To verify across hosts, pass `--no-repo` and `--project <name>`.
+
+**Which project.** Without `--project`, the project name comes from your repository. That's the `origin` remote's repository name, else the first remote's, else the repository folder's name. A gitlab.com project is named by the path after its group, with `/` as `-`. A checkout of a github.com repository or a gitlab.com project whose name matches reports to that repository's own project. In GitHub Actions or GitLab CI, the job reports to the GitHub or GitLab project with that name. `--project <name>` names the project explicitly and doesn't claim a repository's project. See [How IronBee identifies your project](/cli/concepts/projects).
 
 ---
 

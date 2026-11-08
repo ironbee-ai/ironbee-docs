@@ -61,7 +61,7 @@ Use these terms. When you describe something on screen, quote the console label 
 Console labels, quoted verbatim:
 - **Status:** Created, Queued, Starting, Running, Completed, Failed, Cancelled, Interrupted, Unknown
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
-- **Trigger:** Vercel, Netlify, GitHub Actions, API, CLI, Console
+- **Trigger:** Vercel, Netlify, GitHub Actions, GitLab CI, API, CLI, Console
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
 - **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
 - **Finding severity:** Critical, High, Medium, Low

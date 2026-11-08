@@ -1,16 +1,18 @@
 ---
 title: Code review of your local checkout
 sidebarTitle: Code review
-description: Review your branch with ironbee review before you open a pull request, and read the findings in the terminal UI, as text, JSON or SARIF.
+description: Review your branch with ironbee review before you open a pull request, review again after your fixes, and read the findings as TUI, text, JSON or SARIF.
 ---
 
-`ironbee review` reviews your branch against the repository's default branch, the way a pull request of it would be reviewed, without opening one. The review runs on IronBee: the CLI sends what the remote doesn't have yet, the reviewer reads the change, and the findings come back to your terminal.
+`ironbee review` reviews your branch against the repository's default branch, the way a pull request (on GitLab, a merge request) of it would be reviewed, without opening one. The review runs on IronBee: the CLI sends what the remote doesn't have yet, the reviewer reads the change, and the findings come back to your terminal. A second review of the branch [follows the first](#follow-up-reviews), and reads only what changed since.
 
 ```bash
 ironbee review                                 # the Review area on a terminal, the text form in CI
 ironbee review --dry-run                       # what would be sent, what is left out, and the price
-ironbee review --plain --fail-on high          # exit 4 when a finding at or above high exists
+ironbee review --plain --fail-on high          # exit 4 when a new or open finding at or above high exists
 ironbee review --format sarif > review.sarif   # for GitHub code scanning
+ironbee review --include-unstaged --include-untracked --exclude 'fixtures/**'   # the working tree as it is, less one folder
+ironbee review --fresh                         # a new first review, even when a follow-up is possible
 ironbee review show                            # this worktree's newest review again
 ```
 
@@ -18,9 +20,9 @@ ironbee review show                            # this worktree's newest review a
 
 ## Before you start
 
-- The repository is on **github.com** and connected through the [IronBee GitHub App](/integrations/github). Otherwise the API refuses the review with `PROJECT_NOT_BOUND`.
+- The repository is bound to a project of your team: a **github.com** repository connected through the [IronBee GitHub App](/integrations/github), or a **gitlab.com** project whose group is connected in the console. Otherwise the API refuses the review with `NOT_FOUND`: no project of the team is bound to the repository.
 - Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
-- The GitHub App is installed for the repository the review targets. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING`, and the CLI lists your checkout's github.com remotes so you can pick another with `--remote`.
+- IronBee can reach the repository the review targets: the GitHub App is installed for it, or its GitLab group is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab, where the CLI adds that the group needs connecting in the IronBee console. Either way, the CLI lists your checkout's github.com and gitlab.com remotes so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
 - Your team has [credits](/cli/guides/credits) left this month.
 - git 2.25 or later, and the full history: in a shallow clone, run `git fetch --unshallow` first.
@@ -38,7 +40,7 @@ After a local rebase or merge, the diff is the same one a pull request would sho
 
 | Flag | Description |
 |------|-------------|
-| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository |
+| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository or a gitlab.com project |
 | `--base <ref>` | Review against this ref instead of the default branch. It must be on the remote |
 | `-C, --project-dir <dir>` | Where to start looking for the repository root (default `.`) |
 
@@ -54,19 +56,21 @@ By default, only what `git push` would send, plus your staged changes:
 |---------|------|
 | Unpushed commits | Yes, flattened into one patch |
 | Staged changes | Yes |
-| Unstaged edits to tracked files | Only with `review.includeUnstaged` |
-| Untracked files | Only with `review.includeUntracked`. Ignored files are never sent |
+| Unstaged edits to tracked files | Only with `--include-unstaged` or `review.includeUnstaged` |
+| Untracked files | Only with `--include-untracked` or `review.includeUntracked`. Ignored files are never sent |
 | Files your ignore rules match | No. They're reviewed at their pushed state, and a deletion is sent |
 | Anything under a `.ironbee/` folder | Never |
-| Paths `review.exclude` matches | Never, including deletions and renames out of them |
+| Paths `review.exclude` or `--exclude` matches | Never, including deletions and renames out of them |
 | Links pointing outside the repository | No |
 
-Turn the two switches on in your repository's [personal file](/cli/configuration/configuration#the-personal-file) or in the global config. A file inside the checkout can't set them:
+To send unstaged edits or untracked files on every run, turn the two switches on in your repository's [personal file](/cli/configuration/configuration#the-personal-file) or in the global config. A file inside the checkout can't set them:
 
 ```bash
 ironbee config set --personal review.includeUnstaged true
 ironbee config set --personal review.includeUntracked true
 ```
+
+For one run, pass `--include-unstaged` or `--include-untracked` instead. The flag turns the switch on for that run only, and the configured value stays as it is.
 
 ### Exclude paths
 
@@ -91,6 +95,11 @@ A pattern with no `*` in its last segment that matches a folder of a changed fil
 
 The list is the union of every layer: the global config, the personal file, `config.json`, `config.local.json`, and every tracked nested `.ironbee/config.json`. A nested file's patterns match under its own folder. A file renamed from an excluded path, or with the same content as one, is left out with it.
 
+For one run, `--exclude <glob>` keeps more paths home, on top of every configured pattern:
+- It's repeatable, and a value can hold a comma list: `--exclude 'fixtures/**,**/*.snap'`.
+- It uses the `review.exclude` grammar, matched from the repository root, with the same refusal rules. Its patterns count toward the 100.
+- Quote the glob so your shell doesn't expand it. A glob the shell expanded anyway arrives as extra arguments, and the command refuses them rather than send part of what you meant.
+
 ### Check before you send
 
 Before anything is sent, the command prints what it sends and where it goes:
@@ -108,17 +117,24 @@ sending:
   switches    includeUnstaged=false (the default), includeUntracked=false (the default)
 ```
 
-The `size` line counts every changed file and line. Its reviewable lines are what the review is [priced](/cli/guides/credits#what-a-run-costs) by: they leave out lock, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes.
+The `size` line counts every changed file and line. Its reviewable lines are what the review is [priced](/cli/guides/credits#what-a-run-costs) by: they leave out lock, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes. A [follow-up](#follow-up-reviews) is priced by the lines changed since instead.
+
+The block can also carry:
+- a `series` line: the review a [follow-up](#follow-up-reviews) continues, its round and the lines changed since, such as `follow-up of <job-id> (round 2) · 12 changed lines in 3 files since, of 236 in the change`, or why the run is a first review
+- a `gate` line, when you pass [`--gate`](#findings-and-what-blocks)
+- `flag` as a switch's source, when `--include-unstaged` or `--include-untracked` turned it on
 
 Under that, it names every path it left out and why:
-- matched by `review.exclude`, or renamed from or identical to a path it matched
+- matched by `review.exclude` or by `--exclude`, or renamed from or identical to a path one of them matched
 - matched by your ignore rules
 - IronBee's own files
 - a link pointing outside the repository
 
 It also lists the nested `.ironbee/config.json` files whose exclusions joined, the folders a starred pattern matched while their files are sent, and `not sent` lines that count the files with unstaged changes and the untracked files the switches would send.
 
-`--dry-run` stops there. It prints the block, the files in the patch and the price, and starts no review. To get the price it sends only the repository, the size and the settings. With `--json`, it prints the same as one JSON document, whose `estimate` holds `credits`, `sizeClass`, `depth`, `reviewableLines` and `left`. `sizeClass` is the API's code, so `XXXL` there reads `3XL` in the text form. When the price can't be looked up, `estimate` is `null`, `estimateError` holds its `code` and `message`, and the command still exits `0`.
+`--dry-run` stops there. It prints the block, the files in the patch and the price, and starts no review. When there's nothing to review, or nothing changed since the last review, it asks for no price, and the JSON then has no `estimate`. To get the price it sends only the repository, the size and the settings, plus, on a follow-up, the previous review's id and the lines changed since. With `--json`, it prints the same as one JSON document, whose `estimate` holds `credits`, `sizeClass`, `depth`, `reviewableLines` and `left`. `sizeClass` is the API's code, so `XXXL` there reads `3XL` in the text form. When the price can't be looked up, `estimate` is `null`, `estimateError` holds its `code` and `message`, and the command still exits `0`.
+
+The JSON's `followUp` is the review the run would follow, with its `previousJobId`, the `round`, and the `lines` and `files` changed since, or `null` for a first review. On a follow-up, `estimate.reviewableLines` and `estimate.sizeClass` are those of the lines priced, and `estimate.read` says what the price is on: `delta` for the lines changed since, `whole` for the whole change again, or `nothing`. When nothing changed since the last review, the block says that no review would be created and nothing spent, and the JSON carries `unchangedSince`.
 
 ### Size limits
 
@@ -139,7 +155,7 @@ The run is refused when a `.ironbee` folder at any level, or anything inside one
 
 The endpoints, the credential and the two switches decide where your code goes, and as which team. `ironbee review` reads them only from these sources, first winning:
 
-1. the flags `--api-url` and `--collector-url`
+1. the flags `--api-url` and `--collector-url`, and for this run's switches, `--include-unstaged` and `--include-untracked`
 2. the environment, as for [`ironbee verify`](/cli/guides/verification-jobs#credentials): `IRONBEE_ACCESS_TOKEN`, `IRONBEE_API_KEY`, `IRONBEE_API_URL`, and the `IRONBEE_SERVICE_*` variables
 3. the repository's [personal file](/cli/configuration/configuration#the-personal-file)
 4. the global config, `~/.ironbee/config.json`
@@ -173,6 +189,57 @@ Each setting resolves on its own: the flag, then the personal file, then `config
 
 ---
 
+## Follow-up reviews
+
+A second review of the same branch on the same machine follows the first, the way a push to a pull request does. The reviewer reads only what changed since, carries the earlier findings to the new code, and says which ones were fixed. The round is [priced](/cli/guides/credits#what-a-run-costs) by the lines changed since the review it follows. When the earlier round left files unread, or most of the change is new since, the platform reads and prices the whole change again, and the result says `read` `whole`.
+
+A run looks at the newest review that succeeded in this worktree, for the same branch, remote and base. A newer review that failed or was cancelled is skipped. A newer one that's still running, or whose state the CLI can't read, means no follow-up this time. When you review the base's own branch, such as `main` against `origin/main`, only a review over the same pushed commit counts, so the first run after a push is a first review. The run follows that review when it:
+- sent the same set of changes: the same unstaged and untracked switches, whether a flag or the config set them, and the same `--exclude` patterns
+- kept the history a follow-up continues from, with its apply point still on the remote. After a rebase and a force-push, the apply point is often gone
+- has never had a follow-up fail for want of it. After such a failure, the CLI doesn't follow that review again
+- is at most six days old
+
+Otherwise the `series` line of the [pre-send block](#check-before-you-send) says why not, and the run is a first review, even when an older review would qualify. A detached `HEAD` has no series of reviews, so name the review with `--previous`. Neither has a branch created again since the review, moved with `git branch -f`, `git checkout -B` or `git switch -C`, or renamed or copied onto its name. A plain `git reset` doesn't end the series. Reviews stored by a CLI before 0.51 never start a series, so your first review after upgrading is a first review.
+
+| Flag | Description |
+|------|-------------|
+| `--fresh` | Make a first review, even when a follow-up is possible. It skips the check below too, so it creates and charges a new review even when nothing changed |
+| `--previous <job-id>` | Follow this review: a succeeded review stored for this worktree, on a detached `HEAD` too. The run is refused when the CLI finds that the review can't be followed. When the platform can't take the follow-up, the run falls back to a first review, as below. Can't be combined with `--fresh` |
+| `--addressed <id>` | A finding you fixed, by its `id` in the `--json` form (repeatable). The review reads it again, even when its own lines didn't change. Without a follow-up, it's dropped with a note |
+
+**When nothing changed.** When the files are the same over the same pushed commit, asked with the same settings, no review is created, unless you pass `--fresh`. The command shows the previous result again, and `--json` marks it with `unchangedSince: <job-id>`. Other review settings, such as `--depth`, `--focus` or `review.settings`, make a first review instead. Another `--gate` alone makes a follow-up that reads nothing, and marks every finding again under the new gate. The rules above still apply, apart from the same set of changes. Such a round is free, unless the platform has to read the whole change again.
+
+When the platform can't take a follow-up, or the earlier review's tree is gone from your repository, the run falls back to a first review and says why in one line. With `--previous`, a missing tree refuses the run instead. When git can't measure the lines changed since, because it was killed, timed out or its output overflowed, the run stops instead, and says to pass `--fresh` or to drop `--previous`. A round that read nothing new isn't charged. The uploaded patch is kept seven days, so a review can be followed for six.
+
+With `--json`, every result carries `round` and `read`: `read` is `first` on a first review, else `delta`, `whole` or `nothing`. A follow-up's result also carries `previousJobId`. The result's `round` is a string: the round number, then a short commit, such as `2-a1b2c3d`. The dry run's `followUp.round` is the plain number.
+
+---
+
+## Findings and what blocks
+
+Each finding carries an `id` and a `state`:
+
+| State | Meaning |
+|-------|---------|
+| `new` | Found in this round. Every finding of a first review is `new` |
+| `open` | An earlier finding that still stands at the new code |
+| `fixed` | An earlier finding the review read as addressed |
+| `dropped` | An earlier finding whose code is gone, or no longer applies |
+
+A finding carried from an earlier round comes without a suggested fix or a diagram. The counts, `--fail-on` and the exit code count only `new` and `open` findings. The text form lists `fixed` and `dropped` ones after the rest. SARIF leaves them out, and carries each other finding's state in its result's `properties`.
+
+Each finding also carries `blocking`: whether it blocks under the review's **gate**. The gate is the repository's merge gate, its [**Block merging when**](/code-review/settings#on-the-pull-request) setting, unless you pass `--gate` for the run:
+
+| Flag | Description |
+|------|-------------|
+| `--gate <level>` | What blocks for this run: `low`, `medium`, `high` or `critical` for a standing finding at or above it, or `never` for nothing |
+
+A finding listed because it's below the repository's comment threshold never blocks, whatever the gate.
+
+The result names its gate as `result.gate`: `blockAt` is the severity or `never`, and `source` is `request` for `--gate` or `repository` for the merge gate. With `--dry-run --json`, the document carries `gate` when you passed `--gate`. `--fail-on` stays its own severity, whatever the gate.
+
+---
+
 ## Output
 
 | Flag | Form |
@@ -185,12 +252,14 @@ Each setting resolves on its own: the flag, then the personal file, then `config
 | Flag | Description |
 |------|-------------|
 | `--min-severity <severity>` | Show only findings at or above `low`, `medium`, `high` or `critical`, in the TUI and text forms |
-| `--fail-on <severity>` | Exit `4` when a finding at or above it exists. Every finding counts, whatever `--min-severity` hides |
+| `--fail-on <severity>` | Exit `4` when a `new` or `open` finding at or above it exists. Every such finding counts, whatever `--min-severity` hides |
 | `--no-wait` | Create the review, print its id, and exit |
 | `--queue-wait <seconds>` | Cancel the review if it hasn't started within this (default `900`). The command then exits `2`, and with `--json` the job carries `error.type` `queue_wait` |
 | `--collector-url <url>` | Collector base URL, for a patch too large to travel with the request |
 
-The text form starts with a header: the repository, the branch, the commit range, the depth with the review's credits, and the counts by severity. Then come the summary and the findings, grouped by file. Each finding reads `severity  path:line  claim`, followed by its explanation, the reviewed code around the line, the suggested fix as a diff, and a diagram's source. Findings the reviewer only lists come last, one line each.
+The text form starts with a header: the repository, the branch, the commit range, the depth with the review's credits, and the counts by severity. On a follow-up, it adds the review it follows, the round and what it read, such as `follow-up of <job-id> · round 2 · read delta (12 lines)`. When the result names its gate, a line such as `gate        medium (the repository's merge gate)` follows.
+
+Then come the summary and the findings, grouped by file. Each finding reads `severity  path:line  claim`, followed by its explanation, the reviewed code around the line, the suggested fix as a diff, and a diagram's source. On a follow-up, each line starts with the finding's state, and a finding carried from an earlier round adds its newest reading on a `reading:` line. Findings the reviewer only lists come next, one line each, and one that blocks ends with `(blocking)`. The `fixed` and `dropped` findings come last, under their own headings. The final line counts the findings, the blocking ones among them when the result names its gate, and the `fixed` and `dropped` ones when there are any.
 
 The summary and the findings' texts are Markdown. They're rendered on a colour terminal and printed as written for a log. `--json` and `--format sarif` keep them raw. Set `NO_COLOR` to drop every colour.
 
@@ -212,9 +281,9 @@ Progress goes to stderr in every form, so stdout carries the document alone:
 
 On a terminal, `ironbee review` opens the review in the **Review** area of the [TUI](/cli/guides/interactive-mode) when it succeeds. `ironbee tui review` opens the area with the stored reviews, this worktree's first.
 
-The left pane lists the findings, grouped by file. The right pane shows the selected finding:
+When the result names its gate, the header shows it, who set it and the blocking count, such as `gate low (this run) · 2 blocking`. On a follow-up, it also shows the review it follows, the round and what it read. The left pane lists the findings, grouped by file. A finding that blocks says `(blocking)`. On a follow-up, each row starts with its state, and the `fixed` and `dropped` findings show their path, with no context or fix. The right pane shows the selected finding:
 - the reviewed code around the line, with the line marked and syntax colour
-- the explanation
+- the explanation, and for a finding carried from an earlier round, its newest reading under **Reading**
 - the diagram's Mermaid source
 - the suggested fix as a word-level diff
 
@@ -233,6 +302,7 @@ The left pane lists the findings, grouped by file. The right pane shows the sele
 | `b` | Back to the list of reviews |
 
 `a` writes the fix to the working tree and stages nothing. It works on this worktree's reviews only, and a fix you already applied isn't offered again. It refuses when:
+- the finding is `fixed` or `dropped`, so there's nothing to apply
 - the file changed since the review, or the reviewed version is gone or can't be read
 - the reviewer marked the fix's indentation as differing from the file's. Copy the fix with `c`, or open the file with `e`
 - the fix's lines fall outside the reviewed file
@@ -248,6 +318,7 @@ The left pane lists the findings, grouped by file. The right pane shows the sele
 ```bash
 ironbee review show [<job-id>]            # render a review again (default: this worktree's newest)
 ironbee review status <job-id>            # read a review back from the API
+ironbee review status <job-id> --watch    # follow a review to its end
 ironbee review cancel <job-id> [reason]   # ask a review to stop
 ```
 
@@ -255,6 +326,21 @@ ironbee review cancel <job-id> [reason]   # ask a review to stop
 - `cancel` takes `-C`, `--remote` and `--api-url`.
 - `show` renders the stored copy of a finished review, else asks the API.
 - `status` exits `3` while the review is still going. It also works outside a checkout, with a credential from the flags, the environment or the global config.
+
+### Follow a review
+
+`status --watch` follows a review to its end, with the progress of a run, then renders it as `status` does:
+- `--max-wait <seconds>` bounds the watch. When it passes first, the command prints one line, or the job's body with `--json`, and exits `3`. Without it, the watch has no limit. It needs `--watch`.
+- A watch never cancels the review. `Ctrl-C` ends only the watch.
+- `--queue-wait <seconds>` ends the watch when the review hasn't started within it (default `900`), and exits `3`. The review stays queued.
+- When a review created from this checkout ends, the watch completes the stored copy of it.
+
+A shell that limits how long a command may run, such as an AI agent's, can create the review and then repeat a bounded watch until it ends:
+
+```bash
+ironbee review --no-wait --json                                  # create it and print the job
+ironbee review status <job-id> --watch --max-wait 540 --json     # exit 3 while it still runs
+```
 
 The CLI stores each review under `~/.ironbee/projects/<token>/reviews/`, keeping the newest 20 per worktree. Linked worktrees of one repository share the folder. See [Runtime files](/cli/advanced/runtime-files).
 
@@ -264,11 +350,43 @@ The CLI stores each review under `~/.ironbee/projects/<token>/reviews/`, keeping
 
 | Exit code | Meaning |
 |-----------|---------|
-| `0` | The review succeeded, with no finding at or above `--fail-on` |
+| `0` | The review succeeded, with no `new` or `open` finding at or above `--fail-on` |
 | `1` | An error, or the review failed |
-| `2` | Cancelled, including `Ctrl-C` |
-| `3` | `show` or `status` only: the review is still going |
-| `4` | A finding at or above `--fail-on` exists |
+| `2` | Cancelled, including `Ctrl-C` during a run. `Ctrl-C` during `status --watch` only interrupts the command, and cancels nothing |
+| `3` | `show` or `status` only: the review is still going, or a `status --watch` whose `--max-wait` or `--queue-wait` passed first |
+| `4` | A `new` or `open` finding at or above `--fail-on` exists |
+
+---
+
+## From a coding agent
+
+With verification on, in enforce or assist mode, `ironbee install` adds the `/ironbee-review` command to [Claude Code](/cli/clients/claude-code#ironbee-review) and [Cursor](/cli/clients/cursor#slash-commands), and the [`$ironbee-review` skill](/cli/clients/codex#the-ironbee-review-skill) to Codex. Monitoring-only mode doesn't install it. The agent runs `ironbee review` on your working tree as it is, staged, unstaged and untracked changes included, and reports the result. On request, it fixes what blocks and reviews again.
+
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-review` | Review the working tree and report it: the findings by state, the blocking ones, and the credits used and left |
+| `/ironbee-review fix` | The same, then fix the blocking findings once. The agent fixes each one or declines it with a reason |
+| `/ironbee-review fix loop` | Fix, then review again as a follow-up that names the fixed findings, until nothing blocks, the cap is reached, a pass fixes nothing, nothing changed since the last review, or a round fails |
+| `/ironbee-review fix rounds:<n>` | The same loop, with a cap of `n` rounds, from 1 to 20 |
+| `/ironbee-review price` | The dry run: what the review would cost, and what it would leave out. It creates no review |
+
+The first word is the mode: `report`, the default, `fix` or `price`. The rest come in any order:
+- a severity word, `low`, `medium`, `high` or `critical`: what blocks for this run. It reaches every review of the run as `--gate`, the price's dry run included
+- `loop` or `rounds:<n>`: review again after each fix pass. Outside `fix` mode they're ignored, and the reply says so
+- `exclude:<glob,...>`: paths kept out of every round
+- `fresh`: a first review, even when a follow-up of an earlier one is possible or nothing changed
+
+Any other word, or a `rounds:` value outside 1 to 20, stops the command: the reply names it and the grammar, and nothing runs.
+
+The agent fixes only the findings IronBee marked `blocking`. It reads each one in the current file first, and treats a suggested fix as a hint, never applying it blindly. The loop's cap is `rounds:<n>`, else `review.fix.maxRounds`: an integer from 1 to 20, `5` by default.
+
+```bash
+ironbee config set review.fix.maxRounds 8
+```
+
+In report and fix modes, the reply ends with a closing report: each round, why the run ended, what's still open and whether it blocks, what was fixed in each round, the fixes no review read again, and the credits per round and in all. When the cap ends a loop, the last pass's fixes haven't been reviewed. `/ironbee-review fix rounds:1` reviews them.
+
+A review spends your team's credits, so the agent never starts one on its own: the command runs only when you type it. On Codex, the agent asks once to run `ironbee review` and `ironbee credits` outside the sandbox, since the review writes a temporary index under `.git` and needs the network.
 
 ---
 

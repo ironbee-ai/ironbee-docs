@@ -1,6 +1,6 @@
 ---
 title: Codex
-description: How IronBee integrates with OpenAI Codex CLI - guidance files, hooks, the $ironbee-verify skill, MCP servers, and Codex-specific behavior.
+description: How IronBee integrates with OpenAI Codex CLI - guidance files, hooks, the $ironbee-verify and $ironbee-review skills, MCP servers, and Codex specifics.
 ---
 
 When you run `ironbee install` in a project where [Codex CLI](https://github.com/openai/codex) is detected, IronBee wires up the hooks, guidance, and tools Codex needs to verify your agent's work. The integration mirrors [Claude Code](/cli/clients/claude-code) and [Cursor](/cli/clients/cursor), with a few Codex-specific details covered below.
@@ -23,6 +23,7 @@ IronBee writes Codex's active config **per project** (under `<project>/.codex/`)
 | `<project>/AGENTS.md` | The always-applied verification rule, written into an IronBee-delimited block (`<!-- ironbee:start -->` … `<!-- ironbee:end -->`) |
 | `<project>/.agents/skills/ironbee-verification/SKILL.md` | The verification skill the agent follows |
 | `<project>/.agents/skills/ironbee-verify/SKILL.md` | The `$ironbee-verify` skill you can invoke by hand |
+| `<project>/.agents/skills/ironbee-review/SKILL.md` + `agents/openai.yaml` | The [`$ironbee-review`](#the-ironbee-review-skill) skill, for a code review of your working tree, and its Codex policy, which keeps Codex from invoking it on its own |
 | `<project>/.codex/agents/ironbee-scenario.toml` | The **scenario sub-agent** for [saved scenarios](/cli/guides/scenarios) (registered like the verifier; its read-only sandbox applies on Codex versions before 0.154) |
 | `<project>/.agents/skills/ironbee-{manage,search,run,sync}-scenario/SKILL.md` | The `$ironbee-{manage,search,run,sync}-scenario` skills |
 | `<project>/.codex/agents/ironbee-issue-tracker.toml` + `<project>/.agents/skills/ironbee-issue-track/SKILL.md` | The **issue-tracker sub-agent** and its `$ironbee-issue-track` skill - written only when an [issue tracker](/cli/guides/issue-tracking) is connected (in `main-agent` mode there's no agent; the skill drives the tools inline) |
@@ -52,11 +53,26 @@ $ironbee-verify ./scenarios/checkout.md      # a scenario file
 
 When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) - see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
 
-The same mention syntax applies to the other commands - `$ironbee-{manage,search,run,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
+The same mention syntax applies to the other commands - `$ironbee-review` for a [code review](#the-ironbee-review-skill), `$ironbee-{manage,search,run,sync}-scenario` for [saved scenarios](/cli/guides/scenarios) and, when an [issue tracker is connected](/cli/guides/issue-tracking), `$ironbee-issue-track`.
 
 <Note>
   Using the **GitHub Issues** integration on Codex? Its `gh` calls run inside Codex's tool sandbox, which blocks outbound network by default - enable `[sandbox_workspace_write] network_access = true` if `gh issue view` can't reach `api.github.com`. Install prints a reminder; Jira and Linear are unaffected (their tools run outside the sandbox). See [Issue Tracking → GitHub Issues](/cli/guides/issue-tracking#github-issues).
 </Note>
+
+---
+
+## The ironbee-review skill
+
+`$ironbee-review` runs [`ironbee review`](/cli/guides/code-review) on your working tree and reports the findings, with the same modes as `/ironbee-review` in Claude Code: `fix` fixes the blocking findings, `fix loop` and `fix rounds:<n>` review again after each fix pass, and `price` asks what the review would cost.
+
+```bash
+$ironbee-review              # review the working tree and report it
+$ironbee-review fix loop     # fix and review again until nothing blocks, up to the cap
+```
+
+The main agent runs it in both delivery modes, without a sub-agent. A review spends your team's credits, so Codex never invokes the skill on its own: its `agents/openai.yaml` sets `allow_implicit_invocation: false`. See [From a coding agent](/cli/guides/code-review#from-a-coding-agent) for every mode and option.
+
+Codex's workspace sandbox blocks the review's temporary index under `.git` and its network calls. So the skill runs `ironbee review` and `ironbee credits` with escalated permissions, and Codex asks you once to approve each of the two commands.
 
 ---
 

@@ -48,7 +48,7 @@ Show the verdict status of the sessions in a project:
 ironbee status [project-dir]
 ```
 
-For each session it prints the verdict (`pass`, `fail` or `not_applicable`), the number of checks recorded, and, for failures, the list of unresolved issues. A verdict file that can't be read shows as `invalid JSON`. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#assist-mode-default) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
+For each session it prints the verdict (`pass`, `fail` or `not_applicable`), the number of checks recorded, for failures the list of unresolved issues, and the verdict's [summary](/cli/concepts/how-it-works#the-verdict) when it has one. A verdict file that can't be read shows as `invalid JSON`. Sessions with no verdict yet show as `missing`, or as `monitoring-only` when verification is disabled. An [assist-mode](/cli/guides/verification#assist-mode-default) session that never ran a manual `/ironbee-verify` cycle also shows as `monitoring-only` (there was no gate); one that did will carry its verdict.
 
 ---
 
@@ -60,7 +60,7 @@ Dry-run the verdict checks for a session **without changing anything**, a read-o
 ironbee verdict [session-id]
 ```
 
-If only one session is active, the session ID is auto-detected. Use this to understand exactly why a session would pass or fail before the agent retries. Add `-p, --project-dir <dir>` to target a project other than the current directory.
+If only one session is active, the session ID is auto-detected. Use this to understand exactly why a session would pass or fail before the agent retries. It also reports the verdict's optional `summary`: present, with its length, or absent. A summary that isn't a string, or is longer than 10,000 characters, fails the check, and the result is `✗ BLOCKED`, because the verdict has schema errors. Add `-p, --project-dir <dir>` to target a project other than the current directory.
 
 <Note>
   This command used to be `ironbee verify [session-id]`. `ironbee verify` now runs a **cloud verification job** through the IronBee API - see [Verification Jobs](/cli/guides/verification-jobs). The local dry-run lives on unchanged as `ironbee verdict`.

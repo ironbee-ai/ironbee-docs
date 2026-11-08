@@ -102,7 +102,7 @@ IronBee detects your AI client (Claude Code, Cursor, or Codex) and sets it up au
 
 Then it walks you through a few quick arrow-key pickers. First, **which verification mode** to run:
 
-- **`assist`** *(default)*: the verifier and `/ironbee-verify` are installed so the agent can verify on demand, but nothing blocks task completion.
+- **`assist`** *(default)*: the verifier and `/ironbee-verify` are installed so the agent verifies when you ask, but nothing blocks task completion.
 - **`enforce`**: changes must pass every active cycle before a task can complete. Enforce also asks how strict the gate is and whether a failed verification must be fixed.
 - **`monitor`**: tracking only. Sessions, activity, and tool calls are recorded to the Collector; no verification machinery is installed.
 
