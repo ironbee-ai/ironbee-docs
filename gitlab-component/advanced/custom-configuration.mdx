@@ -58,7 +58,7 @@ See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools
 
 ## Committing the generated setup
 
-The changes IronBee's setup makes to `.claude/`, `.mcp.json` and `.gitignore` stay out of the commits the component makes, because they're its working files rather than the change being verified. To let a run commit the setup it generated, for example to use it for local development, set `ironbee_exclude_files: 'false'`. `.ironbee/` stays out either way.
+The changes IronBee's setup makes to `.claude/`, `.mcp.json` and `.gitignore` stay out of the commits the component makes, because they're its working files rather than the change being verified. To commit the setup it generated together with a fix, for example to use it for local development, set `ironbee_exclude_files: 'false'`. A run that commits no fix commits no setup either. `.ironbee/` stays out either way.
 
 ---
 

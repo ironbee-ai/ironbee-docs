@@ -1,12 +1,12 @@
 ---
-title: Migrate from v1.0
-description: What changed in v1.1 of the IronBee Action, through v1.1.1, and how to update a v1.0 workflow.
+title: Migrate from an earlier version
+description: What changed in v1.1 and v1.2 of the IronBee Action, and how to update a workflow written for an earlier version.
 ---
 
 v1.1.0 of the IronBee Action adds a second place to run the verification, on IronBee, next to your runner. It also takes over the outcome of a run: it commits fixes, posts the report and passes or fails the job. A few inputs were renamed along the way. This page lists what to change in a workflow written for v1.0.
 
 <Warning>
-  The `v1` tag points to v1.1.1. A workflow that uses `ironbee-ai/ironbee-action@v1` already runs it, so update the inputs below.
+  The `v1` tag points to the latest v1 release. A workflow that uses `ironbee-ai/ironbee-action@v1` already runs it, so update the inputs below.
 </Warning>
 
 ---
@@ -83,6 +83,22 @@ v1.1.1 needs no change to a v1.1.0 workflow:
 
 - **No duplicate report.** When the repository is connected through the [IronBee GitHub App](/integrations/github), IronBee publishes a run on IronBee on the pull request itself. The action then posts no report comment, and keeps the report in the job summary. The new `platform_publishes` output says which happened.
 - **Your app's telemetry.** `app_start_command` and `app_restart_command` run with `IRONBEE_COLLECTOR_URL` and `IRONBEE_API_KEY` in their environment, so an app whose OpenTelemetry exporter reads them sends its traces and logs to the verification run.
+
+---
+
+## What changed in v1.2.0
+
+v1.2.0 changes what some v1.1 workflows do. Check these against yours:
+
+- **Fixing on your runner follows `verification_apply_fix`.** With `verification_apply_fix: false`, or a comment without `--fix`, a run on your runner now reports what it finds and changes no file. To keep fixing there, leave `verification_apply_fix` at `true`, the default.
+- **A commit holds only the fix.** Only the files the fix changed are committed. On your runner, the action commits only after a verification failed and the agent verified again. With `ironbee_exclude_files: false`, the setup files go in a fix commit, and a run that commits no fix commits no setup.
+- **A scheduled run reads the repository's visibility.** With `verification_mode: auto`, a schedule on a private repository with an Anthropic credential now runs on your runner, as other events do. Set `verification_mode: platform` to keep it on IronBee.
+- **The reachability request sends your headers.** On IronBee, the request before the run carries `app_headers` and `app_secret_headers`, so a bypass header gets a protected preview past it. It no longer follows a redirect: it logs where the redirect leads. See [Protected deployments](/github-action/guides/verifying-your-app#protected-deployments).
+- **The restart after a fix rebuilds.** On IronBee, the default restart stops the app with everything it started, then runs `app_build_command` and `app_start_command` again.
+- **A push on your runner verifies every commit in it**, from the push's `before` commit, as on IronBee.
+- **Comment commands are stricter.** A comment that only starts with the command, such as `/ironbee-verify.`, runs nothing. A `--fix` that the workflow doesn't apply gets a one-line note in the report. See [Verify from a pull request comment](/github-action/guides/comment-trigger).
+- **Local mode works in a subdirectory.** `working_directory` can point below the repository's root on your runner too.
+- **The evidence keeps each agent's logs.** The artifact holds each session whole, with each agent's `verdict.json` and `actions.jsonl` under `sessions/<id>/agents/<agentId>/`.
 
 ---
 

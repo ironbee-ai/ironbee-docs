@@ -30,7 +30,7 @@ flowchart TD
 
 <Steps>
   <Step title="Plan">
-    The action decides the mode, the target and the changeset, and logs them together with the reason for the mode and the minimum `timeout-minutes` the run needs. It stops here, before installing anything, when the run can't work: no target, a fork pull request on a comment run, or an invalid input value.
+    The action decides the mode, the target and the changeset, and logs them together with the reason for the mode and the minimum `timeout-minutes` the run needs. It stops here, before installing anything, when the run can't work: no target, a comment run on a fork pull request or on one it can't tell from a fork, or an invalid input value.
   </Step>
   <Step title="Verify">
     **On IronBee:** the action installs the IronBee CLI and runs `ironbee verify run web`. That starts a verification run on IronBee and follows it until it ends.
@@ -42,10 +42,10 @@ flowchart TD
   <Step title="Fix">
     This step runs when the verification fails, fixing is on (`verification_apply_fix`) and an Anthropic credential is set.
     - **On IronBee:** a Claude Code run on your runner edits the files to fix the reported issues. For an app that runs on the runner, the action then restarts it and runs a second verification. A deployed URL isn't re-verified, because the deployment still serves the code that was deployed.
-    - **On your runner:** the agent fixes and re-verifies in the same session. It does so whatever `verification_apply_fix` says.
+    - **On your runner:** the agent fixes and re-verifies in the same session. With fixing off, it reports what it finds and changes no file.
   </Step>
   <Step title="Commit">
-    The action commits and pushes the fix itself; the agent only edits files.
+    The action commits and pushes the fix itself; the agent only edits files. Only the files the fix changed are committed.
     - On a pull request, the fix goes to the pull request branch.
     - Otherwise it goes to a new `ironbee/fix-<sha7>-<run_id>` branch with a pull request.
     - A fix whose re-verification fails is not pushed.
@@ -68,7 +68,7 @@ The action binds each run to the change behind the event, so the verification lo
 |-------|--------------------|
 | `pull_request` | The whole pull request |
 | `issue_comment` | The pull request the comment is on. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
-| `push` | On IronBee: every commit in the push, from the event's `before` commit, or the commit against its parent when that base isn't usable. On your runner: the last commit against its parent |
+| `push` | Every commit in the push, from the event's `before` commit, or the commit against its parent when that base isn't usable |
 | `workflow_dispatch`, `schedule`, `deployment_status` and other events | On IronBee: the commit against its parent. On your runner: the whole application |
 
 To verify the application without the repository, for example a private repository that the IronBee GitHub App doesn't cover, set `ironbee_bind_repository: false`.
@@ -77,7 +77,7 @@ To verify the application without the repository, for example a private reposito
 
 ## Where results appear
 
-- **On the pull request:** the action's report comment, with a link to the run in the console. When the [IronBee GitHub App](/integrations/github) is installed for the repository, IronBee publishes a run on IronBee itself instead: the **IronBee Verification** check, an inline comment on each finding in the diff and a comment with the result. The action then leaves its own comment out.
+- **On the pull request:** the action's report comment, with a link to the run in the console. When the [IronBee GitHub App](/integrations/github) covers the repository, IronBee publishes a run on IronBee itself instead: the **IronBee Verification** check, an inline comment on each finding in the diff and a comment with the result. The action then leaves its own comment out.
 - **In the workflow run:** the job summary and the job's pass or fail result. The `verdict`, `mode`, `job_id`, `job_url`, `artifacts_url` and `platform_publishes` [outputs](/github-action/configuration/configuration#outputs) are available to later steps.
 - **In the IronBee Console:** runs on IronBee appear on the project's **Verifications** tab with the trigger **GitHub Actions**. The project is the repository's GitHub project unless you set `ironbee_project`. See [Verifications](/console/verifications).
 

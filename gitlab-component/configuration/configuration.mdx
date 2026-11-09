@@ -74,7 +74,7 @@ See [Local-mode platforms](/gitlab-component/guides/verification-platforms).
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
 | `ironbee_extra_config` | Empty | Local | Raw IronBee CLI configuration as JSON, deep-merged into the generated `.ironbee/config.json`. Your keys win. See [Custom configuration](/gitlab-component/advanced/custom-configuration) |
-| `ironbee_exclude_files` | `'true'` | Both | Keep IronBee's generated `.claude/`, `.mcp.json` and `.gitignore` changes out of the commits the component makes. Set `'false'` to commit the setup it generated. `.ironbee/` is always left out |
+| `ironbee_exclude_files` | `'true'` | Both | Keep IronBee's generated `.claude/`, `.mcp.json` and `.gitignore` changes out of the commits the component makes. Set `'false'` to include the setup it generated in a fix commit; a run that commits no fix commits no setup either. `.ironbee/` is always left out |
 
 ---
 
@@ -99,7 +99,7 @@ A run on IronBee that only verifies needs no Anthropic credential.
 |-------|---------|------|-------------|
 | `verification_prompt` | Empty | Both | Additional instructions for the verification |
 | `verification_auto` | `'true'` | Both | Set `'false'` to verify only in a manual pipeline. Every other pipeline, schedules included, then does nothing. See [Turning automatic verification off](/gitlab-component/guides/running-in-ci#turning-automatic-verification-off) |
-| `verification_apply_fix` | `'true'` | Platform | Fix the issues a failing verification on IronBee reports, on your runner. Needs an Anthropic credential; without one the run verifies and reports only. On your runner, the agent always fixes what it finds, whatever this input says |
+| `verification_apply_fix` | `'true'` | Both | Fix the issues a failing verification reports, on your runner, and commit the fix. Needs an Anthropic credential; without one, a run on IronBee verifies and reports only. `'false'` verifies and reports in both modes |
 
 The component has no `verification_command` input: GitLab CI/CD has no pipeline trigger for a merge request note.
 
@@ -114,11 +114,11 @@ The component has no `verification_command` input: GitLab CI/CD has no pipeline 
 | `app_start_command` | Empty | Both | Command that starts the app, such as `npm run start` |
 | `app_url` | Empty | Both | A public URL is verified as a deployment. A `localhost`, private-network or dotless host, such as `docker`, means the app runs on the runner. See [Which URLs count as on the runner](/gitlab-component/guides/verifying-your-app#which-urls-count-as-on-the-runner) |
 | `app_port` | Empty | Both | Port the app listens on, for an app on the runner. Required for an app on the runner unless `app_url` names its port |
-| `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Needed when `app_start_command` hands off, such as `docker compose up -d --build` |
+| `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Empty stops the app the component started and runs `app_build_command` and `app_start_command` again. Needed when `app_start_command` hands off, such as `docker compose up -d --build`. Set, it runs to the end after the component stops the process it started |
 | `app_logs_command` | Empty | Platform | Prints the app's own logs into the job's artifacts, such as `docker compose logs --no-color --tail=2000` |
 | `app_wait_seconds` | Empty | Platform | How long to wait for the app to accept connections. Empty waits 60 seconds |
 | `app_headers` | Empty | Platform | Request headers for a deployed URL, one `Name: value` per line. Non-secret values only |
-| `app_secret_headers` | Empty | Platform | Secret request headers, such as a deployment protection bypass, one `Name: value` per line, from a masked CI/CD variable. Encrypted and never returned |
+| `app_secret_headers` | Empty | Platform | Secret request headers, such as a deployment protection bypass, one `Name: value` per line, from a masked CI/CD variable. Encrypted and never returned. The reachability request before the run sends them too, with `app_headers` |
 
 ---
 

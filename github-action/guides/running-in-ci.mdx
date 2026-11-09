@@ -33,9 +33,7 @@ on:
     branches: [main]
 ```
 
-**What gets verified:**
-- **On IronBee:** every commit in the push.
-- **On your runner:** the last commit against its parent.
+**What gets verified:** every commit in the push, from the push's `before` commit, or the commit against its parent when that base isn't usable.
 
 **Fixes:** committed to a new `ironbee/fix-<sha7>-<run_id>` branch, with a pull request targeting the branch that was pushed.
 
@@ -100,7 +98,7 @@ on:
     types: [created]
 ```
 
-A `/ironbee-verify` comment on a pull request starts a verification of that pull request. On IronBee, fixes are applied only when the comment asks for them with `--fix`; on your runner, the agent fixes what it finds either way. This trigger needs a guard in the workflow, so it has its own guide: [Verify from a pull request comment](/github-action/guides/comment-trigger).
+A `/ironbee-verify` comment on a pull request starts a verification of that pull request. Fixes are applied only when the comment asks for them with `--fix`. This trigger needs a guard in the workflow, so it has its own guide: [Verify from a pull request comment](/github-action/guides/comment-trigger).
 
 ---
 
@@ -109,12 +107,14 @@ A `/ironbee-verify` comment on a pull request starts a verification of that pull
 | Trigger | What gets verified | Fixes go to |
 |---------|--------------------|-------------|
 | `pull_request` | The pull request | The pull request branch |
-| `issue_comment` | The pull request the comment is on | The pull request branch. On IronBee, only with `--fix` |
-| `push` | On IronBee: the pushed commits. On your runner: the last commit | A new fix branch and pull request |
+| `issue_comment` | The pull request the comment is on | The pull request branch, only with `--fix` |
+| `push` | The pushed commits | A new fix branch and pull request |
 | `schedule`, `workflow_dispatch` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and pull request |
 | `deployment_status` | On IronBee: the deployed commit. On your runner: the whole application | A new fix branch and pull request |
 
-Fixes need an Anthropic credential. On IronBee they also need `verification_apply_fix: true`, the default; without a credential, a run on IronBee verifies and reports only. On your runner, the agent always fixes what it finds, whatever `verification_apply_fix` says. A fix whose re-verification fails is not pushed.
+Fixes need `verification_apply_fix: true`, the default, and an Anthropic credential. Without a credential, a run on IronBee verifies and reports only. With `verification_apply_fix: false`, a run verifies and reports in both modes: on your runner, the agent reports what it finds and changes no file. A fix whose re-verification fails is not pushed.
+
+Only what the fix changed is committed. On IronBee, the install and the build run before the fix, so what they write stays out of the commit. On your runner, the agent installs, builds and fixes in one session, so the action commits only after a verification failed and the agent verified again; that commit can also hold what the agent's own install or build wrote. Files your app writes outside ignored paths while the fix runs count as changes too. With `ironbee_exclude_files: false`, IronBee's setup files are committed with the fix.
 
 ---
 
@@ -175,7 +175,7 @@ Use the `if:` when the job does expensive setup before the action, and the input
 
 The action writes the report to the workflow run's summary and posts it as a pull request comment. When a comment from an earlier run exists, it's updated instead of duplicated. On a push, schedule or manual run, the report becomes the body of the fix pull request.
 
-When the [IronBee GitHub App](/integrations/github) is installed for the repository, IronBee publishes a run on IronBee itself, on any event: the **IronBee Verification** check on the verified commit and, on a pull request, an inline comment on each finding in the diff, with a suggestion where one applies, and a comment with the result. The action then posts no report comment and doesn't update an earlier one; the report stays in the job summary, and the `platform_publishes` output is `true`. A run on your runner always reports through the action's comment. When a fix round re-verifies an app on the runner, the re-verification posts on the pull request too, and its comments replace the first run's. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request).
+When the [IronBee GitHub App](/integrations/github) covers the repository, IronBee publishes a run on IronBee itself, on any event: the **IronBee Verification** check on the verified commit and, on a pull request, an inline comment on each finding in the diff, with a suggestion where one applies, and a comment with the result. The action then posts no report comment and doesn't update an earlier one; the report stays in the job summary, and the `platform_publishes` output is `true`. A run on your runner always reports through the action's comment. When a fix round re-verifies an app on the runner, the re-verification posts on the pull request too, and its comments replace the first run's. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request).
 
 A run on IronBee reports:
 - the verdict and a link to the run in the IronBee Console

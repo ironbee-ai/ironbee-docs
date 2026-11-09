@@ -43,9 +43,7 @@ The starter file the console writes includes this block.
 
 The job runs on a push to the default branch (`push` with `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH`).
 
-**What gets verified:**
-- **On IronBee:** every commit in the push.
-- **On your runner:** the last commit against its parent.
+**What gets verified:** every commit in the push, from the push's `before` commit (`CI_COMMIT_BEFORE_SHA`), or the commit against its parent when that base isn't usable.
 
 **Fixes:** committed to a new `ironbee/fix-<sha7>-<pipeline_id>` branch, with a merge request targeting the branch that was pushed. The fix merge request's description is the report.
 
@@ -78,10 +76,12 @@ GitLab CI/CD has no pipeline trigger for a merge request note, so the GitHub Act
 | Pipeline source | What gets verified | Fixes go to |
 |-----------------|--------------------|-------------|
 | `merge_request_event` | The merge request | The merge request's source branch |
-| `push` to the default branch | On IronBee: the pushed commits. On your runner: the last commit | A new fix branch and merge request |
+| `push` to the default branch | The pushed commits | A new fix branch and merge request |
 | `schedule`, `web`, `api`, `trigger` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and merge request |
 
-Fixes need an Anthropic credential and a [GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token). On IronBee they also need `verification_apply_fix: 'true'`, the default; without an Anthropic credential, a run on IronBee verifies and reports only. On your runner, the agent always fixes what it finds, whatever `verification_apply_fix` says. A fix whose re-verification fails is not pushed.
+Fixes need an Anthropic credential and a [GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token). They also need `verification_apply_fix: 'true'`, the default. Without an Anthropic credential, a run on IronBee verifies and reports only. With `verification_apply_fix: 'false'`, a run verifies and reports in both modes: on your runner, the agent reports what it finds and changes no file. A fix whose re-verification fails is not pushed.
+
+Only what the fix changed is committed. On IronBee, the install and the build run before the fix, so what they write stays out of the commit. On your runner, the agent installs, builds and fixes in one session, so the component commits only after a verification failed and the agent verified again; that commit can also hold what the agent's own install or build wrote. Files your app writes outside ignored paths while the fix runs count as changes too. With `ironbee_exclude_files: 'false'`, IronBee's setup files are committed with the fix.
 
 Fix commits end in `[skip ci]` and are pushed with `-o ci.skip`. GitLab starts a pipeline for every push, and the push option skips only a branch pipeline; a merge request pipeline is skipped only by `[skip ci]`. Together they keep a fix from verifying itself again.
 
