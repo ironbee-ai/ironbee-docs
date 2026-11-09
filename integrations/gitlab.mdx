@@ -42,7 +42,7 @@ Start from one of three places:
     - A group with an active connection on another IronBee account can't be picked. An owner or admin of that account has to disconnect it first.
   </Step>
   <Step title="Pick the repositories">
-    A new group makes no repository a project until you pick. Once the first sync has read the group, the console opens **Repositories of** your group. Choose **All repositories** or **Only selected repositories**, tick the ones to cover, and click **Review N repositories**. **Not now** leaves the group with nothing enabled; pick later from **Integrations > GitLab**. In the setup wizard, the same choice is the **Pick repositories** step.
+    A new group makes no repository a project until you pick. Once the first sync has read the group, the console opens **Repositories of** your group. Choose **All repositories** or **Only selected repositories**, tick the ones to cover, and click **Connect N repositories**. **Not now** leaves the group with nothing enabled; pick later from **Integrations > GitLab**. In the setup wizard, the same choice is the **Pick repositories** step.
   </Step>
 </Steps>
 
@@ -106,7 +106,7 @@ On the Free tier, these accounts count toward the group's limit of service accou
 
 ## Mention IronBee
 
-Each group's row shows IronBee's **Mention**, usually `@ironbee-<group path>`, with a copy button. Use the value shown there: renaming the group doesn't rename the service account. Write it on a merge request to ask for a review. The short form `@ironbee` works too. The commands are the same as on GitHub; see [Commands](/code-review/on-gitlab#commands).
+Each group's row shows IronBee's **Mention**, usually `@ironbee-<group path>`, with a copy button. Use the value shown there: renaming the group doesn't rename the service account. Write it on a merge request to ask for a review. The short form `@ironbee-ai`, the same mention as on GitHub, works too. The commands are the same as on GitHub; see [Commands](/code-review/on-gitlab#commands).
 
 ---
 
@@ -149,7 +149,7 @@ The group's row also shows when it last synced. IronBee syncs each group every f
 | Symptom | Likely cause |
 |---------|--------------|
 | A run fails with "repo checkout failed", or the component's report says the run couldn't read the repository | The project is private or internal and its group isn't connected. Connect the group, or verify without the repository: `ironbee_bind_repository: 'false'` in the component, `--no-repo` with `ironbee verify` |
-| Mentioning `@ironbee-ai` does nothing | That's the GitHub mention. On GitLab, use the group's mention from **Integrations > GitLab**, or `@ironbee` |
+| Mentioning `@ironbee` does nothing | The short form is `@ironbee-ai`, as on GitHub. Or use the group's mention from **Integrations > GitLab** |
 | **You own no top-level GitLab group** | You aren't an Owner of a top-level group on gitlab.com |
 | A repository is missing from the list | It was created moments ago, is shared into the group, or is archived. Click **Sync now** |
 | The connection reads **Suspended** | The service account was removed or demoted, or its tokens were revoked. **Reconnect** |

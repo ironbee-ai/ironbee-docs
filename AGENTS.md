@@ -13,16 +13,16 @@
 
 IronBee reviews pull requests and verifies code changes the way a QA engineer would, and keeps the evidence. There are three ways in.
 
-**Code review.** Once the IronBee GitHub App covers a repository, or a repository is picked in a connected GitLab group (gitlab.com only), IronBee reviews its pull requests or merge requests.
-- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a comment command (`@ironbee-ai` on GitHub; the group's service account `@ironbee-<group path>`, or `@ironbee`, on GitLab), or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
-- On GitHub it posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check. On GitLab it posts a review note with inline threads, a summary note, and the **IronBee review** pipeline status, which holds a merge only with **Block merges** on.
+**Code review.** Once the IronBee GitHub App covers a repository, or a repository is picked in a connected GitLab group (gitlab.com only) or Bitbucket workspace (bitbucket.org only), IronBee reviews its pull requests or merge requests.
+- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a comment command (`@ironbee-ai` on GitHub, GitLab and Bitbucket; on GitLab, the group's service account `@ironbee-<group path>` too), or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
+- On GitHub it posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check. On GitLab it posts a review note with inline threads, a summary note, and the **IronBee review** pipeline status, which holds a merge only with **Block merges** on. On Bitbucket it posts inline comments, a review comment, a summary comment and the **IronBee review** build status, which holds a merge only through Bitbucket's merge check on successful builds (Premium).
 - The console shows pull requests and findings under **Code review** (**Pull requests**, **Rules**, **Memories**, **Settings**) and on each project's **Code review** tab.
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
-- A run is started by the IronBee GitHub Action, the IronBee GitLab component, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
-- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**, and so does picking a repository in a GitLab group.
+- A run is started by the IronBee GitHub Action, the IronBee GitLab component, the IronBee Bitbucket Pipe, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
+- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**, and so does picking a repository in a GitLab group or a Bitbucket workspace.
 - Results appear in three places:
-  - on the pull request or merge request, for a run bound to a connected repository: a check (a pipeline status on GitLab), an inline comment on each finding with a suggested fix, and a summary comment. The GitHub Action and the GitLab component then leave their own report comment out
+  - on the pull request or merge request, for a run bound to a connected repository: a check (a pipeline status on GitLab, a build status on Bitbucket), an inline comment on each finding with a suggested fix, and a summary comment. The GitHub Action, the GitLab component and the Bitbucket Pipe then leave their own report comment out
   - the Netlify deploy page
   - the console
 
@@ -31,7 +31,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 **The console** (console.ironbee.ai) shows:
 - projects
 - code review: pull requests, findings, rules, memories and settings
-- each GitHub or GitLab project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
+- each GitHub, GitLab or Bitbucket project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
@@ -45,7 +45,7 @@ Use these terms. When you describe something on screen, quote the console label 
 | Use | Avoid | Notes |
 |-----|-------|-------|
 | verification run | job, task, test run | One verification of a deployment, commit or change. Say "verification job" only when you quote CLI output or `ironbee verify` fields |
-| verification | test, check | Use "check" only for GitHub and Vercel checks and the **Checks** tab. On GitLab, say "pipeline status" |
+| verification | test, check | Use "check" only for GitHub and Vercel checks and the **Checks** tab. On GitLab, say "pipeline status"; on Bitbucket, "build status" |
 | verification cycle | loop, iteration | CLI only: one verify pass inside an agent session |
 | session | run, task | CLI only: one AI client session |
 | activity | step, action | CLI only: one agent turn. In the console scenario docs, **action** (an Act, Assert, Extract or Wait row) and **Step** (the grouping row) are console labels, so use them there |
@@ -61,7 +61,7 @@ Use these terms. When you describe something on screen, quote the console label 
 Console labels, quoted verbatim:
 - **Status:** Created, Queued, Starting, Running, Completed, Failed, Cancelled, Interrupted, Unknown
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
-- **Trigger:** Vercel, Netlify, GitHub Actions, GitLab CI, API, CLI, Console
+- **Trigger:** Vercel, Netlify, GitHub Actions, GitLab CI, Bitbucket Pipelines, API, CLI, Console
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
 - **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
 - **Finding severity:** Critical, High, Medium, Low
@@ -73,9 +73,11 @@ Console labels, quoted verbatim:
 |-----------|------|-------|
 | IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, code review, and the checks and PR comments of verification runs |
 | GitLab connection | Integrations > `integrations/gitlab` | A gitlab.com top-level group connected from the console: repository access, code review of merge requests, the code wiki |
-| Code review | Code review (`code-review/*`) | The GitHub and GitLab sides (`on-github`, `on-gitlab`) and the console pages. The CLI's `ironbee review` stays under CLI |
+| Bitbucket connection | Integrations > `integrations/bitbucket` | A bitbucket.org workspace: IronBee's Forge app, installed by a workspace admin and connected from the app's page in the workspace's settings. Repository access, code review of pull requests, the code wiki. The mention is `@ironbee-ai`, as on GitHub |
+| Code review | Code review (`code-review/*`) | The GitHub, GitLab and Bitbucket sides (`on-github`, `on-gitlab`, `on-bitbucket`) and the console pages. The CLI's `ironbee review` stays under CLI |
 | `ironbee-ai/ironbee-action` | Integrations > GitHub Action (`github-action/*`) | Use `@v1` in examples, the moving tag of the latest release; never an exact version, so readers don't have to keep updating it. The workflow secret `IRONBEE_API_KEY` is passed as the `ironbee_api_key` input |
 | `ironbee-ai/ironbee-gitlab` CI/CD component | Integrations > GitLab component (`gitlab-component/*`) | The GitLab twin of the GitHub Action, with the same inputs and report. Use `gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1` in examples, never an exact version. The credential inputs read the `IRONBEE_API_KEY`, `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `GITLAB_TOKEN` CI/CD variables by default |
+| `ironbee-ai/ironbee-bitbucket` pipe | Integrations > Bitbucket Pipe (`bitbucket-pipe/*`) | The Bitbucket Pipelines twin of the GitHub Action, with the same variables (in capitals) and report. Use `docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1` in examples, never an exact version. A pipe sees a repository variable only when the step passes it, so examples pass `IRONBEE_API_KEY: $IRONBEE_API_KEY` and the step's own `BITBUCKET_OAUTH_TOKEN` |
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
 | `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use |
@@ -104,8 +106,8 @@ Console labels, quoted verbatim:
 
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
-- **Integrations:** GitHub App, GitLab, Vercel, Netlify, then the GitHub Action and GitLab component groups
-- **Code review:** overview, on the pull request (GitHub), on the merge request (GitLab), then the console pages (pull requests, rules and memories, settings)
+- **Integrations:** GitHub App, GitLab, Bitbucket, Vercel, Netlify, then the GitHub Action, GitLab component and Bitbucket Pipe groups
+- **Code review:** overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings)
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
 - **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
@@ -159,7 +161,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - Clip each shot to the part the text explains, a card, table, dialog or panel about 600-1000 px wide. A full-window capture is unreadable in the content column.
 - Keep the console's top bar out of the frame, since it shows the plan name. Never show real people's names or emails, prices, plans, seats, limits, or a take-over control.
 - Capture from the console running on mock data, not from a real account.
-- On GitHub, code review shows severity and kind marks and the **Open in IronBee** button as the console's own SVG badges, not emoji. The docs use copies of them from `images/code-review/badges/`, shown inline with the `ib-mark` classes in `style.css`. Re-copy them from the console frontend's `public/badges/` when they change.
+- On GitHub, code review shows severity and kind marks and the **Open in IronBee** button as the console's own SVG badges, not emoji. On Bitbucket, the marks are emoji. The docs use copies of them from `images/code-review/badges/`, shown inline with the `ib-mark` classes in `style.css`. Re-copy them from the console frontend's `public/badges/` when they change.
 
 ## Content boundaries
 

@@ -10,8 +10,8 @@ It also reviews your pull requests the way a careful teammate would, reading eac
 
 You can use any of these, or all of them:
 
-- **Code review on your pull requests.** Install the IronBee GitHub App, or connect a GitLab group, and IronBee reviews every pull request or merge request in the repositories it covers. Its findings land as comments on the pull request and in the console.
-- **On your deployments and pull requests.** Connect Vercel or Netlify, or add the GitHub Action or the GitLab component, and IronBee verifies each preview deployment, pull request or merge request on its own infrastructure. The result lands on the pull request, on the deployment, and in the console.
+- **Code review on your pull requests.** Install the IronBee GitHub App, or connect a GitLab group or a Bitbucket workspace, and IronBee reviews every pull request or merge request in the repositories it covers. Its findings land as comments on the pull request and in the console.
+- **On your deployments and pull requests.** Connect Vercel or Netlify, or add the GitHub Action, the GitLab component or the Bitbucket Pipe, and IronBee verifies each preview deployment, pull request or merge request on its own infrastructure. The result lands on the pull request, on the deployment, and in the console.
 - **Inside your AI coding agent.** The IronBee CLI gives Claude Code, Cursor and Codex the tools to verify their own changes in a real browser, a running backend or a terminal before they call the work done.
 
 ## The problem
@@ -30,7 +30,7 @@ Teams using agentic development today face:
     Every pull request or merge request gets a review with inline comments, suggested fixes, a summary and a check that can hold a merge. Your team's rules and memories steer it.
   </Card>
   <Card title="Verification on every change" icon="shield-check">
-    Every preview deployment on Vercel or Netlify, every push or pull request with the GitHub Action, and every merge request or push to the default branch with the GitLab component starts a verification run. An agent reads the change and exercises it against your running app.
+    Every preview deployment on Vercel or Netlify, every push or pull request with the GitHub Action, every merge request or push to the default branch with the GitLab component, and every pull request or push with the Bitbucket Pipe starts a verification run. An agent reads the change and exercises it against your running app.
   </Card>
   <Card title="Verification inside your agent" icon="terminal">
     With the IronBee CLI, your AI coding agent verifies its own changes with real tools. In assist mode you ask for a verification; in enforce mode the agent can't finish until the verification passes.
@@ -39,7 +39,7 @@ Teams using agentic development today face:
     Every verification run is captured and available in the console: the recording, screenshots, actions, network requests, traces, and logs. Watch a run live while it's in progress.
   </Card>
   <Card title="Results where you work" icon="git-pull-request">
-    Results land on the pull request or merge request as a check, inline comments on the findings and a comment, as a Vercel deployment check or on the Netlify deploy page, and in the console. The GitHub Action and the GitLab component can also fix what they find.
+    Results land on the pull request or merge request as a check, inline comments on the findings and a comment, as a Vercel deployment check or on the Netlify deploy page, and in the console. The GitHub Action, the GitLab component and the Bitbucket Pipe can also fix what they find.
   </Card>
   <Card title="Security" icon="lock">
     Never collects prompt content, file content, tool output, credentials (API keys and authentication tokens), or any PII beyond your org-configured email. Your code and secrets stay on your machine.
@@ -50,15 +50,15 @@ Teams using agentic development today face:
 
 ### Code review on your pull requests
 
-1. A pull request opens or gets a push in a repository the IronBee GitHub App covers, or a merge request in a GitLab repository you picked.
+1. A pull request opens or gets a push in a repository the IronBee GitHub App covers, or in a GitLab or Bitbucket repository you picked.
 2. IronBee reads the change against the rest of the repository, with your rules and memories.
-3. It posts a review with a comment for each finding, adds a summary, and sets the **IronBee review** check, or on GitLab a pipeline status where IronBee writes one. Every review and finding also appears under **Code review** in the console.
+3. It posts a review with a comment for each finding, adds a summary, and sets the **IronBee review** check, on GitLab a pipeline status where IronBee writes one, or on Bitbucket a build status. Every review and finding also appears under **Code review** in the console.
 
 See [Code review of pull requests](/code-review/overview).
 
 ### On your deployments and pull requests
 
-1. A preview deployment on Vercel or Netlify, a push or pull request with the GitHub Action, or a merge request or push with the GitLab component starts a **verification run**.
+1. A preview deployment on Vercel or Netlify, a push or pull request with the GitHub Action, a merge request or push with the GitLab component, or a pull request or push with the Bitbucket Pipe starts a **verification run**.
 2. An agent on IronBee reads the change, then verifies it. A web app is opened in a browser and exercised like a user would. An API is called directly and its responses are checked against the contract.
 3. The verdict and its evidence land on the pull request, on the deployment, and on the project's **Verifications** tab in the console, where you can also follow the run live.
 
@@ -105,7 +105,7 @@ This is enforce mode. In the default assist mode, the same verification runs whe
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Connect GitHub, GitLab, Vercel or Netlify, or set up the CLI.
+    Connect GitHub, GitLab, Bitbucket, Vercel or Netlify, or set up the CLI.
   </Card>
   <Card title="Key concepts" icon="book-open" href="/getting-started/key-concepts">
     Projects, verification runs, environments, sessions and verdicts.

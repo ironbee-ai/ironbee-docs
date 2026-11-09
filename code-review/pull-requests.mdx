@@ -5,7 +5,7 @@ description: Every pull request IronBee reviews, with its review status and open
 keywords: ["PRs", "review issues", "bugs found in review"]
 ---
 
-The console lists the pull requests of your connected repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github). Where a label on these pages names GitHub, such as **Open on GitHub**, a GitLab repository's pages name GitLab.
+The console lists the pull requests of your connected repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github). Where a label on these pages names GitHub, such as **Open on GitHub**, a GitLab or Bitbucket repository's pages name GitLab or Bitbucket.
 
 ---
 
@@ -20,7 +20,7 @@ Two lists show the same rows and open the same pull request page.
 
 Next to a project's **Code review** tab, its [Code wiki](/console/code-wiki) tab explains the repository's code.
 
-On [Projects](/console/projects), a GitHub or GitLab project's card links in too:
+On [Projects](/console/projects), a GitHub, GitLab or Bitbucket project's card links in too:
 
 - Click the project's name or its **Code review** row to open the project's **Code review** tab with the same date window.
 - Click a bar of the **Code review** row to open the pull requests reviewed in that slice of the window.
@@ -50,7 +50,7 @@ Tick **Needs review** in the filter bar to list only the open pull requests Iron
 - The date filter is hidden and **States** is disabled, since the list holds open pull requests only.
 - A pull request whose first review is running stays listed until the review ends.
 - The list reads the newest 100 open pull requests. When there are more, the box's count ends with `+`, such as `12+`, and the count at the end of the bar reads like **12 among the newest 100 open pull requests**.
-- On a project's **Code review** tab, for owners and admins, the console first asks GitHub or GitLab for the repository's open pull requests. One IronBee never heard of, such as a pull request opened before the repository was connected, is listed too.
+- On a project's **Code review** tab, for owners and admins, the console first asks GitHub, GitLab or Bitbucket for the repository's open pull requests. One IronBee never heard of, such as a pull request opened before the repository was connected, is listed too.
 
 In this list, the **Open Findings** cell of a pull request with no review holds a **Review** button. Click it to start the review without opening the pull request. Owners, admins and members see it. When the team's credits are used up, it's disabled and says when they reset.
 
@@ -122,8 +122,8 @@ Before IronBee has published a review, the column shows `-`, or **after the revi
 | **No reviews in this window** | There are pull requests, but IronBee reviewed none of them in the selected dates. Pick a longer window |
 | **Nothing needs a review** | **Needs review** is ticked, and every open pull request has a review. "An open pull request IronBee has not reviewed appears here." |
 | **Nothing matches** | The filters leave no pull request. **Clear filters** resets them |
-| **No repository connected** | Sidebar list: "Code review runs on repositories connected through the GitHub App or a GitLab group." **Integrations** opens the integrations page |
-| **Code review runs on GitHub and GitLab repositories** | **Code review** tab of a Vercel, Netlify or CLI project: "This project is not one. Pick a repository above." **Open integrations** leads to setting one up |
+| **No repository connected** | Sidebar list: "Code review runs on repositories connected through the GitHub App, a GitLab group or a Bitbucket workspace." **Integrations** opens the integrations page |
+| **Code review runs on GitHub, GitLab and Bitbucket repositories** | **Code review** tab of a Vercel, Netlify or CLI project: "This project is not one. Pick a repository above." **Open integrations** leads to setting one up |
 
 ---
 
@@ -151,9 +151,9 @@ While a job runs on the pull request, the page refreshes on its own until it end
 
 The band under the header sums up what IronBee says of the pull request, from left to right:
 
-1. **The review**: the same word and detail line as the list's **Review** column. The commit links to GitHub.
+1. **The review**: the same word and detail line as the list's **Review** column. The commit links to the repository's host.
 2. **What's open**: the open findings by severity, such as **1 Critical · 2 High open**, or **nothing open**. Then **3 addressed** and **2 listed below the comment threshold** when there are any. These counts match the findings list under the band.
-3. **The check**: **IronBee's check on a1b2c3d, the head**, or **an earlier commit** when the check isn't on the latest commit IronBee reviewed, or **no check on GitHub**. After it comes the merge block in effect: **blocks a merge while medium or worse is open**, **blocks a merge while high or worse is open**, or **never blocks a merge**.
+3. **The check**: **IronBee's check on a1b2c3d, the head**, or **an earlier commit** when the check isn't on the latest commit IronBee reviewed, or **no check on GitHub** (**no check on Bitbucket** on Bitbucket). After it comes the merge block in effect: **blocks a merge while medium or worse is open**, **blocks a merge while high or worse is open**, or **never blocks a merge**.
 
    On GitLab, the band reads **IronBee's result on a1b2c3d, the head** instead, because a project may carry no status of IronBee's. With **Block merges** off, the merge part reads "writes no new status that holds a merge; an earlier red one clears at the next review, a reply under a finding, a resolved thread or a push". With **Block merges** on and **Block merging when** on **Never**, it reads "a review's result never blocks a merge; where pipelines must succeed, a running one holds it". See [Merges](/code-review/on-gitlab#merges).
 4. **The reviews**: how many reviews IronBee published and when the last one finished, such as **3 reviews · the last finished 2h ago**, or **no published review**.
@@ -165,7 +165,7 @@ The band under the header sums up what IronBee says of the pull request, from le
 
 ## The summary
 
-Under the status band, the **Summary** card shows the [pull request summary](/code-review/on-github#the-pull-request-summary) IronBee wrote for the approver. The console reads it from the host: IronBee's section of the description on GitHub, or IronBee's summary note on GitLab.
+Under the status band, the **Summary** card shows the [pull request summary](/code-review/on-github#the-pull-request-summary) IronBee wrote for the approver. The console reads it from the host: IronBee's section of the description on GitHub, IronBee's summary note on GitLab, or IronBee's summary comment on Bitbucket.
 
 - **Folded:** the card shows the summary's first paragraph. Click the **Summary** heading or **Show more** to open the rest, and **Show less** to fold it again.
 - **The header:** the commit the summary describes, such as **of a1b2c3d**, which links to it, and **Open on GitHub**. When someone edited the summary on the host after IronBee wrote it, the header adds **changed on GitHub since IronBee wrote it**.

@@ -1,0 +1,225 @@
+---
+title: Verifying your application in Bitbucket
+sidebarTitle: Verifying your application
+description: Choose what the Bitbucket Pipe verifies, an app it starts in the pipe, a Docker Compose stack or a deployed URL, and how to reach it.
+---
+
+Every run needs a target: the running application the verification exercises. You give the pipe one of two:
+
+- **An app in the pipe.** The pipe starts your app during the step. IronBee reaches it through a reverse tunnel.
+- **A deployed URL.** Your app is already running at a public address, such as a preview deployment.
+
+Without a target, the run stops at the plan step, before verifying anything.
+
+---
+
+## An app in the pipe
+
+Describe how your app is installed, built and started, and the port it listens on:
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `APP_INSTALL_COMMAND` | Install dependencies | `npm ci` |
+| `APP_BUILD_COMMAND` | Build the app | `npm run build` |
+| `APP_START_COMMAND` | Start the app and keep it running | `npm run start` |
+| `APP_PORT` | The port the app listens on | `"3000"` |
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+    APP_INSTALL_COMMAND: "npm ci"
+    APP_BUILD_COMMAND: "npm run build"
+    APP_START_COMMAND: "npm run start"
+    APP_PORT: "3000"
+```
+
+`APP_PORT` is required with `APP_START_COMMAND`. Instead of `APP_PORT`, you can set a localhost URL with a port, such as `APP_URL: "http://localhost:3000"`. When both name a port, the one in `APP_URL` wins.
+
+An app started this way runs inside the pipe's own container, so `localhost` is the pipe. The pipe's image is based on `node:22-bookworm`, with git, curl, jq and the Docker CLI.
+
+**On IronBee**, the pipe runs the commands itself and waits for the port to accept connections, 60 seconds by default (`APP_WAIT_SECONDS`). IronBee then verifies the app through a reverse tunnel, and the app's output is saved as `app.log` in the step's [artifacts](/bitbucket-pipe/advanced/evidence).
+
+<Note>
+  The tunnel carries plain HTTP. Serve the app over HTTP on that port; a port that answers with TLS fails the run immediately.
+</Note>
+
+**On your runner**, the agent runs these commands itself as part of the verification. It's told the commands, the port and `APP_URL`.
+
+Bitbucket expands each `$NAME` in a pipe's variables when it starts the pipe, from the step's environment. A command that needs a variable expanded when it runs is better kept in a script file that the command calls.
+
+### Which URLs count as in the pipe
+
+An `APP_URL` whose host IronBee can't reach from outside is treated as an app in the pipe. On IronBee, it's reached through the tunnel. These hosts count:
+- `localhost`, and any name ending in `.localhost`
+- `host.docker.internal`, the step's Docker service
+- a loopback or private IPv4 address: `127.x`, `0.x`, `10.x`, `172.16.x` to `172.31.x`, `192.168.x`, and link-local `169.254.x`
+- an IPv6 loopback (`::1`), unspecified (`::`), link-local (`fe80::/10`) or unique local (`fc00::/7`) address
+- a name without a dot
+
+Any other host is verified as a deployed URL. On IronBee, a URL in the pipe still needs `APP_START_COMMAND`: the pipe starts the app itself before the tunnel opens. The tunnel connects to the port on the pipe's own loopback address. When `APP_URL` names another host, such as `http://host.docker.internal:4000`, the pipe bridges `127.0.0.1:4000` to that host once the app answers there.
+
+### Apps started through Docker Compose or a service
+
+When the verification runs on IronBee and a fix is made, the pipe restarts the app so the re-verification sees the fixed code. By default it stops the process it started, together with the processes that one started, runs `APP_BUILD_COMMAND` again when it's set, and then `APP_START_COMMAND`. The install command doesn't run again. That's right only when the start command runs the app itself.
+
+When the command hands off to Docker Compose, a process manager or a service, set two more variables:
+
+```yaml
+    APP_START_COMMAND: "docker compose up -d"
+    APP_RESTART_COMMAND: "docker compose up -d --build"
+    APP_LOGS_COMMAND: "docker compose logs --no-color --tail=2000"
+    APP_URL: "http://host.docker.internal:3000"
+```
+
+- `APP_RESTART_COMMAND` restarts the app with the fix. Without it, the re-verification would test the code from before the fix. The pipe first stops the process it started, if that one is still running, then runs the command to the end before the re-verification starts. So use a command that replaces the running app and returns, such as `docker compose up -d --build`; one that stays in the foreground holds the step.
+- `APP_LOGS_COMMAND` prints the app's own logs into the step's artifacts, as `app-service-logs.txt`. Without it, the artifacts hold only the output of the command that started the app.
+
+### Docker Compose
+
+A pipe is a container on the step's Docker service. An app it starts with Docker Compose runs on that service and publishes its ports there, reached from the pipe as `host.docker.internal`. On IronBee, point `APP_URL` at that name, and the pipe bridges the port to `127.0.0.1`, where the tunnel looks for it:
+
+```yaml
+image: atlassian/default-image:5
+options:
+  runtime:
+    cloud:
+      version: 3
+definitions:
+  services:
+    docker:
+      memory: 7128
+  steps:
+    - step: &ironbee-verify
+        name: IronBee verify
+        size: 2x
+        max-time: 150
+        services: [docker]
+        auth:
+          system:
+            scopes: [read:pullrequest:bitbucket, write:pullrequest:bitbucket, write:git:bitbucket]
+        artifacts:
+          - .ironbee/upload/**
+        script:
+          - pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+            variables:
+              IRONBEE_API_KEY: $IRONBEE_API_KEY
+              CLAUDE_CODE_OAUTH_TOKEN: $CLAUDE_CODE_OAUTH_TOKEN
+              BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+              VERIFICATION_MODE: "platform"
+              APP_START_COMMAND: "docker compose up -d --build"
+              APP_RESTART_COMMAND: "docker compose up -d --build"
+              APP_LOGS_COMMAND: "docker compose logs --no-color --tail=2000"
+              APP_URL: "http://host.docker.internal:4000"
+              APP_WAIT_SECONDS: "300"
+```
+
+What the step needs for it:
+- **`runtime: cloud: version: 3`**: Compose builds need Buildx, which the default runtime turns off. The pipe brings its own Docker CLI, with Compose and Buildx, and drives the step's Docker service.
+- **`image: atlassian/default-image:5`**: with runtime version 3, the step's image has to carry the Docker CLI, because Bitbucket starts the pipe with `docker run` from it. `atlassian/default-image:5` does.
+- **`services: [docker]`** with the Docker service's `memory`: the pipe, every image build and every container of the app share the Docker service's memory, up to 3,072 MB on a `1x` step and 7,128 MB on a `2x` step.
+
+`APP_WAIT_SECONDS` is how long both the bridge and the CLI wait for the app to answer. The plan logs the `max-time` the step needs; with fixing on, an app in the pipe can be verified twice.
+
+---
+
+## A deployed URL
+
+Point `APP_URL` at a public address:
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+    APP_URL: "https://preview.example.com"
+```
+
+On IronBee, a step that verifies a deployed URL needs none of the Docker service settings, and runs on a `1x` step.
+
+The install, build and start commands aren't used. Before the verification starts, the pipe requests the URL once. On IronBee, the request carries `APP_HEADERS` and `APP_SECRET_HEADERS`, as the verification does; on your runner, it carries none. It doesn't follow a redirect:
+- A `401` or `403` answer fails the run, because the verification would only see a login page.
+- A redirect logs a warning naming where it leads. The verification follows it and reports on the page it lands on.
+- A URL that doesn't answer from the pipe logs a warning, because IronBee may reach addresses your pipeline can't.
+
+A deployed URL isn't re-verified after a fix: the deployment still serves the code that was deployed. The loop closes when the fix is deployed and the pipeline runs again.
+
+### Protected deployments
+
+A preview behind deployment protection or SSO answers `401` or `403`, and the reachability request before the run fails on it. On IronBee, the ways past it are:
+
+- **A secret header.** If the protection can be bypassed with a header, pass it in `APP_SECRET_HEADERS`, one `Name: value` per line, from a secured repository variable. The reachability request sends it too, so the run gets past that check. IronBee encrypts the value and never returns it.
+
+  ```yaml
+      APP_URL: "https://preview.example.com"
+      APP_SECRET_HEADERS: "x-vercel-protection-bypass: $VERCEL_BYPASS_SECRET"
+  ```
+
+- **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access). The pipe doesn't know the project's secrets, so its reachability request goes without the bypass: a project secret works for a preview that answers that request with a redirect or `200`, not with `401` or `403`.
+- **The app in the pipe.** Leave `APP_URL` empty and set `APP_START_COMMAND` and `APP_PORT`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
+
+On your runner, the headers aren't used, so a preview that answers `401` or `403` is refused whatever they hold. Verify the app in the pipe instead.
+
+A sign-in redirect is logged, not refused, and a login page served with `200` can't be told apart from your app by its status code. In both cases, the verdict describes the login page.
+
+For headers that aren't secret, such as `x-e2e: 1`, use `APP_HEADERS`. Their values are stored as plain text.
+
+---
+
+## Environments
+
+On IronBee, `IRONBEE_ENVIRONMENT` names the project environment the run is against, such as `staging` or `preview`. The run uses that environment's variables and secrets on top of the project-wide ones.
+
+```yaml
+    IRONBEE_ENVIRONMENT: "staging"
+```
+
+- A name the project hasn't seen yet is created by the first run that uses it.
+- When the variable is empty, a step with a `deployment:` uses that deployment environment's name (`BITBUCKET_DEPLOYMENT_ENVIRONMENT`).
+- With neither, the run uses the project-wide variables and secrets only.
+- When the environment has **Domain** properties, `APP_URL` must be inside those domains. Runs in the pipe are refused for that environment, because a tunnel has no domain.
+
+---
+
+## Monorepos
+
+Point the pipe at a subdirectory with `WORKING_DIRECTORY`. The commands, the configuration and the verification run relative to it:
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+    WORKING_DIRECTORY: "packages/web-app"
+    APP_INSTALL_COMMAND: "npm ci"
+    APP_START_COMMAND: "npm run dev"
+    APP_PORT: "5173"
+```
+
+The pipe's `.ironbee/` folder moves with it, so keep `packages/web-app/.ironbee/upload/**` in the step's `artifacts`.
+
+---
+
+## Focusing the verification
+
+The verification decides what to check from the changeset. Add instructions when you want specific coverage:
+
+```yaml
+    VERIFICATION_PROMPT: "Focus on the checkout flow and payment form validation"
+```
+
+`VERIFICATION_PROMPT` reaches the verification in both modes. When the verification runs on your runner, you can also set `CLAUDE_CODE_MAX_TURNS` (default `"100"`) and `CLAUDE_CODE_MODEL`.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in Bitbucket Pipelines" icon="git-branch" href="/bitbucket-pipe/guides/running-in-pipelines">
+    Pipelines, fixes and the report.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/bitbucket-pipe/configuration/configuration">
+    Every variable and output, with defaults.
+  </Card>
+</CardGroup>

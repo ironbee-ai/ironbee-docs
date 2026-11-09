@@ -477,6 +477,18 @@ html:not(.dark) img.ib-mark-dark {
   margin: 0 !important;
 }
 
+/* Five logo tiles fit a phone-width card. */
+@media (max-width: 420px) {
+  [data-product-guide-index] .ib-path-art {
+    gap: 0.5rem;
+  }
+
+  [data-product-guide-index] .ib-logo-tile {
+    width: 2.9rem;
+    height: 2.9rem;
+  }
+}
+
 [data-product-guide-index] .ib-terminal {
   width: min(22rem, 86%);
   padding: 0.85rem 1rem;

@@ -20,9 +20,9 @@ ironbee review show                            # this worktree's newest review a
 
 ## Before you start
 
-- The repository is bound to a project of your team: a **github.com** repository connected through the [IronBee GitHub App](/integrations/github), or a **gitlab.com** project whose group is connected in the console. Otherwise the API refuses the review with `NOT_FOUND`: no project of the team is bound to the repository.
+- The repository is bound to a project of your team: a **github.com** repository connected through the [IronBee GitHub App](/integrations/github), a **gitlab.com** project whose group is connected in the console, or a **bitbucket.org** repository whose workspace is connected in the console. Otherwise the API refuses the review with `NOT_FOUND`: no project of the team is bound to the repository.
 - Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
-- IronBee can reach the repository the review targets: the GitHub App is installed for it, or its GitLab group is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab, where the CLI adds that the group needs connecting in the IronBee console. Either way, the CLI lists your checkout's github.com and gitlab.com remotes so you can pick another with `--remote`.
+- IronBee can reach the repository the review targets: the GitHub App is installed for it, its GitLab group is connected, or its Bitbucket workspace is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab or Bitbucket, where the CLI adds that the group, or the workspace, needs connecting in the IronBee console. Either way, the CLI lists your checkout's github.com, gitlab.com and bitbucket.org remotes so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
 - Your team has [credits](/cli/guides/credits) left this month.
 - git 2.25 or later, and the full history: in a shallow clone, run `git fetch --unshallow` first.
@@ -40,7 +40,7 @@ After a local rebase or merge, the diff is the same one a pull request would sho
 
 | Flag | Description |
 |------|-------------|
-| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository or a gitlab.com project |
+| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository, a gitlab.com project or a bitbucket.org repository |
 | `--base <ref>` | Review against this ref instead of the default branch. It must be on the remote |
 | `-C, --project-dir <dir>` | Where to start looking for the repository root (default `.`) |
 

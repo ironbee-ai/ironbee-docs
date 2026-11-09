@@ -45,6 +45,15 @@ include:
       app_url: https://preview.example.com
 ```
 
+```yaml Bitbucket Pipe
+# bitbucket-pipelines.yml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+    APP_URL: https://preview.example.com
+```
+
 </CodeGroup>
 
       <div className="ib-callout">
@@ -72,6 +81,7 @@ include:
         <div className="ib-path-art">
           <div className="ib-logo-tile"><img src="/images/icons/github.svg" alt="GitHub" noZoom /></div>
           <div className="ib-logo-tile"><img src="/images/icons/gitlab.svg" alt="GitLab" noZoom /></div>
+          <div className="ib-logo-tile"><img src="/images/icons/bitbucket.svg" alt="Bitbucket" noZoom /></div>
           <div className="ib-logo-tile"><img src="/images/icons/vercel.svg" alt="Vercel" noZoom /></div>
           <div className="ib-logo-tile"><img src="/images/icons/netlify.svg" alt="Netlify" noZoom /></div>
         </div>
@@ -81,6 +91,7 @@ include:
           <ul className="ib-links">
             <li><a href="/github-action/get-started/getting-started"><span>Verify pull requests with the GitHub Action</span><span>→</span></a></li>
             <li><a href="/gitlab-component/get-started/getting-started"><span>Verify merge requests with the GitLab component</span><span>→</span></a></li>
+            <li><a href="/bitbucket-pipe/get-started/getting-started"><span>Verify pull requests with the Bitbucket Pipe</span><span>→</span></a></li>
             <li><a href="/integrations/vercel"><span>Verify Vercel preview deployments</span><span>→</span></a></li>
             <li><a href="/integrations/netlify"><span>Verify Netlify deploy previews</span><span>→</span></a></li>
             <li><a href="/integrations/overview"><span>How integrations work</span><span>→</span></a></li>
@@ -118,7 +129,7 @@ include:
     <div className="ib-section-head">
       <p className="ib-eyebrow">Code review</p>
       <h2 className="ib-h2">Review every pull request and merge request</h2>
-      <p className="ib-sub">Install the GitHub App or connect your GitLab group, and every pull request or merge request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
+      <p className="ib-sub">Install the GitHub App or connect your GitLab group or Bitbucket workspace, and every pull request or merge request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
     </div>
     <div className="ib-tiles">
       <a className="ib-tile" href="/code-review/overview">
@@ -201,13 +212,14 @@ include:
     </div>
     <div className="ib-guides">
       <div>
-        <p className="ib-guide-title">GitHub Action and GitLab component</p>
+        <p className="ib-guide-title">GitHub, GitLab and Bitbucket CI</p>
         <ul className="ib-links">
           <li><a href="/github-action/concepts/verification-modes"><span>Platform and local verification</span><span>→</span></a></li>
           <li><a href="/github-action/guides/verifying-your-app"><span>Choose what to verify</span><span>→</span></a></li>
           <li><a href="/github-action/guides/comment-trigger"><span>Verify from a pull request comment</span><span>→</span></a></li>
           <li><a href="/gitlab-component/guides/running-in-ci"><span>Verify in GitLab CI/CD pipelines</span><span>→</span></a></li>
           <li><a href="/gitlab-component/guides/verifying-your-app#docker-in-docker"><span>Docker-in-Docker on GitLab runners</span><span>→</span></a></li>
+          <li><a href="/bitbucket-pipe/guides/verifying-your-app#docker-compose"><span>Docker Compose in Bitbucket Pipelines</span><span>→</span></a></li>
         </ul>
       </div>
       <div>

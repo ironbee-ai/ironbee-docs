@@ -1,7 +1,7 @@
 ---
 title: Code wiki settings
 sidebarTitle: Settings
-description: Choose which GitHub and GitLab repositories get a code wiki, the language it's written in, how often it's rebuilt and which paths it leaves out.
+description: Choose which GitHub, GitLab and Bitbucket repositories get a code wiki, its language, how often it's rebuilt and which paths it leaves out.
 ---
 
 Code wiki settings decide which repositories get a [code wiki](/console/code-wiki), the language its pages are written in and how often it's rebuilt from scratch. You set them at two levels:
@@ -32,7 +32,7 @@ When repositories hold their own values, the section counts them, such as **2 re
 
 ### Repositories
 
-The **Repositories** table lists every connected GitHub and GitLab repository whose project isn't archived. Each row holds the repository's own settings:
+The **Repositories** table lists every connected GitHub, GitLab and Bitbucket repository whose project isn't archived. Each row holds the repository's own settings:
 
 | Column | What it shows |
 |--------|---------------|
@@ -57,7 +57,7 @@ The **Status** column reads:
 
 A change takes effect on the repository's next write. Turning a wiki off keeps its pages but stops showing them. Turning it on writes them again within a few minutes. Changing the language or the cadence starts no run of its own.
 
-If no repository is connected yet, the table reads **No repository connected**: "A wiki is written for repositories connected through the GitHub App or a GitLab group." See [GitHub App](/integrations/github) and [GitLab](/integrations/gitlab).
+If no repository is connected yet, the table reads **No repository connected**: "A wiki is written for repositories connected through the GitHub App, a GitLab group or a Bitbucket workspace." See [GitHub App](/integrations/github), [GitLab](/integrations/gitlab) and [Bitbucket](/integrations/bitbucket).
 
 ---
 
@@ -108,7 +108,7 @@ Everyone in the account can see code wiki settings, at both levels. Only owners 
 
 An archived project's page is read-only for everyone, and says **This project is archived. Unarchive it to change its code wiki settings.** See [Project settings](/console/project-settings).
 
-The code wiki is written for GitHub and GitLab repositories only. On a Vercel, Netlify or CLI project, the page says **The wiki is written for GitHub and GitLab repositories**, with **Open integrations**.
+The code wiki is written for GitHub, GitLab and Bitbucket repositories only. On a Vercel, Netlify or CLI project, the page says **The wiki is written for GitHub, GitLab and Bitbucket repositories**, with **Open integrations**.
 
 ---
 

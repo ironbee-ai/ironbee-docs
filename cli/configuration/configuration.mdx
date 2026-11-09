@@ -389,9 +389,9 @@ The personal file holds one repository's settings outside the checkout, at `~/.i
 
 - It holds only what `ironbee review` reads: the two switches, the endpoints, the credentials, `review.exclude`, `review.settings.*` and `params.*`.
 - Only `ironbee review` and `ironbee credits` read it. `ironbee verify`, the hooks that send your sessions to the Collector, and the devtools servers don't, so a credential stored only in the personal file doesn't reach them.
-- It records the remote's `owner/repo`, or a gitlab.com project's full path, and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
+- It records the remote's `owner/repo`, a gitlab.com project's full path, or a bitbucket.org repository's `workspace/repo_slug`, and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
 - It's written readable by you only (`0600`, in a `0700` folder).
-- There's one per repository, for one `owner/repo` or GitLab project. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
+- There's one per repository, for one `owner/repo`, GitLab project or Bitbucket repository. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
 
 ---
 
@@ -459,7 +459,7 @@ Connect Jira, Linear, or GitHub Issues - see the [Issue Tracking guide](/cli/gui
 
 ## VCS linkage
 
-Links each agent turn to the pull request it produced, or the merge request on gitlab.com, and the issues the turn is attributed to, such as those a GitHub PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+Links each agent turn to the pull request it produced, the merge request on gitlab.com, or the pull request on bitbucket.org, and the issues the turn is attributed to, such as those a GitHub PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|

@@ -1,0 +1,181 @@
+---
+title: Running in Bitbucket Pipelines
+description: How the IronBee Bitbucket Pipe behaves in each kind of pipeline, what it reports back, and how to limit when it runs.
+keywords: ["Bitbucket Pipelines", "pull-requests pipeline", "custom pipeline", "pipeline schedule", "EVENT_NAME"]
+---
+
+The IronBee Pipe adapts to the pipeline that runs it. The kind of pipeline decides what gets verified and where a fix goes. The report and the step result work the same way in every pipeline. This guide covers each one and what the pipe produces.
+
+The pipe runs wherever your `bitbucket-pipelines.yml` puts its step. Bitbucket names no event, so the pipe reads it from the pipeline: a pull request pipeline has its pull request, and anything else is a push, unless the `EVENT_NAME` variable says otherwise.
+
+| Pipeline | `EVENT_NAME` |
+|----------|--------------|
+| `pull-requests:` | `merge_request`, read on its own |
+| `branches:` or `default:` | `push`, read on its own |
+| `custom:`, run by hand | Set `manual` |
+| `custom:`, on a schedule | Set `schedule` |
+
+Any other value fails the run.
+
+---
+
+## Pull request
+
+```yaml
+pipelines:
+  pull-requests:
+    '**':
+      - step: *ironbee-verify
+```
+
+A `pull-requests:` pipeline runs when a pull request is opened and on every push to it.
+
+**What gets verified:** the whole pull request. Bitbucket runs the pipeline on the source branch merged with the destination; IronBee reads the pull request's own head.
+
+**Fixes:** committed to the pull request's source branch.
+
+**Report:** a comment on the pull request, updated in place on later runs, unless IronBee publishes the run on the pull request itself. See [The report](#the-report).
+
+This is the most common pipeline and the recommended starting point.
+
+---
+
+## Push to a branch
+
+```yaml
+pipelines:
+  branches:
+    main:
+      - step: *ironbee-verify
+```
+
+**What gets verified:** Bitbucket doesn't tell a pipe which commit a push started from, so the pipe measures a push from where its branch left the repository's main branch.
+- On the main branch itself: the pushed commit against its parent.
+- On another branch, such as `develop` or `release/*`: every commit on the branch since it left the main branch, so each push reads all of that branch's unmerged work.
+
+**Fixes:** committed to a new `ironbee/fix-<sha7>-<build_number>` branch, with a pull request targeting the branch that was pushed. The fix pull request's description is the report.
+
+Use it alongside pull request pipelines to catch what broke after a merge.
+
+---
+
+## Scheduled and manual pipelines
+
+A `custom:` pipeline runs only when someone starts it from **Pipelines > Run pipeline**, or on a schedule. Set `EVENT_NAME` on the pipe so it knows which:
+
+```yaml
+pipelines:
+  custom:
+    ironbee-nightly:
+      - step:
+          <<: *ironbee-verify
+          script:
+            - pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+              variables:
+                IRONBEE_API_KEY: $IRONBEE_API_KEY
+                BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+                APP_URL: "https://staging.example.com"
+                EVENT_NAME: "schedule"
+```
+
+Then add a schedule for `ironbee-nightly` under **Repository settings > Pipelines > Schedules**. For a pipeline you start by hand, set `EVENT_NAME: "manual"` instead. Without `EVENT_NAME`, a `custom:` pipeline counts as a push.
+
+**What gets verified:**
+- **On IronBee:** the latest commit against its parent.
+- **On your runner:** the whole application.
+
+**Fixes:** committed to a new fix branch, with a pull request.
+
+A manual pipeline is useful to repeat a verification after a configuration change, or before a release.
+
+---
+
+## No comment command
+
+Bitbucket Pipelines has no trigger for a pull request comment, so the GitHub Action's [`/ironbee-verify` comment](/github-action/guides/comment-trigger) has no equivalent in the pipe. To verify on demand, run a `custom:` pipeline with `EVENT_NAME: "manual"`.
+
+---
+
+## Pipeline summary
+
+| Pipeline | What gets verified | Fixes go to |
+|----------|--------------------|-------------|
+| `pull-requests:` | The pull request | The pull request's source branch |
+| `branches:` | The commits since the branch left the main branch; on the main branch, the pushed commit | A new fix branch and pull request |
+| `custom:` with `manual` or `schedule` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and pull request |
+
+Fixes need an Anthropic credential and the step's [Bitbucket token](/bitbucket-pipe/get-started/getting-started#the-bitbucket-token). They also need `VERIFICATION_APPLY_FIX: "true"`, the default. Without an Anthropic credential, a run on IronBee verifies and reports only. With `VERIFICATION_APPLY_FIX: "false"`, a run verifies and reports in both modes: on your runner, the agent reports what it finds and changes no file. A fix whose re-verification fails is not pushed.
+
+Only what the fix changed is committed. On IronBee, the install and the build run before the fix, so what they write stays out of the commit. On your runner, the agent installs, builds and fixes in one session, so the pipe commits only after a verification failed and the agent verified again; that commit can also hold what the agent's own install or build wrote. Files your app writes outside ignored paths while the fix runs count as changes too. With `IRONBEE_EXCLUDE_FILES: "false"`, IronBee's setup files are committed with the fix.
+
+Fix commits end in `[skip ci]`. Bitbucket starts a pipeline for every push, and without it a fix would verify itself again.
+
+After a fix lands on a pull request branch, its new head commit has no build. On a branch whose merge checks ask for **Minimum number of successful builds for the last commit**, the pull request can merge only once a pipeline passes on that commit: once you've reviewed the fix, start one for the branch from **Pipelines > Run pipeline**.
+
+---
+
+## Turning automatic verification off
+
+To verify only when someone asks for it with a manual pipeline, turn off verification in every other pipeline: pull requests, branches and schedules. You have two ways to do it.
+
+**In `bitbucket-pipelines.yml`.** Put the step only under `custom:`, with no `pull-requests:` or `branches:` entry for it. A `custom:` pipeline never starts by itself, so nothing runs: no build minutes, no clone, no image pull.
+
+**With the `VERIFICATION_AUTO` variable.** The pipe resolves to "nothing to do", every step after the plan is skipped, and the pipe ends green in seconds.
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    VERIFICATION_AUTO: $IRONBEE_VERIFICATION_AUTO   # 'false' switches it off
+```
+
+By the time the pipe starts, Bitbucket has already pulled the step's image, cloned the repository, started the services and run the script lines before the pipe. Use the pipeline file when the step does expensive setup, and the variable otherwise. Neither stops a `custom:` pipeline with `EVENT_NAME: "manual"`; `VERIFICATION_AUTO: "false"` does stop a scheduled one.
+
+---
+
+## The report
+
+On a pull request, the pipe posts the report as a pull request comment, and updates the comment from an earlier run instead of adding another. After a fix, the comment shows the re-verified run and links the run before it. On a branch, schedule or manual pipeline, the report becomes the description of the fix pull request.
+
+When the repository's workspace is [connected to IronBee](/integrations/bitbucket), IronBee publishes a run on IronBee on the pull request itself, with a build status, inline comments and a summary. The pipe then posts no comment, doesn't update an earlier one, and the `IRONBEE_PLATFORM_PUBLISHES` output is `true`.
+
+Bitbucket has no step summary. In every mode, the pipe prints the report in the step log under **IronBee Verification Report**, and saves it as `report.md` in the step's [artifacts](/bitbucket-pipe/advanced/evidence). The report is plain Markdown, because Bitbucket shows HTML as text.
+
+A run on IronBee reports:
+- the verdict and a link to the run in the IronBee Console
+- the summary, and the **Checks**, **Issues** and **Suggested fixes** from the verdict
+- after a fix, a link to the verification before the fix
+- a **No verification ran** or **No verdict** banner, with the reason, when the run couldn't produce a verdict
+
+A run on your runner reports:
+- the verdict, with the number of cycles when there was more than one
+- each verification cycle, with its checks, issues and fixes, and a link to that verification in the console
+- an early-exit banner, with the details under **Session end details**, when the agent stopped early (for example at `CLAUDE_CODE_MAX_TURNS`)
+- a link to the step's page, whose **Artifacts** tab holds the [evidence](/bitbucket-pipe/advanced/evidence)
+
+Without the `BITBUCKET_OAUTH_TOKEN`, the report stays in the step log, and the pipe logs a warning.
+
+---
+
+## The step result
+
+The last step of the pipe fails it, and with it the step, when the verification fails or ends without a verdict. A failed step fails the commit's pipeline build, which the **Minimum number of successful builds for the last commit** merge check counts. The outputs are written to `.ironbee/outputs.env`, where the step's `after-script` reads `IRONBEE_VERDICT` (`pass`, `fail`, `not_applicable` or `unknown`) and the other [outputs](/bitbucket-pipe/configuration/configuration#outputs), whether the pipe passed or failed.
+
+---
+
+## Forks
+
+Bitbucket runs no pipeline for a pull request from a fork, so the pipe never runs with your repository's credentials on a fork's code.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verifying your application" icon="play" href="/bitbucket-pipe/guides/verifying-your-app">
+    Choose the target: an app in the pipe or a deployed URL.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/bitbucket-pipe/configuration/configuration">
+    Every variable and output, with defaults.
+  </Card>
+</CardGroup>

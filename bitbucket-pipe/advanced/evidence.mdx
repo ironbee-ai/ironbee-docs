@@ -1,0 +1,87 @@
+---
+title: Evidence in Bitbucket
+sidebarTitle: Evidence
+description: Where the recording, screenshots, logs and report of each Bitbucket Pipe run are, on IronBee and in the step's artifacts.
+---
+
+Every run keeps the evidence behind its verdict. Where you find it depends on where the verification ran.
+
+---
+
+## Runs on IronBee
+
+The evidence of a run on IronBee is in the IronBee Console:
+- the recording
+- screenshots
+- the actions the agent took
+- network requests, traces and logs
+
+Open it from the **View session in IronBee Console** link in the [report](/bitbucket-pipe/guides/running-in-pipelines#the-report), from the `IRONBEE_JOB_URL` output, or from the project's **Verifications** tab. See [Verification detail](/console/verification-detail).
+
+---
+
+## The step's artifacts
+
+The pipe copies what it keeps into `.ironbee/upload/`. A step keeps only the files its `artifacts:` names, so list that folder on the step:
+
+```yaml
+- step:
+    artifacts:
+      - .ironbee/upload/**
+```
+
+With `WORKING_DIRECTORY` set, the folder is under that directory, such as `packages/web-app/.ironbee/upload/**`. Open the files from the step's **Artifacts** tab in the pipeline. They hold:
+
+| File | When |
+|------|------|
+| `report.md` | Every run: the report, since Bitbucket has no step summary |
+| `app.log` | When the pipe started your app: the app's output |
+| `app-service-logs.txt` | When you set `APP_LOGS_COMMAND`: the app's own logs |
+| The verification evidence | Local mode, when the run produced any. See below |
+
+Use the app logs when a verification fails because the app itself stopped or errored.
+
+### Runs on your runner
+
+A run inside the pipe records to the IronBee Console and also puts its evidence in the artifacts:
+
+```
+cycle-1/
+  screenshots/
+  recordings/
+cycle-2/
+  screenshots/
+  recordings/
+claude-output.log
+ironbee-devtools-mcp.log
+sessions/<id>/        # agents/<agentId>/: verdict.json, actions.jsonl
+```
+
+- Screenshots and recordings are grouped by verification cycle.
+- `claude-output.log` holds the agent's output.
+- `ironbee-devtools-mcp.log` is the DevTools server's log.
+
+The report links to the step's page, and the `IRONBEE_ARTIFACTS_URL` output carries the same link.
+
+---
+
+## Console links
+
+The report's links point at `console.ironbee.ai`. To use a different host, set `IRONBEE_CONSOLE_URL` to the hostname, without a scheme:
+
+```yaml
+    IRONBEE_CONSOLE_URL: "console.example.com"
+```
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in Bitbucket Pipelines" icon="git-branch" href="/bitbucket-pipe/guides/running-in-pipelines">
+    Pipelines, fixes and the report.
+  </Card>
+  <Card title="Diagnostics" icon="stethoscope" href="/bitbucket-pipe/advanced/diagnostics">
+    Find out why a run didn't behave as expected.
+  </Card>
+</CardGroup>

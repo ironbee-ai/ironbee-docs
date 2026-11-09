@@ -1,14 +1,15 @@
 ---
 title: Code review of pull requests
 sidebarTitle: Overview
-description: IronBee reviews pull requests on GitHub and merge requests on GitLab, comments on what it finds, and keeps each review in the console.
+description: IronBee reviews pull requests on GitHub and Bitbucket and merge requests on GitLab, comments on what it finds, and keeps each review in the console.
 keywords: ["AI code review", "PR review", "pull request review bot"]
 ---
 
-IronBee reviews the pull requests of every GitHub repository the IronBee GitHub App covers, and the merge requests of every GitLab repository you pick in a connected group. Each review reads the change against the rest of the repository and reports what it finds:
+IronBee reviews the pull requests of every GitHub repository the IronBee GitHub App covers, the merge requests of every GitLab repository you pick in a connected group, and the pull requests of every Bitbucket repository you pick in a connected workspace. Each review reads the change against the rest of the repository and reports what it finds:
 
 - **On GitHub:** a review with an inline comment for each finding, a summary added to the pull request description, and the **IronBee review** check. See [On the pull request](/code-review/on-github).
 - **On GitLab:** a review note with an inline thread for each finding, a summary note, and the **IronBee review** pipeline status. See [On the merge request](/code-review/on-gitlab).
+- **On Bitbucket:** an inline comment for each finding, a review comment, a summary comment, and the **IronBee review** build status. See [On Bitbucket](/code-review/on-bitbucket).
 - **In the console:** every pull request with its reviews and findings, under **Code review** in the sidebar and on each project's **Code review** tab.
 
 To review a branch before you open a pull request, run `ironbee review` from the CLI. See [Code review of your local checkout](/cli/guides/code-review).
@@ -19,7 +20,7 @@ The same connection also gives each repository a [code wiki](#code-wiki), on the
 
 ## Turn it on
 
-Install the [IronBee GitHub App](/integrations/github) on your repositories, or [connect a GitLab group](/integrations/gitlab) and pick its repositories. Every repository the App covers, and every GitLab repository you pick, becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default. The repository's [code wiki](/console/code-wiki) starts at the same time, unless **Write a wiki for newly connected repositories** is off in [Code wiki settings](/console/code-wiki-settings).
+Install the [IronBee GitHub App](/integrations/github) on your repositories, or connect a [GitLab group](/integrations/gitlab) or a [Bitbucket workspace](/integrations/bitbucket) and pick its repositories. Every repository the App covers, and every GitLab or Bitbucket repository you pick, becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default. The repository's [code wiki](/console/code-wiki) starts at the same time, unless **Write a wiki for newly connected repositories** is off in [Code wiki settings](/console/code-wiki-settings).
 
 To stop reviewing one repository, an owner or admin opens the project's **Settings > Code review** and turns off **Review pull requests in this repository**. See [Code review settings](/code-review/settings).
 
@@ -31,9 +32,9 @@ To stop reviewing one repository, an owner or admin opens the project's **Settin
 ## What starts a review
 
 - **A pull request opens, or gets a new push.** **Automatic reviews** decides which of these start a review: **On open and every push** (the default), **On open only**, or **Only when asked**. By default, a draft waits until it's ready for review, and a pull request opened by a bot isn't reviewed.
-- **You ask for one.** Comment `@ironbee-ai review` on the pull request, or on GitLab mention the group's IronBee account, `@ironbee-<group path> review`, or the short form `@ironbee review`. You can also click **Review now** on its page in the console, or **Review** on a pull request that [needs review](/code-review/pull-requests).
+- **You ask for one.** Comment `@ironbee-ai review` on the pull request or merge request, on GitHub, GitLab or Bitbucket. On GitLab, the group's IronBee account, `@ironbee-<group path> review`, works too. You can also click **Review now** on its page in the console, or **Review** on a pull request that [needs review](/code-review/pull-requests).
 
-A follow-up review reads only what changed since the last one, and answers the threads it opened before. See [Code review on GitHub](/code-review/on-github) and [Code review on GitLab](/code-review/on-gitlab).
+A follow-up review reads only what changed since the last one, and answers the threads it opened before. See [Code review on GitHub](/code-review/on-github), [Code review on GitLab](/code-review/on-gitlab) and [Code review on Bitbucket](/code-review/on-bitbucket).
 
 ---
 
@@ -54,7 +55,7 @@ Every finding has a severity, **Critical**, **High**, **Medium** or **Low**, and
 
 ## Code wiki
 
-IronBee writes a [code wiki](/console/code-wiki) of each repository the GitHub App covers or you pick in a GitLab group, from its default branch: what the code does, where to start, how its parts depend on each other, and one page for each area, with every claim linked to the lines it comes from. It's written again as pull requests merge, and it uses no credits.
+IronBee writes a [code wiki](/console/code-wiki) of each repository the GitHub App covers or you pick in a GitLab group or a Bitbucket workspace, from its default branch: what the code does, where to start, how its parts depend on each other, and one page for each area, with every claim linked to the lines it comes from. It's written again as pull requests merge, and it uses no credits.
 
 The wiki starts when the repository is connected, like code review, and you read it on the project's **Code wiki** tab. To choose which repositories get one and in which language, see [Code wiki settings](/console/code-wiki-settings).
 
@@ -74,6 +75,9 @@ Each review uses credits by the reviewable lines it reads and the depth it runs 
   </Card>
   <Card title="On the merge request" icon="gitlab" href="/code-review/on-gitlab">
     What differs on GitLab: the summary note, the pipeline status and merges.
+  </Card>
+  <Card title="On Bitbucket" icon="/images/icons/bitbucket.svg" href="/code-review/on-bitbucket">
+    What differs on Bitbucket: the comments, the build status and merges.
   </Card>
   <Card title="Pull requests in the console" icon="git-pull-request" href="/code-review/pull-requests">
     Every pull request with its reviews and findings.

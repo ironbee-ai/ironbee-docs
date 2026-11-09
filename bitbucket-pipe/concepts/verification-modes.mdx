@@ -1,0 +1,86 @@
+---
+title: Platform and local verification in Bitbucket
+sidebarTitle: Platform and local verification
+description: Where the Bitbucket Pipe runs the verification, how it picks from the repository's visibility, and which variables apply to each mode.
+---
+
+The IronBee Pipe can run the verification in two places:
+
+- **Platform mode:** on IronBee. The console calls this **On IronBee**.
+- **Local mode:** inside the pipe, on your Bitbucket Pipelines runner. The console calls this **On your Bitbucket Pipelines runner**.
+
+Everything after the verification works the same way in both modes: the verdict, the fix, the commit and the report. Only a run on IronBee can be [published on the pull request](/bitbucket-pipe/guides/running-in-pipelines#the-report) by IronBee itself. The `VERIFICATION_MODE` variable picks the mode: `auto` (the default), `platform` or `local`.
+
+---
+
+## Compare the two modes
+
+| | Platform (on IronBee) | Local (on your runner) |
+|---|---|---|
+| Where the agent runs | IronBee's infrastructure | Inside the pipe, in your pipeline |
+| Model access | IronBee's | Your Anthropic API key or Claude Code OAuth token |
+| Pipeline setup | None: no Chromium, no DevTools install | Chromium, IronBee DevTools and Claude Code, installed on every run |
+| Anthropic credential | Only to fix what it finds | Required |
+| What it verifies | Your web app, in a browser | The [DevTools platforms](/bitbucket-pipe/guides/verification-platforms) you enable: browser, backend, Node.js, Python, terminal |
+| Evidence | The IronBee Console | The IronBee Console and the step's artifacts |
+| Private repositories | Need the repository's workspace [connected to IronBee](/integrations/bitbucket) | Work with any checkout |
+
+---
+
+## How `auto` decides
+
+With `VERIFICATION_MODE: auto`, the pipe decides from two things it can check without calling IronBee: whether the repository is private, and whether an Anthropic credential is passed.
+
+| Repository | Anthropic credential | Mode |
+|------------|----------------------|------|
+| Public | Any | Platform. IronBee can check out a public repository without the Bitbucket connection |
+| Private | Passed | Local. The pipe can't check whether the Bitbucket connection covers the repository, so it uses the engine it knows can run |
+| Private | Not passed | Platform, the only engine available. This needs the repository's workspace connected to IronBee |
+
+The first line of the plan in the step log names the mode and the reason.
+
+<Tip>
+  If your repository is private and its workspace is [connected to IronBee](/integrations/bitbucket), set `VERIFICATION_MODE: "platform"` explicitly. Otherwise `auto` runs on your runner whenever an Anthropic credential is passed.
+</Tip>
+
+A private repository whose workspace isn't connected can still be verified on IronBee: set `IRONBEE_BIND_REPOSITORY: "false"` to verify the running application without a checkout of the repository.
+
+---
+
+## Variables that apply to one mode
+
+The pipe warns in the step log when you set a variable that doesn't apply to the mode it runs in.
+
+**Platform mode only**
+
+| Variable | Purpose |
+|----------|---------|
+| `IRONBEE_PROJECT` | The project the run reports to. Empty derives it from the git remote |
+| `IRONBEE_ENVIRONMENT` | The project environment whose variables and secrets the run uses |
+| `IRONBEE_BIND_REPOSITORY` | Bind the run to the repository so it verifies the changeset |
+| `IRONBEE_JOB_TIMEOUT_MINUTES` | The run's timeout on IronBee |
+| `APP_RESTART_COMMAND`, `APP_LOGS_COMMAND`, `APP_WAIT_SECONDS` | An app that runs in the pipe, reached through a tunnel |
+| `APP_HEADERS`, `APP_SECRET_HEADERS` | Request headers for a deployed URL |
+
+**Local mode only**
+
+| Variable | Purpose |
+|----------|---------|
+| `IRONBEE_BROWSER_DEVTOOLS`, `IRONBEE_BACKEND_DEVTOOLS`, `IRONBEE_NODE_DEVTOOLS`, `IRONBEE_PYTHON_DEVTOOLS`, `IRONBEE_TERMINAL_DEVTOOLS` | The DevTools platforms the agent verifies through |
+| `IRONBEE_EXTRA_CONFIG` | Raw IronBee CLI config. See [Custom configuration](/bitbucket-pipe/advanced/custom-configuration) |
+| `CLAUDE_CODE_MODEL`, `CLAUDE_CODE_MAX_TURNS`, `CLAUDE_CODE_ARGS` | The Claude Code agent in the pipe |
+
+`CLAUDE_CODE_CLI_VERSION` and the Anthropic credential also apply to the fix step in platform mode. See [Configuration](/bitbucket-pipe/configuration/configuration) for every variable.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="How it works" icon="lightbulb" href="/bitbucket-pipe/concepts/how-it-works">
+    The run from the plan to the report.
+  </Card>
+  <Card title="Bitbucket" icon="/images/icons/bitbucket.svg" href="/integrations/bitbucket">
+    Connect your Bitbucket workspace so IronBee can read private repositories.
+  </Card>
+</CardGroup>

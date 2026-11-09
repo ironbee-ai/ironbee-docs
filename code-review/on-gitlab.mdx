@@ -89,12 +89,12 @@ With **Block merges** off, on a project with **Pipelines must succeed**, a faile
 
 ## Commands
 
-Write a command in a comment on the merge request, mentioning IronBee. On GitLab the mention is the group's service account, `@ironbee-<group path>`, shown and copyable under **Mention** on [Integrations > GitLab](/integrations/gitlab#mention-ironbee). The short form `@ironbee` works too. `@ironbee-ai` is the GitHub mention and does nothing on GitLab.
+Write a command in a comment on the merge request, mentioning IronBee. On GitLab the mention is the group's service account, `@ironbee-<group path>`, shown and copyable under **Mention** on [Integrations > GitLab](/integrations/gitlab#mention-ironbee). The short form `@ironbee-ai`, the same mention as on GitHub, works too.
 
 The commands, their replies and the forms IronBee reads are the same as on GitHub: `review`, `full review`, `pause`, `resume` and `retract`. See [Commands](/code-review/on-github#commands). For example:
 
 ```
-@ironbee review
+@ironbee-ai review
 ```
 
 A reply under IronBee's review note counts as a comment on the merge request, so commands work there too.
