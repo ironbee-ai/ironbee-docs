@@ -1,0 +1,189 @@
+---
+title: Get started with the GitLab component
+sidebarTitle: Getting started
+description: Add IronBee verification to your GitLab CI/CD pipeline with the IronBee component, from the console or by hand.
+keywords: ["GitLab CI", "GitLab CI/CD component", "CI/CD Catalog", ".gitlab-ci.yml", "merge request"]
+---
+
+The IronBee GitLab component verifies every merge request and every push to the default branch against your running application and reports the result on the merge request. It's the GitLab counterpart of the [IronBee GitHub Action](/github-action/get-started/getting-started), with the same inputs, decisions and report. It can run the verification in one of two places:
+
+- **On IronBee**: IronBee verifies the change on its own infrastructure. Nothing is installed on your runner.
+- **On your GitLab runner**: the verification runs inside your pipeline with your own Anthropic access.
+
+When the verification finds a problem, the component can report it, or also write the fix and commit it.
+
+The component is published in the [GitLab CI/CD Catalog](https://gitlab.com/explore/catalog/ironbee-ai/ironbee-gitlab) as `gitlab.com/ironbee-ai/ironbee-gitlab/verify`. This guide gets it running in a few minutes. For the mechanics behind it, see [How it works](/gitlab-component/concepts/how-it-works).
+
+---
+
+## Prerequisites
+
+- An [IronBee account](https://console.ironbee.ai) and your account API key. Owners and admins find it in the console under **Settings > Account**. Other members can ask an owner or admin for it.
+- To verify **on IronBee**: the project's group [connected to IronBee](/integrations/gitlab). A public project also works without it.
+- To verify **on your GitLab runner**, or to have findings fixed: an Anthropic API key from [console.anthropic.com](https://console.anthropic.com), or a Claude Code OAuth token from `claude setup-token`.
+- To post the report note and push fixes: a GitLab project access token. See [The GitLab token](#the-gitlab-token).
+- A project on gitlab.com. Self-managed GitLab and GitLab Dedicated aren't supported.
+
+---
+
+## Set it up from the console
+
+The fastest path is the console, which writes the pipeline file for you.
+
+<Steps>
+  <Step title="Connect GitLab">
+    Open **Settings > Getting started**. On the **GitLab** card, click **Add the Component**, or **Connect GitLab** to connect your GitLab group first. See [GitLab](/integrations/gitlab). On **Projects**, a GitLab project's **Install the IronBee Component** opens the same steps for that project.
+  </Step>
+  <Step title="Answer three questions">
+    In the **IronBee Component** step:
+    - **Repository**: the GitLab project the pipeline file and the variables go into.
+    - **Where it runs**: **On IronBee** (recommended) or **On your GitLab runner**.
+    - **On a finding**: **Report it**, or **Fix it too**. On your GitLab runner, the agent fixes what it finds either way.
+  </Step>
+  <Step title="Set it up on GitLab">
+    Fill in how your app starts, then add the CI/CD variables the console lists: **Open CI/CD variables** opens the project's settings, and **Open access tokens** is where you create the `GITLAB_TOKEN`. Click **Copy and open the pipeline editor**: the console copies the file and opens GitLab's pipeline editor. Paste it there and commit. If the project already has a `.gitlab-ci.yml`, add the `include` block to it instead; **Copy the pipeline file** copies the file again. The commit is a push, and that push starts your first verification.
+  </Step>
+</Steps>
+
+The console listens for the first pipeline and moves on when it arrives. The rest of this page builds the same file by hand.
+
+---
+
+## Add the component
+
+Add the component to `.gitlab-ci.yml` with one of the two starters below.
+
+<Tabs>
+  <Tab title="On IronBee, report only">
+    ```yaml
+    include:
+      - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+        inputs:
+          verification_mode: platform
+          verification_apply_fix: 'false'
+          # Where the app runs during the pipeline: on this runner ...
+          app_install_command: npm ci
+          app_build_command: npm run build
+          app_start_command: npm run start
+          app_port: '3000'
+          # ... or at a preview URL instead of the four lines above:
+          # app_url: https://preview.example.com
+
+    # Redeclare the component's job to give it enough time.
+    ironbee-verify:
+      timeout: 90m
+
+    # One pipeline per change: the merge request's, or the branch's when no merge request is open.
+    workflow:
+      rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+          when: never
+        - if: $CI_COMMIT_BRANCH
+    ```
+  </Tab>
+  <Tab title="On your runner, fixing too">
+    ```yaml
+    include:
+      - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+        inputs:
+          verification_mode: local
+          verification_apply_fix: 'true'
+          # Where the app runs during the pipeline: on this runner ...
+          app_install_command: npm ci
+          app_build_command: npm run build
+          app_start_command: npm run start
+          app_url: http://localhost:3000
+          # ... or at a preview URL instead of the four lines above:
+          # app_url: https://preview.example.com
+
+    # Redeclare the component's job to give it enough time.
+    ironbee-verify:
+      timeout: 90m
+
+    # One pipeline per change: the merge request's, or the branch's when no merge request is open.
+    workflow:
+      rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+          when: never
+        - if: $CI_COMMIT_BRANCH
+    ```
+  </Tab>
+</Tabs>
+
+Replace the four `app_*` lines with your own install, build and start commands and the port your app listens on. If your app is already deployed at a public preview URL, delete the four lines and set `app_url` instead. The component needs one of the two: without a target the run stops before it verifies anything. See [Verifying your application](/gitlab-component/guides/verifying-your-app).
+
+Every input is a string. Quote numbers and `true`/`false`, as in `app_port: '3000'`: GitLab refuses an input whose value isn't a string. No credential appears in the file: the credential inputs read the CI/CD variables below by default.
+
+To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: 'true'`. The re-verification after a fix restarts the app with `app_start_command` alone, without rebuilding it, so serve the source (such as `npm run dev`) or set `app_restart_command`; see [Apps started through Docker Compose or a service](/gitlab-component/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, the agent fixes what it finds whatever `verification_apply_fix` says, so a run there needs the `GITLAB_TOKEN` to push its fixes.
+
+The `workflow:` block is optional. It keeps a project that runs both branch and merge request pipelines to one pipeline per push, so a push to a branch with an open merge request doesn't start two pipelines. See [Running in GitLab CI/CD](/gitlab-component/guides/running-in-ci).
+
+<Tip>
+  At the start of every run, the component logs the `timeout:` its configuration needs. Set at least that much on the job: GitLab's default job timeout is one hour, which may be less than your configuration needs. When GitLab stops a job mid-run, the verification is cancelled with it.
+</Tip>
+
+`@v1` follows the latest release, so your pipeline gets fixes without editing the file. The starter file the console writes uses `@1`, which follows the same releases.
+
+---
+
+## Add the CI/CD variables
+
+In your GitLab project, open **Settings > CI/CD > Variables** and add each variable. Mark each one **Masked**, and leave it unprotected: a protected variable reaches only protected branches, so a merge request pipeline from another branch wouldn't see it.
+
+| Variable | Value | Needed for |
+|----------|-------|------------|
+| `IRONBEE_API_KEY` | Your IronBee account API key | Every run |
+| `ANTHROPIC_API_KEY` | An Anthropic API key | Verifying on your runner, or fixing |
+| `CLAUDE_CODE_OAUTH_TOKEN` | A Claude Code OAuth token, instead of `ANTHROPIC_API_KEY` | Verifying on your runner, or fixing |
+| `GITLAB_TOKEN` | A project access token. See [The GitLab token](#the-gitlab-token) | The report note and the fixes |
+
+The `ironbee_api_key`, `anthropic_api_key`, `claude_code_oauth_token` and `gitlab_token` inputs default to these variables. Your Anthropic key or token stays in GitLab: the component uses it only on your runner, and IronBee never receives it.
+
+The next merge request or push to the default branch starts a verification run.
+
+---
+
+## The GitLab token
+
+A job's own `CI_JOB_TOKEN` can't post a merge request note, push a commit or open a merge request. The component does those with the token in the `gitlab_token` input, `$GITLAB_TOKEN` by default:
+
+| Needs | What for |
+|-------|----------|
+| A project access token, or a group or personal one | Create it under the project's **Settings > Access tokens** |
+| The `api` and `write_repository` scopes | `api` for the report note and the fix merge request, `write_repository` for the fix commit and the fix branch |
+| The **Developer** role or above | Pushing to the merge request branch and creating branches |
+
+Keep the token in a masked variable. The component never prints it, and masking keeps it out of anything git or a tool prints on its own.
+
+Without a token, the component still verifies:
+- The report stays in the job log, with a warning.
+- A run that produced fixes fails, because it has nothing to push them with. The fixes exist only on the runner.
+
+A run on IronBee that only reports needs no token. When IronBee publishes the run on the merge request itself, the component posts no note at all. See [The report](/gitlab-component/guides/running-in-ci#the-report).
+
+---
+
+## Forks
+
+A merge request from a fork is refused: a pipeline of a fork's code must not run with your project's credentials, and the fork's own pipeline has none. The component detects it at the plan step and says so instead of failing on an empty key.
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Platform and local verification" icon="split" href="/gitlab-component/concepts/verification-modes">
+    How the component decides where the verification runs.
+  </Card>
+  <Card title="Running in GitLab CI/CD" icon="git-branch" href="/gitlab-component/guides/running-in-ci">
+    How the component behaves on each pipeline source and what it reports.
+  </Card>
+  <Card title="Verifying your application" icon="play" href="/gitlab-component/guides/verifying-your-app">
+    An app on the runner, Docker-in-Docker, or a deployed URL.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

@@ -31,10 +31,18 @@ cd your-project && ironbee install
 
 ```yaml GitHub Action
 # .github/workflows/ironbee.yml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     app_url: https://preview.example.com
+```
+
+```yaml GitLab component
+# .gitlab-ci.yml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      app_url: https://preview.example.com
 ```
 
 </CodeGroup>
@@ -63,14 +71,16 @@ cd your-project && ironbee install
       <div className="ib-path">
         <div className="ib-path-art">
           <div className="ib-logo-tile"><img src="/images/icons/github.svg" alt="GitHub" noZoom /></div>
+          <div className="ib-logo-tile"><img src="/images/icons/gitlab.svg" alt="GitLab" noZoom /></div>
           <div className="ib-logo-tile"><img src="/images/icons/vercel.svg" alt="Vercel" noZoom /></div>
           <div className="ib-logo-tile"><img src="/images/icons/netlify.svg" alt="Netlify" noZoom /></div>
         </div>
         <div className="ib-path-body">
-          <h3 className="ib-h3">Deployments and pull requests</h3>
-          <p className="ib-sub">IronBee verifies each preview deployment and pull request on its own infrastructure, and reports on the pull request, the deployment and in the console.</p>
+          <h3 className="ib-h3">Deployments, pull requests and merge requests</h3>
+          <p className="ib-sub">IronBee verifies each preview deployment, pull request and merge request on its own infrastructure, and reports on the change, the deployment and in the console.</p>
           <ul className="ib-links">
             <li><a href="/github-action/get-started/getting-started"><span>Verify pull requests with the GitHub Action</span><span>→</span></a></li>
+            <li><a href="/gitlab-component/get-started/getting-started"><span>Verify merge requests with the GitLab component</span><span>→</span></a></li>
             <li><a href="/integrations/vercel"><span>Verify Vercel preview deployments</span><span>→</span></a></li>
             <li><a href="/integrations/netlify"><span>Verify Netlify deploy previews</span><span>→</span></a></li>
             <li><a href="/integrations/overview"><span>How integrations work</span><span>→</span></a></li>
@@ -107,8 +117,8 @@ cd your-project && ironbee install
   <section className="ib-split">
     <div className="ib-section-head">
       <p className="ib-eyebrow">Code review</p>
-      <h2 className="ib-h2">Review every pull request</h2>
-      <p className="ib-sub">Install the GitHub App, and every pull request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
+      <h2 className="ib-h2">Review every pull request and merge request</h2>
+      <p className="ib-sub">Install the GitHub App or connect your GitLab group, and every pull request or merge request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
     </div>
     <div className="ib-tiles">
       <a className="ib-tile" href="/code-review/overview">
@@ -191,12 +201,13 @@ cd your-project && ironbee install
     </div>
     <div className="ib-guides">
       <div>
-        <p className="ib-guide-title">GitHub Action</p>
+        <p className="ib-guide-title">GitHub Action and GitLab component</p>
         <ul className="ib-links">
           <li><a href="/github-action/concepts/verification-modes"><span>Platform and local verification</span><span>→</span></a></li>
           <li><a href="/github-action/guides/verifying-your-app"><span>Choose what to verify</span><span>→</span></a></li>
           <li><a href="/github-action/guides/comment-trigger"><span>Verify from a pull request comment</span><span>→</span></a></li>
-          <li><a href="/github-action/get-started/migrating"><span>Migrate from v1.0</span><span>→</span></a></li>
+          <li><a href="/gitlab-component/guides/running-in-ci"><span>Verify in GitLab CI/CD pipelines</span><span>→</span></a></li>
+          <li><a href="/gitlab-component/guides/verifying-your-app#docker-in-docker"><span>Docker-in-Docker on GitLab runners</span><span>→</span></a></li>
         </ul>
       </div>
       <div>

@@ -39,7 +39,7 @@ A repository's page opens with **Review pull requests in this repository**:
 - **On:** every pull request in the repository gets a review and the **IronBee review** check.
 - **Off:** no review and no check for the repository, and [`@ironbee-ai review`](/code-review/on-github#commands) does nothing there.
 
-Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **Settings: 14 of 16 follow the account, 2 set here**. It links to **Account settings** and, when the repository sets something, offers **Reset all to account settings**. The switch itself isn't one of the 16 and no reset changes it.
+Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **Settings: 14 of 16 follow the account, 2 set here**. It links to **Account settings** and, when the repository sets something, offers **Reset all to account settings**. The switch itself isn't counted, and no reset changes it.
 
 A newly connected repository starts with review on, unless **Review new repositories automatically** is off for the account. A repository that was connected before keeps the switch it had.
 
@@ -54,7 +54,7 @@ When a review runs.
 
 | Setting | Options | Default | What it does |
 |---------|---------|---------|--------------|
-| **Review new repositories automatically** | On, Off | On | Account page only. When a GitHub repository is connected, IronBee starts reviewing its pull requests right away |
+| **Review new repositories automatically** | On, Off | On | Account page only. When a repository is connected, IronBee starts reviewing its pull requests right away |
 | **Automatic reviews** | **On open and every push**, **On open only**, **Only when asked** | **On open and every push** | When a review starts by itself. Reopening a pull request and marking a draft ready count as opening it. `@ironbee-ai review` and **Review now** always work |
 | **Draft pull requests** | **Wait until ready**, **Review drafts too** | **Wait until ready** | Whether a draft gets automatic reviews |
 | **Pull requests opened by bots** | **Not reviewed**, **Reviewed** | **Not reviewed** | Dependency updates and the like. A person's push to a bot's pull request is reviewed either way |
@@ -102,8 +102,8 @@ What a review writes.
 
 | Setting | Options | Default | What it does |
 |---------|---------|---------|--------------|
-| **Comment on findings of** | **Every severity**, **Medium and above**, **High and above** | **Every severity** | A finding below the threshold is listed in the review body with no comment of its own, and never blocks a merge |
-| **Pull request summary** | On, Off | On | A walkthrough of the change for the approver |
+| **Comment on findings of** | **Every severity**, **Medium and above**, **High and above** | **Every severity** | A finding below the threshold is listed in the review body with no comment of its own, and never blocks a merge. So is a low-severity finding that reads as a minor remark, at any threshold |
+| **Pull request summary** | On, Off | On | A walkthrough of the change for the approver: its impact, what changed, where to look. See [the summary](/code-review/on-github#the-pull-request-summary) |
 | **Suggested fixes** | On, Off | On | A ready-to-apply fix where one is clear |
 | **Diagrams** | On, Off | On | A small diagram on a finding about order, state or a path. See [the examples](/code-review/on-github#diagrams) |
 | **Comment language** | English, Deutsch, Español, Français, Português (Brasil), 日本語, 한국어, 中文, Türkçe, Русский | English | The language of comments, the review body, the summary and answers. Code, names and suggested fixes stay as they are. The [code wiki](/console/code-wiki-settings#defaults) is written in it too while its **Wiki language** is **Same as the comment language** |
@@ -116,9 +116,10 @@ Merging, replies and what the team teaches the review.
 
 | Setting | Options | Default | What it does |
 |---------|---------|---------|--------------|
-| **Block merging when** | **Medium or worse open**, **High or worse open**, **Never** | **Medium or worse open** | The **IronBee review** check doesn't pass while a finding at or above that severity is open. It holds a merge only where branch protection requires that check |
+| **Block merging when** | **Medium or worse open**, **High or worse open**, **Never** | **Medium or worse open** | IronBee's check doesn't pass while a finding at or above that severity is open. It holds a merge only where the repository requires it: branch protection on GitHub, or on GitLab, **Pipelines must succeed** with **Block merges** on. On GitLab, a merge request set to auto-merge also stops at a blocking result, unless this is **Never** |
+| **Block merges** | On, Off | Off | GitLab repositories only; the account page calls it **Block merges on GitLab**. Off: on a project with **Pipelines must succeed**, IronBee writes no new status and releases the statuses it has open, and an earlier red status of IronBee's clears at the next review, a reply under a finding, a resolved thread or a push. On: there, a running review or verification and a blocking result hold the merge. **Block merging when** on **Never** lifts a review's result, not the hold while the review runs. See [Merges on GitLab](/code-review/on-gitlab#merges) |
 | **Answer questions** | On, Off | On | A question asked in a reply under an IronBee comment gets an answer |
-| **Close fixed threads** | **Resolve the thread**, **Reply only** | **Resolve the thread** | When a later review finds a finding fixed, IronBee says so in its thread. **Resolve the thread** also resolves it |
+| **Close fixed threads** | **Resolve the thread**, **Reply only** | **Resolve the thread** | When a later review finds a finding fixed, IronBee says so in its thread. **Resolve the thread** also resolves it. With **Resolve the thread**, a finding a person [turned down](/code-review/on-github#replies-reactions-and-resolved-threads) has its thread resolved too |
 | **Learn from the team's reactions** | On, Off | On | A thumbs-down, a thread resolved without a fix or a hidden comment tells the review not to say this again |
 
 See [Code review on GitHub](/code-review/on-github) for the check, the comments and the threads.
@@ -158,7 +159,7 @@ No entry can be blank or hold control or text-direction characters. When a list 
 The bar under the form counts what you changed, such as **2 unsaved changes**, and says when the change applies:
 
 - **Account page:** at the next pull request of every repository that follows the account.
-- **Repository page:** at the repository's next pull request event. A check already on GitHub keeps its result until the next review.
+- **Repository page:** at the repository's next pull request event. A check on GitHub, or a pipeline status on GitLab, keeps its result until the next review.
 
 Click **Save changes** to save, or **Discard** to drop your changes. If the console refuses a value, the row says why and its section's tab is marked. If you leave the page with unsaved changes, **Leave without saving?** asks you to **Leave** or **Keep editing**.
 
@@ -170,7 +171,7 @@ Everyone in the account can see code review settings, at both levels. Only owner
 
 An archived project's page is read-only for everyone, and says **This project is archived. Unarchive it to change its code review settings.** See [Project settings](/console/project-settings).
 
-Code review runs on GitHub repositories only. On a Vercel, Netlify or CLI project, the page says **Code review runs on GitHub repositories**, with **Install the GitHub App** and a link to **Integrations**.
+Code review runs on GitHub and GitLab repositories only. On a Vercel, Netlify or CLI project, the page says **Code review runs on GitHub and GitLab repositories**: connect the project's repository through the GitHub App or a GitLab group, and its pull requests are reviewed from the next one on. **Open integrations** leads to setting it up.
 
 ---
 

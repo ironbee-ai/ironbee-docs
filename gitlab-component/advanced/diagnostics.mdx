@@ -1,0 +1,102 @@
+---
+title: Diagnostics for the GitLab component
+sidebarTitle: Diagnostics
+description: Find out why a GitLab component run didn't behave as expected, from the plan in the job log to the report banners.
+---
+
+When a run doesn't behave as expected, start with the lines the component writes at the top of its job log, then the report.
+
+---
+
+## Read the plan
+
+The component's first real step, **Resolve the verification plan**, logs:
+- **the mode and why it was picked**, for example: auto, the repository is public, so the platform can check it out
+- **the target**: a deployed URL, or the port of an app on the runner
+- **the `timeout:` the job needs**, as "This configuration needs timeout: of at least 85m on the job that runs it." Set at least that much on the job. When the job's own timeout is lower, the component also warns
+
+With the plan, the component warns about inputs that don't apply to the mode it runs in, and about conflicts such as a port in `app_url` that differs from `app_port`. A warning means a setting was ignored, not that the run failed. Errors and warnings start with `ERROR:` and `WARNING:`.
+
+---
+
+## Verbose logging
+
+Set `verbose: 'true'` to log each tool call with its arguments, the tool responses, the prompt and the verdict details:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      app_url: https://preview.example.com
+      verbose: 'true'
+```
+
+---
+
+## Common problems
+
+| What you see | Why | What to do |
+|--------------|-----|------------|
+| The job doesn't run in a merge request pipeline, or a push runs two pipelines | The project's `workflow:rules` or the job's redeclared `rules:` leave it out, or the project runs both branch and merge request pipelines | Use the `workflow:rules` from [One pipeline per push](/gitlab-component/guides/running-in-ci#one-pipeline-per-push) |
+| `ironbee_api_key is required` in a merge request pipeline | `IRONBEE_API_KEY` is a protected variable, and the branch isn't protected | Clear **Protect variable** on the CI/CD variable |
+| An input value fails the run and names the input | A `true`/`false` input got another value | Use `true`/`false`, `1`/`0`, `yes`/`no` or `on`/`off`, quoted |
+| The run stops at the plan with "no target" | Neither `app_url` nor `app_start_command` with `app_port` is set | Add a target. See [Verifying your application](/gitlab-component/guides/verifying-your-app) |
+| The run fails before verifying, on a `401` or `403` | The deployment is protected, and the reachability request before the run sends no headers | Verify on the runner. See [Protected deployments](/gitlab-component/guides/verifying-your-app#protected-deployments) |
+| The report says the run could not read the repository | A private or internal project whose group isn't connected to IronBee | [Connect the group](/integrations/gitlab) and cover the project, or set `ironbee_bind_repository: 'false'` |
+| **No verification ran** with `PROJECT_ARCHIVED` | The project is archived in the console | Unarchive it, or report to another project with `ironbee_project` |
+| **No verification ran** with `TARGET_OUTSIDE_ENVIRONMENT_DOMAIN` | `app_url` is outside the Domain properties of the environment in `ironbee_environment` | Point `app_url` at a host inside those domains, or change the environment's domains |
+| **No verification ran** with `ENVIRONMENT_DOMAIN_NO_TUNNEL` | An app on the runner was verified against an environment that has Domain properties | Verify a deployed URL instead, or use an environment without domains |
+| The run fails with "speaks TLS" | The app on the runner answers with HTTPS | Serve the app over plain HTTP on `app_port` |
+| The app runs under Docker-in-Docker, but the tunnel finds nothing | `app_url` points at `localhost`, while the app publishes its ports on the `docker` service | Set `app_url` to the service's host, such as `http://docker:4000`. See [Docker-in-Docker](/gitlab-component/guides/verifying-your-app#docker-in-docker) |
+| **No verification ran** with `CREDITS_EXHAUSTED` | The team's credits for the month are used up | See [Credit usage](/console/usage) |
+| "a tunnel target needs app_start_command to start the application" | On IronBee, `app_url` names a host on the runner, but there's no start command | Set `app_start_command`, or point `app_url` at a deployed URL |
+| "app_restart_command failed; the re-verification would run against the pre-fix application" | The restart command exited with an error after a fix | Fix the command; it has to replace the running app and return |
+| "ironbee_extra_config is not valid JSON" | The input isn't a JSON object | Fix the JSON |
+| "fix is enabled but no Anthropic credential is set" | `verification_apply_fix` is on, the default, on IronBee without an Anthropic credential | Expected when you only want a report. Add a credential to have findings fixed, or set `verification_apply_fix: 'false'` to silence it |
+| **No verdict** | The verification ended without a verdict | Open the run in the console from the report link to see how it ended |
+| The job is cancelled partway, and the run reads as a platform failure | The job's `timeout:` is lower than the run needs | Raise it to the value the plan logs |
+| **Session ended early** (on your runner) | The agent reached `claude_code_max_turns`, or stopped on an error | Raise `claude_code_max_turns`, or narrow the work with `verification_prompt` |
+| "no gitlab_token is set, so the report stays in the job log" | No `GITLAB_TOKEN` variable | Add a [project access token](/gitlab-component/get-started/getting-started#the-gitlab-token) |
+| "there are fixes to push to `<branch>`, and no gitlab_token to push them with", or "there are fixes to open a merge request for, and no gitlab_token to push them with" | A fix was made, but there's no token to push it | Add the token. On IronBee, `verification_apply_fix: 'false'` also turns fixing off; on your runner the agent always fixes |
+| "could not push the fixes to `<branch>`, the branch may have moved since this run checked it out" | Someone pushed to the merge request branch during the run | Run the pipeline again on the new head |
+| The push of a fix or the report note is refused | The token lacks the `api` or `write_repository` scope, or the **Developer** role | Create the token again with both scopes and the **Developer** role or above |
+| "local verification needs anthropic_api_key or claude_code_oauth_token" | `verification_mode: local` with no Anthropic credential | Add `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`, or verify on IronBee |
+| "headers apply to a deployed URL only" | `app_headers` or `app_secret_headers` with an app on the runner, on IronBee | Remove the headers, or verify a deployed URL |
+| The setup step fails on your runner with `working_directory` set | Local mode needs `working_directory` at the repository's root for now | Verify the subdirectory on IronBee with `verification_mode: platform` |
+| A merge request with a fix can't merge | The fix commit's pipeline was skipped, and the project requires **Pipelines must succeed** | Run a new pipeline, or turn on **Skipped pipelines are considered successful** |
+| A merge request from a fork is refused at the plan | A fork's pipeline must not run with your project's credentials | Expected. Verify after merging, or with a manual pipeline on the branch |
+
+---
+
+## Look at a run from your machine
+
+With the [IronBee CLI](/cli/get-started/getting-started) signed in to the same account, check a run on IronBee by its `IRONBEE_JOB_ID`:
+
+```bash
+ironbee verify status <job_id>
+```
+
+See [Verification jobs](/cli/guides/verification-jobs).
+
+---
+
+## Session logs from your runner
+
+When the verification ran on your runner, the job's [evidence artifacts](/gitlab-component/advanced/evidence#runs-on-your-runner) include the session's own logs under `sessions/<id>/`:
+- `verdict.json` holds the final verdict.
+- `actions.jsonl` is the full event log.
+
+If the agent stopped early, the report shows a banner with a collapsible block: the reason, the turns, errors and any blocked tool calls.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Evidence" icon="folder" href="/gitlab-component/advanced/evidence">
+    Where the recording, screenshots, logs and report are.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

@@ -5,7 +5,7 @@ description: A project's identity, its verification type, and archiving.
 
 Every project has a **Settings** tab, after **Scenarios**. Its menu has two parts:
 
-- **Project**: **General**, covered on this page, [Code review](/code-review/settings) and [Code wiki](/console/code-wiki-settings#repository-settings). On a project that isn't a GitHub repository, the last two show how to connect it with the GitHub App.
+- **Project**: **General**, covered on this page, [Code review](/code-review/settings) and [Code wiki](/console/code-wiki-settings#repository-settings). On a project that isn't a GitHub or GitLab repository, the last two say so, with **Open integrations** to connect its repository through the GitHub App or a GitLab group.
 - **Configuration**: [Environments](/console/environments), [Variables](/console/variables) and [Secrets](/console/secrets).
 
 Everyone in the account can read a project's settings. Only owners and admins can change them.
@@ -21,8 +21,8 @@ The **General** page shows how the project is identified:
 
 | Field | What it shows |
 |-------|---------------|
-| **Name** | The project's name: the repository, Vercel project, Netlify site or CLI name |
-| **Source** | Where the project comes from: GitHub, Vercel, Netlify or CLI |
+| **Name** | The project's name: the repository, Vercel project, Netlify site or CLI name. A GitLab repository is named by its path after the group, with `/` as `-`, such as `platform-backend` |
+| **Source** | Where the project comes from: GitHub, GitLab, Vercel, Netlify or CLI |
 | **Project id** | The project's id, with a copy button |
 | **Created** | When the project was created |
 
@@ -36,11 +36,11 @@ The **Verification** card sets what a deployment of this project starts:
 - **API** calls the deployment over HTTP and checks the responses against its contract.
 - **None** starts nothing on a deployment until a type is set here.
 
-Pick one and click **Save**. The change takes effect on the next deployment. A GitHub repository starts with **None**, and so does a Vercel project or Netlify site enabled with **None**.
+Pick one and click **Save**. The change takes effect on the next deployment. A GitHub or GitLab repository starts with **None**, and so does a Vercel project or Netlify site enabled with **None**.
 
 <Note>
-  - The type applies to deployments from Vercel and Netlify. Runs started from the GitHub Action, the API or the CLI name their own type, so on a CLI project the selection has no effect.
-  - If a project is **Not active**, the card says it isn't verified, and the type can't be changed. Click **Open Vercel integration** (or the Netlify or GitHub one) to enable it again. A GitHub repository also comes back when you add it to the App's repositories on GitHub again.
+  - The type applies to deployments from Vercel and Netlify. Runs started from the GitHub Action, the GitLab component, the API or the CLI name their own type, so on a CLI project the selection has no effect.
+  - If a project is **Not active**, the card says it isn't verified, and the type can't be changed. Click **Open Vercel integration** (or the Netlify, GitHub or GitLab one) to enable it again. A GitHub repository also comes back when you add it to the App's repositories on GitHub again.
 </Note>
 
 ---

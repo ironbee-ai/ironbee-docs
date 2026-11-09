@@ -1,0 +1,207 @@
+---
+title: Verifying your application in GitLab
+sidebarTitle: Verifying your application
+description: Choose what the GitLab component verifies, an app it starts on the runner, a Docker-in-Docker service or a deployed URL, and how to reach it.
+---
+
+Every run needs a target: the running application the verification exercises. You give the component one of two:
+
+- **An app on the runner.** The component starts your app during the job. IronBee reaches it through a reverse tunnel.
+- **A deployed URL.** Your app is already running at a public address, such as a review app or a preview deployment.
+
+Without a target, the run stops at the plan step, before verifying anything.
+
+---
+
+## An app on the runner
+
+Describe how your app is installed, built and started, and the port it listens on:
+
+| Input | Purpose | Example |
+|-------|---------|---------|
+| `app_install_command` | Install dependencies | `npm ci` |
+| `app_build_command` | Build the app | `npm run build` |
+| `app_start_command` | Start the app and keep it running | `npm run start` |
+| `app_port` | The port the app listens on | `'3000'` |
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      app_install_command: npm ci
+      app_build_command: npm run build
+      app_start_command: npm run start
+      app_port: '3000'
+```
+
+`app_port` is required with `app_start_command`. Instead of `app_port`, you can set a localhost URL with a port, such as `app_url: http://localhost:3000`. When both name a port, the one in `app_url` wins.
+
+**On IronBee**, the component runs the commands itself and waits for the port to accept connections, 60 seconds by default (`app_wait_seconds`). IronBee then verifies the app through a reverse tunnel, and the app's output is saved as `app.log` in the job's [artifacts](/gitlab-component/advanced/evidence).
+
+<Note>
+  The tunnel carries plain HTTP. Serve the app over HTTP on that port; a port that answers with TLS fails the run immediately.
+</Note>
+
+**On your runner**, the agent runs these commands itself as part of the verification. It's told the commands and `app_url`, not `app_port`, so set `app_url: http://localhost:3000` to tell it where the app answers.
+
+The five commands reach bash as you wrote them: GitLab doesn't expand them, and bash expands them when they run. So `npm start -- --port ${PORT:-3000}` keeps its default.
+
+### Which URLs count as on the runner
+
+An `app_url` whose host IronBee can't reach from outside is treated as an app on the runner. On IronBee, it's reached through the tunnel. These hosts count:
+- `localhost`, and any name ending in `.localhost`
+- a loopback or private IPv4 address: `127.x`, `0.x`, `10.x`, `172.16.x` to `172.31.x`, `192.168.x`, and link-local `169.254.x`
+- an IPv6 loopback (`::1`), unspecified (`::`), link-local (`fe80::/10`) or unique local (`fc00::/7`) address
+- a name without a dot, such as `docker`, a service container or a Docker Compose service
+
+Any other host is verified as a deployed URL. On IronBee, a URL on the runner still needs `app_start_command`: the component starts the app itself before the tunnel opens. The tunnel connects to the port on the runner's own loopback address. When `app_url` names another host, such as `http://docker:4000`, the component bridges `127.0.0.1:4000` to that host once the app answers there.
+
+### Apps started through Docker Compose or a service
+
+When the verification runs on IronBee and a fix is made, the component restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again, without the install and build commands. That's right only when the start command runs the app itself, from the source the fix changed.
+
+When the command hands off to Docker Compose, a process manager or a service, set two more inputs:
+
+```yaml
+      app_start_command: docker compose up -d
+      app_restart_command: docker compose up -d --build
+      app_logs_command: docker compose logs --no-color --tail=2000
+      app_port: '3000'
+```
+
+- `app_restart_command` restarts the app with the fix. Without it, the re-verification would test the code from before the fix. It runs to the end before the re-verification starts, and the component doesn't stop the app it started first, so use a command that replaces the running app and returns, such as `docker compose up -d --build`.
+- `app_logs_command` prints the app's own logs into the job's artifacts, as `app-service-logs.txt`. Without it, the artifacts hold only the output of the command that started the app.
+
+### Docker-in-Docker
+
+On GitLab's shared runners, an app started with Docker Compose runs on a `docker:dind` service and publishes its ports on that service, not on the job's loopback. On IronBee, point `app_url` at the service's host, and the component bridges the port to `127.0.0.1`, where the tunnel looks for it:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: platform
+      app_start_command: 'docker-compose up -d --build'
+      app_restart_command: 'docker-compose up -d --build'
+      app_logs_command: 'docker-compose logs --no-color --tail=2000'
+      app_url: 'http://docker:4000'
+      app_wait_seconds: '300'
+
+ironbee-verify:
+  timeout: 150m
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TLS_VERIFY: '1'
+    DOCKER_CERT_PATH: /certs/client
+  # The job's image is node:22-bookworm, which has no docker CLI.
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq docker.io docker-compose >/dev/null
+```
+
+The Debian packages install Compose as the `docker-compose` command, so the example uses it rather than `docker compose`. `app_wait_seconds` is how long both the bridge and the CLI wait for the app to answer. The plan logs the `timeout:` the job needs; with fixing on, an app on the runner can be verified twice.
+
+---
+
+## A deployed URL
+
+Point `app_url` at a public address:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      app_url: https://preview.example.com
+```
+
+The install, build and start commands aren't used. Before the verification starts, the component requests the URL once, without any headers:
+- A `401` or `403` answer fails the run, because the verification would only see a login page.
+- A URL that doesn't answer from the runner logs a warning, because IronBee may reach addresses your runner can't.
+
+A deployed URL isn't re-verified after a fix: the deployment still serves the code that was deployed. The loop closes when the fix is deployed and the pipeline runs again.
+
+### Protected deployments
+
+A preview behind deployment protection or SSO that answers `401` or `403` fails the reachability request before the run. That request sends no headers, so a bypass in `app_secret_headers` or in a project secret doesn't get it through. For such a preview, verify on the runner: leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
+
+When the protection answers that request with `200` or a redirect instead, the verification itself can get in with:
+
+- **A secret header.** If the protection can be bypassed with a header, pass it in `app_secret_headers`, one `Name: value` per line, from a masked CI/CD variable. IronBee encrypts the value and never returns it.
+
+  ```yaml
+      app_url: https://preview.example.com
+      app_secret_headers: "x-vercel-protection-bypass: $VERCEL_BYPASS_SECRET"
+  ```
+
+- **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access).
+
+An SSO redirect that answers `200` with a login page can't be told apart from your app by its status code. In that case, the verdict describes the login page.
+
+For headers that aren't secret, such as `x-e2e: 1`, use `app_headers`. Their values are stored as plain text.
+
+---
+
+## Environments
+
+On IronBee, `ironbee_environment` names the project environment the run is against, such as `staging` or `preview`. The run uses that environment's variables and secrets on top of the project-wide ones.
+
+```yaml
+      ironbee_environment: staging
+```
+
+- A name the project hasn't seen yet is created by the first run that uses it.
+- When the input is empty, the run uses the job's own `environment:` (`CI_ENVIRONMENT_NAME`). Redeclare the job with `action: verify`, so each run isn't recorded as a deployment:
+
+  ```yaml
+  ironbee-verify:
+    environment: { name: staging, action: verify }
+  ```
+
+- With neither, the run uses the project-wide variables and secrets only.
+- When the environment has **Domain** properties, `app_url` must be inside those domains. Runs on the runner are refused for that environment, because a tunnel has no domain.
+
+---
+
+## Monorepos
+
+Point the component at a subdirectory with `working_directory`. The commands, the configuration and the verification run relative to it:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: platform
+      working_directory: packages/web-app
+      app_install_command: npm ci
+      app_start_command: npm run dev
+      app_port: '5173'
+```
+
+On your runner, `working_directory` has to be the repository's root for now: in a subdirectory, the setup step fails. Verify a subdirectory on IronBee, as above.
+
+---
+
+## Focusing the verification
+
+The verification decides what to check from the changeset. Add instructions when you want specific coverage:
+
+```yaml
+      verification_prompt: 'Focus on the checkout flow and payment form validation'
+```
+
+`verification_prompt` reaches the verification in both modes. A literal `$` in it is written `$$`, because GitLab expands variables in every input except the five commands and `claude_code_args`. When the verification runs on your runner, you can also set `claude_code_max_turns` (default `'100'`) and `claude_code_model`.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in GitLab CI/CD" icon="git-branch" href="/gitlab-component/guides/running-in-ci">
+    Pipeline sources, fixes and the report.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

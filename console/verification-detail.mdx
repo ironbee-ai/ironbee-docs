@@ -4,7 +4,7 @@ description: Follow a verification run live, replay its recording, and read its 
 keywords: ["recording", "screenshots", "network requests", "traces", "logs"]
 ---
 
-Every verification run has a **Verification Details** page. Open it by clicking a row in a project's [Verifications](/console/verifications) list, or by following the link in a GitHub check, a Vercel check, a Netlify deploy card or the GitHub Action's report.
+Every verification run has a **Verification Details** page. Open it by clicking a row in a project's [Verifications](/console/verifications) list, by following the link in a GitHub check, a GitLab pipeline status, a Vercel check, a Netlify deploy card or the GitHub Action's report, or with the **Open in IronBee** button on the run's comment on a pull request or merge request. The same button on an inline comment opens the page on that comment's [finding](#findings).
 
 The page brings together everything the run did:
 - what it saw, in the recording and screenshots
@@ -19,12 +19,12 @@ The page brings together everything the run did:
 
 ## Header
 
-The breadcrumbs lead back to the project. Next to the title, runs tied to a GitHub repository link to the commit and the pull request. On the right, a badge shows the result, or the status while the run has no result yet.
+The breadcrumbs lead back to the project. Next to the title, runs tied to a GitHub or GitLab repository link to the commit and the pull request or merge request. On the right, a badge shows the result, or the status while the run has no result yet.
 
 The strip below the title summarizes the run:
 
 - The result, the run's name, and its type, trigger and attempt, for example **Web · Vercel · attempt 1**.
-- The [callbacks](/console/verifications#callbacks) that report the result back to Vercel, GitHub or Netlify.
+- The [callbacks](/console/verifications#callbacks) that report the result back to Vercel, GitHub, GitLab or Netlify.
 - **Run details**, the info icon, which opens the run's facts: its name and id, project, trigger, type, attempts, duration, credits, why it ended, when it was created, started and ended, any error, and the delivery of each callback.
 - The duration, the credits, and how many actions, requests and screenshots the run recorded.
 
@@ -89,12 +89,37 @@ The result panel shows the verdict of the run:
 
 | Tab | What it shows |
 |-----|---------------|
-| **Summary** | What the run verified and what it concluded |
+| **Summary** | What the run verified and what it concluded. A verdict without one says "This verdict carries no summary. Its checks and issues are in the other tabs." |
 | **Checks** | Each check the run made, and its outcome |
+| **Findings** | Each problem the run found, worst first, with its suggested fix. See [Findings](#findings) |
 | **Issues** | Each problem found, with where it happened and the evidence behind it |
 | **Suggested fixes** | The changes the run suggests for the issues. They are suggestions, not applied fixes |
 
+When the verdict lists findings, the tabs are **Summary**, **Checks** and **Findings**, and a link to **Issues** or **Suggested fixes** opens **Findings**. The count on **Findings** takes the color of the worst finding's severity. Otherwise, as on a passing run, an older run or a CLI verification cycle, the tabs are **Summary**, **Checks**, **Issues** and **Suggested fixes**.
+
 You can resize the panel, collapse it, or swap it with the recording.
+
+### Findings
+
+**Findings** lists what the run found, worst first. Each row shows:
+
+- **The severity**: **Critical**, **High**, **Medium** or **Low**.
+- **The category**: **Correctness**, **Security**, or **Docs, names and tests**, the same categories as [code review](/code-review/pull-requests#a-findings-row).
+- **The file and line**, such as `src/cart.ts:42`.
+- **The title**: what goes wrong.
+
+When IronBee published the run on the pull request, **Summary on GitHub** at the top of the list opens the run's comment, and **Open thread on GitHub** beside a finding opens its inline comment. A finding whose line isn't in the pull request's diff has no inline comment, so it has no link. On GitLab, the links read **Summary on GitLab** and **Open thread on GitLab**. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request) and [What appears on the merge request](/integrations/gitlab#what-appears-on-the-merge-request).
+
+Click a row to open the finding in a dialog. Its first line gives the severity, the category, and the file and line, linked to the file at the verified commit, followed by the commit, such as **at a1b2c3d**. **Open thread on GitHub** opens the finding's inline comment. Under it, the finding's title is the dialog's title.
+
+The sections follow in this order. A section with nothing to show is left out.
+
+1. **Happens when**, **Then**, **Seen** and **Impact**: what triggers the problem, what happens next, what the run saw, and what it costs.
+2. The diff: for a run tied to a pull request, the part of the pull request's diff that holds the finding's line, with the lines the run quoted marked.
+3. **Suggested fix**, open by default: a note on what to change, and the code to put in. When the code replaces lines around the finding, the heading says which, such as **replaces lines 12–14**, and if the pull request's diff holds those lines, the code shows as a diff against them. Otherwise the code shows on its own under the file's path, or under **The code to put in** when the finding names no file.
+4. **Where this rests**: other places in the code the finding relies on, each linked to the file at the verified commit.
+
+The footer shows where the finding stands in the list, such as **3 of 5**, and the buttons **Previous** and **Next**. **Next** names the next finding's file and line, such as **Next: src/cart.ts:42**. Press `←` and `→` to move, and `Esc` to close.
 
 ---
 
@@ -124,7 +149,7 @@ All three follow the playback: they show what happened up to the selected step o
 
 ## Share a view
 
-The page's URL keeps the selected tab, panel, step and screenshot. Copy it to point a teammate at the exact moment you are looking at.
+The page's URL keeps the selected tab, panel, step and screenshot, and the [finding](#findings) open in the dialog. Copy it to point a teammate at the exact moment you are looking at.
 
 ---
 

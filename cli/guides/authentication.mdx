@@ -6,7 +6,7 @@ description: "How the CLI authenticates with IronBee: OAuth tokens for interacti
 IronBee accepts two kinds of credentials, and the CLI picks the right one for you:
 
 - **OAuth access token:** the default for interactive use. `ironbee login` mints a personal token tied to your user and account. Each token is individually named and revocable.
-- **API key:** an account-scoped key for machine-to-machine (M2M) use, such as the [GitHub Action](/github-action/get-started/getting-started) or any CI pipeline where no browser is available.
+- **API key:** an account-scoped key for machine-to-machine (M2M) use, such as the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started) or any CI pipeline where no browser is available.
 
 Both are first-class and supported. The difference is who they identify: an OAuth token is *you*, an API key is *the account*.
 
@@ -46,7 +46,7 @@ To free a slot, open the [OAuth Tokens page](/console/access-tokens), revoke a t
 
 ## API keys (CI and automation)
 
-For automation that runs without a browser, such as CI jobs, scheduled jobs and scripts, use an account API key instead. The [GitHub Action](/github-action/get-started/getting-started) takes it as its `ironbee_api_key` input. Supply it through the `IRONBEE_SERVICE_API_KEY` environment variable (the legacy `IRONBEE_API_KEY` still works) so it never lands in a committed file:
+For automation that runs without a browser, such as CI jobs, scheduled jobs and scripts, use an account API key instead. The [GitHub Action](/github-action/get-started/getting-started) and the [GitLab component](/gitlab-component/get-started/getting-started) take it as their `ironbee_api_key` input. Supply it through the `IRONBEE_SERVICE_API_KEY` environment variable (the legacy `IRONBEE_API_KEY` still works) so it never lands in a committed file:
 
 ```bash
 export IRONBEE_SERVICE_API_KEY=<your-account-api-key>
@@ -75,6 +75,7 @@ If both are present, the OAuth token takes priority on the wire. In practice:
 |-----------|-----------|---------------|
 | You, working locally | OAuth token | `ironbee login` |
 | GitHub Action | API key | `IRONBEE_API_KEY` repository secret, passed as the `ironbee_api_key` input |
+| GitLab component | API key | `IRONBEE_API_KEY` masked CI/CD variable, which the `ironbee_api_key` input reads by default |
 | Other CI | API key | `IRONBEE_SERVICE_API_KEY` secret |
 | Scripted or headless machine | API key | `IRONBEE_SERVICE_API_KEY` or `service.apiKey` |
 

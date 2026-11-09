@@ -16,7 +16,7 @@ Most behavior is controlled by the action's [dedicated inputs](/github-action/co
 Pass a JSON object as a string. It's merged on top of the configuration the action generates, so you only list the keys you want to change:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -29,7 +29,7 @@ Pass a JSON object as a string. It's merged on top of the configuration the acti
 
 Any key from the IronBee CLI configuration is accepted. See the [CLI configuration reference](/cli/configuration/configuration) for the full set.
 
-During the run, the action writes its own `.ironbee/config.json`, so a configuration file committed to your repository isn't used. The action restores your file when the run ends.
+During the run, the action writes its own `.ironbee/config.json`, so a configuration file committed to your repository isn't used. With `ironbee_exclude_files` on, the default, the action restores your file when the run ends.
 
 ---
 
@@ -38,7 +38,7 @@ During the run, the action writes its own `.ironbee/config.json`, so a configura
 The [local-mode platforms](/github-action/guides/verification-platforms) are served by one `ironbee-devtools` MCP server. Pass extra environment variables to it under `ironbeeDevTools.env`:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

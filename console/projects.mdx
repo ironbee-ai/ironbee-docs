@@ -8,8 +8,9 @@ description: Every project in your account, with its code reviews, verification 
 A project is one of:
 
 - a **GitHub** repository. Installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project
+- a **GitLab** repository. In a [connected GitLab group](/integrations/gitlab), each repository you pick becomes a project, named by its path after the group with `/` as `-`: `acme/platform/backend` is `platform-backend`
 - a **Vercel** project or a **Netlify** site that an owner or admin enabled from [Integrations](/integrations/overview)
-- a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a github.com repository reports to that repository's GitHub project instead
+- a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a github.com or gitlab.com repository reports to that repository's GitHub or GitLab project instead
 
 Click a project to open its **Code review** tab. Its other tabs are [Code wiki](/console/code-wiki), [Verifications](/console/verifications), [Scenarios](/console/scenarios) and [Settings](/console/project-settings).
 
@@ -19,7 +20,7 @@ Click a project to open its **Code review** tab. Its other tabs are [Code wiki](
 
 A project that's no longer enabled on its provider is listed last, under the **Not active** band. Its card says **Deployments are not verified** and has a **Settings** button.
 
-- For a Vercel project or a Netlify site, enable it again from the provider's integration.
+- For a Vercel project, a Netlify site or a GitLab repository, enable it again from the provider's integration.
 - For a GitHub repository, enable it again from the GitHub integration, or add the repository back to the App on GitHub if it left the App's repositories.
 
 <img className="ib-shot ib-shot-light" src="/images/console/projects/projects-bands-light.png" alt="Projects page in card view with a GitHub project, then the Not active band with a Netlify project whose card says Deployments are not verified" />
@@ -45,19 +46,20 @@ The date filter in the page header sets the window every number on the page cove
 
 Each project card shows:
 
-- **The header**: the provider's logo, the project's name and where it lives. A GitHub project shows its repository, such as **GitHub · acme/shop**. A Vercel or Netlify project shows its verification type, such as **Vercel · Web**. On the right, the card shows when the project was last active, when it was created if it hasn't run yet, or **nothing in this window**. The menu offers **Project settings** and, for a GitHub project, **Open on GitHub**.
+- **The header**: the provider's logo, the project's name and where it lives. A GitHub or GitLab project shows its repository, such as **GitHub · acme/shop** or **GitLab · acme/platform/backend**. A Vercel or Netlify project shows its verification type, such as **Vercel · Web**. On the right, the card shows when the project was last active, when it was created if it hasn't run yet, or **nothing in this window**. The menu offers **Project settings** and, for a GitHub or GitLab project, **Open on GitHub** or **Open on GitLab**.
 - **Code review**: the open findings, with critical and high named, such as **1 critical · 1 high open**, or **No open findings**. While a review runs, the row says **Reviewing #N**. The bars below count the pull requests reviewed in each slice of the window, by their state now: open, merged and closed. Click the row to open the project's pull requests, or click a bar to open the pull requests of that slice.
 - **Verifications**: the pass rate and the latest result, such as **92% · passed 2h ago**, or **Running** with the run's name while a run is in progress. The bars below count the runs in each slice of the window, with how many failed. Click the row to open the project's verifications, or click a bar to open that run or the runs in that slice.
-- **Code wiki**: how many pages the [wiki](/console/code-wiki) has and when it was built, such as **38 pages · built 3h ago**, or where it stands: **Writing the first version**, **Refreshing**, **Not built yet** or **Off**.
+- **Code wiki**: how many pages the [wiki](/console/code-wiki) has and when it was built, such as **38 pages · built 3h ago**, or where it stands: **Writing the first version**, **Refreshing**, **Not built yet**, **The first version failed** or **Off**. When a later rebuild failed, the line adds **refresh failed** after the page count.
 
 Some rows say why there's nothing to show yet:
 
 | Row | It says | What it means |
 |-----|---------|---------------|
 | **Code review** | **Off**, with **Turn on** for owners and admins | Code review is turned off for this repository |
-| **Code review**, **Code wiki** | **GitHub only** | Code review and the code wiki run on GitHub repositories. Vercel, Netlify and CLI projects don't have them |
-| **Code review** | **Not connected**, with **Install the GitHub App** | The repository isn't covered by the IronBee GitHub App |
-| **Verifications** | **Not set up**, with **Install the IronBee Action** | A GitHub repository that hasn't run a verification yet. If you've already added the action, the next pull request starts the first run |
+| **Code review**, **Code wiki** | **GitHub and GitLab only**, with **Connect GitHub or GitLab** | Code review and the code wiki run on GitHub and GitLab repositories. Vercel, Netlify and CLI projects don't have them |
+| **Code review** | **Not connected**, with **Install the GitHub App** or **Connect its GitLab group** | The repository isn't covered by the IronBee GitHub App, or its GitLab group isn't connected |
+| **Code wiki** | **Needs the GitHub App**, or **Not connected** on a GitLab project | The same: the repository isn't covered by the GitHub App, or its GitLab group isn't connected |
+| **Verifications** | **Not set up**, with **Install the IronBee Action** or **Install the IronBee Component** | A GitHub or GitLab repository that hasn't run a verification yet. If you've already added the GitHub Action or the GitLab component, the next pull request or merge request starts the first run |
 | **Verifications** | **No runs yet** | A Vercel, Netlify or CLI project that hasn't run yet. The card says what starts its first run, such as **The next Vercel deployment starts a web verification of shop-web.** |
 
 ---
@@ -74,7 +76,7 @@ The list has these columns:
 | Column | What it shows |
 |--------|---------------|
 | **Project** | The project name |
-| **Provider** | GitHub, Vercel, Netlify or CLI, with the verification type below it |
+| **Provider** | GitHub, GitLab, Vercel, Netlify or CLI, with the verification type below it |
 | **Code Review** | Open pull requests and their critical and high findings, such as **3 open · 1 high**, or **Reviewing #N**, **No open pull requests** or **Off** |
 | **Runs** | The run strip: the window laid out as a time axis. Click a slot to open its runs |
 | **Success Rate** | The share of verifications that passed |
@@ -101,7 +103,7 @@ For queries across sessions, verifications, fixes and more, use [Search](/consol
 
 ## Create a project
 
-GitHub repositories don't need this step: installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project.
+GitHub and GitLab repositories don't need this step. Installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project, and in a [connected GitLab group](/integrations/gitlab#repositories-and-projects), each repository you pick becomes one. If you've connected a GitLab group but picked no repository yet, the empty **Projects** page says so and offers **Pick repositories**, which opens **Integrations > GitLab**.
 
 To add a Vercel project or a Netlify site, an owner or admin clicks **New project** in the page header:
 

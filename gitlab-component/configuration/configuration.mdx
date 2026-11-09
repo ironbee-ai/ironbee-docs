@@ -1,0 +1,198 @@
+---
+title: GitLab component configuration
+sidebarTitle: Configuration
+description: Every input and output of the IronBee GitLab component, with defaults, the mode each one applies to, and how to extend its job.
+---
+
+This page lists every input and output of `gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1`. The **Mode** column shows where an input applies:
+- **Both** means both modes.
+- **Platform** means on IronBee.
+- **Local** means on your runner.
+
+The component logs a warning when you set an input that doesn't apply to the mode it runs in. See [Platform and local verification](/gitlab-component/concepts/verification-modes).
+
+Only `ironbee_api_key` is required, and it reads the `IRONBEE_API_KEY` CI/CD variable by default. Every run also needs a target: `app_url`, or `app_start_command` with `app_port`. See [Verifying your application](/gitlab-component/guides/verifying-your-app).
+
+---
+
+## Input values
+
+- Every input is a string, numbers and `true`/`false` included, so quote them: `app_port: '3000'`. GitLab refuses an input whose value isn't a string.
+- Any input except `stage` and `job_name` can be a `$VARIABLE`, which GitLab expands when the job starts. A literal `$` is written `$$`.
+- The five commands (`app_install_command`, `app_build_command`, `app_start_command`, `app_restart_command`, `app_logs_command`) and `claude_code_args` are the exception: GitLab leaves them as written, and bash expands them when they run. A `$MY_COMMAND` there expands into words; a command holding `&&`, a pipe or quotes needs `eval "$MY_COMMAND"`.
+- Every `true`/`false` input also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any other value fails the run and names the input.
+
+---
+
+## Where the verification runs
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `verification_mode` | `auto` | Both | `auto`, `platform` or `local`. `auto` picks platform for a public project, and local for a private or internal one when an Anthropic credential is set |
+
+---
+
+## IronBee account and endpoints
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `ironbee_api_key` | `$IRONBEE_API_KEY` | Both | Your IronBee account API key, from **Settings > Account** in the console. Store it as a masked CI/CD variable |
+| `ironbee_cli_version` | `latest` | Both | IronBee CLI version to install, such as `0.52.0`. Empty means `latest` |
+| `ironbee_project` | Empty | Platform | The project the run reports to. Empty derives it from the git remote |
+| `ironbee_environment` | Empty | Platform | The project environment the run is against, by name. Selects that environment's variables and secrets on top of the project-wide ones. A new name is created by the first run that uses it. Empty falls back to the job's own `environment:` (`CI_ENVIRONMENT_NAME`) |
+| `ironbee_api_url` | Empty | Platform | IronBee API base URL. Leave empty |
+| `ironbee_collector_url` | Empty | Both | IronBee collector URL. Leave empty. On IronBee, your app's commands get the resolved URL as `IRONBEE_COLLECTOR_URL`, with the key as `IRONBEE_API_KEY`. See [Your app's own telemetry](#your-apps-own-telemetry) |
+| `ironbee_console_url` | Empty | Both | Console hostname, without a scheme, used for links in the report. Empty derives it from the collector URL |
+
+---
+
+## The verification run on IronBee
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `ironbee_bind_repository` | `'true'` | Platform | Bind the run to the repository so it verifies the changeset. Set `'false'` to verify the running app without a checkout, for example a private project whose group isn't connected to IronBee |
+| `ironbee_job_timeout_minutes` | Empty | Platform | Timeout for the verification run on IronBee. Empty uses the default |
+
+---
+
+## DevTools platforms
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `ironbee_browser_devtools` | `'true'` | Local | Web UI, DOM, console, accessibility, screenshots, recording |
+| `ironbee_backend_devtools` | `'false'` | Local | HTTP, gRPC, GraphQL, WebSocket, databases, logs |
+| `ironbee_node_devtools` | `'false'` | Local | Node.js runtime: tracepoints, exceptions, variables, HTTP capture |
+| `ironbee_python_devtools` | `'false'` | Local | Python runtime through debugpy: tracepoints, exceptions, logs, thread dumps |
+| `ironbee_terminal_devtools` | `'false'` | Local | CLI, REPL and TUI programs through a pseudo-terminal. Gives the agent a shell on the runner |
+
+See [Local-mode platforms](/gitlab-component/guides/verification-platforms).
+
+---
+
+## IronBee configuration and commits
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `ironbee_extra_config` | Empty | Local | Raw IronBee CLI configuration as JSON, deep-merged into the generated `.ironbee/config.json`. Your keys win. See [Custom configuration](/gitlab-component/advanced/custom-configuration) |
+| `ironbee_exclude_files` | `'true'` | Both | Keep IronBee's generated `.claude/`, `.mcp.json` and `.gitignore` changes out of the commits the component makes. Set `'false'` to commit the setup it generated. `.ironbee/` is always left out |
+
+---
+
+## Claude Code
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `anthropic_api_key` | `$ANTHROPIC_API_KEY` | Local, and fixing in platform | Anthropic API key |
+| `claude_code_oauth_token` | `$CLAUDE_CODE_OAUTH_TOKEN` | Local, and fixing in platform | Claude Code OAuth token, instead of `anthropic_api_key`. Create one with `claude setup-token` |
+| `claude_code_cli_version` | `latest` | Local, and fixing in platform | Claude Code CLI version to install |
+| `claude_code_model` | Empty | Local | Claude model for the agent on your runner |
+| `claude_code_max_turns` | `'100'` | Local | Maximum conversation turns for the agent on your runner |
+| `claude_code_args` | Empty | Local | Additional Claude Code CLI arguments |
+
+A run on IronBee that only verifies needs no Anthropic credential.
+
+---
+
+## What to verify and what to do about it
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `verification_prompt` | Empty | Both | Additional instructions for the verification |
+| `verification_auto` | `'true'` | Both | Set `'false'` to verify only in a manual pipeline. Every other pipeline, schedules included, then does nothing. See [Turning automatic verification off](/gitlab-component/guides/running-in-ci#turning-automatic-verification-off) |
+| `verification_apply_fix` | `'true'` | Platform | Fix the issues a failing verification on IronBee reports, on your runner. Needs an Anthropic credential; without one the run verifies and reports only. On your runner, the agent always fixes what it finds, whatever this input says |
+
+The component has no `verification_command` input: GitLab CI/CD has no pipeline trigger for a merge request note.
+
+---
+
+## Application under test
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `app_install_command` | Empty | Both | Command that installs dependencies, such as `npm ci` |
+| `app_build_command` | Empty | Both | Command that builds the app, such as `npm run build` |
+| `app_start_command` | Empty | Both | Command that starts the app, such as `npm run start` |
+| `app_url` | Empty | Both | A public URL is verified as a deployment. A `localhost`, private-network or dotless host, such as `docker`, means the app runs on the runner. See [Which URLs count as on the runner](/gitlab-component/guides/verifying-your-app#which-urls-count-as-on-the-runner) |
+| `app_port` | Empty | Both | Port the app listens on, for an app on the runner. Required for an app on the runner unless `app_url` names its port |
+| `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Needed when `app_start_command` hands off, such as `docker compose up -d --build` |
+| `app_logs_command` | Empty | Platform | Prints the app's own logs into the job's artifacts, such as `docker compose logs --no-color --tail=2000` |
+| `app_wait_seconds` | Empty | Platform | How long to wait for the app to accept connections. Empty waits 60 seconds |
+| `app_headers` | Empty | Platform | Request headers for a deployed URL, one `Name: value` per line. Non-secret values only |
+| `app_secret_headers` | Empty | Platform | Secret request headers, such as a deployment protection bypass, one `Name: value` per line, from a masked CI/CD variable. Encrypted and never returned |
+
+---
+
+## GitLab and general behavior
+
+| Input | Default | Mode | Description |
+|-------|---------|------|-------------|
+| `gitlab_token` | `$GITLAB_TOKEN` | Both | GitLab token for the report note, the fix commit and the fix merge request. See [The GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token) |
+| `working_directory` | `.` | Both | Directory the verification runs in |
+| `verbose` | `'false'` | Both | Log each tool call with its arguments, the tool responses, the prompt and the verdict details |
+
+---
+
+## The job itself
+
+The component adds one job. These inputs place it:
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `stage` | `test` | The stage the job runs in |
+| `job_name` | `ironbee-verify` | The job's name, and the name you redeclare to extend it |
+| `image` | `node:22-bookworm` | The image the job runs in. It needs Node 22, bash, git, curl and apt-get |
+
+Anything else, such as a `timeout:`, `services:`, `environment:`, `tags:` or `rules:`, goes on a job of the same name in your own `.gitlab-ci.yml`. GitLab merges it into the component's job:
+
+```yaml
+ironbee-verify:
+  timeout: 2h
+  # Becomes ironbee_environment when that input is empty.
+  # `action: verify` keeps each run from being recorded as a deployment.
+  environment: { name: staging, action: verify }
+  tags: [docker]
+  services:
+    - postgres:16
+```
+
+### Your app's own telemetry
+
+When the component starts your app for a run on IronBee, your app's install, build, start and restart commands run with `IRONBEE_COLLECTOR_URL` (the collector the run reports to) and `IRONBEE_API_KEY` in their environment. An app whose OpenTelemetry exporter reads them ships its traces and logs into the verification run, next to the rest of its evidence. Nothing is written to disk for it.
+
+### Credentials in the job
+
+GitLab puts every CI/CD variable in the environment of everything a job starts. The component takes its own inputs back out of the environment, together with `IRONBEE_API_KEY`, `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `GITLAB_TOKEN`, and gives each step only what it needs. A credential you keep under another variable name is still visible to every process in the job, your app included.
+
+---
+
+## Outputs
+
+The job writes its outputs as a dotenv report. A later job that `needs: [ironbee-verify]`, or any job in a later stage, reads them as variables:
+
+| Variable | Description |
+|----------|-------------|
+| `IRONBEE_VERDICT` | `pass`, `fail`, `not_applicable` or `unknown` |
+| `IRONBEE_MODE` | Where the verification ran: `platform` or `local` |
+| `IRONBEE_JOB_ID` | The verification run's id. Platform mode only; after a fix, the re-verification's id |
+| `IRONBEE_JOB_URL` | Link to the run in the IronBee Console. Platform mode only, once the run has started |
+| `IRONBEE_ARTIFACTS_URL` | Where to browse the job's evidence artifacts. Local mode only; evidence from a run on IronBee is in the console |
+| `IRONBEE_PLATFORM_PUBLISHES` | `true` when IronBee publishes the run on the repository itself: the status on the commit, and on a merge request its comments and summary note. The component then posts no report note. `false` otherwise, and always in local mode |
+
+```yaml
+report-verdict:
+  stage: deploy
+  when: always
+  needs:
+    - job: ironbee-verify
+      optional: true
+  script:
+    - echo "Verdict $IRONBEE_VERDICT, run $IRONBEE_JOB_URL"
+```
+
+`when: always` runs it when the verification fails too, and `optional: true` keeps the pipeline valid where the component's job doesn't run, such as a push to a feature branch.
+
+---
+
+## Caching
+
+In local mode, the Playwright Chromium binaries are cached with the job's `cache:` to speed up later runs. GitLab caches only paths inside the project directory, so they live in `.cache/ms-playwright` there, and the component tells git to ignore that folder. Platform mode installs no browser.

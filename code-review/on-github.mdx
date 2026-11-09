@@ -50,17 +50,17 @@ The body opens with an **Open in IronBee** button, which opens the pull request 
 
 <img className="ib-mark ib-mark-button ib-mark-light" src="/images/code-review/badges/open-in-ironbee-light.svg" alt="Open in IronBee" noZoom /><img className="ib-mark ib-mark-button ib-mark-dark" src="/images/code-review/badges/open-in-ironbee-dark.svg" alt="Open in IronBee" noZoom />
 
-Then come:
+Under it comes the heading **IronBee Code Review**, the same in every **Comment language**, on every review: the first one, a follow-up, or one with no findings. Then come:
 
 - **The head line:** the number of findings on the commit, with the counts by severity, such as **3 findings** on `abc1234` · <img className="ib-mark ib-mark-light" src="/images/code-review/badges/severity-high-light.svg" alt="High" noZoom /><img className="ib-mark ib-mark-dark" src="/images/code-review/badges/severity-high-dark.svg" alt="High" noZoom /> 1 high · <img className="ib-mark ib-mark-light" src="/images/code-review/badges/severity-medium-light.svg" alt="Medium" noZoom /><img className="ib-mark ib-mark-dark" src="/images/code-review/badges/severity-medium-dark.svg" alt="Medium" noZoom /> 2 medium.
 - **Notes on how the review was made**, in italics. For example, how many files **Paths to ignore** left out ("_2 files left out by the repository's settings._"), that **Auto** depth read a large change at a lighter depth, or a **Partial review** note naming the files that weren't read in full, which the next review reads.
 - **The team's rules and memories** the review applied ("Applied 2 rules and 1 memory: ..."), and any of the repository's rule files it left out as invalid, with why. See [Rules and memories](/code-review/rules-and-memories).
 - **The findings table:** one row per finding, most severe first. The first column holds the severity and kind marks, **where** links to the line at the reviewed commit, and **what** links to the finding's inline comment. After 10 rows, the rest fold under **+N more**.
-- **Findings below the comment threshold:** the findings whose severity is under the **Comment on findings of** setting, folded under **N below the comment threshold**. They get no inline comment of their own and never hold a merge.
+- **Findings below the comment threshold:** the findings whose severity is under the **Comment on findings of** setting, folded under **N below the comment threshold**. A low finding that reads as a minor remark is listed there too, whatever that setting says. They get no inline comment of their own and never hold a merge.
 - **A diagram** of where the findings sit: the folders and files of the change, each finding colored by its severity. See [Diagrams](#diagrams).
 - **The feedback line:** "_👍 or 👎 on a comment teaches the next review._"
 
-When the review finds nothing, the body reads "No findings on `abc1234`."
+When the review finds nothing, the heading is followed by "No findings on `abc1234`."
 
 <img className="ib-shot" src="/images/code-review/github/review-body.png" alt="A review body on GitHub: the Open in IronBee button, the head line with 8 findings and their Low badges, a note on the review depth, and the findings table with severity and kind icons" />
 
@@ -191,12 +191,12 @@ With **Pull request summary** on, IronBee adds a section at the end of the pull 
 The section walks the approver through the change: an overview, **Why:**, and these parts, each shown only when it has something to say:
 
 - the change in numbers, by kind: behavior changes, refactoring, tests, docs, configuration, generated files, and files that weren't read
-- **Since the last summary**, after a push
+- **Impact**: what the change reaches, in fixed fields in this order: **UI**, **API**, **Data**, **Configuration**, **Dependencies** and **Breaking**. Each field holds up to three points and shows only when it has one
 - **What changed**, grouped by what each part of the change is about
 - **How it fits together**, with diagrams and a folded map of which changed files use which
 - **Where to look**, with the review's findings on each file
 - **A reading order**
-- **Not in this pull request**, such as "No test file is changed."
+- **What this change leaves out**, such as "No test file is changed."
 - **Files** and **Commits**, folded
 
 IronBee writes only inside its own section, between two hidden markers, and rewrites it in place when the pull request changes. The author's text around it is never changed. If the description is empty, the section is all there is.
@@ -205,9 +205,16 @@ IronBee writes only inside its own section, between two hidden markers, and rewr
 
 ## Follow-up reviews
 
-After the first review, a push (with **Automatic reviews** on **On open and every push**) or `@ironbee-ai review` starts a follow-up review. It reads what changed since the last review, not the whole pull request again. `@ironbee-ai full review` reads the whole pull request.
+After the first review, a push (with **Automatic reviews** on **On open and every push**) or `@ironbee-ai review` starts a follow-up review. It reads what changed since the last review, not the whole pull request again. When the author's changes since the last review make up more than 75% of the pull request's changed lines, it reads the whole diff again. `@ironbee-ai full review` reads the whole pull request.
 
-A follow-up review checks each earlier finding whose code changed, and replies on its thread:
+A follow-up review checks the earlier findings again:
+
+- **A finding whose file the push changed**, anywhere in that file, is read against the new code.
+- **Every other open finding** is read again too, against what the push changed, so a fix in another file can mark it addressed.
+
+A finding the push didn't touch closes only on a change the author pushed, never on what a merge from the base branch brought in. A push that only merges the base branch reads none of the untouched findings again.
+
+When something changed, IronBee replies on the finding's thread:
 
 | What IronBee finds | Its reply | The thread |
 |--------------------|-----------|------------|
@@ -219,7 +226,9 @@ A follow-up review checks each earlier finding whose code changed, and replies o
 
 With **Reply only**, IronBee replies and leaves the threads of fixed findings open for you to resolve. When the change makes a finding more or less severe, the reply ends with "Severity now 🟠 **High** (was medium)." IronBee replies only when something changed: a finding still at the same place gets no new reply.
 
-The follow-up review's body starts with what happened since the last review: "**Since `abc1234`** (now `def5678`): 1 new · 2 addressed · 0 no longer applicable · 3 still open". Then come the new findings, with their table, and a fold listing the earlier findings that are still open, linked to their threads. New findings don't repeat what an earlier review said, or what someone turned down.
+After you apply a fix IronBee asked for, the follow-up review doesn't post a new finding that only remarks on the trade-off the fix made, or that asks you to undo it. A defect the fix brings in is still reported.
+
+Under its heading, the follow-up review's body starts with what happened since the last review: "**Since `abc1234`** (now `def5678`): 1 new · 2 addressed · 0 no longer applicable · 3 still open". When people [turned findings down](#replies-reactions-and-resolved-threads), the line ends with a count such as "· 1 turned down". Then come the new findings, with their table, and a fold, **Still open from earlier reviews**, listing the earlier findings that are still open, linked to their threads. An earlier finding that was listed in the review body has no thread to reply on, so what changed about it is listed under **Earlier findings without a thread**, one line each. New findings don't repeat what an earlier review said, or what someone turned down.
 
 ---
 
@@ -243,7 +252,7 @@ The title says what the review found:
 | Part of the change wasn't read | The title ends with `· partial` |
 | After a person resolves one of IronBee's threads | `2 open · 2 low · 1 resolved by people` |
 
-The summary starts with the commit, the change's size, how long the review took and the credits it used. A follow-up review's summary adds what changed since the last review. Links lead to **The review** and **The pull request's summary**. The details below hold the review's findings table and, after a follow-up review, the findings it found addressed.
+The summary starts with the commit, the change's size, how long the review took and the credits it used. A follow-up review's summary adds what changed since the last review, such as "Since `abc1234`: 1 new · 2 addressed · 0 no longer applicable · 1 turned down · 3 still open", with the turned-down count only when there are some. Links lead to **The review** and **The pull request's summary**. The details below hold the review's findings table and, after a follow-up review, the findings it found addressed.
 
 ### Conclusions
 
@@ -256,7 +265,7 @@ The summary starts with the commit, the change's size, how long the review took 
 
 The **Action required** conclusion holds a merge only where the branch's protection rules require the **IronBee review** check. Without that, it's information only.
 
-Only open findings count toward the conclusion. A finding listed below the comment threshold never counts, and neither does a finding whose thread a person resolved. When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
+Only open findings count toward the conclusion. A finding listed below the comment threshold never counts, and neither does a finding whose thread a person resolved or that a person [turned down](#replies-reactions-and-resolved-threads). When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
 
 A neutral check never holds a merge. Its title names what happened:
 
@@ -284,7 +293,7 @@ Write a command in a comment on the pull request's **Conversation** tab, mention
 | `@ironbee-ai full review` | Reads the whole pull request again, even when nothing was pushed | "Reading the whole pull request again at `abc1234`." |
 | `@ironbee-ai pause` | Stops automatic reviews of this pull request. Asking still gets a review | "Paused: no automatic review of this pull request until `@ironbee-ai` resume. `@ironbee-ai` review still reviews it when asked." |
 | `@ironbee-ai resume` | Starts automatic reviews again | "Resumed: the next push is reviewed again." |
-| `@ironbee-ai retract` | Takes IronBee's review off the pull request: deletes its inline comments and its own comments, replaces each review body with "_(retracted)_", since GitHub keeps a submitted review, removes the summary section from the description, and sets the check to neutral | None. The check's summary reads "retracted" |
+| `@ironbee-ai retract` | Takes IronBee's review off the pull request: deletes its inline comments and its own comments, replaces each review body with "_(retracted)_", since GitHub keeps a submitted review, removes the summary section from the description, and sets the check to neutral. What a verification run posted on the pull request stays | None. The check's summary reads "retracted" |
 
 Only the pull request's author and people whose GitHub association with the repository is owner, member or collaborator can give commands. IronBee doesn't act on commands or questions from anyone else. `retract` needs one of those three associations: being the pull request's author isn't enough.
 
@@ -314,11 +323,13 @@ IronBee reads what people do with its comments. As with commands, only the pull 
 | What you do | What IronBee does | Setting |
 |-------------|-------------------|---------|
 | Reply under one of IronBee's inline comments with a question, or an argument against the finding | Answers on the thread right away, from the code at the newest commit. If you're right, it withdraws the finding and resolves the thread. Otherwise it says the finding stands, or that the code can't settle it. It answers up to three times on one thread, and not on a thread a person resolved or hid | **Answer questions** |
-| Reply that turns the finding down, such as "won't fix" or "intended" | At the next review, closes the finding without a reply. IronBee doesn't raise it again | Always |
-| Give an IronBee comment a thumbs-up or a thumbs-down | At the next review, a comment with more thumbs-down than thumbs-up is closed and not raised again, and later reviews learn from it. Heart, hooray and rocket count as a thumbs-up, confused as a thumbs-down | **Learn from the team's reactions** |
-| Hide an IronBee comment | At the next review, the comment is closed and not raised again, whatever the reason you chose. Hidden as spam, off-topic or a duplicate, it also teaches later reviews. Hidden as resolved or outdated, it doesn't | **Learn from the team's reactions** |
-| Resolve one of IronBee's threads | The finding no longer counts as open, IronBee [rechecks the check](#conclusions) right away, and later reviews don't raise it again. A thread resolved without a code change also teaches later reviews | **Block merging when** sets what the recheck concludes. Learning needs **Learn from the team's reactions** |
+| Reply that turns the finding down, such as "won't fix" or "intended" | At the next review, records the finding as turned down, without a reply. IronBee doesn't raise it again | Always |
+| Give an IronBee comment a thumbs-up or a thumbs-down | At the next review, a comment with more thumbs-down than thumbs-up is turned down and not raised again, and later reviews learn from it. Heart, hooray and rocket count as a thumbs-up, confused as a thumbs-down | **Learn from the team's reactions** |
+| Hide an IronBee comment | At the next review, the comment is turned down and not raised again, whatever the reason you chose. Hidden as spam, off-topic or a duplicate, it also teaches later reviews. Hidden as resolved or outdated, it doesn't | **Learn from the team's reactions** |
+| Resolve one of IronBee's threads | The finding no longer counts as open, and IronBee [rechecks the check](#conclusions) right away. At the next review, the finding is recorded as turned down, and later reviews don't raise it again. A thread resolved without a code change also teaches later reviews | **Block merging when** sets what the recheck concludes. Learning needs **Learn from the team's reactions** |
 | Mention `@ironbee-ai` with a question in the conversation | Answers in a reply | Always |
+
+A finding that's turned down gets no reply. It leaves the open counts and no longer holds a merge. With **Close fixed threads** on **Resolve the thread**, IronBee resolves its thread. In the console, it's listed under **Turned down**; see [Findings](/code-review/pull-requests#findings).
 
 With **Answer questions** off, IronBee doesn't answer replies under its comments. It still reads a reply that turns a finding down.
 

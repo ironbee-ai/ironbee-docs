@@ -1,0 +1,184 @@
+---
+title: Running in GitLab CI/CD
+description: How the IronBee GitLab component behaves on each pipeline source, what it reports back, and how to limit when it runs.
+keywords: ["GitLab CI", "merge request pipeline", "pipeline schedule", "workflow rules"]
+---
+
+The IronBee GitLab component adapts to the pipeline that runs it. The pipeline source (`CI_PIPELINE_SOURCE`) decides what gets verified and where a fix goes. The report and the job result work the same way on every source. This guide covers each one and what the component produces.
+
+The component adds one job, `ironbee-verify`, in the `test` stage. Its default `rules:` run it in exactly four kinds of pipeline: merge request pipelines, pushes to the default branch, schedules, and pipelines started by hand.
+
+---
+
+## Merge request
+
+The job runs in merge request pipelines (`merge_request_event`) by default.
+
+**What gets verified:** the whole merge request.
+
+**Fixes:** committed to the merge request's source branch.
+
+**Report:** a note on the merge request, updated in place on later runs, unless IronBee publishes the run on the merge request itself. See [The report](#the-report).
+
+This is the most common pipeline and the recommended starting point.
+
+### One pipeline per push
+
+If your project runs both branch and merge request pipelines, a push to a branch with an open merge request starts both. Keep it to one with `workflow:rules`:
+
+```yaml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+```
+
+The starter file the console writes includes this block.
+
+---
+
+## Push to the default branch
+
+The job runs on a push to the default branch (`push` with `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH`).
+
+**What gets verified:**
+- **On IronBee:** every commit in the push.
+- **On your runner:** the last commit against its parent.
+
+**Fixes:** committed to a new `ironbee/fix-<sha7>-<pipeline_id>` branch, with a merge request targeting the branch that was pushed. The fix merge request's description is the report.
+
+Use it alongside merge request pipelines to catch what broke after a merge.
+
+---
+
+## Scheduled and manual pipelines
+
+Create a pipeline schedule under **Build > Pipeline schedules**, for example `0 9 * * 1` for every Monday at 09:00 UTC. A pipeline started by hand from **Build > Pipelines > Run pipeline** (`web`), through the API (`api`) or with a trigger token (`trigger`) runs the job too.
+
+**What gets verified:**
+- **On IronBee:** the latest commit against its parent.
+- **On your runner:** the whole application.
+
+**Fixes:** committed to a new fix branch, with a merge request.
+
+A manual pipeline is useful to repeat a verification after a configuration change, or before a release.
+
+---
+
+## No comment command
+
+GitLab CI/CD has no pipeline trigger for a merge request note, so the GitHub Action's [`/ironbee-verify` comment](/github-action/guides/comment-trigger) has no equivalent in the component. To verify on demand, run a pipeline by hand.
+
+---
+
+## Pipeline summary
+
+| Pipeline source | What gets verified | Fixes go to |
+|-----------------|--------------------|-------------|
+| `merge_request_event` | The merge request | The merge request's source branch |
+| `push` to the default branch | On IronBee: the pushed commits. On your runner: the last commit | A new fix branch and merge request |
+| `schedule`, `web`, `api`, `trigger` | On IronBee: the latest commit. On your runner: the whole application | A new fix branch and merge request |
+
+Fixes need an Anthropic credential and a [GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token). On IronBee they also need `verification_apply_fix: 'true'`, the default; without an Anthropic credential, a run on IronBee verifies and reports only. On your runner, the agent always fixes what it finds, whatever `verification_apply_fix` says. A fix whose re-verification fails is not pushed.
+
+Fix commits end in `[skip ci]` and are pushed with `-o ci.skip`. GitLab starts a pipeline for every push, and the push option skips only a branch pipeline; a merge request pipeline is skipped only by `[skip ci]`. Together they keep a fix from verifying itself again.
+
+After a fix lands on a merge request branch, the merge request's latest pipeline is a skipped one. On a project with **Pipelines must succeed**, the merge request can merge only once a new pipeline passes, unless **Skipped pipelines are considered successful** is on in the project's merge settings.
+
+---
+
+## Changing when the job runs
+
+Redeclare the job's `rules:` in your own `.gitlab-ci.yml`. Redeclared `rules:` replace the component's, so list every pipeline you want. For example, to run on merge requests and schedules only:
+
+```yaml
+ironbee-verify:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+```
+
+If you set the `job_name` input, redeclare the job under that name instead.
+
+---
+
+## Turning automatic verification off
+
+To verify only when someone asks for it with a manual pipeline, turn off verification in every other pipeline: merge requests, pushes and schedules. You have two ways to do it.
+
+**In the job's `rules:`.** GitLab evaluates them when it creates the pipeline, so a skipped pipeline costs nothing: no runner minutes, no clone, no image pull.
+
+```yaml
+ironbee-verify:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "trigger"
+    - if: $IRONBEE_VERIFICATION_AUTO == "false"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+```
+
+The first rule keeps a manual pipeline running when the variable is `false`.
+
+**With the `verification_auto` input.** The component resolves to "nothing to do", every step after the plan is skipped, and the job ends green in seconds.
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_auto: $IRONBEE_VERIFICATION_AUTO   # 'false' switches it off
+```
+
+By the time the job's script starts, the runner has already pulled the image, cloned the repository, started the services and run your `before_script`. Use the `rules:` when the job does expensive setup, and the input otherwise. Neither stops a manual pipeline.
+
+---
+
+## The report
+
+On a merge request, the component posts the report as a merge request note, and updates the note from an earlier run instead of adding another. On a push, schedule or manual pipeline, the report becomes the description of the fix merge request.
+
+When the project's group is [connected to IronBee](/integrations/gitlab), IronBee publishes a run on IronBee on the merge request itself, with inline comments and a summary. The component then posts no note, and the `IRONBEE_PLATFORM_PUBLISHES` output is `true`.
+
+GitLab has no job summary. In every mode, the component prints the report in a collapsed **IronBee Verification Report** section of the job log, and saves it as `report.md` in the job's [artifacts](/gitlab-component/advanced/evidence).
+
+A run on IronBee reports:
+- the verdict and a link to the run in the IronBee Console
+- the summary, and the **Checks**, **Issues** and **Suggested fixes** from the verdict
+- after a fix, a link to the verification before the fix
+- a **No verification ran** or **No verdict** banner, with the reason, when the run couldn't produce a verdict
+
+A run on your runner reports:
+- the verdict, with the number of cycles when there was more than one
+- each verification cycle, with its checks, issues and fixes, and a link to that verification in the console
+- an early-exit banner, with a collapsible details block, when the agent stopped early (for example at `claude_code_max_turns`)
+- a link to browse the job's [evidence artifacts](/gitlab-component/advanced/evidence)
+
+Without a `GITLAB_TOKEN`, the report stays in the job log, and the component logs a warning.
+
+---
+
+## The job result
+
+The last step of the job fails it when the verification fails or ends without a verdict, so the job can hold a merge with **Pipelines must succeed**. The outputs are written as a dotenv report: a later job that `needs: [ironbee-verify]`, or any job in a later stage, reads `IRONBEE_VERDICT` (`pass`, `fail`, `not_applicable` or `unknown`) and the other [outputs](/gitlab-component/configuration/configuration#outputs) as variables.
+
+---
+
+## Forks
+
+A merge request from a fork is refused, because a pipeline of the fork's code must not run with your project's credentials. The component says so at the plan step.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verifying your application" icon="play" href="/gitlab-component/guides/verifying-your-app">
+    Choose the target: an app on the runner or a deployed URL.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

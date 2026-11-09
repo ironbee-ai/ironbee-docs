@@ -1,0 +1,82 @@
+---
+title: Evidence in GitLab
+sidebarTitle: Evidence
+description: Where the recording, screenshots, logs and report of each GitLab component run are, on IronBee and in the job's artifacts.
+---
+
+Every run keeps the evidence behind its verdict. Where you find it depends on where the verification ran.
+
+---
+
+## Runs on IronBee
+
+The evidence of a run on IronBee is in the IronBee Console:
+- the recording
+- screenshots
+- the actions the agent took
+- network requests, traces and logs
+
+Open it from the **View session in IronBee Console** link in the [report](/gitlab-component/guides/running-in-ci#the-report), from the `IRONBEE_JOB_URL` output, or from the project's **Verifications** tab. See [Verification detail](/console/verification-detail).
+
+---
+
+## The job's artifacts
+
+The job uploads one artifact archive, `ironbee-verification-evidence`, whether the job passes or fails. GitLab keeps it for 30 days. Browse it from the job's page, under **Job artifacts**. It holds:
+
+| File | When |
+|------|------|
+| `report.md` | Every run: the report, since GitLab has no job summary |
+| `app.log` | When the component started your app: the app's output |
+| `app-service-logs.txt` | When you set `app_logs_command`: the app's own logs |
+| The verification evidence | Local mode, when the run produced any. See below |
+
+Use the app logs when a verification fails because the app itself stopped or errored.
+
+### Runs on your runner
+
+A run on your runner records to the IronBee Console and also puts its evidence in the artifact:
+
+```
+cycle-1/
+  screenshots/
+  recordings/
+cycle-2/
+  screenshots/
+  recordings/
+claude-output.log
+ironbee-devtools-mcp.log
+sessions/<id>/        # verdict.json, actions.jsonl
+```
+
+- Screenshots and recordings are grouped by verification cycle.
+- `claude-output.log` holds the agent's output.
+- `ironbee-devtools-mcp.log` is the DevTools server's log.
+
+The report links to the artifacts, and the `IRONBEE_ARTIFACTS_URL` output carries the link for later jobs.
+
+---
+
+## Console links
+
+The report's links point at `console.ironbee.ai`. To use a different host, set `ironbee_console_url` to the hostname, without a scheme:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      ironbee_console_url: 'console.example.com'
+```
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Running in GitLab CI/CD" icon="git-branch" href="/gitlab-component/guides/running-in-ci">
+    Pipeline sources, fixes and the report.
+  </Card>
+  <Card title="Diagnostics" icon="stethoscope" href="/gitlab-component/advanced/diagnostics">
+    Find out why a run didn't behave as expected.
+  </Card>
+</CardGroup>

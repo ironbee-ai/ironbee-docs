@@ -1,24 +1,25 @@
 ---
 title: Code review of pull requests
 sidebarTitle: Overview
-description: IronBee reviews every pull request in your GitHub repositories, comments on what it finds, and keeps each review in the console.
+description: IronBee reviews pull requests on GitHub and merge requests on GitLab, comments on what it finds, and keeps each review in the console.
 keywords: ["AI code review", "PR review", "pull request review bot"]
 ---
 
-IronBee reviews the pull requests of every GitHub repository the IronBee GitHub App covers. Each review reads the change against the rest of the repository and reports what it finds:
+IronBee reviews the pull requests of every GitHub repository the IronBee GitHub App covers, and the merge requests of every GitLab repository you pick in a connected group. Each review reads the change against the rest of the repository and reports what it finds:
 
-- **On GitHub:** a review with an inline comment for each finding, a summary added to the pull request description, and the **IronBee review** check.
+- **On GitHub:** a review with an inline comment for each finding, a summary added to the pull request description, and the **IronBee review** check. See [On the pull request](/code-review/on-github).
+- **On GitLab:** a review note with an inline thread for each finding, a summary note, and the **IronBee review** pipeline status. See [On the merge request](/code-review/on-gitlab).
 - **In the console:** every pull request with its reviews and findings, under **Code review** in the sidebar and on each project's **Code review** tab.
 
 To review a branch before you open a pull request, run `ironbee review` from the CLI. See [Code review of your local checkout](/cli/guides/code-review).
 
-The same App also gives each repository a [code wiki](#code-wiki), on the project's **Code wiki** tab next to **Code review**.
+The same connection also gives each repository a [code wiki](#code-wiki), on the project's **Code wiki** tab next to **Code review**.
 
 ---
 
 ## Turn it on
 
-Install the [IronBee GitHub App](/integrations/github) on your repositories. Every repository the App covers becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default. The repository's [code wiki](/console/code-wiki) starts at the same time, unless **Write a wiki for newly connected repositories** is off in [Code wiki settings](/console/code-wiki-settings).
+Install the [IronBee GitHub App](/integrations/github) on your repositories, or [connect a GitLab group](/integrations/gitlab) and pick its repositories. Every repository the App covers, and every GitLab repository you pick, becomes a project, and code review is on for it from the start: the account setting **Review new repositories automatically** is **On** by default. The repository's [code wiki](/console/code-wiki) starts at the same time, unless **Write a wiki for newly connected repositories** is off in [Code wiki settings](/console/code-wiki-settings).
 
 To stop reviewing one repository, an owner or admin opens the project's **Settings > Code review** and turns off **Review pull requests in this repository**. See [Code review settings](/code-review/settings).
 
@@ -30,9 +31,9 @@ To stop reviewing one repository, an owner or admin opens the project's **Settin
 ## What starts a review
 
 - **A pull request opens, or gets a new push.** **Automatic reviews** decides which of these start a review: **On open and every push** (the default), **On open only**, or **Only when asked**. By default, a draft waits until it's ready for review, and a pull request opened by a bot isn't reviewed.
-- **You ask for one.** Comment `@ironbee-ai review` on the pull request, or click **Review now** on its page in the console.
+- **You ask for one.** Comment `@ironbee-ai review` on the pull request, or on GitLab mention the group's IronBee account, `@ironbee-<group path> review`, or the short form `@ironbee review`. You can also click **Review now** on its page in the console, or **Review** on a pull request that [needs review](/code-review/pull-requests).
 
-A follow-up review reads only what changed since the last one, and answers the threads it opened before. See [Code review on GitHub](/code-review/on-github).
+A follow-up review reads only what changed since the last one, and answers the threads it opened before. See [Code review on GitHub](/code-review/on-github) and [Code review on GitLab](/code-review/on-gitlab).
 
 ---
 
@@ -53,7 +54,7 @@ Every finding has a severity, **Critical**, **High**, **Medium** or **Low**, and
 
 ## Code wiki
 
-IronBee writes a [code wiki](/console/code-wiki) of each repository the GitHub App covers, from its default branch: what the code does, where to start, how its parts depend on each other, and one page for each area, with every claim linked to the lines it comes from. It's written again as pull requests merge, and it uses no credits.
+IronBee writes a [code wiki](/console/code-wiki) of each repository the GitHub App covers or you pick in a GitLab group, from its default branch: what the code does, where to start, how its parts depend on each other, and one page for each area, with every claim linked to the lines it comes from. It's written again as pull requests merge, and it uses no credits.
 
 The wiki starts when the repository is connected, like code review, and you read it on the project's **Code wiki** tab. To choose which repositories get one and in which language, see [Code wiki settings](/console/code-wiki-settings).
 
@@ -61,7 +62,7 @@ The wiki starts when the repository is connected, like code review, and you read
 
 ## Credits
 
-Each review uses credits by the reviewable lines it reads and the depth it runs at. A review cancelled after it starts uses half; one that fails or has nothing new to read uses none. Answers to questions, replies, harvests after a merge, rechecks, retractions and the code wiki use none. When the team's credits run out, or what's left doesn't cover the review, the **IronBee review** check says so instead of reviewing. The rates are under **What a job costs** on [Credit usage](/console/usage#what-a-job-costs); each plan's credits are on [Pricing](/console/pricing).
+Each review uses credits by the reviewable lines it reads and the depth it runs at. A review cancelled after it starts uses half; one that fails or has nothing new to read uses none. Answers to questions, replies, harvests after a merge, rechecks, retractions and the code wiki use none. When the team's credits run out, or what's left doesn't cover the review, the **IronBee review** check or status says so instead of reviewing. On a GitLab project with **Pipelines must succeed** and **Block merges** off, where IronBee writes no status, a reply on the merge request says so. The rates are under **What a job costs** on [Credit usage](/console/usage#what-a-job-costs); each plan's credits are on [Pricing](/console/pricing).
 
 ---
 
@@ -70,6 +71,9 @@ Each review uses credits by the reviewable lines it reads and the depth it runs 
 <CardGroup cols={2}>
   <Card title="On the pull request" icon="github" href="/code-review/on-github">
     The review, its comments, the summary, the check and the commands.
+  </Card>
+  <Card title="On the merge request" icon="gitlab" href="/code-review/on-gitlab">
+    What differs on GitLab: the summary note, the pipeline status and merges.
   </Card>
   <Card title="Pull requests in the console" icon="git-pull-request" href="/code-review/pull-requests">
     Every pull request with its reviews and findings.

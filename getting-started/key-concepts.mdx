@@ -4,8 +4,8 @@ description: The terms you'll meet across IronBee, from projects and verificatio
 ---
 
 IronBee organizes everything around **projects**. A project collects three kinds of work:
-- **code reviews** of the pull requests in a GitHub repository
-- **verification runs**, which IronBee executes on its own infrastructure for your deployments and pull requests
+- **code reviews** of the pull requests in a GitHub repository, or the merge requests in a GitLab one
+- **verification runs**, which IronBee executes on its own infrastructure for your deployments, pull requests and merge requests
 - **sessions**, which your AI coding agent records with the IronBee CLI
 
 ```mermaid actions={false}
@@ -35,11 +35,12 @@ Your **account** is the workspace your team shares. It holds your projects, inte
 
 A **project** is what IronBee verifies:
 - a GitHub repository
+- a GitLab repository
 - a Vercel project
 - a Netlify site
 - a **CLI project**: a name your IronBee CLI reports under
 
-Owners and admins enable GitHub, Vercel and Netlify projects from [Integrations](/integrations/overview). CLI projects appear on their own the first time the CLI reports under a name. See [How IronBee identifies your project](/cli/concepts/projects).
+Owners and admins enable GitHub, GitLab, Vercel and Netlify projects from [Integrations](/integrations/overview). CLI projects appear on their own the first time the CLI reports under a name. See [How IronBee identifies your project](/cli/concepts/projects).
 
 Every project has a **verification type**:
 - **Web**: open the deployment in a browser and exercise it as a user would.
@@ -51,9 +52,9 @@ A project that is no longer enabled on its provider is **Not active**: it keeps 
 
 ## Code review
 
-A **code review** is IronBee's review of a pull request in a GitHub repository the IronBee GitHub App covers. It runs when the pull request opens or gets a push, or when you ask for one, and posts its comments, a summary and the **IronBee review** check on the pull request.
+A **code review** is IronBee's review of a pull request in a GitHub repository the IronBee GitHub App covers, or of a merge request in a repository of a [connected GitLab group](/integrations/gitlab). It runs when the pull request opens or gets a push, or when you ask for one, and posts its comments, a summary and the **IronBee review** check on the pull request. On GitLab, the check is a pipeline status.
 
-- A **finding** is one problem a review reports, with a severity (**Critical**, **High**, **Medium** or **Low**) and a category. A later review marks it addressed once a push fixes it.
+- A **finding** is one problem a review reports, with a severity (**Critical**, **High**, **Medium** or **Low**) and a category. A later review marks it addressed once a push fixes it. A failed verification run on IronBee reports findings the same way, and posts them on the pull request with suggested fixes.
 - A **rule** tells the review what must or must not happen in your code, and can raise a finding. A **memory** tells it what is true in a part of the code.
 
 Pull requests and their findings appear under **Code review** in the console and on the project's **Code review** tab. See [Code review of pull requests](/code-review/overview).
@@ -62,7 +63,7 @@ Pull requests and their findings appear under **Code review** in the console and
 
 ## Code wiki
 
-The **code wiki** is a set of pages IronBee writes about a GitHub repository from its default branch: an overview, where to start, the architecture, and one page for each area of the code. It's written again as pull requests merge, and every claim links to the lines it comes from. It's on the project's **Code wiki** tab. See [Code wiki of a repository](/console/code-wiki).
+The **code wiki** is a set of pages IronBee writes about a GitHub or GitLab repository from its default branch: an overview, where to start, the architecture, and one page for each area of the code. It's written again as pull requests merge, and every claim links to the lines it comes from. It's on the project's **Code wiki** tab. See [Code wiki of a repository](/console/code-wiki).
 
 ---
 
@@ -71,10 +72,10 @@ The **code wiki** is a set of pages IronBee writes about a GitHub repository fro
 A **verification run** is one verification of a change: a preview deployment, a push, a pull request, or a run you start yourself. An agent reads what changed, exercises it against your running app, and records a **result** with the evidence behind it.
 
 Every run has:
-- **A trigger**, what started it: **Vercel**, **Netlify**, **GitHub Actions**, **API**, **CLI** or **Console**.
+- **A trigger**, what started it: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **API**, **CLI** or **Console**.
 - **A status**, where it is: Created, Queued, Starting, Running, Completed, Failed, Cancelled.
 - **A result**, what it concluded: **Pass**, **Fail**, **Not applicable** (the change left nothing to verify), **Soft fail** or **Unknown**.
-- **The source** it verified, for runs tied to a GitHub repository: repository, branch, commit and pull request.
+- **The source** it verified, for runs tied to a GitHub or GitLab repository: repository, branch, commit and pull request.
 
 Runs appear on the project's [Verifications](/console/verifications) tab. While a run is in progress you can watch it live, and afterwards replay it on its [verification detail](/console/verification-detail) page.
 
@@ -158,7 +159,7 @@ IronBee doesn't take a pass at face value. Each platform requires certain tools 
 
 ## Fix
 
-A **fix** is a code change the agent makes after a failed verification. The agent then verifies again, up to a retry limit. The GitHub Action can fix findings too, and commit the fix for you.
+A **fix** is a code change the agent makes after a failed verification. The agent then verifies again, up to a retry limit. The GitHub Action and the GitLab component can fix findings too, and commit the fix for you.
 
 ---
 

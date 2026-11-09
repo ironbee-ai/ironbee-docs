@@ -1,21 +1,23 @@
 ---
 title: Migrate from v1.0
-description: What changed in v1.1.0 of the IronBee Action and how to update a v1.0 workflow.
+description: What changed in v1.1 of the IronBee Action, through v1.1.1, and how to update a v1.0 workflow.
 ---
 
 v1.1.0 of the IronBee Action adds a second place to run the verification, on IronBee, next to your runner. It also takes over the outcome of a run: it commits fixes, posts the report and passes or fails the job. A few inputs were renamed along the way. This page lists what to change in a workflow written for v1.0.
 
 <Warning>
-  The `v1` tag points to v1.1.0. A workflow that uses `ironbee-ai/ironbee-action@v1` already runs v1.1.0. Pin `@v1.1.0` and update the inputs below.
+  The `v1` tag points to v1.1.1. A workflow that uses `ironbee-ai/ironbee-action@v1` already runs it, so update the inputs below.
 </Warning>
 
 ---
 
-## Pin the version
+## The version
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
 ```
+
+`@v1` follows the latest release, so your workflow gets fixes without editing the file.
 
 ---
 
@@ -68,10 +70,19 @@ An Anthropic credential is now optional. It's needed only on your runner, or to 
 ## Changed defaults and outputs
 
 - `ironbee_exclude_files` now defaults to `true`. IronBee's generated files (`.ironbee/`, `.claude/`, `.mcp.json`, `.gitignore`) stay out of the commits the action makes.
-- `ironbee_collector_url` and `ironbee_console_url` are empty by default and derived by the CLI.
+- `ironbee_collector_url` and `ironbee_console_url` are empty by default. The CLI picks the collector, and the action derives the console host from it.
 - The `verdict` output can be `pass`, `fail`, `not_applicable` or `unknown`.
 - New outputs: `mode`, `job_id` and `job_url`. `artifacts_url` is set only when the verification ran on your runner.
 - Every `true`/`false` input also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any other value fails the run and names the input.
+
+---
+
+## What changed in v1.1.1
+
+v1.1.1 needs no change to a v1.1.0 workflow:
+
+- **No duplicate report.** When the repository is connected through the [IronBee GitHub App](/integrations/github), IronBee publishes a run on IronBee on the pull request itself. The action then posts no report comment, and keeps the report in the job summary. The new `platform_publishes` output says which happened.
+- **Your app's telemetry.** `app_start_command` and `app_restart_command` run with `IRONBEE_COLLECTOR_URL` and `IRONBEE_API_KEY` in their environment, so an app whose OpenTelemetry exporter reads them sends its traces and logs to the verification run.
 
 ---
 
@@ -87,8 +98,8 @@ An Anthropic credential is now optional. It's needed only on your runner, or to 
     max_turns: '30'
 ```
 
-```yaml v1.1.0
-- uses: ironbee-ai/ironbee-action@v1.1.0
+```yaml v1.1
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -108,7 +119,7 @@ An Anthropic credential is now optional. It's needed only on your runner, or to 
 
 <CardGroup cols={2}>
   <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
-    Every input and output in v1.1.0.
+    Every input and output in v1.
   </Card>
   <Card title="How it works" icon="lightbulb" href="/github-action/concepts/how-it-works">
     What happens in a run, from the plan to the report.

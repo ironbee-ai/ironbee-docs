@@ -58,9 +58,9 @@ You can enable more projects later: from **Integrations > Vercel**, expand the i
 
 ## Step 3: Install the GitHub App
 
-The Vercel integration knows the deployment; the GitHub App knows the code behind it. With both, the run verifies the pull request's changes, and the result also lands on the pull request as a check and a comment.
+The Vercel integration knows the deployment; the GitHub App knows the code behind it. With both, the run verifies the pull request's changes, and the result also lands on the pull request: a check, an inline comment on each finding in the diff, with a suggestion where one applies, and a comment with the result.
 
-In **Integrations**, select **GitHub** and click **Install the GitHub App**. Then follow [GitHub App](/integrations/github).
+In **Integrations**, select **GitHub** and click **Install the GitHub App**. Then follow [GitHub App](/integrations/github). For a project on GitLab, connect its group instead; the result then lands on the merge request. See [GitLab](/integrations/gitlab).
 
 ---
 
@@ -188,7 +188,7 @@ When a project leaves the installation's scope, or you uninstall the integration
 | No **IronBee Verification** check on the deployment | The project isn't enabled, its verification type is **None**, the deployment is a production build, or the project is outside the installation's scope. Check the project list under **Integrations > Vercel** |
 | The check concludes quickly, and the run shows the agent couldn't open the app | Preview access is missing. See [Preview access](#preview-access) |
 | Neutral, "IronBee could not complete this verification" | The repository is private and the GitHub App doesn't cover it, or the run hit an error. Check the GitHub App, then re-request the check |
-| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or no pull request was found for the commit. See [GitHub App](/integrations/github) |
+| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub or gitlab.com, the project's GitLab group isn't connected, or no pull request or merge request was found for the commit. See [GitHub App](/integrations/github) and [GitLab](/integrations/gitlab) |
 | "This install link is incomplete" during installation | The integration was installed on a personal Vercel account. Install it again on a team |
 | The connect page says the installation is no longer pending | It expired or was already completed. Install the integration again from your Vercel team |
 
@@ -198,7 +198,7 @@ When a project leaves the installation's scope, or you uninstall the integration
 
 <CardGroup cols={2}>
   <Card title="GitHub App" icon="/images/icons/github.svg" href="/integrations/github">
-    Repository access, the check on the commit, and the pull request comment.
+    Repository access, the check on the commit, and the comments on the pull request.
   </Card>
   <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
     The same verification on Netlify deploy previews.

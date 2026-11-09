@@ -9,7 +9,7 @@ With the `issue_comment` trigger, anyone you allow can start a verification by c
 /ironbee-verify
 ```
 
-The run verifies the whole pull request the comment is on. The run posts its report on the pull request. It fixes what it finds only when the comment asks for it.
+The run verifies the whole pull request the comment is on, and reports on the pull request. On IronBee, it fixes what it finds only when the comment asks for it.
 
 ---
 
@@ -28,7 +28,8 @@ permissions:
   issues: write
 
 concurrency:
-  group: ironbee-${{ github.event.issue.number }}
+  # Only a command shares the group, so another comment, IronBee's own included, never cancels a run.
+  group: ironbee-${{ github.event.issue.number }}-${{ startsWith(github.event.comment.body, '/ironbee-verify') }}
   cancel-in-progress: true
 
 jobs:
@@ -39,14 +40,14 @@ jobs:
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
       startsWith(github.event.comment.body, '/ironbee-verify')
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       # issue_comment runs on the default branch, so check out the pull request's head explicitly.
       - uses: actions/checkout@v4
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
           fetch-depth: 0
-      - uses: ironbee-ai/ironbee-action@v1.1.0
+      - uses: ironbee-ai/ironbee-action@v1
         with:
           ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -65,7 +66,13 @@ jobs:
 
 `issue_comment` runs on the default branch, and `github.sha` points there, not at the pull request. The `ref: refs/pull/<number>/head` checkout makes the runner build the pull request's code. The action reads the pull request itself to decide what to verify.
 
-You can add the `issue_comment` trigger to your existing workflow instead of a separate file. In that case, combine the condition with your other events, as shown in [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off).
+You can add the `issue_comment` trigger to your existing workflow instead of a separate file. In that case, combine the condition with your other events, as shown in [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off), and key the concurrency group so that a comment that isn't a command, IronBee's own comments included, never cancels a run:
+
+```yaml
+concurrency:
+  group: ironbee-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}-${{ github.event_name != 'issue_comment' || startsWith(github.event.comment.body, '/ironbee-verify') }}
+  cancel-in-progress: true
+```
 
 ---
 
@@ -97,17 +104,17 @@ To use a different command, set `verification_command` and change the `startsWit
 `--fix` asks the run to fix what it finds and commit the fix to the pull request branch.
 - It needs an Anthropic credential.
 - It is bounded by `verification_apply_fix`: a repository that turned fixing off can't turn it back on from a comment.
-- Without `--fix`, a comment run only verifies and reports.
+- Without `--fix`, a comment run on IronBee only verifies and reports. On your runner, the agent fixes what it finds either way.
 
 ---
 
 ## Following the run
 
-A comment run doesn't appear in the pull request's checks, so the action reacts to the comment instead:
+The workflow job of a comment run doesn't appear in the pull request's checks, so the action reacts to the comment instead:
 - an eyes reaction (`eyes`) when it accepts the command
 - when the run ends, a thumbs up (`+1`) for a pass, or a thumbs down (`-1`) for anything else: a fail, not applicable, no verdict or an error. The eyes reaction is then removed.
 
-The reactions come from the account behind `github_token`. A malformed command gets the reply instead of a reaction. The report is posted on the pull request as with any other run.
+The reactions come from the account behind `github_token`. A malformed command gets the reply instead of a reaction. The report reaches the pull request as with any other run. See [The report](/github-action/guides/running-in-ci#the-report).
 
 ---
 

@@ -1,0 +1,74 @@
+---
+title: Custom configuration in GitLab
+sidebarTitle: Custom configuration
+description: Override any IronBee CLI setting the GitLab component doesn't expose as a dedicated input, with ironbee_extra_config.
+---
+
+Most behavior is controlled by the component's [dedicated inputs](/gitlab-component/configuration/configuration). For anything else, `ironbee_extra_config` passes raw JSON that is deep-merged into the `.ironbee/config.json` the component generates. Your keys win over the defaults.
+
+<Note>
+  `ironbee_extra_config` applies to local mode only, when the verification runs on your runner. On IronBee, the component logs a warning and ignores it.
+</Note>
+
+---
+
+## How it works
+
+Pass a JSON object as a string. It's merged on top of the configuration the component generates, so you only list the keys you want to change:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: local
+      ironbee_extra_config: |
+        {
+          "maxRetries": 5
+        }
+```
+
+Any key from the IronBee CLI configuration is accepted. See the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+
+During the run, the component writes its own `.ironbee/config.json`, so a configuration file committed to your repository isn't used. With `ironbee_exclude_files` on, the default, the component restores your file when the run ends.
+
+---
+
+## Tuning the DevTools server
+
+The [local-mode platforms](/gitlab-component/guides/verification-platforms) are served by one `ironbee-devtools` MCP server. Pass extra environment variables to it under `ironbeeDevTools.env`:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: local
+      ironbee_extra_config: |
+        {
+          "ironbeeDevTools": { "env": { "BROWSER_HEADLESS_ENABLE": "true" } }
+        }
+```
+
+See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the keys the server accepts.
+
+<Note>
+  IronBee always sets its own invariants (the tool-name prefix, metadata flags and platform) last. They can't be overridden through `ironbee_extra_config`.
+</Note>
+
+---
+
+## Committing the generated setup
+
+The changes IronBee's setup makes to `.claude/`, `.mcp.json` and `.gitignore` stay out of the commits the component makes, because they're its working files rather than the change being verified. To let a run commit the setup it generated, for example to use it for local development, set `ironbee_exclude_files: 'false'`. `.ironbee/` stays out either way.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Local-mode platforms" icon="layers" href="/gitlab-component/guides/verification-platforms">
+    The platforms the DevTools server provides.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

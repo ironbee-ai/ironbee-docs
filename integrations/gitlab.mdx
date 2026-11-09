@@ -1,0 +1,175 @@
+---
+title: GitLab
+description: Connect a top-level GitLab group so IronBee can review your merge requests, write the code wiki, and report verification runs on the merge request.
+icon: "/images/icons/gitlab.svg"
+keywords: ["GitLab", "gitlab.com", "merge request", "GitLab group", "service account"]
+---
+
+The GitLab connection links a top-level group on gitlab.com to your IronBee account. IronBee works in the group through a service account it creates there, and never under your name. The connection gives IronBee:
+
+- **Code review.** IronBee reviews the merge requests of the repositories you pick, comments on what it finds and sets the **IronBee review** pipeline status, except where that status would hold merges you didn't ask it to; see [Merges](#merges). See [Code review on GitLab merge requests](/code-review/on-gitlab).
+- **Code wiki.** IronBee writes a wiki of each repository you pick, from its default branch, and keeps it current as merge requests merge. See [Code wiki of a repository](/console/code-wiki).
+- **Repository access.** A verification run checks out the commit it verifies. For a run from the GitLab component or `ironbee verify`, a private or internal project needs the connection for that; a public one doesn't. A Vercel or Netlify deployment of a project whose group isn't connected is verified on its URL alone, with nothing posted on GitLab.
+- **Results on the merge request.** A verification run with a verdict posts a pipeline status, inline comments on its findings and a summary note on the merge request. See [What appears on the merge request](#what-appears-on-the-merge-request).
+
+The [IronBee GitLab component](/gitlab-component/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same connection to check out private projects.
+
+<Note>
+  Only gitlab.com is supported. Self-managed GitLab and GitLab Dedicated aren't supported yet. GitLab isn't a way to sign in to IronBee: you connect a group from an IronBee account you're signed in to.
+</Note>
+
+---
+
+## Connect a group
+
+You need:
+- the **owner** or **admin** role in IronBee
+- the **Owner** role on a top-level group on gitlab.com. A personal namespace or a subgroup can't be connected; the projects of the group's subgroups are covered through the top-level group.
+
+Start from one of three places:
+- **Integrations** in the sidebar: select **GitLab** and click **Connect a GitLab group**, or **Connect another group** once one is connected.
+- The **Set up IronBee** wizard that opens on a new account: on **Connect your repositories**, pick the **GitLab** card and click **Connect GitLab**. See the [Quickstart](/getting-started/quickstart).
+- **Settings > Getting started**: the **GitLab** card's **Connect GitLab**, then **Open GitLab**. Back in IronBee, click **Pick repositories**.
+
+<Steps>
+  <Step title="Authorize on GitLab">
+    GitLab opens in the same tab and asks you to authorize the **IronBee AI** application. Authorize it with your GitLab account.
+  </Step>
+  <Step title="Pick the group">
+    GitLab sends you back to IronBee, which shows **Authorized on GitLab**, **Reading your groups** and **Connecting the group**. On **Connect GitLab to IronBee**, pick the **GitLab group** to connect, check the **IronBee account**, and click **Connect**.
+    - Only the top-level groups you own are listed. When there's exactly one, IronBee connects it without asking.
+    - A group already connected to this account reads "Already connected to this account. Connecting again renews its access."
+    - A group with an active connection on another IronBee account can't be picked. An owner or admin of that account has to disconnect it first.
+  </Step>
+  <Step title="Pick the repositories">
+    A new group makes no repository a project until you pick. Once the first sync has read the group, the console opens **Repositories of** your group. Choose **All repositories** or **Only selected repositories**, tick the ones to cover, and click **Review N repositories**. **Not now** leaves the group with nothing enabled; pick later from **Integrations > GitLab**. In the setup wizard, the same choice is the **Pick repositories** step.
+  </Step>
+</Steps>
+
+When you connect, IronBee creates a service account in the group as a Maintainer, which uses no seat, and puts a webhook on each repository you pick. The token GitLab gave the console for your account is revoked at the end of the connect.
+
+### If the connect fails
+
+| Message | What it means |
+|---------|---------------|
+| **GitLab was not authorized** | You declined on GitLab. Authorize IronBee with an Owner of the group |
+| **This connection is no longer pending** | The connect took more than 10 minutes, or you signed in again in between. Start again |
+| **Your IronBee sign-in was lost** | The connect can't finish without it, and nothing was connected. Sign in again, then start again |
+| **You own no top-level GitLab group** | You're not an Owner of any top-level group. **Create a group on GitLab** opens GitLab |
+| **This group belongs to another IronBee account** | A group connects to one account at a time. An owner or admin of that account can disconnect it |
+| **GitLab did not confirm you own this group** | Connecting takes the group's Owner role on GitLab and the owner or admin role in IronBee. Nothing was connected |
+| **Could not complete the connection** | Start again. If it keeps failing, try again in a few minutes |
+
+Each message has **Start again**.
+
+---
+
+## Repositories and projects
+
+**Integrations > GitLab** lists each connected group with its **Group**, **Enabled repositories**, **Status** (**Active** or **Suspended**) and when it was **Connected**. **Open on GitLab** opens the group. Expand a group to see its repositories.
+
+The group's **Scope** decides which repositories are projects:
+- **All repositories**: every repository of the group, and the ones added to it later. A new repository is enabled by itself within a few minutes.
+- **Only selected repositories**: only the ones you enable. A new repository waits until you enable it.
+
+**Enable all** and **Only selected** switch between the two. **Only selected** keeps what's already enabled. Projects in subgroups at any depth are listed; projects shared into the group and archived projects aren't.
+
+Each repository's row shows its **Verification type** and its **Status**. The row's actions menu holds **Enable**, **Edit type** (**Web**, **API** or **None**) and **Disable**.
+
+For each new project:
+- Code review starts, unless **Review new repositories automatically** is off. See [Code review settings](/code-review/settings).
+- The [code wiki](/console/code-wiki) starts, unless **Write a wiki for newly connected repositories** is off.
+- The verification type is **None**. Runs from the GitLab component and from `ironbee verify` in that repository report to the project and name their own type.
+- Merge requests that were already open are listed in the console as **Not reviewed**. They're reviewed when someone asks, or on their next push.
+
+**Project names.** A project is named by its path after the group, with `/` as `-`: `acme/shop` is `shop`, and `acme/platform/backend` is `platform-backend`. The integration's lists show the path with slashes. A project renamed on GitLab keeps its IronBee name.
+
+A repository that can't be added because another project of the account already has its name reads **Name taken by another project** in the pick step, and **Not a project yet: another project of this account has this name** under **Integrations > GitLab**. Rename or archive that project, then enable the repository again.
+
+<Note>
+  The pick decides what IronBee reviews and writes a wiki for. It doesn't limit what IronBee can read or verify: a run from the GitLab component or `ironbee verify` in any project of the connected group can check out its code and posts on its merge requests. The service account is a Maintainer of the whole group.
+</Note>
+
+---
+
+## What IronBee creates in the group
+
+| On GitLab | Why |
+|-----------|-----|
+| A service account named **IronBee**, with the username `ironbee-<group path>` (or `ironbee-<group path>-<group id>` if that name is taken), a Maintainer of the group | Posts reviews, replies and statuses, and resolves threads. It uses no seat |
+| A webhook on each enabled repository | Tells IronBee about merge requests, comments and pushes |
+| An **IronBee reader** account in a project, with the Reporter role | Created at the project's first job, to check out code for a run or a review. Each job's token is revoked when the job ends |
+
+On the Free tier, these accounts count toward the group's limit of service accounts.
+
+---
+
+## Mention IronBee
+
+Each group's row shows IronBee's **Mention**, usually `@ironbee-<group path>`, with a copy button. Use the value shown there: renaming the group doesn't rename the service account. Write it on a merge request to ask for a review. The short form `@ironbee` works too. The commands are the same as on GitHub; see [Commands](/code-review/on-gitlab#commands).
+
+---
+
+## What appears on the merge request
+
+For code review, see [Code review on GitLab merge requests](/code-review/on-gitlab).
+
+A verification run with a verdict, from the GitLab component on IronBee, `ironbee verify` or a Vercel or Netlify deployment of a project in the group, posts on the merge request through the connection:
+- the **IronBee Verification** pipeline status, or **IronBee Verification · API** for an API run, on the verified commit
+- an inline comment on each finding whose line is in the merge request's diff, with a suggested fix when there is one
+- one summary note per verification type, edited in place on later runs
+
+When IronBee posts the run itself, the GitLab component leaves its own report note out. See [The report](/gitlab-component/guides/running-in-ci#the-report).
+
+A cancelled run, or one with no verdict, gets the status only. So does a run bound to a commit that ended after a newer push to the merge request. A run bound to the merge request itself, as in the component's merge request pipelines, posts on the commit it checked out, and on the merge request while that commit is still its head; cancelled or without a verdict, it posts nothing.
+
+### Merges
+
+IronBee's statuses join the merge request's pipeline. On a project with **Pipelines must succeed**, the **Block merges** code review setting decides what they do:
+
+- **Off**, the default: IronBee writes no new status, and releases a status of its own that is running or failed at its next write on that commit: the next review, a reply under a finding, a resolved thread or a push. Its findings stay in the comments and the summary note. On a project with **All threads must be resolved**, IronBee's open inline threads still count like anyone else's.
+- **On**: a running review or verification, and a blocking result, hold the merge.
+
+See [Merges](/code-review/on-gitlab#merges).
+
+---
+
+## Managing the connection
+
+The group's row also shows when it last synced. IronBee syncs each group every few minutes: it finds new, renamed and removed projects, keeps the webhooks in place and renews its tokens. **Sync now** starts a sync right away. Only owners and admins can sync, change the scope, enable or disable repositories, reconnect or disconnect.
+
+**Suspended.** When GitLab stops accepting IronBee's tokens or service account, the row reads **This connection is suspended**, with the reason, such as "IronBee's service account is no longer a Maintainer of this group." Nothing is reviewed or verified until you reconnect: an Owner of the group clicks **Reconnect** and authorizes GitLab again. The webhooks and the repository pick stay as they are.
+
+**Disconnect.** GitLab tells IronBee nothing when access is removed on its side, so you disconnect from the console: click **Disconnect** on the group's row. IronBee takes its webhooks off the group's projects, removes its **IronBee reader** accounts from them, and revokes its own tokens. The repositories stop being reviewed and verified; their projects stay in IronBee with their history. The service account stays on the group, because it can't remove itself. An Owner can remove it from the group's service accounts page, which **Open the group's service accounts** opens, and a later connect reuses it if it's still there.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|--------------|
+| A run fails with "repo checkout failed", or the component's report says the run couldn't read the repository | The project is private or internal and its group isn't connected. Connect the group, or verify without the repository: `ironbee_bind_repository: 'false'` in the component, `--no-repo` with `ironbee verify` |
+| Mentioning `@ironbee-ai` does nothing | That's the GitHub mention. On GitLab, use the group's mention from **Integrations > GitLab**, or `@ironbee` |
+| **You own no top-level GitLab group** | You aren't an Owner of a top-level group on gitlab.com |
+| A repository is missing from the list | It was created moments ago, is shared into the group, or is archived. Click **Sync now** |
+| The connection reads **Suspended** | The service account was removed or demoted, or its tokens were revoked. **Reconnect** |
+| Merges aren't held by IronBee | **Block merges** is off, the default. See [Merges](/code-review/on-gitlab#merges) |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Code review on GitLab" icon="git-merge" href="/code-review/on-gitlab">
+    What IronBee posts on a merge request, the pipeline status and the commands.
+  </Card>
+  <Card title="GitLab component" icon="gitlab" href="/gitlab-component/get-started/getting-started">
+    Verify every merge request and push from your own pipeline.
+  </Card>
+  <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
+    Verify preview deployments as a Vercel deployment check.
+  </Card>
+  <Card title="Netlify" icon="/images/icons/netlify.svg" href="/integrations/netlify">
+    Verify deploy previews, with the result on the deploy page.
+  </Card>
+</CardGroup>

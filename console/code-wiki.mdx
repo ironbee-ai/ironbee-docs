@@ -1,11 +1,11 @@
 ---
 title: Code wiki of a repository
 sidebarTitle: Code wiki
-description: IronBee writes a wiki of each connected GitHub repository from its default branch and keeps it current as pull requests merge.
+description: IronBee writes a wiki of each connected GitHub or GitLab repository from its default branch and keeps it current as changes merge.
 keywords: ["repository documentation", "codebase wiki", "architecture overview", "onboarding docs"]
 ---
 
-IronBee writes a wiki of each GitHub repository the [IronBee GitHub App](/integrations/github) covers. It reads the repository's default branch and writes pages that explain the code: what the repository does, where to start, how its parts depend on each other, and one page for each area of the code. As pull requests merge, the wiki is written again. Writing the wiki uses no credits.
+IronBee writes a wiki of each GitHub repository the [IronBee GitHub App](/integrations/github) covers, and of each repository you pick in a [connected GitLab group](/integrations/gitlab). It reads the repository's default branch and writes pages that explain the code: what the repository does, where to start, how its parts depend on each other, and one page for each area of the code. As pull requests or merge requests merge, the wiki is written again. Writing the wiki uses no credits.
 
 The wiki is on each project's **Code wiki** tab, after **Code review**. The project's card on the [Projects](/console/projects) page shows how many pages it has and when it was written. To choose which repositories get a wiki and in which language, see [Code wiki settings](/console/code-wiki-settings).
 
@@ -14,19 +14,19 @@ The wiki is on each project's **Code wiki** tab, after **Code review**. The proj
 ## When the wiki is written
 
 - **When a repository is connected.** Its first wiki starts within a few minutes, unless **Write a wiki for newly connected repositories** is off. Until it's ready, the tab reads **Writing the first wiki**: "A repository takes 5 to 15 minutes to read. This page updates by itself."
-- **When the default branch moves.** A push to the default branch, such as a merged pull request, updates the wiki about ten minutes later. Pushes that land close together are written in one update.
+- **When the default branch moves.** A push to the default branch, such as a merged pull request or merge request, updates the wiki about ten minutes later. Pushes that land close together are written in one update.
 - **On a schedule.** **Rebuild from scratch** sets how often a run ignores what it read before and reads the whole repository again: **Daily**, **Weekly** or **Manual**, with no scheduled rebuild. A scheduled rebuild is skipped when nothing changed since the last one.
 - **When you click Refresh.** See [Refresh the wiki](#refresh-the-wiki).
 
 While the wiki is written again, the pages you're reading stay up, under a band that says **Writing the pages again** and which commit they're from. When several repositories in your account are written at the same time, a run can wait its turn: the band reads **Waiting to start**, with a time.
 
-Each page shows the commit it was written from and when, such as **from b317e16 · 11h ago**, and the language when it isn't English. Click the commit to open it on GitHub.
+Each page shows the commit it was written from and when, such as **from b317e16 · 11h ago**, and the language when it isn't English. Click the commit to open it on GitHub or GitLab.
 
 ---
 
 ## The pages
 
-The page list on the left groups the pages under **Start here**, **Architecture** and **Areas**. Type in **Filter pages** to narrow it. On a narrow screen, the list becomes a **Page** menu.
+The page list on the left groups the pages under **Start here**, **Architecture** and **Areas**. Type in **Filter pages** to narrow it. On a narrow screen, the list becomes a menu at the top that shows the current page's title.
 
 <img className="ib-shot ib-shot-light" src="/images/console/code-wiki/wiki-overview-light.png" alt="The Code wiki tab on the Overview page, with the page list, the At a glance counts and languages, and the start of the summary" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-wiki/wiki-overview-dark.png" alt="The Code wiki tab on the Overview page, with the page list, the At a glance counts and languages, and the start of the summary" />
@@ -83,9 +83,9 @@ The areas are decided again on every run. If an area you had open is gone, the t
 
 ## Sources
 
-The wiki says where each claim comes from. A small file mark after a sentence holds its sources, with a count when there's more than one. Hover over it, or tap it, to see each file and its lines, such as `L12–20`, at the commit the wiki was written from. Click a source to open it on GitHub.
+The wiki says where each claim comes from. A small file mark after a sentence holds its sources, with a count when there's more than one. Hover over it, or tap it, to see each file and its lines, such as `L12–20`, at the commit the wiki was written from. Click a source to open it on GitHub or GitLab.
 
-**On this page**, on the right, lists the page's sections. Under it, **Browse the code at** opens the repository at that commit, and on an area page, **Open this area on GitHub** opens the area's folder.
+**On this page**, on the right, lists the page's sections. Under it, **Browse the code at** opens the repository at that commit, and on an area page, **Open this area on GitHub** or **Open this area on GitLab** opens the area's folder.
 
 ---
 
@@ -105,8 +105,8 @@ You can refresh a repository's wiki once an hour. Within the hour, IronBee says 
 | **No wiki yet** | The first run starts within a few minutes of connecting the repository. Click **Refresh** to ask for it now |
 | **No wiki yet: the first run failed** | Click **Refresh** to try again |
 | **The repository wiki is off** | The wiki is turned off for this repository. Its pages are kept but not shown. **Turn on in Settings** opens [Code wiki settings](/console/code-wiki-settings#repositories) |
-| **No wiki for this project** | The repository isn't connected through the GitHub App, or the project is archived |
-| **The wiki is written for GitHub repositories** | A Vercel, Netlify or CLI project. **Install the GitHub App** and **Integrations** show how to connect the repository |
+| **No wiki for this project** | The repository isn't connected through the GitHub App or a GitLab group, or the project is archived |
+| **The wiki is written for GitHub and GitLab repositories** | A Vercel, Netlify or CLI project. **Open integrations** shows how to connect its repository through the GitHub App or a GitLab group |
 
 If a later run fails, the tab keeps showing the pages from the last run that finished, under **The last run could not finish**. The next push to the default branch, or **Refresh**, starts a new run.
 
@@ -131,6 +131,6 @@ See [Roles and permissions](/console/roles).
     Choose which repositories get a wiki, its language and how often it's rebuilt.
   </Card>
   <Card title="Code review" icon="git-pull-request" href="/code-review/overview">
-    Reviews of every pull request in the same repositories.
+    Reviews of every pull request and merge request in the same repositories.
   </Card>
 </CardGroup>
