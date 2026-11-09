@@ -1,6 +1,6 @@
 ---
 title: How IronBee identifies your project
-description: How the CLI names the project your sessions and verification jobs report to, and when it reports to a GitHub or GitLab project.
+description: How the CLI names the project your sessions and verification jobs report to, and when it reports to a GitHub, GitLab or Bitbucket project.
 ---
 
 Every session the CLI records, and every [`ironbee verify`](/cli/guides/verification-jobs) job it starts, reports to a project in the [IronBee Console](https://console.ironbee.ai). You don't create that project by hand: the CLI works out its name from your repository.
@@ -25,7 +25,7 @@ A **gitlab.com** project is named the way the console names it: the path after i
 
 ## Repository projects and CLI projects
 
-A project in the console belongs to a provider: GitHub, GitLab, Vercel, Netlify, or the CLI. The same name under two providers makes two projects.
+A project in the console belongs to a provider: GitHub, GitLab, Bitbucket, Vercel, Netlify, or the CLI. The same name under two providers makes two projects.
 
 When your checkout's remote is on **github.com**, and the derived name equals the repository's name, the CLI claims the repository's **GitHub project**. Your sessions and jobs then report to the same project as the [GitHub App](/integrations/github) and the [GitHub Action](/github-action/get-started/getting-started) runs for that repository. If that project doesn't exist yet, it's created.
 
@@ -33,12 +33,16 @@ The claim works with HTTPS and SSH remotes, including `ssh.github.com` (SSH over
 
 When the remote is on **gitlab.com**, the CLI claims the project's **GitLab project** the same way. The derived name must equal the project's last path segment, or its name as above. The claim works with HTTPS and SSH remotes, including `altssh.gitlab.com` (SSH over port 443).
 
+When the remote is on **bitbucket.org**, the CLI claims the repository's **Bitbucket project** the same way. The derived name must equal the repository's slug. The claim works with HTTPS and SSH remotes, including `altssh.bitbucket.org` (SSH over port 443).
+
+For an `ironbee verify` job, the claim follows the repository the run is bound to: the remote your branch is pushed to. A job on a branch pushed to a fork, or to another host, reports to that repository's project when its name matches, and claims none otherwise.
+
 In every other case, the CLI reports to a **CLI project** with the derived name:
-- a remote on another host, a self-managed GitLab server included
+- a remote on another host, a self-managed GitLab server or Bitbucket Data Center or Server included
 - no remote
 - a name that doesn't match the repository
 
-A verification job started in GitHub Actions or GitLab CI goes by its trigger instead: it reports to the GitHub or GitLab project with the derived name, created if it doesn't exist yet. In GitLab CI, that includes a job on a self-managed GitLab server. A job whose remote is on the other host is refused; see [Binding the run to your repository](/cli/guides/verification-jobs#binding-the-run-to-your-repository).
+A verification job started in GitHub Actions, GitLab CI or Bitbucket Pipelines goes by its trigger instead: it reports to the GitHub, GitLab or Bitbucket project with the derived name, created if it doesn't exist yet. In GitLab CI, that includes a job on a self-managed GitLab server. A job whose remote is on another host than the CI's is refused; see [Binding the run to your repository](/cli/guides/verification-jobs#binding-the-run-to-your-repository).
 
 <Note>
   Before CLI 0.45, a github.com checkout reported to a CLI project with the repository's name. After upgrading, new sessions and jobs report to the repository's GitHub project instead. Earlier history stays in the CLI project.
@@ -48,13 +52,17 @@ A verification job started in GitHub Actions or GitLab CI goes by its trigger in
   Before CLI 0.49, a gitlab.com checkout reported to a CLI project, and a project in a subgroup was named by its last segment, such as `backend`. After upgrading, new sessions and jobs report to the GitLab project under its new name, such as `platform-backend`, and `${projectName}` in your config follows it. Earlier history stays where it was.
 </Note>
 
-When a job resolves to a GitHub or GitLab project that has none of the variables or secrets a same-named CLI project holds, `ironbee verify` prints a notice so you can move them.
+<Note>
+  Before CLI 0.53, a bitbucket.org checkout reported to a CLI project with the repository's name. After upgrading, new sessions and jobs report to the repository's Bitbucket project. Earlier history stays in the CLI project.
+</Note>
+
+When a job resolves to a GitHub, GitLab or Bitbucket project that has none of the variables or secrets a same-named CLI project holds, `ironbee verify` prints a notice so you can move them.
 
 ---
 
 ## Naming the project yourself
 
-`--project <name>` on `ironbee verify run web` or `ironbee verify run api` names the project explicitly, and doesn't claim a repository's project. In GitHub Actions or GitLab CI, the job reports to the GitHub or GitLab project with that name, which is created if it doesn't exist yet. On a checkout whose remote is on the other host, pass `--no-repo` too. Anywhere else, it reports to a CLI project with that name.
+`--project <name>` on `ironbee verify run web` or `ironbee verify run api` names the project explicitly, and doesn't claim a repository's project. In GitHub Actions, GitLab CI or Bitbucket Pipelines, the job reports to the GitHub, GitLab or Bitbucket project with that name, which is created if it doesn't exist yet. On a checkout whose remote is on another host than the CI's, pass `--no-repo` too. Anywhere else, it reports to a CLI project with that name.
 
 ```bash
 ironbee verify run web --url https://preview.example.com --project shop-web
@@ -64,7 +72,7 @@ ironbee verify run web --url https://preview.example.com --project shop-web
 
 ## What is sent
 
-For a github.com checkout, every event the CLI sends carries the repository's `owner/repo`, so the console can file it under the GitHub project. For a gitlab.com checkout, it carries the project's full path. This includes the events of the devtools server. It happens whether or not [issue-tracker and VCS linking](/cli/guides/issue-tracking) is enabled. The only way to stop it is to suspend the [Collector](/cli/configuration/configuration#collector) with `collector.enable: false`, which stops sending anything at all. See [Privacy mode](/cli/advanced/privacy).
+For a github.com checkout, every event the CLI sends carries the repository's `owner/repo`, so the console can file it under the GitHub project. For a gitlab.com checkout, it carries the project's full path, and for a bitbucket.org checkout, the repository's `workspace/repo_slug`. This includes the events of the devtools server. It happens whether or not [issue-tracker and VCS linking](/cli/guides/issue-tracking) is enabled. The only way to stop it is to suspend the [Collector](/cli/configuration/configuration#collector) with `collector.enable: false`, which stops sending anything at all. See [Privacy mode](/cli/advanced/privacy).
 
 ---
 

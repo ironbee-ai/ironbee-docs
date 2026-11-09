@@ -46,6 +46,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `integrations/overview.mdx` | How integrations work | ✅ |
 | `integrations/github.mdx` | GitHub App | ✅ |
 | `integrations/gitlab.mdx` | GitLab | ✅ |
+| `integrations/bitbucket.mdx` | Bitbucket | ✅ |
 | `integrations/vercel.mdx` | Vercel | ✅ |
 | `integrations/netlify.mdx` | Netlify | ✅ |
 
@@ -54,7 +55,7 @@ Current structure as of the `docs.json` navigation configuration.
 | File | Title | Status |
 |------|-------|--------|
 | `github-action/get-started/getting-started.mdx` | Get started with the GitHub Action | ✅ |
-| `github-action/get-started/migrating.mdx` | Migrate from v1.0 | ✅ |
+| `github-action/get-started/migrating.mdx` | Migrate from an earlier version | ✅ |
 | `github-action/configuration/configuration.mdx` | GitHub Action configuration | ✅ |
 
 #### Concepts
@@ -111,6 +112,36 @@ Current structure as of the `docs.json` navigation configuration.
 | `gitlab-component/advanced/evidence.mdx` | Evidence in GitLab | ✅ |
 | `gitlab-component/advanced/diagnostics.mdx` | Diagnostics for the GitLab component | ✅ |
 
+### Bitbucket Pipe
+
+| File | Title | Status |
+|------|-------|--------|
+| `bitbucket-pipe/get-started/getting-started.mdx` | Get started with the Bitbucket Pipe | ✅ |
+| `bitbucket-pipe/configuration/configuration.mdx` | Bitbucket Pipe configuration | ✅ |
+
+#### Concepts
+
+| File | Title | Status |
+|------|-------|--------|
+| `bitbucket-pipe/concepts/how-it-works.mdx` | How the Bitbucket Pipe works | ✅ |
+| `bitbucket-pipe/concepts/verification-modes.mdx` | Platform and local verification in Bitbucket | ✅ |
+
+#### Guides
+
+| File | Title | Status |
+|------|-------|--------|
+| `bitbucket-pipe/guides/running-in-pipelines.mdx` | Running in Bitbucket Pipelines | ✅ |
+| `bitbucket-pipe/guides/verifying-your-app.mdx` | Verifying your application in Bitbucket | ✅ |
+| `bitbucket-pipe/guides/verification-platforms.mdx` | Local-mode platforms in Bitbucket | ✅ |
+
+#### Advanced
+
+| File | Title | Status |
+|------|-------|--------|
+| `bitbucket-pipe/advanced/custom-configuration.mdx` | Custom configuration in Bitbucket | ✅ |
+| `bitbucket-pipe/advanced/evidence.mdx` | Evidence in Bitbucket | ✅ |
+| `bitbucket-pipe/advanced/diagnostics.mdx` | Diagnostics for the Bitbucket Pipe | ✅ |
+
 ---
 
 ## Code review
@@ -122,6 +153,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `code-review/overview.mdx` | Code review of pull requests | ✅ |
 | `code-review/on-github.mdx` | Code review on GitHub pull requests | ✅ |
 | `code-review/on-gitlab.mdx` | Code review on GitLab merge requests | ✅ |
+| `code-review/on-bitbucket.mdx` | Code review on Bitbucket pull requests | ✅ |
 
 ### In the console
 

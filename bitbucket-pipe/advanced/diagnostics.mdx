@@ -1,0 +1,106 @@
+---
+title: Diagnostics for the Bitbucket Pipe
+sidebarTitle: Diagnostics
+description: Find out why a Bitbucket Pipe run didn't behave as expected, from the plan in the step log to the report banners.
+---
+
+When a run doesn't behave as expected, start with the lines the pipe writes at the top of its step log, then the report.
+
+---
+
+## Read the plan
+
+The pipe's first real step, **Resolve the verification plan**, logs:
+- **the mode and why it was picked**, for example: auto, the repository is public, so the platform can check it out
+- **the target**: a deployed URL, or the port of an app in the pipe
+- **the `max-time` the step needs**, as "This configuration needs max-time of at least 85 on the step that runs it." The number is in minutes. Set at least that much on the step: a pipe can't read its step's `max-time`, so it doesn't check it
+
+With the plan, the pipe warns about variables that don't apply to the mode it runs in, and about conflicts such as a port in `APP_URL` that differs from `APP_PORT`. A warning means a setting was ignored, not that the run failed. Errors and warnings start with `ERROR:` and `WARNING:`, and each step of the pipe starts with a `▶` line.
+
+---
+
+## Verbose logging
+
+Set `VERBOSE: "true"` to log each tool call's response, the prompt, the artifact list and the verdict details:
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    APP_URL: "https://preview.example.com"
+    VERBOSE: "true"
+```
+
+---
+
+## Common problems
+
+| What you see | Why | What to do |
+|--------------|-----|------------|
+| "IRONBEE_API_KEY is required" | The step doesn't pass the variable to the pipe. A pipe sees a repository variable only when the step passes it | Add `IRONBEE_API_KEY: $IRONBEE_API_KEY` under the pipe's `variables:` |
+| "BITBUCKET_REPO_FULL_NAME and BITBUCKET_COMMIT are not set" | The pipe ran outside a Bitbucket Pipelines step | Run it from a step of `bitbucket-pipelines.yml` |
+| "EVENT_NAME must be one of merge_request, push, manual, schedule" | `EVENT_NAME` has another value | Use one of the four, or leave it empty on a pull request or branch pipeline |
+| A variable value fails the run and names the variable | A `true`/`false` variable got another value | Use `true`/`false`, `1`/`0`, `yes`/`no` or `on`/`off`, quoted |
+| The run stops at the plan with "no target" | Neither `APP_URL` nor `APP_START_COMMAND` with `APP_PORT` is set | Add a target. See [Verifying your application](/bitbucket-pipe/guides/verifying-your-app) |
+| A `custom:` pipeline is switched off by `VERIFICATION_AUTO`, or on your runner verifies the latest change instead of the whole application | It has no `EVENT_NAME`, so it counts as a push | Set `EVENT_NAME: "manual"`, the only kind `VERIFICATION_AUTO: "false"` doesn't stop, or `EVENT_NAME: "schedule"` for a scheduled pipeline. On IronBee, both verify the latest commit against its parent |
+| The run fails before verifying, on a `401` or `403` | The deployment is protected, and the reachability request before the run doesn't carry a bypass. It sends `APP_HEADERS` and `APP_SECRET_HEADERS` on IronBee, and no headers on your runner | On IronBee, pass the bypass in `APP_SECRET_HEADERS`. Otherwise verify the app in the pipe. See [Protected deployments](/bitbucket-pipe/guides/verifying-your-app#protected-deployments) |
+| A warning that the URL "answers 302, redirecting to" another address | The deployed URL redirects, for example to a sign-in page. The reachability request doesn't follow redirects | Nothing, if the redirect leads to your app. If it's a sign-in page, the verdict describes that page: pass the bypass in `APP_SECRET_HEADERS`, or verify the app in the pipe |
+| The report says the run could not read the repository | A private repository whose workspace isn't connected to IronBee | [Connect the workspace](/integrations/bitbucket) and cover the repository, or set `IRONBEE_BIND_REPOSITORY: "false"` |
+| **No verification ran** with `PROJECT_ARCHIVED` | The project is archived in the console | Unarchive it, or report to another project with `IRONBEE_PROJECT` |
+| **No verification ran** with `TARGET_OUTSIDE_ENVIRONMENT_DOMAIN` | `APP_URL` is outside the Domain properties of the environment in `IRONBEE_ENVIRONMENT` | Point `APP_URL` at a host inside those domains, or change the environment's domains |
+| **No verification ran** with `ENVIRONMENT_DOMAIN_NO_TUNNEL` | An app in the pipe was verified against an environment that has Domain properties | Verify a deployed URL instead, or use an environment without domains |
+| **No verification ran** with `CREDITS_EXHAUSTED` | The team's credits for the month are used up | See [Credit usage](/console/usage) |
+| The report's **No verification ran** banner names a code but no reason | The pipe's report carries the code only | The step log has the full message, in the line "verification did not produce a job" |
+| The run fails with "speaks TLS" | The app in the pipe answers with HTTPS | Serve the app over plain HTTP on `APP_PORT` |
+| The app runs under Docker Compose, but the tunnel finds nothing | `APP_URL` points at `localhost`, while the app publishes its ports on the step's Docker service | Set `APP_URL` to `http://host.docker.internal:<port>`. See [Docker Compose](/bitbucket-pipe/guides/verifying-your-app#docker-compose) |
+| Docker Compose fails to build, or the step runs out of memory | The step's runtime or memory doesn't fit a Compose build | Use `runtime: cloud: version: 3`, `image: atlassian/default-image:5`, `services: [docker]` and `size: 2x` with `memory: 7128` on the Docker service |
+| "a tunnel target needs APP_START_COMMAND to start the application" | On IronBee, `APP_URL` names a host in the pipe, but there's no start command | Set `APP_START_COMMAND`, or point `APP_URL` at a deployed URL |
+| "APP_RESTART_COMMAND failed; the re-verification would run against the pre-fix application" | The restart command exited with an error after a fix | Fix the command; it has to replace the running app and return |
+| "IRONBEE_EXTRA_CONFIG is not valid JSON" | The variable isn't a JSON object | Fix the JSON |
+| "fix is enabled but no Anthropic credential is set" | `VERIFICATION_APPLY_FIX` is on, the default, on IronBee without an Anthropic credential | Expected when you only want a report. Pass a credential to have findings fixed, or set `VERIFICATION_APPLY_FIX: "false"` to silence it |
+| **No verdict** | The verification ended without a verdict | Open the run in the console from the report link to see how it ended |
+| The step is stopped partway, and the run reads as a platform failure | The step's `max-time` is lower than the run needs | Raise it to the value the plan logs |
+| **Session ended early** (on your runner) | The agent reached `CLAUDE_CODE_MAX_TURNS`, or stopped on an error | Raise `CLAUDE_CODE_MAX_TURNS`, or narrow the work with `VERIFICATION_PROMPT` |
+| "no BITBUCKET_OAUTH_TOKEN is set, so the report stays in the step log" | The step doesn't pass its token to the pipe | Add `BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN` under `variables:` |
+| "Bitbucket API ... answered 401" or "answered 403" | The step's token lacks a scope it needs | Add the scopes under the step's `auth`. See [The Bitbucket token](/bitbucket-pipe/get-started/getting-started#the-bitbucket-token) |
+| "the pull request's title could not be read, so the prompt goes without it" | On your runner, the token can't read the pull request | Add `read:pullrequest:bitbucket` to the step's scopes |
+| "there are fixes to push to `<branch>`, and no BITBUCKET_OAUTH_TOKEN to push them with", or "there are fixes to open a pull request for, and no BITBUCKET_OAUTH_TOKEN to push them with" | A fix was made, but the pipe has no token to push it | Pass the token, or set `VERIFICATION_APPLY_FIX: "false"` to turn fixing off |
+| "could not push the fixes to `<branch>`, the branch may have moved since this run checked it out" | Someone pushed to the pull request branch during the run, or the token lacks `write:git:bitbucket` | Run the pipeline again on the new head, and check the step's scopes |
+| "local verification needs ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN" | `VERIFICATION_MODE: local` with no Anthropic credential passed | Pass `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`, or verify on IronBee |
+| "headers apply to a deployed URL only" | `APP_HEADERS` or `APP_SECRET_HEADERS` with an app in the pipe, on IronBee | Remove the headers, or verify a deployed URL |
+| A pull request with a fix can't merge | The fix commit has no build, and the branch's merge checks ask for **Minimum number of successful builds for the last commit** | Start a pipeline for the branch from **Pipelines > Run pipeline** once you've reviewed the fix |
+
+---
+
+## Look at a run from your machine
+
+With the [IronBee CLI](/cli/get-started/getting-started) signed in to the same account, check a run on IronBee by its `IRONBEE_JOB_ID`:
+
+```bash
+ironbee verify status <job_id>
+```
+
+See [Verification jobs](/cli/guides/verification-jobs).
+
+---
+
+## Session logs from your runner
+
+When the verification ran inside the pipe, the step's [evidence artifacts](/bitbucket-pipe/advanced/evidence#runs-on-your-runner) include the session's own logs. Each agent of the session has its own folder, `sessions/<id>/agents/<agentId>/`, and the main agent's is `agents/main/`:
+- `verdict.json` holds that agent's latest verdict.
+- `actions.jsonl` is its full event log.
+
+If the agent stopped early, the report shows a banner and a **Session end details** list: the reason, the turns, errors and any blocked tool calls.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Evidence" icon="folder" href="/bitbucket-pipe/advanced/evidence">
+    Where the recording, screenshots, logs and report are.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/bitbucket-pipe/configuration/configuration">
+    Every variable and output, with defaults.
+  </Card>
+</CardGroup>

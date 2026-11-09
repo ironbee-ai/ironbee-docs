@@ -1,13 +1,14 @@
 ---
 title: How integrations work
-description: Connect GitHub, GitLab, Vercel or Netlify, turn repositories, projects and sites into IronBee projects, and see where the results land.
-keywords: ["GitHub", "GitLab", "Vercel", "Netlify", "preview deployments"]
+description: Connect GitHub, GitLab, Bitbucket, Vercel or Netlify, turn repositories, projects and sites into IronBee projects, and see where results land.
+keywords: ["GitHub", "GitLab", "Bitbucket", "Vercel", "Netlify", "preview deployments"]
 ---
 
-Integrations connect IronBee to where your code lives and deploys. The GitHub App and the GitLab connection make your repositories projects, so IronBee reviews their pull requests and merge requests. IronBee also verifies your changes:
+Integrations connect IronBee to where your code lives and deploys. The GitHub App, the GitLab connection and the Bitbucket connection make your repositories projects, so IronBee reviews their pull requests and merge requests. IronBee also verifies your changes:
 - every deployment of an enabled project on Vercel or Netlify, with no workflow to maintain
 - every push and pull request, with the GitHub Action
 - every merge request and push to the default branch, with the GitLab component
+- every pull request and push to the main branch, with the Bitbucket Pipe
 
 Each run exercises the change like a QA engineer would and reports the result where you already look.
 
@@ -17,8 +18,8 @@ Each run exercises the change like a QA engineer would and reports the result wh
 
 Owners and admins open **Integrations** in the console's sidebar. The page lists the providers under **Connected** and **Available**. Select one to see its installations and the projects in each.
 
-<img className="ib-shot ib-shot-light" src="/images/console/integrations/integrations-page-light.png" alt="The Integrations page with Vercel selected, listing two connected Vercel teams, each marked Nothing enabled: deployments start no runs" />
-<img className="ib-shot ib-shot-dark" src="/images/console/integrations/integrations-page-dark.png" alt="The Integrations page with Vercel selected, listing two connected Vercel teams, each marked Nothing enabled: deployments start no runs" />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/integrations-page-light.png" alt="The Integrations page with Vercel selected among GitHub, Bitbucket, Vercel and Netlify under Connected and GitLab under Available, listing two Vercel teams, each marked Nothing enabled: deployments start no runs" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/integrations-page-dark.png" alt="The Integrations page with Vercel selected among GitHub, Bitbucket, Vercel and Netlify under Connected and GitLab under Available, listing two Vercel teams, each marked Nothing enabled: deployments start no runs" />
 
 | Provider | What you install | What starts a run |
 |----------|------------------|-------------------|
@@ -26,10 +27,12 @@ Owners and admins open **Integrations** in the console's sidebar. The page lists
 | [GitHub Action](/github-action/get-started/getting-started) | A workflow file in your repository | Pushes, pull requests, `/ironbee-verify` comments, schedules and manual runs |
 | [GitLab](/integrations/gitlab) | A connection to a top-level group, from the console | No verification run on its own. It reviews merge requests, and gives runs access to your projects and merge requests |
 | [GitLab component](/gitlab-component/get-started/getting-started) | An `include` in your `.gitlab-ci.yml` | Merge requests, pushes to the default branch, schedules and manual pipelines |
+| [Bitbucket](/integrations/bitbucket) | IronBee's app on a workspace, connected from its settings | No verification run on its own. It reviews pull requests, and gives runs access to your repositories and pull requests |
+| [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started) | A step in your `bitbucket-pipelines.yml` | Pull requests, pushes to a branch, schedules and manual pipelines |
 | [Vercel](/integrations/vercel) | The IronBee Vercel integration | Preview deployments of enabled projects |
 | [Netlify](/integrations/netlify) | The IronBee Netlify extension | Deploy previews and branch deploys of enabled sites |
 
-You can connect more than one. A common setup is Vercel or Netlify for deployments, plus the GitHub App or the GitLab connection so the runs verify each pull request's or merge request's changes and report on it.
+You can connect more than one. A common setup is Vercel or Netlify for deployments, plus the GitHub App, the GitLab connection or the Bitbucket connection so the runs verify each pull request's or merge request's changes and report on it.
 
 ---
 
@@ -54,14 +57,14 @@ You can connect more than one. A common setup is Vercel or Netlify for deploymen
 
 ## Projects and verification types
 
-Each GitHub repository the App covers becomes an IronBee project when the App is installed; there's nothing to enable. Each GitLab repository becomes one when you pick it for its connected group, and each Vercel project or Netlify site when you enable it. A project keeps its runs, its settings and its history.
+Each GitHub repository the App covers becomes an IronBee project when the App is installed; there's nothing to enable. Each GitLab or Bitbucket repository becomes one when you pick it for its connected group or workspace, and each Vercel project or Netlify site when you enable it. A project keeps its runs, its settings and its history.
 
 Every project has a verification type:
 - **Web** opens the deployment in a browser and exercises it as a user would.
 - **API** calls the deployment over HTTP and checks the responses against its contract.
 - **None** starts nothing on a deployment until a type is set in the project's settings.
 
-A GitHub or GitLab repository starts with **None**. Runs from the GitHub Action, the GitLab component and `ironbee verify` name their own type. For a Vercel project or Netlify site, pick the type when you enable it; **Web** is selected to start with. Change it later with **Edit type** on the Integrations page, or in the project's settings. The change takes effect on the next deployment.
+A GitHub, GitLab or Bitbucket repository starts with **None**. Runs from the GitHub Action, the GitLab component, the Bitbucket Pipe and `ironbee verify` name their own type. For a Vercel project or Netlify site, pick the type when you enable it; **Web** is selected to start with. Change it later with **Edit type** on the Integrations page, or in the project's settings. The change takes effect on the next deployment.
 
 <img className="ib-shot ib-shot-light" src="/images/console/integrations/enable-project-dialog-light.png" alt="The Enable dialog for a Vercel project, with the Web, API and None verification types and the Enable button" />
 <img className="ib-shot ib-shot-dark" src="/images/console/integrations/enable-project-dialog-dark.png" alt="The Enable dialog for a Vercel project, with the Web, API and None verification types and the Enable button" />
@@ -72,7 +75,7 @@ A project can be in one of three states:
 |-------|---------|
 | Enabled | It's a project of the installation. On Vercel and Netlify, its deployments start runs of its verification type |
 | Disabled | Vercel and Netlify only: you clicked **Disable**. Deployments stop starting runs; the project keeps its history, and runs from the CLI or the API still report to it |
-| **Not active** | The project left the installation's scope, or the integration was uninstalled. It keeps its id, runs and settings. **Enable again** in **New project** brings back a Vercel project or Netlify site; adding a repository back to the GitHub App, or enabling it again under its GitLab group, brings back its project |
+| **Not active** | The project left the installation's scope, or the integration was uninstalled. It keeps its id, runs and settings. **Enable again** in **New project** brings back a Vercel project or Netlify site; adding a repository back to the GitHub App, or enabling it again under its GitLab group or Bitbucket workspace, brings back its project |
 
 ---
 
@@ -86,6 +89,7 @@ A run is against one of the project's environments, and uses that environment's 
 | Netlify | `deploy-preview`, `branch-deploy`, `production` |
 | GitHub Action | The name in `ironbee_environment`, or the deployment's environment on `deployment` events |
 | GitLab component | The name in `ironbee_environment`, or the job's own `environment:` |
+| Bitbucket Pipe | The name in `IRONBEE_ENVIRONMENT`, or the step's deployment environment |
 
 Manage them in the project's **Settings**: **Environments**, **Variables** and **Secrets**.
 
@@ -95,9 +99,10 @@ Manage them in the project's **Settings**: **Environments**, **Variables** and *
 
 | Provider | On the provider | On the pull request | In the console |
 |----------|-----------------|---------------------|----------------|
-| Vercel | The **IronBee Verification** deployment check | A check, inline comments on the findings and a comment, with the GitHub App or the GitLab connection | The project's **Verifications** tab, trigger **Vercel** |
-| Netlify | The **IronBee verification** card on the deploy page | A check, inline comments on the findings and a comment, with the GitHub App or the GitLab connection | Trigger **Netlify** |
+| Vercel | The **IronBee Verification** deployment check | A check, inline comments on the findings and a comment, with the GitHub App or the GitLab or Bitbucket connection | The project's **Verifications** tab, trigger **Vercel** |
+| Netlify | The **IronBee verification** card on the deploy page | A check, inline comments on the findings and a comment, with the GitHub App or the GitLab or Bitbucket connection | Trigger **Netlify** |
 | GitHub Action | The job result and job summary | On IronBee, with the GitHub App: IronBee's check, inline comments and comment. Otherwise the action's report comment | Trigger **GitHub Actions** |
 | GitLab component | The job result and the report in the job log | On IronBee, with the GitLab connection: IronBee's pipeline status where it writes one, inline comments and summary note. Otherwise the component's report note | Trigger **GitLab CI** |
+| Bitbucket Pipe | The step result and the report in the step log | On IronBee, with the Bitbucket connection: IronBee's build status, inline comments and summary comment. Otherwise the pipe's report comment | Trigger **Bitbucket Pipelines** |
 
 Every run links to its [verification detail](/console/verification-detail) page, with the recording, the actions, the network requests, traces and logs, and the result.

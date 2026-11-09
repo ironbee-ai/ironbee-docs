@@ -1,0 +1,65 @@
+---
+title: Custom configuration in Bitbucket
+sidebarTitle: Custom configuration
+description: Override any IronBee CLI setting the Bitbucket Pipe doesn't expose as a dedicated variable, with IRONBEE_EXTRA_CONFIG.
+---
+
+Most behavior is controlled by the pipe's [dedicated variables](/bitbucket-pipe/configuration/configuration). For anything else, `IRONBEE_EXTRA_CONFIG` passes raw JSON that is deep-merged into the `.ironbee/config.json` the pipe generates. Your keys win over the defaults.
+
+<Note>
+  `IRONBEE_EXTRA_CONFIG` applies to local mode only, when the verification runs inside the pipe. On IronBee, the pipe logs a warning and ignores it.
+</Note>
+
+---
+
+## How it works
+
+Pass a JSON object as a string. It's merged on top of the configuration the pipe generates, so you only list the keys you want to change:
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+    VERIFICATION_MODE: "local"
+    IRONBEE_EXTRA_CONFIG: '{"maxRetries": 5}'
+```
+
+Any key from the IronBee CLI configuration is accepted. See the [CLI configuration reference](/cli/configuration/configuration) for the full set.
+
+During the run, the pipe writes its own `.ironbee/config.json`, so a configuration file committed to your repository isn't used. With `IRONBEE_EXCLUDE_FILES` on, the default, the pipe restores your file when the run ends.
+
+---
+
+## Tuning the DevTools server
+
+The [local-mode platforms](/bitbucket-pipe/guides/verification-platforms) are served by one `ironbee-devtools` MCP server. Pass extra environment variables to it under `ironbeeDevTools.env`:
+
+```yaml
+    IRONBEE_EXTRA_CONFIG: '{"ironbeeDevTools": {"env": {"BROWSER_HEADLESS_ENABLE": "true"}}}'
+```
+
+See the CLI's [DevTools MCP overrides](/cli/configuration/configuration#devtools-mcp-overrides) for the keys the server accepts.
+
+<Note>
+  IronBee always sets its own invariants (the tool-name prefix, metadata flags and platform) last. They can't be overridden through `IRONBEE_EXTRA_CONFIG`.
+</Note>
+
+---
+
+## Committing the generated setup
+
+The changes IronBee's setup makes to `.claude/`, `.mcp.json` and `.gitignore` stay out of the commits the pipe makes, because they're its working files rather than the change being verified. To commit the setup it generated together with a fix, for example to use it for local development, set `IRONBEE_EXCLUDE_FILES: "false"`. A run that commits no fix commits no setup either. `.ironbee/` stays out either way.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Local-mode platforms" icon="layers" href="/bitbucket-pipe/guides/verification-platforms">
+    The platforms the DevTools server provides.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/bitbucket-pipe/configuration/configuration">
+    Every variable and output, with defaults.
+  </Card>
+</CardGroup>

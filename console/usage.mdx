@@ -58,11 +58,11 @@ A code review is priced before it starts, by the reviewable lines it reads and t
 - A review cancelled after it started is charged half its price.
 - A review that fails, or has nothing new to read, is free.
 
-What starts a review and the work that's free are on [Code review on GitHub pull requests](/code-review/on-github#credits). They're the same on [GitLab merge requests](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run).
+What starts a review and the work that's free are on [Code review on GitHub pull requests](/code-review/on-github#credits). They're the same on [GitLab merge requests](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run) and [Bitbucket pull requests](/code-review/on-bitbucket#credits-and-when-a-review-doesnt-run).
 
 ### Verification
 
-Every verification run on IronBee uses credits, whatever started it: Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification**, or a [scenario run](/console/scenario-runs).
+Every verification run on IronBee uses credits, whatever started it: Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification**, or a [scenario run](/console/scenario-runs).
 
 A run is charged for each started minute, up to a cap set by its time limit. Once the run has started, it's charged for its minutes however it ends: passed, failed or cancelled.
 
@@ -103,10 +103,10 @@ For owners and billing admins, the bell in the top bar also shows **IronBee cred
 - **Run instant verification**, **Run scenario** and **Run again** are disabled. Hover one to see why: "This team's IronBee credits for this month are used up; they reset on" and the date.
 - If a run dialog is open, the same sentence shows at the top and its run button stays disabled.
 - A run created before the credits ran out, but not started yet, is refused when it would start, and uses no credits. In the list its status is **Failed**, or **Run error** for a scenario run, whose page says **Stopped before it started**. **Run details** on its [verification detail](/console/verification-detail#header) page gives the reason under **Refused**.
-- A deployment from Vercel or Netlify isn't verified, and no run appears in the list. Its GitHub or Vercel check closes as neutral, and says **IronBee did not run this verification · out of credits this month**. On GitLab, the pipeline status with that description is passed, where IronBee writes one: on a project with **Pipelines must succeed** and **Block merges** off, it writes none.
+- A deployment from Vercel or Netlify isn't verified, and no run appears in the list. Its GitHub or Vercel check closes as neutral, and says **IronBee did not run this verification · out of credits this month**. On GitLab, the pipeline status with that description is passed, where IronBee writes one: on a project with **Pipelines must succeed** and **Block merges** off, it writes none. On Bitbucket, the build status with that description is successful.
 - `ironbee verify` and `ironbee review` stop with an error. See [When credits run out](/cli/guides/credits#when-credits-run-out) in the CLI docs.
 
-For code review, see [When credits run out](/code-review/on-github#when-credits-run-out), and for GitLab merge requests, [Credits and when a review doesn't run](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run).
+For code review, see [When credits run out](/code-review/on-github#when-credits-run-out), and for GitLab merge requests and Bitbucket pull requests, Credits and when a review doesn't run on [GitLab](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run) and [Bitbucket](/code-review/on-bitbucket#credits-and-when-a-review-doesnt-run).
 
 ---
 

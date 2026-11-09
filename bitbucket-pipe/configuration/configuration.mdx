@@ -1,0 +1,197 @@
+---
+title: Bitbucket Pipe configuration
+sidebarTitle: Configuration
+description: Every variable and output of the IronBee Bitbucket Pipe, with defaults, the mode each one applies to, and what the step around it needs.
+---
+
+This page lists every variable and output of `docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1`. The **Mode** column shows where a variable applies:
+- **Both** means both modes.
+- **Platform** means on IronBee.
+- **Local** means on your runner.
+
+The pipe logs a warning when you set a variable that doesn't apply to the mode it runs in. See [Platform and local verification](/bitbucket-pipe/concepts/verification-modes).
+
+Only `IRONBEE_API_KEY` is required. Every run also needs a target: `APP_URL`, or `APP_START_COMMAND` with `APP_PORT`. See [Verifying your application](/bitbucket-pipe/guides/verifying-your-app).
+
+---
+
+## Variable values
+
+- A pipe sees a repository variable only when the step passes it, so pass every credential under `variables:`, as in `IRONBEE_API_KEY: $IRONBEE_API_KEY`.
+- Bitbucket expands each `$NAME` when it starts the pipe. A command that needs a variable expanded when it runs is better kept in a script file that the command calls.
+- Bitbucket doesn't type-check a pipe's variables, so quote numbers and `true`/`false`: `APP_PORT: "3000"`.
+- Every `true`/`false` variable also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any other value fails the run and names the variable.
+- A variable passed empty is empty, not its default. An empty `true`/`false` variable, `VERIFICATION_MODE`, `WORKING_DIRECTORY`, `IRONBEE_CLI_VERSION` or `CLAUDE_CODE_CLI_VERSION` means its default.
+
+---
+
+## Where the verification runs
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `VERIFICATION_MODE` | `auto` | Both | `auto`, `platform` or `local`. `auto` picks platform for a public repository, and local for a private one when an Anthropic credential is passed |
+
+---
+
+## IronBee account and endpoints
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `IRONBEE_API_KEY` | Empty | Both | Your IronBee account API key, from **Settings > Account** in the console. Keep it in a secured repository variable and pass it: `IRONBEE_API_KEY: $IRONBEE_API_KEY` |
+| `IRONBEE_CLI_VERSION` | `latest` | Both | IronBee CLI version to install, such as `0.53.0`. Empty means `latest` |
+| `IRONBEE_PROJECT` | Empty | Platform | The project the run reports to. Empty derives it from the git remote |
+| `IRONBEE_ENVIRONMENT` | Empty | Platform | The project environment the run is against, by name. Selects that environment's variables and secrets on top of the project-wide ones. A new name is created by the first run that uses it. Empty falls back to the step's deployment environment (`BITBUCKET_DEPLOYMENT_ENVIRONMENT`) |
+| `IRONBEE_API_URL` | Empty | Platform | IronBee API base URL. Leave empty |
+| `IRONBEE_COLLECTOR_URL` | Empty | Both | IronBee collector URL. Leave empty. On IronBee, your app's commands get the resolved URL as `IRONBEE_COLLECTOR_URL`, with the key as `IRONBEE_API_KEY`. See [Your app's own telemetry](#your-apps-own-telemetry) |
+| `IRONBEE_CONSOLE_URL` | Empty | Both | Console hostname, without a scheme, used for links in the report. Empty derives it from the collector URL |
+
+---
+
+## The verification run on IronBee
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `IRONBEE_BIND_REPOSITORY` | `"true"` | Platform | Bind the run to the repository so it verifies the changeset. Set `"false"` to verify the running app without a checkout, for example a private repository whose workspace isn't connected to IronBee |
+| `IRONBEE_JOB_TIMEOUT_MINUTES` | Empty | Platform | Timeout for the verification run on IronBee. Empty uses the default |
+
+---
+
+## DevTools platforms
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `IRONBEE_BROWSER_DEVTOOLS` | `"true"` | Local | Web UI, DOM, console, accessibility, screenshots, recording |
+| `IRONBEE_BACKEND_DEVTOOLS` | `"false"` | Local | HTTP, gRPC, GraphQL, WebSocket, databases, logs |
+| `IRONBEE_NODE_DEVTOOLS` | `"false"` | Local | Node.js runtime: tracepoints, exceptions, variables, HTTP capture |
+| `IRONBEE_PYTHON_DEVTOOLS` | `"false"` | Local | Python runtime through debugpy: tracepoints, exceptions, logs, thread dumps |
+| `IRONBEE_TERMINAL_DEVTOOLS` | `"false"` | Local | CLI, REPL and TUI programs through a pseudo-terminal. Gives the agent a shell in the pipe |
+
+See [Local-mode platforms](/bitbucket-pipe/guides/verification-platforms).
+
+---
+
+## IronBee configuration and commits
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `IRONBEE_EXTRA_CONFIG` | Empty | Local | Raw IronBee CLI configuration as JSON, deep-merged into the generated `.ironbee/config.json`. Your keys win. See [Custom configuration](/bitbucket-pipe/advanced/custom-configuration) |
+| `IRONBEE_EXCLUDE_FILES` | `"true"` | Both | Keep IronBee's generated `.claude/`, `.mcp.json` and `.gitignore` changes out of the commits the pipe makes. Set `"false"` to include the setup it generated in a fix commit; a run that commits no fix commits no setup either. `.ironbee/` is always left out |
+
+---
+
+## Claude Code
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `ANTHROPIC_API_KEY` | Empty | Local, and fixing in platform | Anthropic API key. Pass it from a secured repository variable |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Empty | Local, and fixing in platform | Claude Code OAuth token, instead of `ANTHROPIC_API_KEY`. Create one with `claude setup-token` |
+| `CLAUDE_CODE_CLI_VERSION` | `latest` | Local, and fixing in platform | Claude Code CLI version to install |
+| `CLAUDE_CODE_MODEL` | Empty | Local | Claude model for the agent in the pipe |
+| `CLAUDE_CODE_MAX_TURNS` | `"100"` | Local | Maximum conversation turns for the agent in the pipe |
+| `CLAUDE_CODE_ARGS` | Empty | Local | Additional Claude Code CLI arguments |
+
+A run on IronBee that only verifies needs no Anthropic credential.
+
+---
+
+## What to verify and what to do about it
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `VERIFICATION_PROMPT` | Empty | Both | Additional instructions for the verification |
+| `VERIFICATION_AUTO` | `"true"` | Both | Set `"false"` to verify only in a manual pipeline. Every other pipeline, schedules included, then does nothing. See [Turning automatic verification off](/bitbucket-pipe/guides/running-in-pipelines#turning-automatic-verification-off) |
+| `VERIFICATION_APPLY_FIX` | `"true"` | Both | Fix the issues a failing verification reports, in the pipe, and commit the fix. Needs an Anthropic credential; without one, a run on IronBee verifies and reports only. `"false"` verifies and reports in both modes |
+
+The pipe has no `VERIFICATION_COMMAND` variable: Bitbucket Pipelines has no trigger for a pull request comment.
+
+---
+
+## Application under test
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `APP_INSTALL_COMMAND` | Empty | Both | Command that installs dependencies, such as `npm ci` |
+| `APP_BUILD_COMMAND` | Empty | Both | Command that builds the app, such as `npm run build` |
+| `APP_START_COMMAND` | Empty | Both | Command that starts the app, such as `npm run start` |
+| `APP_URL` | Empty | Both | A public URL is verified as a deployment. A `localhost`, `host.docker.internal`, private-network or dotless host means the app runs in the pipe. See [Which URLs count as in the pipe](/bitbucket-pipe/guides/verifying-your-app#which-urls-count-as-in-the-pipe) |
+| `APP_PORT` | Empty | Both | Port the app listens on, for an app in the pipe. Required for an app in the pipe unless `APP_URL` names its port |
+| `APP_RESTART_COMMAND` | Empty | Platform | Restarts the app with the fix before the re-verification. Empty stops the app the pipe started and runs `APP_BUILD_COMMAND` and `APP_START_COMMAND` again. Needed when `APP_START_COMMAND` hands off, such as `docker compose up -d --build`. Set, it runs to the end after the pipe stops the process it started |
+| `APP_LOGS_COMMAND` | Empty | Platform | Prints the app's own logs into the step's artifacts, such as `docker compose logs --no-color --tail=2000` |
+| `APP_WAIT_SECONDS` | Empty | Platform | How long to wait for the app to accept connections. Empty waits 60 seconds |
+| `APP_HEADERS` | Empty | Platform | Request headers for a deployed URL, one `Name: value` per line. Non-secret values only |
+| `APP_SECRET_HEADERS` | Empty | Platform | Secret request headers, such as a deployment protection bypass, one `Name: value` per line, from a secured repository variable. Encrypted and never returned. The reachability request before the run sends them too, with `APP_HEADERS` |
+
+---
+
+## Bitbucket and general behavior
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `BITBUCKET_OAUTH_TOKEN` | Empty | Both | The step's own token, for the report comment, the fix commit and the fix pull request. Pass it as `BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN`. See [The Bitbucket token](/bitbucket-pipe/get-started/getting-started#the-bitbucket-token) |
+| `EVENT_NAME` | Empty | Both | What started the pipeline: `merge_request`, `push`, `manual` or `schedule`. Empty reads `merge_request` in a pull request pipeline and `push` otherwise. Set `manual` or `schedule` on a `custom:` pipeline. See [Running in Bitbucket Pipelines](/bitbucket-pipe/guides/running-in-pipelines) |
+| `WORKING_DIRECTORY` | `.` | Both | Directory the verification runs in, relative to the clone |
+| `VERBOSE` | `"false"` | Both | Log each tool call's response, the prompt, the artifact list and the verdict details |
+
+---
+
+## The step around the pipe
+
+The pipe is called from a step of your own, so the step's keys are yours to set:
+
+| Step key | What the pipe needs from it |
+|----------|-----------------------------|
+| `max-time` | At least what the plan logs: 90 minutes for a run that verifies once, 150 for a run on IronBee that fixes an app in the pipe and verifies it again. Bitbucket's default is 120 |
+| `auth.system.scopes` | `read:pullrequest:bitbucket`, `write:pullrequest:bitbucket` and `write:git:bitbucket`, for the step's `BITBUCKET_OAUTH_TOKEN` |
+| `artifacts` | `.ironbee/upload/**`, to keep the report and the evidence. See [Evidence](/bitbucket-pipe/advanced/evidence) |
+| `caches` | A custom cache for the browser, in local mode. See [Caching](#caching) |
+| `services`, `size` | `services: [docker]` and `size: 2x` for an app started with Docker Compose. See [Docker Compose](/bitbucket-pipe/guides/verifying-your-app#docker-compose) |
+| `output-variables` | The [outputs](#outputs) to hand to later steps |
+
+### Your app's own telemetry
+
+When the pipe starts your app for a run on IronBee, your app's install, build, start and restart commands run with `IRONBEE_COLLECTOR_URL` (the collector the run reports to) and `IRONBEE_API_KEY` in their environment. An app whose OpenTelemetry exporter reads them ships its traces and logs into the verification run, next to the rest of its evidence. Nothing is written to disk for it.
+
+### Credentials in the pipe
+
+A pipe's variables reach everything it starts. The pipe takes its own variables back out of the environment and gives each step only what it needs: on IronBee, the app the pipe starts gets no Anthropic key, and the agent no Bitbucket token. On your runner, the agent starts your app, so the app inherits the agent's environment, the Anthropic credential and `IRONBEE_API_KEY` included. A variable you pass under another name, such as your app's own secret, reaches every process the pipe starts, your app included.
+
+---
+
+## Outputs
+
+The pipe writes its outputs to `.ironbee/outputs.env` in the working directory. The step's `after-script` reads them on every run; the step's later script lines run only when the pipe passes. A step that lists them in `output-variables:` also hands them to the steps after it, when the pipe can reach the step's variables file:
+
+```yaml
+- step:
+    output-variables: [IRONBEE_VERDICT, IRONBEE_JOB_URL]
+    script:
+      - pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+        variables:
+          IRONBEE_API_KEY: $IRONBEE_API_KEY
+```
+
+| Variable | Description |
+|----------|-------------|
+| `IRONBEE_VERDICT` | `pass`, `fail`, `not_applicable` or `unknown` |
+| `IRONBEE_MODE` | Where the verification ran: `platform` or `local` |
+| `IRONBEE_JOB_ID` | The verification run's id. Platform mode only; after a fix, the re-verification's id |
+| `IRONBEE_JOB_URL` | Link to the run in the IronBee Console. Platform mode only, once the run has started |
+| `IRONBEE_ARTIFACTS_URL` | The step's page, whose **Artifacts** tab holds the evidence. Local mode only; evidence from a run on IronBee is in the console |
+| `IRONBEE_PLATFORM_PUBLISHES` | `true` when IronBee publishes the run on the repository itself: the build status on the commit, and on a pull request its comments and summary comment. The pipe then posts no report comment. `false` otherwise, and always in local mode |
+
+---
+
+## Caching
+
+In local mode, the pipe installs the Playwright Chromium binaries on every run. A pipe keeps nothing outside the clone, so they live in `.cache/ms-playwright` at the clone's root, and the pipe tells git to ignore that folder. Keep them between runs with a custom cache on the step:
+
+```yaml
+definitions:
+  caches:
+    playwright: .cache/ms-playwright
+  steps:
+    - step: &ironbee-verify
+        caches: [playwright]
+```
+
+Platform mode installs no browser.

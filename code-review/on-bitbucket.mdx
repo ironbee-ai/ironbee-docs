@@ -1,0 +1,133 @@
+---
+title: Code review on Bitbucket pull requests
+sidebarTitle: On Bitbucket
+description: What IronBee posts on a Bitbucket pull request, how the IronBee review build status works, and how to steer reviews with commands and replies.
+keywords: ["Bitbucket pull request review", "AI code review", "Bitbucket Cloud", "build status", "merge check"]
+---
+
+IronBee reviews the pull requests of a repository whose workspace is [connected to IronBee](/integrations/bitbucket), once the repository is enabled and has code review turned on. It posts inline comments and a review comment, keeps a summary comment on the pull request, and sets the **IronBee review** build status. Everything it writes appears as IronBee's app in the workspace. To turn code review on, see [Code review](/code-review/overview).
+
+A review on Bitbucket reads, decides and reports the same way as on GitHub, so this page covers what differs. For the parts it shares, it links to [Code review on GitHub](/code-review/on-github).
+
+Each review also appears in the console, with its findings. See [Pull requests](/code-review/pull-requests). To review a branch before you open a pull request, use [`ironbee review`](/cli/guides/code-review) in the CLI.
+
+---
+
+## What starts a review
+
+The same events and settings as on GitHub start or hold back a review: a pull request opened, a draft marked ready, and new commits pushed, filtered by **Automatic reviews**, **Draft pull requests**, **Pull requests opened by bots**, **Target branches** and **Skip by title**. See [What starts a review](/code-review/on-github#what-starts-a-review). Bitbucket pull requests have no labels, so **Skip by label** never matches on Bitbucket.
+
+Bitbucket sends events to IronBee's app with a short delay, so a review can start a few minutes after the push.
+
+A pull request that was already open when its repository was enabled isn't reviewed on its own. The console lists it as **Not reviewed** until someone asks for a review, or it gets a push.
+
+A pull request from a fork in the same workspace is reviewed too. A pull request from a fork in another workspace is left alone: IronBee posts nothing on it.
+
+---
+
+## The review IronBee posts
+
+IronBee posts an inline comment for each finding, then the review comment. Bitbucket has no batched review, so it sends a notification for each comment. The review never approves a pull request. Whether a finding holds a merge is up to [the build status](#the-ironbee-review-build-status).
+
+**The review comment** is a comment on the pull request, with the same content as the review body on GitHub: the **Open in IronBee** button, the head line with the counts by severity, the notes on how the review was made, the rules and memories it applied and the findings table. See [The review body](/code-review/on-github#the-review-body).
+
+**Inline comments** are comments on the pull request's diff, one per finding, with the same parts as on GitHub. See [Inline comments](/code-review/on-github#inline-comments). A suggested fix is a suggestion you can apply from the comment with **Apply suggestion**. A fix that holds a code fence, or that reaches more than 100 lines above the comment, is a plain code block instead.
+
+Bitbucket shows text differently in a few ways:
+- The severity and kind marks are emoji, such as 🔴 for critical or 🐛 for correctness, instead of the console's icons. The **Open in IronBee** button is an image on its own line.
+- Bitbucket has no folds, so a folded section is a bold heading with its content shown.
+- Bitbucket draws no Mermaid diagrams, so the review leaves out the map of where the findings sit and the **How it happens** diagrams.
+- The line asking for a thumbs-up or a thumbs-down is left out, since IronBee doesn't read reactions on Bitbucket.
+
+---
+
+## The summary comment
+
+With **Pull request summary** on, IronBee keeps one summary comment on the pull request and edits it in place when the pull request changes. It never writes in the pull request's description.
+
+The comment is headed **Summary of this pull request**, and its first line says where it comes from: "_Written by IronBee from the code at `abc1234`._", or "_..., update 3._" after it has been rewritten. Its sections are the same as on GitHub, without diagrams. See [The pull request summary](/code-review/on-github#the-pull-request-summary).
+
+The console's pull request page shows the same summary in its **Summary** card. See [Pull requests](/code-review/pull-requests).
+
+---
+
+## Follow-up reviews
+
+Follow-up reviews work as on GitHub: a push or a request reads what changed since the last review, and IronBee replies on the comments of its earlier findings. With **Close fixed threads** on **Resolve the thread**, it resolves the comment of a fixed finding. See [Follow-up reviews](/code-review/on-github#follow-up-reviews).
+
+---
+
+## The IronBee review build status
+
+A review sets a build status named **IronBee review** on the commit it reviewed, for the pull request's source branch. Its link opens the pull request in the console.
+
+| GitHub check conclusion | Bitbucket build status |
+|-------------------------|------------------------|
+| In progress | In progress |
+| Success | Successful |
+| Action required | Failed |
+| Neutral | Successful |
+| Cancelled | Successful |
+
+The status's description is the check's title on GitHub, such as `3 findings · 1 high · 2 low`, `Nothing to add` or **IronBee review · too large to review**. See [When the review is done](/code-review/on-github#when-the-review-is-done) for the titles. A status that would read only **IronBee review** adds the first line of the review's summary, such as **IronBee review · retracted**. A running status shows no progress.
+
+A neutral or cancelled outcome is successful on Bitbucket, so it never fails a build. Only an open finding that reaches **Block merging when** turns the status to failed.
+
+### Merges
+
+IronBee always writes its build statuses on Bitbucket. The **Block merges** setting is GitLab's alone.
+
+The status counts toward Bitbucket's merge check **Minimum number of successful builds for the last commit**, set in a branch restriction's merge settings:
+- On every plan, a running or failed **IronBee review** status shows as a warning on the pull request.
+- On a Premium plan, where an admin turns the merge check on, it holds the merge: a running review until it ends, and a blocking result until it's fixed.
+
+**Block merging when** decides which findings make the result blocking. Set to **Never**, a review's result never fails the status. See [Code review settings](/code-review/settings).
+
+---
+
+## Commands
+
+Write a command in a comment on the pull request, mentioning IronBee with `@ironbee-ai`, the same mention as on GitHub, shown and copyable under **Mention** on [Integrations > Bitbucket](/integrations/bitbucket#mention-ironbee).
+
+The commands, their replies and the forms IronBee reads are the same as on GitHub: `review`, `full review`, `pause`, `resume` and `retract`. See [Commands](/code-review/on-github#commands). For example:
+
+```
+@ironbee-ai review
+```
+
+A reply under IronBee's review comment works too. A command in a reply under one of its inline comments isn't read: write it in the pull request's conversation.
+
+Only the pull request's author and people with a role in the workspace can give commands: its admins, members and collaborators. `retract` needs a role in the workspace: being the author isn't enough. IronBee doesn't act on commands or questions from anyone else.
+
+`retract` deletes IronBee's review comment and its inline comments, turns its other comments, the summary included, into "_(retracted)_", and the status reads **IronBee review · retracted**.
+
+---
+
+## Replies and resolved comments
+
+IronBee reads what people do with its comments, as on GitHub. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads). As with commands, only the author and people with a role in the workspace count. On Bitbucket:
+
+- **Replies** work as on GitHub. IronBee's answer starts by mentioning you, so Bitbucket notifies you.
+- **Resolving a comment.** Resolving or reopening one of IronBee's comments reaches IronBee right away, and the recheck of the **IronBee review** status follows.
+- **Reactions** aren't read: Bitbucket doesn't share them with apps. Reply instead.
+- **Hiding a comment** has no counterpart on Bitbucket.
+- Editing or deleting a comment isn't followed.
+
+---
+
+## Credits and when a review doesn't run
+
+Credits, the situations in which no review runs, and what happens when the team's credits run out are the same as on GitHub, with the **IronBee review** build status in place of the check. See [When a review doesn't run](/code-review/on-github#when-a-review-doesnt-run) and [Credits](/code-review/on-github#credits).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Bitbucket" icon="/images/icons/bitbucket.svg" href="/integrations/bitbucket">
+    Connect a workspace and pick its repositories.
+  </Card>
+  <Card title="Code review settings" icon="settings" href="/code-review/settings">
+    Triggers, depth, output and merge blocking.
+  </Card>
+</CardGroup>

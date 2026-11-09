@@ -22,9 +22,10 @@ Most environments appear on their own. A deployment or a run that names a new en
 | Netlify | `deploy-preview`, `branch-deploy` or `production`, from the deploy context |
 | GitHub Action | The name in `ironbee_environment`, or the deployment's environment on `deployment` events |
 | GitLab component | The name in `ironbee_environment`, or the job's own `environment:` name |
+| Bitbucket Pipe | The name in `IRONBEE_ENVIRONMENT`, or the step's deployment environment |
 | `ironbee verify` | The name in `--environment` |
 
-Each card says how the environment got its name: created in the console, or named by Vercel deploys, Netlify deploys, GitHub Actions runs, GitLab CI runs, API runs, Console runs or CLI runs.
+Each card says how the environment got its name: created in the console, or named by Vercel deploys, Netlify deploys, GitHub Actions runs, GitLab CI runs, Bitbucket Pipelines runs, API runs, Console runs or CLI runs.
 
 To set an environment up before its first run, click **New environment**:
 

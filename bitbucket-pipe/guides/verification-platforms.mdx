@@ -1,0 +1,69 @@
+---
+title: Local-mode platforms in Bitbucket
+sidebarTitle: Local-mode platforms
+description: Choose the IronBee DevTools platforms the agent verifies through when the Bitbucket Pipe runs the verification on your runner.
+---
+
+When the verification runs inside the pipe (local mode), the agent verifies through IronBee DevTools, the same platforms the [CLI uses](/cli/concepts/how-it-works). You choose which platforms it gets.
+
+<Note>
+  These variables apply to local mode only. On IronBee, the run verifies your web app in a browser, and the pipe logs a warning if you set them. See [Platform and local verification](/bitbucket-pipe/concepts/verification-modes).
+</Note>
+
+---
+
+## The platforms
+
+| Platform | Variable | Default | Verifies through |
+|----------|----------|---------|------------------|
+| Browser | `IRONBEE_BROWSER_DEVTOOLS` | `"true"` | A real Chromium browser: navigation, DOM, console, accessibility, screenshots, recording |
+| Backend | `IRONBEE_BACKEND_DEVTOOLS` | `"false"` | Real protocol calls: HTTP, gRPC, GraphQL, WebSocket, databases, logs |
+| Node.js | `IRONBEE_NODE_DEVTOOLS` | `"false"` | The Node.js runtime: tracepoints, exceptions, variables, HTTP capture |
+| Python | `IRONBEE_PYTHON_DEVTOOLS` | `"false"` | The Python runtime through debugpy: tracepoints, exceptions, logs, thread dumps |
+| Terminal | `IRONBEE_TERMINAL_DEVTOOLS` | `"false"` | CLI, REPL and TUI programs, driven through a pseudo-terminal |
+
+Only the browser runs by default. Turn on the others when those layers are part of the change:
+
+```yaml
+- pipe: docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1
+  variables:
+    IRONBEE_API_KEY: $IRONBEE_API_KEY
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+    BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN
+    VERIFICATION_MODE: "local"
+    IRONBEE_BROWSER_DEVTOOLS: "true"
+    IRONBEE_BACKEND_DEVTOOLS: "true"
+```
+
+<Warning>
+  The terminal platform gives the agent a shell in the pipe. Turn it on only when a command-line program is what you are verifying.
+</Warning>
+
+All enabled platforms are served by one `ironbee-devtools` MCP server. Its log is written to `.ironbee/artifacts/ironbee-devtools-mcp.log` and kept with the step's [evidence](/bitbucket-pipe/advanced/evidence).
+
+---
+
+## Browser in a pipe
+
+The pipe launches Chromium with its sandbox off, because a pipe's container has no user namespaces for Chromium to sandbox with. No configuration is needed.
+
+Chromium and its system dependencies are installed on every run in local mode. To keep the browser between runs, add a custom cache; see [Caching](/bitbucket-pipe/configuration/configuration#caching). Local mode's Chromium and Claude Code run inside the pipe, so on a step with Docker Compose they share the Docker service's memory with your app.
+
+---
+
+## Tuning a platform
+
+To pass extra environment variables to the DevTools server, or to change other CLI settings, use `IRONBEE_EXTRA_CONFIG`. See [Custom configuration](/bitbucket-pipe/advanced/custom-configuration).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verifying your application" icon="play" href="/bitbucket-pipe/guides/verifying-your-app">
+    Choose the target and how to reach it.
+  </Card>
+  <Card title="Custom configuration" icon="sliders-horizontal" href="/bitbucket-pipe/advanced/custom-configuration">
+    Tune the DevTools server and other CLI settings.
+  </Card>
+</CardGroup>
