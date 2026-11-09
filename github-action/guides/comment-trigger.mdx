@@ -9,7 +9,7 @@ With the `issue_comment` trigger, anyone you allow can start a verification by c
 /ironbee-verify
 ```
 
-The run verifies the whole pull request the comment is on, and reports on the pull request. On IronBee, it fixes what it finds only when the comment asks for it.
+The run verifies the whole pull request the comment is on, and reports on the pull request. It fixes what it finds only when the comment asks for it.
 
 ---
 
@@ -86,6 +86,7 @@ concurrency:
 ```
 
 - The command must be the first line of the comment that isn't a quote. A comment that only mentions it, or a reply that quotes it, starts nothing.
+- The command is a word of its own. A comment such as `/ironbee-verify.` or `/ironbee-verifying` gets past the job's `startsWith` condition, but the action reads no command in it, and the run ends without verifying anything. The action does the same with a comment on an issue that isn't a pull request, when a job condition lets one through.
 - Options start with `--`. Everything after the first word that isn't an option is the instruction for the agent. So `/ironbee-verify fix the cart total` is an instruction, not a request to fix. An instruction that itself starts with `--` needs a lone `--` before it.
 - A multi-line comment works too: the whole body below the command line is the instruction.
 - The instruction replaces the workflow's `verification_prompt` for that run. A command with no instruction uses `verification_prompt`.
@@ -104,7 +105,9 @@ To use a different command, set `verification_command` and change the `startsWit
 `--fix` asks the run to fix what it finds and commit the fix to the pull request branch.
 - It needs an Anthropic credential.
 - It is bounded by `verification_apply_fix`: a repository that turned fixing off can't turn it back on from a comment.
-- Without `--fix`, a comment run on IronBee only verifies and reports. On your runner, the agent fixes what it finds either way.
+- Without `--fix`, a comment run only verifies and reports, on IronBee and on your runner.
+
+When fixing is off in the workflow, with `verification_apply_fix: false` or no Anthropic credential, a comment with `--fix` runs a verification that only reports. The report says in one line that the comment asked for `--fix` and fixing is off in this workflow. When IronBee publishes the run on the pull request itself, the action posts that line as a comment of its own.
 
 ---
 
@@ -120,7 +123,7 @@ The reactions come from the account behind `github_token`. A malformed command g
 
 ## Forks
 
-Comment commands on pull requests from forks are refused. A comment run holds the base repository's secrets, so building and starting a fork's code under it would hand them to whoever opened the pull request.
+Comment commands on pull requests from forks are refused. A comment run holds the base repository's secrets, so building and starting a fork's code under it would hand them to whoever opened the pull request. When the action can't tell whether the pull request comes from a fork, it refuses the run as well.
 
 ---
 

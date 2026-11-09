@@ -13,9 +13,6 @@ Go to [console.ironbee.ai](https://console.ironbee.ai) and sign up with Google, 
 
 When you create a new account, the console opens **Set up IronBee**. It has three steps: **Connect**, **Pick repositories** and **First review**. The first one, **Connect your repositories**, offers two cards: **GitHub** and **GitLab**.
 
-<img className="ib-shot ib-shot-light" src="/images/console/onboarding/setup-github-connect-light.png" alt="The Set up GitHub dialog on its first step, Connect GitHub: the three steps, what the App does, a preview of a review comment, and the Set up later and Install on GitHub buttons" />
-<img className="ib-shot ib-shot-dark" src="/images/console/onboarding/setup-github-connect-dark.png" alt="The Set up GitHub dialog on its first step, Connect GitHub: the three steps, what the App does, a preview of a review comment, and the Set up later and Install on GitHub buttons" />
-
 <Steps>
   <Step title="Connect">
     **GitHub:** click **Install on GitHub**. GitHub opens in a new window, where you pick the organization or account and the repositories IronBee can see. The step reads **Finish on GitHub** and moves on by itself once the App is installed.
@@ -23,17 +20,23 @@ When you create a new account, the console opens **Set up IronBee**. It has thre
     - If you can't install apps in your organization, pick the organization anyway. GitHub sends a request to its owners, and the step shows **Request sent to your organization owners**. It moves on by itself when one of them approves. Meanwhile, **Copy link** copies the install link to send to an owner, and **Open GitHub** lets you install on an account you own instead.
 
     **GitLab:** you need the Owner role on a top-level group on gitlab.com. Click **Connect GitLab**, authorize IronBee on GitLab, and pick the group. IronBee creates a service account in the group to work through, and brings you back to the next step. See [GitLab](/integrations/gitlab).
+
+    <img className="ib-shot ib-shot-light" src="/images/console/onboarding/setup-connect-light.png" alt="The Connect your repositories step of Set up IronBee: the GitHub card picked next to the GitLab card, what IronBee does on GitHub, and the Set up later and Install on GitHub buttons" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/onboarding/setup-connect-dark.png" alt="The Connect your repositories step of Set up IronBee: the GitHub card picked next to the GitLab card, what IronBee does on GitHub, and the Set up later and Install on GitHub buttons" />
   </Step>
   <Step title="Pick repositories">
     **GitHub:** every repository you shared with the App is already an IronBee project. Under **Pick repositories to review**, keep ticked the repositories whose pull requests IronBee should review. The ones you leave out have code review off. Click **Review N repositories**. Missing a repository? Click **Change access on GitHub**, share it with the App, then click **Refresh**.
 
     **GitLab:** a group makes no repository a project until you pick. Choose **All repositories**, which includes the ones added to the group later, or **Only selected repositories**, and tick them. Each repository you pick becomes a project, and IronBee reviews every new merge request in it. Click **Review N repositories**. Missing a repository? Click **Sync now**.
 
-    <img className="ib-shot ib-shot-light" src="/images/console/onboarding/setup-github-repositories-light.png" alt="The Pick repositories to review step: Installed on acme, 3 repositories shared, with Change access on GitHub, three ticked repositories and the Review 3 repositories button" />
-    <img className="ib-shot ib-shot-dark" src="/images/console/onboarding/setup-github-repositories-dark.png" alt="The Pick repositories to review step: Installed on acme, 3 repositories shared, with Change access on GitHub, three ticked repositories and the Review 3 repositories button" />
+    <img className="ib-shot ib-shot-light" src="/images/console/onboarding/setup-github-repositories-light.png" alt="The Pick repositories to review step of Set up IronBee: Installed on acme, 5 repositories shared, with Change access on GitHub, the ticked repositories, Missing a repository? with Change access on GitHub and Refresh, and the Review 5 repositories button" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/onboarding/setup-github-repositories-dark.png" alt="The Pick repositories to review step of Set up IronBee: Installed on acme, 5 repositories shared, with Change access on GitHub, the ticked repositories, Missing a repository? with Change access on GitHub and Refresh, and the Review 5 repositories button" />
   </Step>
   <Step title="First review">
     Under **Pick a pull request for your first review**, or **Pick a merge request for your first review** on GitLab, pick an open one and click **Review #N**. Drafts are marked **Draft, skipped**.
+
+    <img className="ib-shot ib-shot-light" src="/images/console/onboarding/setup-review-pick-light.png" alt="The Pick a pull request for your first review step: three open pull requests with their repository and author, the draft marked Draft, skipped, the credits left this month, and the Back and Review #128 buttons" />
+    <img className="ib-shot ib-shot-dark" src="/images/console/onboarding/setup-review-pick-dark.png" alt="The Pick a pull request for your first review step: three open pull requests with their repository and author, the draft marked Draft, skipped, the credits left this month, and the Back and Review #128 buttons" />
 
     The step follows the review: **Queued**, **Starting the reviewer**, **Reading the changes**, **Posting the review on GitHub** (or **on GitLab**). You can **Close** it at any time; the review keeps going and shows up on the pull request. When **Your first review is ready**, click **Open the review** to read it in the console, or **View on GitHub** (**View on GitLab**).
 
@@ -56,8 +59,8 @@ Each repository's [code wiki](/console/code-wiki) starts at the same time, unles
 
 Code review needs only the GitHub App or the GitLab connection. To also verify your changes, owners and admins open **Settings > Getting started**. It offers five ways in, and you can connect more than one.
 
-<img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-connect-light.png" alt="Settings, Getting started: the cards for GitHub, Vercel, Netlify and IronBee CLI, with the Connect GitHub, Connect Vercel, Connect Netlify and Set up the CLI buttons" />
-<img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-connect-dark.png" alt="Settings, Getting started: the cards for GitHub, Vercel, Netlify and IronBee CLI, with the Connect GitHub, Connect Vercel, Connect Netlify and Set up the CLI buttons" />
+<img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-connect-light.png" alt="Settings, Getting started: the GitHub and GitLab cards with Connect GitHub and Connect GitLab, and the Vercel, Netlify and IronBee CLI cards marked connected, with Manage" />
+<img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-connect-dark.png" alt="Settings, Getting started: the GitHub and GitLab cards with Connect GitHub and Connect GitLab, and the Vercel, Netlify and IronBee CLI cards marked connected, with Manage" />
 
 <Tabs>
   <Tab title="GitHub Action">

@@ -38,7 +38,7 @@ The fastest path is the console, which writes the pipeline file for you.
     In the **IronBee Component** step:
     - **Repository**: the GitLab project the pipeline file and the variables go into.
     - **Where it runs**: **On IronBee** (recommended) or **On your GitLab runner**.
-    - **On a finding**: **Report it**, or **Fix it too**. On your GitLab runner, the agent fixes what it finds either way.
+    - **On a finding**: **Report it**, or **Fix it too**.
   </Step>
   <Step title="Set it up on GitLab">
     Fill in how your app starts, then add the CI/CD variables the console lists: **Open CI/CD variables** opens the project's settings, and **Open access tokens** is where you create the `GITLAB_TOKEN`. Click **Copy and open the pipeline editor**: the console copies the file and opens GitLab's pipeline editor. Paste it there and commit. If the project already has a `.gitlab-ci.yml`, add the `include` block to it instead; **Copy the pipeline file** copies the file again. The commit is a push, and that push starts your first verification.
@@ -116,7 +116,7 @@ Replace the four `app_*` lines with your own install, build and start commands a
 
 Every input is a string. Quote numbers and `true`/`false`, as in `app_port: '3000'`: GitLab refuses an input whose value isn't a string. No credential appears in the file: the credential inputs read the CI/CD variables below by default.
 
-To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: 'true'`. The re-verification after a fix restarts the app with `app_start_command` alone, without rebuilding it, so serve the source (such as `npm run dev`) or set `app_restart_command`; see [Apps started through Docker Compose or a service](/gitlab-component/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, the agent fixes what it finds whatever `verification_apply_fix` says, so a run there needs the `GITLAB_TOKEN` to push its fixes.
+To have findings fixed while verifying on IronBee, add an Anthropic credential, set `verification_apply_fix: 'true'` and raise the job's `timeout:` to `150m`, as the console does for **Fix it too**: a fixed app on the runner is verified a second time. Before that re-verification, the component runs `app_build_command` and `app_start_command` again. When the start command hands off to Docker Compose or a service, set `app_restart_command`; see [Apps started through Docker Compose or a service](/gitlab-component/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, `verification_apply_fix: 'false'` has the agent report what it finds and change no file. A run that fixes, in either mode, needs the `GITLAB_TOKEN` to push its fixes.
 
 The `workflow:` block is optional. It keeps a project that runs both branch and merge request pipelines to one pipeline per push, so a push to a branch with an open merge request doesn't start two pipelines. See [Running in GitLab CI/CD](/gitlab-component/guides/running-in-ci).
 

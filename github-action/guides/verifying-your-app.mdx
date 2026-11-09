@@ -41,7 +41,7 @@ Describe how your app is installed, built and started, and the port it listens o
   The tunnel carries plain HTTP. Serve the app over HTTP on that port; a port that answers with TLS fails the run immediately.
 </Note>
 
-**On your runner**, the agent runs these commands itself as part of the verification. It's told the commands and `app_url`, not `app_port`, so set `app_url: http://localhost:3000` to tell it where the app answers.
+**On your runner**, the agent runs these commands itself as part of the verification. It's told the commands, the port and `app_url`.
 
 ### Which URLs count as on the runner
 
@@ -55,7 +55,7 @@ Any other host is verified as a deployed URL. On IronBee, a URL on the runner st
 
 ### Apps started through Docker Compose or a service
 
-When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again, without the install and build commands. That's right only when the start command runs the app itself, from the source the fix changed.
+When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started, together with the processes that one started, runs `app_build_command` again when it's set, and then `app_start_command`. The install command doesn't run again. That's right only when the start command runs the app itself.
 
 When the command hands off to Docker Compose, a process manager or a service, set two more inputs:
 
@@ -82,19 +82,18 @@ Point `app_url` at a public address:
     app_url: https://preview.example.com
 ```
 
-The install, build and start commands aren't used. Before the verification starts, the action requests the URL once, without any headers:
+The install, build and start commands aren't used. Before the verification starts, the action requests the URL once. On IronBee, the request carries `app_headers` and `app_secret_headers`, as the verification does; on your runner, it carries none. It doesn't follow a redirect:
 - A `401` or `403` answer fails the run, because the verification would only see a login page.
+- A redirect logs a warning naming where it leads. The verification follows it and reports on the page it lands on.
 - An unreachable URL logs a warning, because IronBee may reach addresses your runner can't.
 
 A deployed URL isn't re-verified after a fix: the deployment still serves the code that was deployed. The loop closes when the fix is deployed and the workflow runs again.
 
 ### Protected deployments
 
-A preview behind deployment protection or SSO that answers `401` or `403` fails the reachability request before the run. That request sends no headers, so a bypass in `app_secret_headers` or in a project secret doesn't get it through. For such a preview, verify on the runner: leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
+A preview behind deployment protection or SSO answers `401` or `403`, and the reachability request before the run fails on it. On IronBee, the ways past it are:
 
-When the protection answers that request with `200` or a redirect instead, the verification itself can get in with:
-
-- **A secret header.** If the protection can be bypassed with a header, pass it in `app_secret_headers`, one `Name: value` per line, from a GitHub secret. IronBee encrypts the value and never returns it.
+- **A secret header.** If the protection can be bypassed with a header, pass it in `app_secret_headers`, one `Name: value` per line, from a GitHub secret. The reachability request sends it too, so the run gets past that check. IronBee encrypts the value and never returns it.
 
   ```yaml
       app_url: https://preview.example.com
@@ -102,9 +101,12 @@ When the protection answers that request with `200` or a redirect instead, the v
         x-vercel-protection-bypass: ${{ secrets.VERCEL_BYPASS_SECRET }}
   ```
 
-- **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access).
+- **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access). The action doesn't know the project's secrets, so its reachability request goes without the bypass: a project secret works for a preview that answers that request with a redirect or `200`, not with `401` or `403`.
+- **The app on the runner.** Leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
 
-An SSO redirect that answers `200` with a login page can't be told apart from your app by its status code. In that case, the verdict describes the login page.
+On your runner, the headers aren't used, so a preview that answers `401` or `403` is refused whatever they hold. Verify the app on the runner instead.
+
+A sign-in redirect is logged, not refused, and a login page served with `200` can't be told apart from your app by its status code. In both cases, the verdict describes the login page.
 
 For headers that aren't secret, such as `x-e2e: 1`, use `app_headers`. Their values are stored as plain text.
 
@@ -134,14 +136,11 @@ Point the action at a subdirectory with `working_directory`. The commands, the c
 - uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
-    verification_mode: platform
     working_directory: packages/web-app
     app_install_command: npm ci
     app_start_command: npm run dev
     app_port: 5173
 ```
-
-On your runner, `working_directory` has to be the repository's root for now: in a subdirectory, the setup step fails. Verify a subdirectory on IronBee, as above.
 
 ---
 

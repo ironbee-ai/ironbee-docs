@@ -136,7 +136,7 @@ A finding outside the diff gets no inline comment; it's listed in the comment's 
 
 A Web and an API project on the same commit each get their own check, review and comment. A cancelled run and one that couldn't complete get the check only. When a newer run of the same type on the same commit has already posted, a Vercel or Netlify run only completes its check, and other runs post nothing. A run bound to a pull request that was cancelled or ended without a verdict gets no check at all.
 
-The App has to have the repository among its repositories. A run in a repository of the same owner that the App doesn't cover is still treated as published by IronBee, but IronBee can't write there, so the pull request gets nothing. Add the repository to the App. `@ironbee-ai retract` doesn't remove what a verification run posted.
+The App has to have the repository among its repositories. IronBee posts nothing for a run in a repository the App doesn't cover, such as one left out of an installation on **Only select repositories**; a GitHub Action run there reports through the action's own comment. `@ironbee-ai retract` doesn't remove what a verification run posted.
 
 ---
 
@@ -156,8 +156,7 @@ Changes on GitHub flow back automatically:
 | Symptom | Likely cause |
 |---------|--------------|
 | A run fails with "repo checkout failed", or the action's report says the run couldn't read the repository | The repository is private and the App doesn't cover it. Grant the App access, or verify without the repository: `ironbee_bind_repository: false` in the GitHub Action, `--no-repo` with `ironbee verify` |
-| A GitHub Action run shows no IronBee check | The run verified on your runner (local mode) or ran with `ironbee_bind_repository: false`, and reports through the job result and the action's comment. A run on a pull request that was cancelled or ended without a verdict gets no check either |
-| A GitHub Action run on IronBee shows nothing on the pull request, and no report comment | The App is installed on the repository's owner but doesn't cover this repository. Add the repository to the App, or set `ironbee_bind_repository: false` |
+| A GitHub Action run shows no IronBee check | The run verified on your runner (local mode), ran with `ironbee_bind_repository: false`, or is in a public repository the App doesn't cover. It reports through the job result and the action's comment. A run on a pull request that was cancelled or ended without a verdict gets no check either |
 | A Vercel or Netlify run shows nothing on the pull request | The App isn't installed for the repository, or the repository is outside the installation's scope |
 | The check appears, but there's no comment | Comments are posted only for a real verdict, and only when an open pull request heads the commit. The pull request the run named may be closed or merged, or a push moved its head during the run |
 | A finding has no inline comment | Its line is outside the pull request's diff. It's listed in the comment's table |

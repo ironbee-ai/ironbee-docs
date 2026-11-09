@@ -41,7 +41,8 @@ include:
 | `ironbee_api_key is required` in a merge request pipeline | `IRONBEE_API_KEY` is a protected variable, and the branch isn't protected | Clear **Protect variable** on the CI/CD variable |
 | An input value fails the run and names the input | A `true`/`false` input got another value | Use `true`/`false`, `1`/`0`, `yes`/`no` or `on`/`off`, quoted |
 | The run stops at the plan with "no target" | Neither `app_url` nor `app_start_command` with `app_port` is set | Add a target. See [Verifying your application](/gitlab-component/guides/verifying-your-app) |
-| The run fails before verifying, on a `401` or `403` | The deployment is protected, and the reachability request before the run sends no headers | Verify on the runner. See [Protected deployments](/gitlab-component/guides/verifying-your-app#protected-deployments) |
+| The run fails before verifying, on a `401` or `403` | The deployment is protected, and the reachability request before the run doesn't carry a bypass. It sends `app_headers` and `app_secret_headers` on IronBee, and no headers on your runner | On IronBee, pass the bypass in `app_secret_headers`. Otherwise verify the app on the runner. See [Protected deployments](/gitlab-component/guides/verifying-your-app#protected-deployments) |
+| A warning that the URL "answers 302, redirecting to" another address | The deployed URL redirects, for example to a sign-in page. The reachability request doesn't follow redirects | Nothing, if the redirect leads to your app. If it's a sign-in page, the verdict describes that page: pass the bypass in `app_secret_headers`, or verify the app on the runner |
 | The report says the run could not read the repository | A private or internal project whose group isn't connected to IronBee | [Connect the group](/integrations/gitlab) and cover the project, or set `ironbee_bind_repository: 'false'` |
 | **No verification ran** with `PROJECT_ARCHIVED` | The project is archived in the console | Unarchive it, or report to another project with `ironbee_project` |
 | **No verification ran** with `TARGET_OUTSIDE_ENVIRONMENT_DOMAIN` | `app_url` is outside the Domain properties of the environment in `ironbee_environment` | Point `app_url` at a host inside those domains, or change the environment's domains |
@@ -57,12 +58,11 @@ include:
 | The job is cancelled partway, and the run reads as a platform failure | The job's `timeout:` is lower than the run needs | Raise it to the value the plan logs |
 | **Session ended early** (on your runner) | The agent reached `claude_code_max_turns`, or stopped on an error | Raise `claude_code_max_turns`, or narrow the work with `verification_prompt` |
 | "no gitlab_token is set, so the report stays in the job log" | No `GITLAB_TOKEN` variable | Add a [project access token](/gitlab-component/get-started/getting-started#the-gitlab-token) |
-| "there are fixes to push to `<branch>`, and no gitlab_token to push them with", or "there are fixes to open a merge request for, and no gitlab_token to push them with" | A fix was made, but there's no token to push it | Add the token. On IronBee, `verification_apply_fix: 'false'` also turns fixing off; on your runner the agent always fixes |
+| "there are fixes to push to `<branch>`, and no gitlab_token to push them with", or "there are fixes to open a merge request for, and no gitlab_token to push them with" | A fix was made, but there's no token to push it | Add the token, or set `verification_apply_fix: 'false'` to turn fixing off |
 | "could not push the fixes to `<branch>`, the branch may have moved since this run checked it out" | Someone pushed to the merge request branch during the run | Run the pipeline again on the new head |
 | The push of a fix or the report note is refused | The token lacks the `api` or `write_repository` scope, or the **Developer** role | Create the token again with both scopes and the **Developer** role or above |
 | "local verification needs anthropic_api_key or claude_code_oauth_token" | `verification_mode: local` with no Anthropic credential | Add `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`, or verify on IronBee |
 | "headers apply to a deployed URL only" | `app_headers` or `app_secret_headers` with an app on the runner, on IronBee | Remove the headers, or verify a deployed URL |
-| The setup step fails on your runner with `working_directory` set | Local mode needs `working_directory` at the repository's root for now | Verify the subdirectory on IronBee with `verification_mode: platform` |
 | A merge request with a fix can't merge | The fix commit's pipeline was skipped, and the project requires **Pipelines must succeed** | Run a new pipeline, or turn on **Skipped pipelines are considered successful** |
 | A merge request from a fork is refused at the plan | A fork's pipeline must not run with your project's credentials | Expected. Verify after merging, or with a manual pipeline on the branch |
 
@@ -82,9 +82,9 @@ See [Verification jobs](/cli/guides/verification-jobs).
 
 ## Session logs from your runner
 
-When the verification ran on your runner, the job's [evidence artifacts](/gitlab-component/advanced/evidence#runs-on-your-runner) include the session's own logs under `sessions/<id>/`:
-- `verdict.json` holds the final verdict.
-- `actions.jsonl` is the full event log.
+When the verification ran on your runner, the job's [evidence artifacts](/gitlab-component/advanced/evidence#runs-on-your-runner) include the session's own logs. Each agent of the session has its own folder, `sessions/<id>/agents/<agentId>/`, and the main agent's is `agents/main/`:
+- `verdict.json` holds that agent's latest verdict.
+- `actions.jsonl` is its full event log.
 
 If the agent stopped early, the report shows a banner with a collapsible block: the reason, the turns, errors and any blocked tool calls.
 

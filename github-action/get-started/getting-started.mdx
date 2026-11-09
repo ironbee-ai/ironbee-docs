@@ -36,7 +36,7 @@ The fastest path is the console, which writes the workflow for you.
     In the **IronBee Action** step:
     - **Repository**: the repository the workflow file and the secrets go into.
     - **Where it runs**: **On IronBee** (recommended) or **On your GitHub runner**.
-    - **On a finding**: **Report it**, or **Fix it too**. On your GitHub runner, the agent fixes what it finds either way.
+    - **On a finding**: **Report it**, or **Fix it too**.
 
     <img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-github-action-light.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
     <img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-github-action-dark.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
@@ -139,7 +139,7 @@ Create `.github/workflows/ironbee.yml` with one of the two starter workflows bel
 
 Replace the four `app_*` lines with your own install, build and start commands and the port your app listens on. If your app is already deployed at a public preview URL, delete the four lines and set `app_url` instead. The action needs one of the two: without a target the run stops before it verifies anything. See [Verifying your application](/github-action/guides/verifying-your-app).
 
-To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: true`. The re-verification after a fix restarts the app with `app_start_command` alone, without rebuilding it, so serve the source (such as `npm run dev`) or set `app_restart_command`; see [Apps started through Docker Compose or a service](/github-action/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, the agent fixes what it finds whatever `verification_apply_fix` says.
+To have findings fixed while verifying on IronBee, add an Anthropic credential, set `verification_apply_fix: true` and raise `timeout-minutes` to `150`, as the console does for **Fix it too**: a fixed app on the runner is verified a second time. Before that re-verification, the action runs `app_build_command` and `app_start_command` again. When the start command hands off to Docker Compose or a service, set `app_restart_command`; see [Apps started through Docker Compose or a service](/github-action/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, `verification_apply_fix: false` has the agent report what it finds and change no file.
 
 <Tip>
   At the start of every run, the action logs the `timeout-minutes` its configuration needs. If that is more than your job allows, raise `timeout-minutes`. When GitHub stops a job mid-run, the verification is cancelled with it.

@@ -43,10 +43,10 @@ flowchart TD
   <Step title="Fix">
     This step runs when the verification fails, fixing is on (`verification_apply_fix`) and an Anthropic credential is set.
     - **On IronBee:** a Claude Code run on your runner edits the files to fix the reported issues. For an app that runs on the runner, the component then restarts it and runs a second verification. A deployed URL isn't re-verified, because the deployment still serves the code that was deployed.
-    - **On your runner:** the agent fixes and re-verifies in the same session. It does so whatever `verification_apply_fix` says.
+    - **On your runner:** the agent fixes and re-verifies in the same session. With fixing off, it reports what it finds and changes no file.
   </Step>
   <Step title="Commit">
-    The component commits and pushes the fix itself, with the [GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token); the agent only edits files.
+    The component commits and pushes the fix itself, with the [GitLab token](/gitlab-component/get-started/getting-started#the-gitlab-token); the agent only edits files. Only the files the fix changed are committed.
     - On a merge request, the fix goes to the merge request's source branch.
     - Otherwise it goes to a new `ironbee/fix-<sha7>-<pipeline_id>` branch with a merge request.
     - A fix whose re-verification fails is not pushed.
@@ -70,7 +70,7 @@ The component binds each run to the change behind the pipeline, so the verificat
 | Pipeline source | What gets verified |
 |-----------------|--------------------|
 | `merge_request_event` | The whole merge request |
-| `push` | On IronBee: every commit in the push, from the push's `before` commit (`CI_COMMIT_BEFORE_SHA`), or the commit against its parent when that base isn't usable. On your runner: the last commit against its parent |
+| `push` | Every commit in the push, from the push's `before` commit (`CI_COMMIT_BEFORE_SHA`), or the commit against its parent when that base isn't usable |
 | `schedule`, `web`, `api`, `trigger` | On IronBee: the commit against its parent. On your runner: the whole application |
 
 To verify the application without the repository, for example a private project whose group isn't connected to IronBee, set `ironbee_bind_repository: 'false'`.
