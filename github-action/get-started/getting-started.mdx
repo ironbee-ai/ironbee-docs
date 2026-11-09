@@ -36,7 +36,7 @@ The fastest path is the console, which writes the workflow for you.
     In the **IronBee Action** step:
     - **Repository**: the repository the workflow file and the secrets go into.
     - **Where it runs**: **On IronBee** (recommended) or **On your GitHub runner**.
-    - **On a finding**: **Report it**, or **Fix it too**.
+    - **On a finding**: **Report it**, or **Fix it too**. On your GitHub runner, the agent fixes what it finds either way.
 
     <img className="ib-shot ib-shot-light" src="/images/console/integrations/onboarding-github-action-light.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
     <img className="ib-shot ib-shot-dark" src="/images/console/integrations/onboarding-github-action-dark.png" alt="The IronBee Action step: the repository acme / web picked, Where it runs open with On IronBee (recommended) selected and On your GitHub runner, and On a finding set to Report it" />
@@ -81,7 +81,7 @@ Create `.github/workflows/ironbee.yml` with one of the two starter workflows bel
         timeout-minutes: 90
         steps:
           - uses: actions/checkout@v4
-          - uses: ironbee-ai/ironbee-action@v1.1.0
+          - uses: ironbee-ai/ironbee-action@v1
             with:
               ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
               verification_mode: platform
@@ -120,7 +120,7 @@ Create `.github/workflows/ironbee.yml` with one of the two starter workflows bel
         timeout-minutes: 90
         steps:
           - uses: actions/checkout@v4
-          - uses: ironbee-ai/ironbee-action@v1.1.0
+          - uses: ironbee-ai/ironbee-action@v1
             with:
               ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
               anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -130,7 +130,7 @@ Create `.github/workflows/ironbee.yml` with one of the two starter workflows bel
               app_install_command: npm ci
               app_build_command: npm run build
               app_start_command: npm run start
-              app_port: 3000
+              app_url: http://localhost:3000
               # ... or at a preview URL instead of the four lines above:
               # app_url: https://preview.example.com
     ```
@@ -139,7 +139,7 @@ Create `.github/workflows/ironbee.yml` with one of the two starter workflows bel
 
 Replace the four `app_*` lines with your own install, build and start commands and the port your app listens on. If your app is already deployed at a public preview URL, delete the four lines and set `app_url` instead. The action needs one of the two: without a target the run stops before it verifies anything. See [Verifying your application](/github-action/guides/verifying-your-app).
 
-To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: true`.
+To have findings fixed while verifying on IronBee, add an Anthropic credential and set `verification_apply_fix: true`. The re-verification after a fix restarts the app with `app_start_command` alone, without rebuilding it, so serve the source (such as `npm run dev`) or set `app_restart_command`; see [Apps started through Docker Compose or a service](/github-action/guides/verifying-your-app#apps-started-through-docker-compose-or-a-service). On your runner, the agent fixes what it finds whatever `verification_apply_fix` says.
 
 <Tip>
   At the start of every run, the action logs the `timeout-minutes` its configuration needs. If that is more than your job allows, raise `timeout-minutes`. When GitHub stops a job mid-run, the verification is cancelled with it.
@@ -157,7 +157,7 @@ In your repository, open **Settings > Secrets and variables > Actions** and clic
 | `ANTHROPIC_API_KEY` | An Anthropic API key | Verifying on your runner, or fixing |
 | `CLAUDE_CODE_OAUTH_TOKEN` | A Claude Code OAuth token, instead of `ANTHROPIC_API_KEY` | Verifying on your runner, or fixing |
 
-Pass the Claude Code token with `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` instead of `anthropic_api_key`. Your Anthropic key or token stays in GitHub: the action uses it on your runner, and IronBee receives only the verification result.
+Pass the Claude Code token with `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` instead of `anthropic_api_key`. Your Anthropic key or token stays in GitHub: the action uses it only on your runner, and IronBee never receives it.
 
 The next push or pull request starts a verification run.
 

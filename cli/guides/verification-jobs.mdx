@@ -162,6 +162,8 @@ The binding attaches only when it would actually work:
 - A commit derived from local HEAD must be **reachable from a remote-tracking branch**. An unpushed HEAD produces a warning, and the run proceeds **unbound** rather than pointing at code the service can't read. An explicit `--commit`, or the CI job's commit, is taken at face value.
 - A dirty working tree only warns. The run stays bound to the committed SHA, which it reads from GitHub or GitLab, so what the agent reads and what's on your disk may differ.
 
+A bound run on a repository the [IronBee GitHub App](/integrations/github) covers, or on a gitlab.com project whose [group is connected](/integrations/gitlab), reports its result there: a check, or a pipeline status where IronBee writes one ([Merges](/code-review/on-gitlab#merges)), on the commit, and on an open pull or merge request an inline comment on each finding in the diff and a summary comment. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request). To keep the run off the repository, pass `--no-repo`.
+
 In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository (on GitLab, connect the project's group in the console), or re-run with `--no-repo`.
 
 In a gitlab.com CI job of the same project, the binding is automatic too, even on a detached checkout. The run binds to the merge request in `CI_MERGE_REQUEST_IID` when it's that project's, else to the commit in `CI_COMMIT_SHA`. The job is declared with a `gitlab_ci` trigger, so the console shows it as **GitLab CI**. A gitlab.com remote is never bound through `GITHUB_REPOSITORY`. See [Environment variables](/cli/configuration/environment-variables#verification-jobs-code-reviews-and-credits).
@@ -218,16 +220,27 @@ With `--json`, stdout carries exactly one JSON document, and all decoration goes
   "triggerType": "api", "attempt": "…", "verificationId": "…",
   "input": { "type": "web" },
   "result": {
-    "status": "pass",
-    "checks": ["…"], "issues": [], "fixes": [], "reason": [],
-    "summary": "…"
+    "status": "fail",
+    "checks": ["…"], "issues": ["…"], "fixes": ["…"], "reason": [],
+    "summary": "…",
+    "findings": [
+      { "id": "…", "title": "…", "severity": "high", "kind": "correctness",
+        "when": "…", "then": "…", "proof": "…", "impact": "…",
+        "where": { "path": "src/cart.ts", "line": 42 },
+        "fix": { "note": "…", "replaceLines": "42-44", "code": "…" } }
+    ],
+    "head": "…"
   },
+  "publication": { "provider": "github", "status": "succeeded" },
   "credits": { "estimated": "…", "charged": "…", "reason": "…" }
 }
 ```
 
 - `status` is one of `queued`, `starting`, `running`, `succeeded`, `failed` or `cancelled`.
 - `result.status` is `pass`, `fail` or `not_applicable`.
+- A failing result carries `findings`, the structured problems its `issues` and `fixes` are derived from. Each has an `id`, a `title`, a `severity` (`critical`, `high`, `medium` or `low`), a `kind` (`correctness`, `security` or `editorial`), and `when`, `then` and `proof`. It may also carry `impact`, `where` (the `path` and `line` of the problem), `fix` (a `note`, and optionally `code` with `replaceLines`, the lines that code replaces, such as `42-44`) and `refs`, the other places the finding relies on.
+- `result.head` is the commit the run checked out, or `null` when the run had no repository.
+- `publication` says whether IronBee publishes the run on the repository: its `provider` (`github` or `gitlab`) and its `status` (`pending`, `succeeded` or `failed`). It's `null` when the run isn't published there.
 - `credits.estimated` is the most the job can use, and `credits.charged` what it used once it ended. Each is `null` until it's known.
 - The body also carries the resolved `environment`, the project, the target type in `input.type`, the trigger, and the created, started and ended timestamps.
 - The result may carry `refused: true` with a `reasonCode` when the run declined or narrowed part of the request. A refused run can still be `succeeded`, so a caller should check it.

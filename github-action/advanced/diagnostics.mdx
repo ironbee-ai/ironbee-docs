@@ -3,7 +3,7 @@ title: Diagnostics
 description: Find out why a run didn't behave as expected, from the plan line to the report banners.
 ---
 
-When a run doesn't behave as expected, start with the lines the action writes at the top of its log, then the report on the pull request.
+When a run doesn't behave as expected, start with the lines the action writes at the top of its log, then the report in the job summary or on the pull request.
 
 ---
 
@@ -23,7 +23,7 @@ Below the plan, the action warns about inputs that don't apply to the mode it ru
 Set `verbose: 'true'` to log each tool call with its arguments, the tool responses, the prompt and the verdict details:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     app_url: https://preview.example.com
@@ -37,7 +37,7 @@ Set `verbose: 'true'` to log each tool call with its arguments, the tool respons
 | What you see | Why | What to do |
 |--------------|-----|------------|
 | The run stops at the plan with "no target" | Neither `app_url` nor `app_start_command` with `app_port` is set | Add a target. See [Verifying your application](/github-action/guides/verifying-your-app) |
-| The run fails before verifying, on a `401` or `403` | The deployment is protected | Pass a bypass in `app_secret_headers`, store it as a project secret, or verify on the runner. See [Protected deployments](/github-action/guides/verifying-your-app#protected-deployments) |
+| The run fails before verifying, on a `401` or `403` | The deployment is protected, and the reachability request before the run sends no headers | Verify on the runner. See [Protected deployments](/github-action/guides/verifying-your-app#protected-deployments) |
 | The report says the run could not read the repository | A private repository that the IronBee GitHub App doesn't cover | Install the [GitHub App](/integrations/github) on the repository, or set `ironbee_bind_repository: false` |
 | **No verification ran** with `PROJECT_ARCHIVED` | The project is archived in the console | Unarchive it, or report to another project with `ironbee_project` |
 | **No verification ran** with `TARGET_OUTSIDE_ENVIRONMENT_DOMAIN` | `app_url` is outside the Domain properties of the environment in `ironbee_environment` | Point `app_url` at a host inside those domains, or change the environment's domains |
@@ -46,7 +46,10 @@ Set `verbose: 'true'` to log each tool call with its arguments, the tool respons
 | **No verdict** | The verification ended without a verdict | Open the run in the console from the report link to see how it ended |
 | The job is cancelled partway | `timeout-minutes` is lower than the run needs | Raise it to the value the plan logs |
 | **Session ended early** (on your runner) | The agent reached `claude_code_max_turns`, or stopped on an error | Raise `claude_code_max_turns`, or narrow the work with `verification_prompt` |
-| No run on a fork's pull request | Forks receive no secrets | Expected. Verify after merging, or with a manual dispatch on the branch |
+| "could not push the fixes to `<branch>`, the branch may have moved since this run checked it out" | Someone pushed to the pull request branch during the run | Run the workflow again on the new head |
+| The run fails at the plan with "this is a pull request from a fork" | Forks receive no secrets | Expected. Verify after merging, or with a manual dispatch on the branch |
+| **No verification ran** with `CREDITS_EXHAUSTED` | The team's credits for the month are used up | See [Credit usage](/console/usage) |
+| The setup step fails on your runner with `working_directory` set | Local mode needs `working_directory` at the repository's root for now | Verify the subdirectory on IronBee with `verification_mode: platform` |
 
 ---
 

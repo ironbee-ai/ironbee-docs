@@ -13,16 +13,16 @@
 
 IronBee reviews pull requests and verifies code changes the way a QA engineer would, and keeps the evidence. There are three ways in.
 
-**Code review.** Once the IronBee GitHub App covers a repository, IronBee reviews its pull requests.
-- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a `@ironbee-ai` comment command, or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
-- It posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check.
+**Code review.** Once the IronBee GitHub App covers a repository, or a repository is picked in a connected GitLab group (gitlab.com only), IronBee reviews its pull requests or merge requests.
+- A review starts when a pull request opens or gets a push (per the **Automatic reviews** setting), from a comment command (`@ironbee-ai` on GitHub; the group's service account `@ironbee-<group path>`, or `@ironbee`, on GitLab), or from **Review now** in the console. `ironbee review` reviews a local branch from the CLI.
+- On GitHub it posts a review with inline comments, a summary in the pull request description, and the **IronBee review** check. On GitLab it posts a review note with inline threads, a summary note, and the **IronBee review** pipeline status, which holds a merge only with **Block merges** on.
 - The console shows pull requests and findings under **Code review** (**Pull requests**, **Rules**, **Memories**, **Settings**) and on each project's **Code review** tab.
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
-- A run is started by the IronBee GitHub Action, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
-- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**.
+- A run is started by the IronBee GitHub Action, the IronBee GitLab component, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
+- A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**, and so does picking a repository in a GitLab group.
 - Results appear in three places:
-  - a GitHub check and pull request comment (Vercel and Netlify runs)
+  - on the pull request or merge request, for a run bound to a connected repository: a check (a pipeline status on GitLab), an inline comment on each finding with a suggested fix, and a summary comment. The GitHub Action and the GitLab component then leave their own report comment out
   - the Netlify deploy page
   - the console
 
@@ -31,7 +31,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 **The console** (console.ironbee.ai) shows:
 - projects
 - code review: pull requests, findings, rules, memories and settings
-- each GitHub project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
+- each GitHub or GitLab project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
@@ -45,7 +45,7 @@ Use these terms. When you describe something on screen, quote the console label 
 | Use | Avoid | Notes |
 |-----|-------|-------|
 | verification run | job, task, test run | One verification of a deployment, commit or change. Say "verification job" only when you quote CLI output or `ironbee verify` fields |
-| verification | test, check | Use "check" only for GitHub and Vercel checks and the **Checks** tab |
+| verification | test, check | Use "check" only for GitHub and Vercel checks and the **Checks** tab. On GitLab, say "pipeline status" |
 | verification cycle | loop, iteration | CLI only: one verify pass inside an agent session |
 | session | run, task | CLI only: one AI client session |
 | activity | step, action | CLI only: one agent turn. In the console scenario docs, **action** (an Act, Assert, Extract or Wait row) and **Step** (the grouping row) are console labels, so use them there |
@@ -53,7 +53,7 @@ Use these terms. When you describe something on screen, quote the console label 
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
 | code review | PR review, review bot | IronBee's review of a pull request. "Review" alone is fine once the context is clear |
-| finding | issue, problem | A problem a code review or the GitHub Action reports. On a verification run's detail the console tab is **Issues** |
+| finding | issue, problem | A problem a code review or a verification run reports. On a verification run's detail the console tab is **Findings**, or **Issues** for older runs and CLI cycles |
 | rule, memory | guideline, instruction, knowledge | Code review: a rule says what must or must not happen (kinds **Check** and **Skip**); a memory says what is true and never raises a finding |
 | span | trace item, event | OpenTelemetry spans in the **Traces** tab |
 | environment, variable, secret | stage, env var, credential | Project settings |
@@ -71,9 +71,11 @@ Console labels, quoted verbatim:
 
 | Component | Docs | Notes |
 |-----------|------|-------|
-| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, code review, checks and PR comments for Vercel and Netlify runs |
-| Code review | Code review (`code-review/*`) | The GitHub side and the console pages. The CLI's `ironbee review` stays under CLI |
-| `ironbee-ai/ironbee-action` | Integrations > GitHub Action (`github-action/*`) | Pin examples to `@v1.1.0`. The workflow secret `IRONBEE_API_KEY` is passed as the `ironbee_api_key` input |
+| IronBee GitHub App | Integrations > `integrations/github` | Repository access, sign-in with GitHub, code review, and the checks and PR comments of verification runs |
+| GitLab connection | Integrations > `integrations/gitlab` | A gitlab.com top-level group connected from the console: repository access, code review of merge requests, the code wiki |
+| Code review | Code review (`code-review/*`) | The GitHub and GitLab sides (`on-github`, `on-gitlab`) and the console pages. The CLI's `ironbee review` stays under CLI |
+| `ironbee-ai/ironbee-action` | Integrations > GitHub Action (`github-action/*`) | Use `@v1` in examples, the moving tag of the latest release; never an exact version, so readers don't have to keep updating it. The workflow secret `IRONBEE_API_KEY` is passed as the `ironbee_api_key` input |
+| `ironbee-ai/ironbee-gitlab` CI/CD component | Integrations > GitLab component (`gitlab-component/*`) | The GitLab twin of the GitHub Action, with the same inputs and report. Use `gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1` in examples, never an exact version. The credential inputs read the `IRONBEE_API_KEY`, `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `GITLAB_TOKEN` CI/CD variables by default |
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
 | `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use |
@@ -102,8 +104,8 @@ Console labels, quoted verbatim:
 
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
-- **Integrations:** GitHub App, Vercel, Netlify, then the GitHub Action group
-- **Code review:** overview, on the pull request, then the console pages (pull requests, rules and memories, settings)
+- **Integrations:** GitHub App, GitLab, Vercel, Netlify, then the GitHub Action and GitLab component groups
+- **Code review:** overview, on the pull request (GitHub), on the merge request (GitLab), then the console pages (pull requests, rules and memories, settings)
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
 - **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 

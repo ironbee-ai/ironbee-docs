@@ -4,7 +4,7 @@ sidebarTitle: Configuration
 description: Every input and output of the IronBee Action, with defaults and the mode each one applies to.
 ---
 
-This page lists every input and output of `ironbee-ai/ironbee-action@v1.1.0`. The **Mode** column shows where an input applies:
+This page lists every input and output of `ironbee-ai/ironbee-action@v1`. The **Mode** column shows where an input applies:
 - **Both** means both modes.
 - **Platform** means on IronBee.
 - **Local** means on your runner.
@@ -32,7 +32,7 @@ Only `ironbee_api_key` is required. Every run also needs a target: `app_url`, or
 | `ironbee_project` | Repository name | Platform | The project the run reports to |
 | `ironbee_environment` | Empty | Platform | The project environment the run is against, by name. Selects that environment's variables and secrets on top of the project-wide ones. A new name is created by the first run that uses it. Empty falls back to the deployment environment on `deployment` and `deployment_status` events |
 | `ironbee_api_url` | Empty | Platform | IronBee API base URL. Leave empty |
-| `ironbee_collector_url` | Empty | Both | IronBee collector URL. Leave empty |
+| `ironbee_collector_url` | Empty | Both | IronBee collector URL. Leave empty. On IronBee, your app's start and restart commands get the resolved URL as `IRONBEE_COLLECTOR_URL`, with the key as `IRONBEE_API_KEY`, so an app whose OpenTelemetry exporter reads them sends its traces and logs to the verification run |
 | `ironbee_console_url` | Empty | Both | Console hostname, without a scheme, used for links in the report. Empty derives it from the collector URL |
 
 ---
@@ -65,7 +65,7 @@ See [Local-mode platforms](/github-action/guides/verification-platforms).
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
 | `ironbee_extra_config` | Empty | Local | Raw IronBee CLI configuration as JSON, deep-merged into the generated `.ironbee/config.json`. Your keys win. See [Custom configuration](/github-action/advanced/custom-configuration) |
-| `ironbee_exclude_files` | `true` | Both | Keep IronBee's generated files (`.ironbee/`, `.claude/`, `.mcp.json`, `.gitignore`) out of the commits the action makes. Set `false` to commit the setup it generated |
+| `ironbee_exclude_files` | `true` | Both | Keep IronBee's generated `.claude/`, `.mcp.json` and `.gitignore` changes out of the commits the action makes. Set `false` to commit the setup it generated. `.ironbee/` is always left out |
 
 ---
 
@@ -89,9 +89,9 @@ A run on IronBee that only verifies needs no Anthropic credential.
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
 | `verification_prompt` | Empty | Both | Additional instructions for the verification. A comment command's instruction replaces it for that run |
-| `verification_auto` | `true` | Both | Set `false` to verify only when asked by name, with a comment command or a manual dispatch. Pushes and pull requests then do nothing. See [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off) |
+| `verification_auto` | `true` | Both | Set `false` to verify only when asked by name, with a comment command or a manual dispatch. Every other event, schedules and deployments included, then does nothing. See [Turning automatic verification off](/github-action/guides/running-in-ci#turning-automatic-verification-off) |
 | `verification_command` | `/ironbee-verify` | Both | The comment command that starts a run on an `issue_comment` event. Its instruction can be up to 4,000 characters. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
-| `verification_apply_fix` | `true` | Both | Fix the issues a failing verification reports. Needs an Anthropic credential; without one the run verifies and reports only |
+| `verification_apply_fix` | `true` | Platform | Fix the issues a failing verification on IronBee reports, on your runner. Needs an Anthropic credential; without one the run verifies and reports only. On your runner, the agent always fixes what it finds, whatever this input says |
 
 ---
 
@@ -101,11 +101,11 @@ A run on IronBee that only verifies needs no Anthropic credential.
 |-------|---------|------|-------------|
 | `app_install_command` | Empty | Both | Command that installs dependencies, such as `npm ci` |
 | `app_build_command` | Empty | Both | Command that builds the app, such as `npm run build` |
-| `app_start_command` | Empty | Both | Command that starts the app, such as `npm run start` |
+| `app_start_command` | Empty | Both | Command that starts the app, such as `npm run start`. On IronBee, it runs with `IRONBEE_COLLECTOR_URL` and `IRONBEE_API_KEY` in its environment |
 | `app_url` | Empty | Both | A public URL is verified as a deployment. A `localhost`, private-network or dotless host means the app runs on the runner. See [Which URLs count as on the runner](/github-action/guides/verifying-your-app#which-urls-count-as-on-the-runner) |
 | `app_port` | Empty | Both | Port the app listens on, for an app on the runner. Required for an app on the runner unless `app_url` names its port |
-| `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Needed when `app_start_command` hands off, such as `docker compose up -d --build` |
-| `app_logs_command` | Empty | Platform | Prints the app's own logs into the evidence artifact, such as `docker compose logs --no-color --tail=2000` |
+| `app_restart_command` | Empty | Platform | Restarts the app with the fix before the re-verification. Needed when `app_start_command` hands off, such as `docker compose up -d --build`. Like `app_start_command`, it runs with `IRONBEE_COLLECTOR_URL` and `IRONBEE_API_KEY` in its environment |
+| `app_logs_command` | Empty | Platform | Prints the app's own logs into the `ironbee-application-log` artifact, such as `docker compose logs --no-color --tail=2000` |
 | `app_wait_seconds` | Empty | Platform | How long to wait for the app to accept connections. Empty waits 60 seconds |
 | `app_headers` | Empty | Platform | Request headers for a deployed URL, one `Name: value` per line. Non-secret values only |
 | `app_secret_headers` | Empty | Platform | Secret request headers, such as a deployment protection bypass, one `Name: value` per line, from a GitHub secret. Encrypted and never returned |
@@ -133,15 +133,17 @@ Every `true`/`false` input also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any 
 | `job_id` | The verification run's id. Platform mode only; after a fix, the re-verification's id |
 | `job_url` | Link to the run in the IronBee Console. Platform mode only, once the run has started |
 | `artifacts_url` | Download URL for the evidence artifact. Local mode only; evidence from a run on IronBee is in the console |
+| `platform_publishes` | `true` when IronBee publishes the run on the repository itself: the check on the commit, and on a pull request its review and comment. The action then posts no report comment. `false` otherwise, and always in local mode |
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   id: ironbee
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     app_url: https://preview.example.com
 
-- run: echo "Verdict ${{ steps.ironbee.outputs.verdict }}, run ${{ steps.ironbee.outputs.job_url }}"
+- if: always()
+  run: echo "Verdict ${{ steps.ironbee.outputs.verdict }}, run ${{ steps.ironbee.outputs.job_url }}"
 ```
 
 ---

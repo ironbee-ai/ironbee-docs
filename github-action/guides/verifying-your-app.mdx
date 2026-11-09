@@ -24,7 +24,7 @@ Describe how your app is installed, built and started, and the port it listens o
 | `app_port` | The port the app listens on | `3000` |
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     app_install_command: npm ci
@@ -41,7 +41,7 @@ Describe how your app is installed, built and started, and the port it listens o
   The tunnel carries plain HTTP. Serve the app over HTTP on that port; a port that answers with TLS fails the run immediately.
 </Note>
 
-**On your runner**, the agent runs these commands itself as part of the verification.
+**On your runner**, the agent runs these commands itself as part of the verification. It's told the commands and `app_url`, not `app_port`, so set `app_url: http://localhost:3000` to tell it where the app answers.
 
 ### Which URLs count as on the runner
 
@@ -51,11 +51,11 @@ An `app_url` whose host IronBee can't reach from outside is treated as an app on
 - an IPv6 loopback (`::1`), unspecified (`::`), link-local (`fe80::/10`) or unique local (`fc00::/7`) address
 - a name without a dot, such as a container name or a Docker Compose service
 
-Any other host is verified as a deployed URL. The tunnel connects to the port on the runner's own loopback address, whatever host the URL names. So for `http://web:3000`, the app has to accept connections on `localhost:3000` on the runner, for example a container that publishes port 3000.
+Any other host is verified as a deployed URL. On IronBee, a URL on the runner still needs `app_start_command`: the action starts the app itself before the tunnel opens. The tunnel connects to the port on the runner's own loopback address, whatever host the URL names. So for `http://web:3000`, the app has to accept connections on `localhost:3000` on the runner, for example a container that publishes port 3000.
 
 ### Apps started through Docker Compose or a service
 
-When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again. That's right only when the command runs the app itself.
+When the verification runs on IronBee and a fix is made, the action restarts the app so the re-verification sees the fixed code. By default it stops the process it started and runs `app_start_command` again, without the install and build commands. That's right only when the start command runs the app itself, from the source the fix changed.
 
 When the command hands off to Docker Compose, a process manager or a service, set two more inputs:
 
@@ -66,8 +66,8 @@ When the command hands off to Docker Compose, a process manager or a service, se
     app_port: 3000
 ```
 
-- `app_restart_command` restarts the app with the fix. Without it, the re-verification would test the code from before the fix.
-- `app_logs_command` prints the app's own logs into the evidence artifact. Without it, the artifact holds only the output of the command that started the app.
+- `app_restart_command` restarts the app with the fix. Without it, the re-verification would test the code from before the fix. It runs to the end before the re-verification starts, and the action doesn't stop the app it started first, so use a command that replaces the running app and returns, such as `docker compose up -d --build`.
+- `app_logs_command` prints the app's own logs into the `ironbee-application-log` artifact. Without it, the artifact holds only the output of the command that started the app.
 
 ---
 
@@ -76,13 +76,13 @@ When the command hands off to Docker Compose, a process manager or a service, se
 Point `app_url` at a public address:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
     app_url: https://preview.example.com
 ```
 
-The install, build and start commands aren't used. Before the verification starts, the action requests the URL once:
+The install, build and start commands aren't used. Before the verification starts, the action requests the URL once, without any headers:
 - A `401` or `403` answer fails the run, because the verification would only see a login page.
 - An unreachable URL logs a warning, because IronBee may reach addresses your runner can't.
 
@@ -90,7 +90,9 @@ A deployed URL isn't re-verified after a fix: the deployment still serves the co
 
 ### Protected deployments
 
-A preview behind deployment protection or SSO needs a way in:
+A preview behind deployment protection or SSO that answers `401` or `403` fails the reachability request before the run. That request sends no headers, so a bypass in `app_secret_headers` or in a project secret doesn't get it through. For such a preview, verify on the runner: leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
+
+When the protection answers that request with `200` or a redirect instead, the verification itself can get in with:
 
 - **A secret header.** If the protection can be bypassed with a header, pass it in `app_secret_headers`, one `Name: value` per line, from a GitHub secret. IronBee encrypts the value and never returns it.
 
@@ -101,7 +103,6 @@ A preview behind deployment protection or SSO needs a way in:
   ```
 
 - **A project secret.** Store the bypass in the IronBee project instead, so every run uses it. For Vercel, see [Preview access](/integrations/vercel#preview-access).
-- **Verify on the runner.** Leave `app_url` empty and set `app_start_command` and `app_port`. This verifies the app, not the deployment, so edge configuration, rewrites and the deployed build aren't exercised.
 
 An SSO redirect that answers `200` with a login page can't be told apart from your app by its status code. In that case, the verdict describes the login page.
 
@@ -130,14 +131,17 @@ If you pin `ironbee_cli_version`, use 0.44.0 or later for `ironbee_environment`.
 Point the action at a subdirectory with `working_directory`. The commands, the configuration and the verification run relative to it:
 
 ```yaml
-- uses: ironbee-ai/ironbee-action@v1.1.0
+- uses: ironbee-ai/ironbee-action@v1
   with:
     ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+    verification_mode: platform
     working_directory: packages/web-app
     app_install_command: npm ci
     app_start_command: npm run dev
     app_port: 5173
 ```
+
+On your runner, `working_directory` has to be the repository's root for now: in a subdirectory, the setup step fails. Verify a subdirectory on IronBee, as above.
 
 ---
 

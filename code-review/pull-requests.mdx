@@ -5,7 +5,7 @@ description: Every pull request IronBee reviews, with its review status and open
 keywords: ["PRs", "review issues", "bugs found in review"]
 ---
 
-The console lists the pull requests of your GitHub repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github).
+The console lists the pull requests of your connected repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github). Where a label on these pages names GitHub, such as **Open on GitHub**, a GitLab repository's pages name GitLab.
 
 ---
 
@@ -15,12 +15,12 @@ Two lists show the same rows and open the same pull request page.
 
 | List | Where | What it shows |
 |------|-------|---------------|
-| **Pull requests** | The sidebar's **Code review > Pull requests** | The pull requests of every GitHub repository connected to your account, newest opened first. Archived projects aren't included |
+| **Pull requests** | The sidebar's **Code review > Pull requests** | The pull requests of every repository connected to your account, newest opened first. Archived projects aren't included |
 | **Code review** tab | A project's first tab | One repository's pull requests, most recently updated first. The project picker in the page header switches to another repository |
 
 Next to a project's **Code review** tab, its [Code wiki](/console/code-wiki) tab explains the repository's code.
 
-On [Projects](/console/projects), a GitHub project's card links in too:
+On [Projects](/console/projects), a GitHub or GitLab project's card links in too:
 
 - Click the project's name or its **Code review** row to open the project's **Code review** tab with the same date window.
 - Click a bar of the **Code review** row to open the pull requests reviewed in that slice of the window.
@@ -34,13 +34,25 @@ Click a row in either list to open its [pull request page](#the-pull-request-pag
 
 ## Filter and search
 
-- **The date filter** in the page header shows the pull requests IronBee reviewed in that window: those whose latest review started inside it. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range**. A pull request with no review in the window isn't listed.
+- **The date filter** in the page header shows the pull requests IronBee reviewed in that window: those whose latest review started inside it. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range**. A pull request with no review in the window isn't listed; tick [**Needs review**](#pull-requests-that-need-a-review) to see the open ones.
 - **Number or title** finds a pull request by its number, with or without `#`, or by words from its title.
 - **Repositories** (sidebar list only) and **States** (**Open**, **Merged**, **Closed**) take several values at once. Each option shows how many pull requests it has.
 - **Author** and **Base branch** take one value. Pick it from the menu, which shows each one's count, or type a GitHub login or a branch name. **Any author** and **Any branch** clear them.
+- **Needs review** shows only the open pull requests IronBee hasn't reviewed. See [Pull requests that need a review](#pull-requests-that-need-a-review).
 - **Clear filters** resets them all. The count at the end of the bar says how many pull requests are left, such as **12 of 40 pull requests**.
 
 In the sidebar list, click a repository's name in a row to show only that repository's pull requests.
+
+### Pull requests that need a review
+
+Tick **Needs review** in the filter bar to list only the open pull requests IronBee hasn't reviewed, whatever the dates. The box shows how many there are.
+
+- The date filter is hidden and **States** is disabled, since the list holds open pull requests only.
+- A pull request whose first review is running stays listed until the review ends.
+- The list reads the newest 100 open pull requests. When there are more, the box's count ends with `+`, such as `12+`, and the count at the end of the bar reads like **12 among the newest 100 open pull requests**.
+- On a project's **Code review** tab, for owners and admins, the console first asks GitHub or GitLab for the repository's open pull requests. One IronBee never heard of, such as a pull request opened before the repository was connected, is listed too.
+
+In this list, the **Open Findings** cell of a pull request with no review holds a **Review** button. Click it to start the review without opening the pull request. Owners, admins and members see it. When the team's credits are used up, it's disabled and says when they reset.
 
 ---
 
@@ -98,7 +110,7 @@ For **Changes requested** and **Passed**, the detail line names the commit the c
 
 The **Open Findings** column shows four counts, always in this order: critical, high, medium and low. A zero is drawn hollow. Hover a count to read it, such as **2 High open** or **no Medium finding open**.
 
-Before IronBee has published a review, the column shows `-`, or **after the review** while the first one runs.
+Before IronBee has published a review, the column shows `-`, or **after the review** while the first one runs. With **Needs review** ticked, an open pull request with no review shows a **Review** button there instead; see [Pull requests that need a review](#pull-requests-that-need-a-review).
 
 ---
 
@@ -106,11 +118,12 @@ Before IronBee has published a review, the column shows `-`, or **after the revi
 
 | The list says | When |
 |---------------|------|
-| **No pull requests yet** | The repository, or the account, has no pull requests yet. They appear as GitHub tells IronBee about them |
+| **No pull requests yet** | The repository, or the account, has no pull requests yet. They appear as the repository's host tells IronBee about them |
 | **No reviews in this window** | There are pull requests, but IronBee reviewed none of them in the selected dates. Pick a longer window |
+| **Nothing needs a review** | **Needs review** is ticked, and every open pull request has a review. "An open pull request IronBee has not reviewed appears here." |
 | **Nothing matches** | The filters leave no pull request. **Clear filters** resets them |
-| **No GitHub repository connected** | Sidebar list: no repository is connected through the GitHub App. **Integrations** opens the integrations page |
-| **Code review runs on GitHub repositories** | **Code review** tab of a Vercel, Netlify or CLI project. **Install the GitHub App** and **Integrations** lead to setting it up |
+| **No repository connected** | Sidebar list: "Code review runs on repositories connected through the GitHub App or a GitLab group." **Integrations** opens the integrations page |
+| **Code review runs on GitHub and GitLab repositories** | **Code review** tab of a Vercel, Netlify or CLI project: "This project is not one. Pick a repository above." **Open integrations** leads to setting one up |
 
 ---
 
@@ -141,10 +154,24 @@ The band under the header sums up what IronBee says of the pull request, from le
 1. **The review**: the same word and detail line as the list's **Review** column. The commit links to GitHub.
 2. **What's open**: the open findings by severity, such as **1 Critical · 2 High open**, or **nothing open**. Then **3 addressed** and **2 listed below the comment threshold** when there are any. These counts match the findings list under the band.
 3. **The check**: **IronBee's check on a1b2c3d, the head**, or **an earlier commit** when the check isn't on the latest commit IronBee reviewed, or **no check on GitHub**. After it comes the merge block in effect: **blocks a merge while medium or worse is open**, **blocks a merge while high or worse is open**, or **never blocks a merge**.
+
+   On GitLab, the band reads **IronBee's result on a1b2c3d, the head** instead, because a project may carry no status of IronBee's. With **Block merges** off, the merge part reads "writes no new status that holds a merge; an earlier red one clears at the next review, a reply under a finding, a resolved thread or a push". With **Block merges** on and **Block merging when** on **Never**, it reads "a review's result never blocks a merge; where pipelines must succeed, a running one holds it". See [Merges](/code-review/on-gitlab#merges).
 4. **The reviews**: how many reviews IronBee published and when the last one finished, such as **3 reviews · the last finished 2h ago**, or **no published review**.
 
 <img className="ib-shot ib-shot-light" src="/images/console/code-review/pull-request-band-light.png" alt="A pull request page header with Review now and Open on GitHub, above the status band reading Changes requested, 1 High and 2 Medium open, the check sentence and 3 reviews" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-review/pull-request-band-dark.png" alt="A pull request page header with Review now and Open on GitHub, above the status band reading Changes requested, 1 High and 2 Medium open, the check sentence and 3 reviews" />
+
+---
+
+## The summary
+
+Under the status band, the **Summary** card shows the [pull request summary](/code-review/on-github#the-pull-request-summary) IronBee wrote for the approver. The console reads it from the host: IronBee's section of the description on GitHub, or IronBee's summary note on GitLab.
+
+- **Folded:** the card shows the summary's first paragraph. Click the **Summary** heading or **Show more** to open the rest, and **Show less** to fold it again.
+- **The header:** the commit the summary describes, such as **of a1b2c3d**, which links to it, and **Open on GitHub**. When someone edited the summary on the host after IronBee wrote it, the header adds **changed on GitHub since IronBee wrote it**.
+- **What it draws:** the summary's text, tables and Mermaid diagrams, with its folded parts closed. Images aren't drawn.
+
+The card appears once IronBee has published a review of the pull request. A pull request with no summary, such as one reviewed with **Pull request summary** off, has no card. If the host can't be read, the card says **Couldn't read the summary from GitHub.** and offers **Try again**.
 
 ---
 
@@ -180,7 +207,7 @@ The settings the next review of this pull request will use:
 | **Depth** | **Auto**, **Quick**, **Standard** or **Deep** |
 | **Focus** | **Bugs and logic**, which is always on, and the focus areas turned on: **Security**, **Docs, names and tests** |
 | **Comments** | Which findings get a comment of their own: **Every severity**, **Medium and above** or **High and above** |
-| **Merge block** | **Medium or worse open**, **High or worse open** or **Never** |
+| **Merge block** | **Medium or worse open**, **High or worse open** or **Never**. On a GitLab repository with **Block merges** off, it reads **Never** |
 
 A value the repository sets for itself, rather than taking the account's, is marked **set here**. When code review is off for the repository, the section says **Code review is off for this repository**. **Settings** opens the repository's code review settings; see [Code review settings](/code-review/settings).
 
@@ -241,10 +268,11 @@ The findings list on the right holds every finding of the pull request, grouped 
 | **Withdrawn** | **taken back by IronBee** | Findings IronBee withdrew |
 | **Addressed** | **fixed since; the threads resolved** | Findings the code has fixed since |
 | **No longer applies** | **the code changed or went away** | Findings whose code changed or was removed |
+| **Turned down** | **turned down by a person: a thumbs-down, a rejecting reply, a hidden comment or a resolved thread** | Findings a person turned down on the pull request. They no longer count as open. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads) |
 | **Open** | **open, or standing after a reply** | Findings still open, including those IronBee kept after a reply on the thread |
-| **Listed below the comment threshold** | **in the review body only; never block a merge** | Findings below the **Comment on findings of** setting. They are listed in the review body, have no comment of their own, and never hold a merge. The group is folded until you click **Show** |
+| **Listed below the comment threshold** | **in the review body only; never block a merge** | Findings below the **Comment on findings of** setting, and low findings that read as a minor remark. They are listed in the review body, have no comment of their own, and never hold a merge |
 
-The groups come in that order, and a group with nothing in it is left out. **Open** always shows, so an empty one says so. Inside a group, the findings that changed most recently come first, then the rest by severity, worst first, and by file and line. A long group shows 20 findings at first. The buttons under it, such as **Show 20 more** and **Show all 45**, show the rest, and a count such as **20 of 45 shown** says how many you see.
+The groups come in that order, and a group with nothing in it is left out. **Open** always shows, so an empty one says so. Each group's heading is a button that folds or opens its rows. **Listed below the comment threshold** starts folded and the other groups start open. A group that holds the finding open in the dialog stays open. Inside a group, the findings that changed most recently come first, then the rest by severity, worst first, and by file and line. A long group shows 20 findings at first. The buttons under it, such as **Show 20 more** and **Show all 45**, show the rest, and a count such as **20 of 45 shown** says how many you see.
 
 <img className="ib-shot ib-shot-light" src="/images/console/code-review/pull-request-findings-light.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed below the comment threshold" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-review/pull-request-findings-dark.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed below the comment threshold" />
@@ -257,14 +285,14 @@ Each row shows:
 - **The category**: **Correctness**, **Security**, or **Docs, names and tests**, which has an info mark that explains it.
 - **The file and line**, where the finding stands now.
 - **The claim**: what IronBee says is wrong.
-- **The state**: **open**, **stands**, **addressed**, **changed**, **gone** or **withdrawn**, with when it last changed.
+- **The state**: **open**, **stands**, **addressed**, **changed**, **gone**, **withdrawn** or **turned down**, with when it last changed. An addressed row is dimmed, with a check mark before **addressed**.
 
 Click a row to open it in the [finding dialog](#the-finding-dialog).
 
 ### Filter the findings
 
 - **Search claims, paths and rules** matches the claim, the file path, and the rules, memories and skills the finding cites.
-- **Filter** opens a panel that narrows the list by **Severity**, **Category** and **State**, each option with its count, and to findings that **Cites a rule or memory**.
+- **Filter** opens a panel that narrows the list by **Severity**, **Category** and **State**, each option with its count, and to findings that **Cites a rule or memory**. **State** offers the row states and **listed below the threshold**.
 - The count beside the button reads like **8 of 14 findings**. Each filter in force shows as a chip you can remove, and **Clear all** removes them all.
 
 The filters and the open finding are kept in the page's address, so a copied link opens the same view.
@@ -280,7 +308,7 @@ The dialog shows one finding in full. Its first line gives the severity, the cat
 The sections follow in this order. A section with nothing to show is left out.
 
 1. **Happens when** and **Then**: what triggers the problem, and what happens next.
-2. **The code**: the part of the pull request's diff that holds the finding, with its lines marked. The header gives the file, how it changed, its added and removed lines, and **in this pull request's diff**. Click the header to fold it. When the diff can't be shown, a note says why, followed by the lines IronBee quoted:
+2. The diff: the part of the pull request's diff that holds the finding, with its lines marked. The header gives the file, how it changed, its added and removed lines, and **in this pull request's diff**. Click the header to fold it. When the diff can't be shown, a note says why, followed by the lines IronBee quoted:
    - **The file is not in the pull request's diff any more.**
    - **GitHub gives no diff for this file (binary, or too large).**
    - **The pull request changes more files than the console reads from GitHub.**
@@ -291,7 +319,7 @@ The sections follow in this order. A section with nothing to show is left out.
 6. **Cites**: the **Rule**, **Memory** and **Skill** entries the finding relies on. See [Rules and memories](/code-review/rules-and-memories).
 7. **History**: what happened to the finding, in order:
    - **Posted by the review at a1b2c3d**.
-   - Each later change: **Still open**, **Stands**, **Addressed**, **The code changed**, **The code went away** or **Withdrawn**, with **after a reply on the thread** and the commit when they apply. IronBee's sentence about it follows. **Read the whole reply on GitHub** opens the reply, a line such as **now rated high** shows a new severity, and **the thread was resolved by someone else** says a person, not IronBee, resolved it.
+   - Each later change: **Still open**, **Stands**, **Addressed**, **The code changed**, **The code went away**, **Withdrawn** or **Turned down**, with **after a reply on the thread** and the commit when they apply. IronBee's sentence about it follows. **Read the whole reply on GitHub** opens the reply, a line such as **now rated high** shows a new severity, and **the thread was resolved by someone else** says a person, not IronBee, resolved it.
    - How the thread stands now: **Thread open on GitHub**, **Thread resolved by IronBee**, **No comment on GitHub any more**, or **Listed in the review body; no comment of its own**.
 
 **Suggested fix** and **How it happens** appear when the review wrote them; the **Suggested fixes** and **Diagrams** settings turn them on or off.
@@ -313,9 +341,10 @@ Press `←` and `→` to move, and `Esc` to close. Inside the code, the arrow ke
 |------------|---------------|
 | View the pull request lists, the pull request page and the finding dialog | Everyone |
 | **Review now** | Owner, Admin, Member |
+| **Review** in the **Needs review** list | Owner, Admin, Member |
 | **Cancel** a job | Owner, Admin, Member |
 
-Billing admins see neither button. On an archived project, **Review now** is disabled. See [Roles and permissions](/console/roles).
+Billing admins see none of these buttons. On an archived project, **Review now** is disabled. See [Roles and permissions](/console/roles).
 
 ---
 

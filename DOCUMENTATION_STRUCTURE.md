@@ -45,6 +45,7 @@ Current structure as of the `docs.json` navigation configuration.
 |------|-------|--------|
 | `integrations/overview.mdx` | How integrations work | ✅ |
 | `integrations/github.mdx` | GitHub App | ✅ |
+| `integrations/gitlab.mdx` | GitLab | ✅ |
 | `integrations/vercel.mdx` | Vercel | ✅ |
 | `integrations/netlify.mdx` | Netlify | ✅ |
 
@@ -80,6 +81,36 @@ Current structure as of the `docs.json` navigation configuration.
 | `github-action/advanced/evidence.mdx` | Evidence | ✅ |
 | `github-action/advanced/diagnostics.mdx` | Diagnostics | ✅ |
 
+### GitLab component
+
+| File | Title | Status |
+|------|-------|--------|
+| `gitlab-component/get-started/getting-started.mdx` | Get started with the GitLab component | ✅ |
+| `gitlab-component/configuration/configuration.mdx` | GitLab component configuration | ✅ |
+
+#### Concepts
+
+| File | Title | Status |
+|------|-------|--------|
+| `gitlab-component/concepts/how-it-works.mdx` | How the GitLab component works | ✅ |
+| `gitlab-component/concepts/verification-modes.mdx` | Platform and local verification in GitLab | ✅ |
+
+#### Guides
+
+| File | Title | Status |
+|------|-------|--------|
+| `gitlab-component/guides/running-in-ci.mdx` | Running in GitLab CI/CD | ✅ |
+| `gitlab-component/guides/verifying-your-app.mdx` | Verifying your application in GitLab | ✅ |
+| `gitlab-component/guides/verification-platforms.mdx` | Local-mode platforms in GitLab | ✅ |
+
+#### Advanced
+
+| File | Title | Status |
+|------|-------|--------|
+| `gitlab-component/advanced/custom-configuration.mdx` | Custom configuration in GitLab | ✅ |
+| `gitlab-component/advanced/evidence.mdx` | Evidence in GitLab | ✅ |
+| `gitlab-component/advanced/diagnostics.mdx` | Diagnostics for the GitLab component | ✅ |
+
 ---
 
 ## Code review
@@ -90,6 +121,7 @@ Current structure as of the `docs.json` navigation configuration.
 |------|-------|--------|
 | `code-review/overview.mdx` | Code review of pull requests | ✅ |
 | `code-review/on-github.mdx` | Code review on GitHub pull requests | ✅ |
+| `code-review/on-gitlab.mdx` | Code review on GitLab merge requests | ✅ |
 
 ### In the console
 

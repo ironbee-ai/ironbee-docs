@@ -17,12 +17,13 @@ There is no workflow file to add and no test suite to maintain. Nothing waits on
 
 ## Prerequisites
 
-- A Netlify team with sites that build deploy previews or branch deploys from a GitHub repository.
+- A Netlify team with sites that build deploy previews or branch deploys from a GitHub repository or a gitlab.com project.
 - The **owner** or **admin** role on your IronBee account.
 - The [IronBee GitHub App](/integrations/github). It's recommended for every repository and required for private ones:
   - It lets the run check out a private repository.
   - It finds the pull request behind a branch deploy.
-  - It posts the result on the pull request as a check and a comment.
+  - It posts the result on the pull request: a check, an inline comment on each finding in the diff, and a comment with the result.
+- For a site built from GitLab, connect the project's group instead. See [GitLab](/integrations/gitlab).
 
 ---
 
@@ -139,7 +140,7 @@ The extension doesn't change your builds. IronBee never stores a Netlify token.
 
   </Step>
   <Step title="The result comes back to the deploy">
-    The deploy page shows the **IronBee verification** card with the result. With the GitHub App installed, the same result lands on the pull request as a check and a comment.
+    The deploy page shows the **IronBee verification** card with the result. With the GitHub App installed, the same result lands on the pull request as a check, inline comments on the findings, and a comment.
   </Step>
 </Steps>
 
@@ -220,7 +221,7 @@ The gear icon next to an enabled site, **Project settings**, opens the project's
 | The site panel says **This team is not connected to IronBee yet.** | Connect the team first. See [Step 2](#step-2-connect-the-team-to-your-ironbee-account) |
 | Deploys stopped being verified | Netlify paused or lost the deploy notification. Click **Resume notification** in the site panel, or turn verification off and on again. If the GitHub check reads **out of credits this month**, your team's credits are used up; see [Credit usage](/console/usage) |
 | The run shows the agent stuck on a password page | Add the site password as a **Password** secret. See [Preview access](#preview-access) |
-| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, or the GitHub App doesn't cover it. See [GitHub App](/integrations/github) |
+| The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub or gitlab.com, or the GitHub App or the GitLab connection doesn't cover it. See [GitHub App](/integrations/github) and [GitLab](/integrations/gitlab) |
 | **This Netlify team is already connected** | Another IronBee account holds the team. Ask an owner of that account to invite you, or connect a different team |
 
 ---
@@ -229,7 +230,7 @@ The gear icon next to an enabled site, **Project settings**, opens the project's
 
 <CardGroup cols={2}>
   <Card title="GitHub App" icon="/images/icons/github.svg" href="/integrations/github">
-    Repository access, the check on the commit, and the pull request comment.
+    Repository access, the check on the commit, and the comments on the pull request.
   </Card>
   <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
     The same verification on Vercel preview deployments.

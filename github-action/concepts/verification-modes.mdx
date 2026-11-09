@@ -8,7 +8,7 @@ The IronBee Action can run the verification in two places:
 - **Platform mode:** on IronBee. The console calls this **On IronBee**.
 - **Local mode:** on your GitHub runner. The console calls this **On your GitHub runner**.
 
-Everything after the verification is the same in both modes: the verdict, the fix, the commit and the report. The `verification_mode` input picks the mode: `auto` (the default), `platform` or `local`.
+Everything after the verification works the same way in both modes: the verdict, the fix, the commit and the report. Only a run on IronBee can be [published on the pull request](/github-action/guides/running-in-ci#the-report) by IronBee itself. The `verification_mode` input picks the mode: `auto` (the default), `platform` or `local`.
 
 ---
 

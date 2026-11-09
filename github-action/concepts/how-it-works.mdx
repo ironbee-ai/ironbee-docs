@@ -42,7 +42,7 @@ flowchart TD
   <Step title="Fix">
     This step runs when the verification fails, fixing is on (`verification_apply_fix`) and an Anthropic credential is set.
     - **On IronBee:** a Claude Code run on your runner edits the files to fix the reported issues. For an app that runs on the runner, the action then restarts it and runs a second verification. A deployed URL isn't re-verified, because the deployment still serves the code that was deployed.
-    - **On your runner:** the agent fixes and re-verifies in the same session.
+    - **On your runner:** the agent fixes and re-verifies in the same session. It does so whatever `verification_apply_fix` says.
   </Step>
   <Step title="Commit">
     The action commits and pushes the fix itself; the agent only edits files.
@@ -51,7 +51,7 @@ flowchart TD
     - A fix whose re-verification fails is not pushed.
   </Step>
   <Step title="Report">
-    The report is posted as a pull request comment, updated in place on later runs, and written to the workflow run's summary. It links to the run in the IronBee Console.
+    The report is written to the workflow run's summary and posted as a pull request comment, updated in place on later runs. It links to the run in the IronBee Console. When IronBee publishes a run on IronBee on the pull request itself, the action posts no comment. See [The report](/github-action/guides/running-in-ci#the-report).
   </Step>
   <Step title="Pass or fail">
     The last step fails the job when the verification fails or ends without a verdict.
@@ -68,7 +68,7 @@ The action binds each run to the change behind the event, so the verification lo
 |-------|--------------------|
 | `pull_request` | The whole pull request |
 | `issue_comment` | The pull request the comment is on. See [Verify from a pull request comment](/github-action/guides/comment-trigger) |
-| `push` | Every commit in the push, from the event's `before` commit, or the commit against its parent when that base isn't usable |
+| `push` | On IronBee: every commit in the push, from the event's `before` commit, or the commit against its parent when that base isn't usable. On your runner: the last commit against its parent |
 | `workflow_dispatch`, `schedule`, `deployment_status` and other events | On IronBee: the commit against its parent. On your runner: the whole application |
 
 To verify the application without the repository, for example a private repository that the IronBee GitHub App doesn't cover, set `ironbee_bind_repository: false`.
@@ -77,8 +77,8 @@ To verify the application without the repository, for example a private reposito
 
 ## Where results appear
 
-- **On the pull request:** the report comment, with a link to the run in the console.
-- **In the workflow run:** the job summary and the job's pass or fail result. The `verdict`, `mode`, `job_id`, `job_url` and `artifacts_url` [outputs](/github-action/configuration/configuration#outputs) are available to later steps.
+- **On the pull request:** the action's report comment, with a link to the run in the console. When the [IronBee GitHub App](/integrations/github) is installed for the repository, IronBee publishes a run on IronBee itself instead: the **IronBee Verification** check, an inline comment on each finding in the diff and a comment with the result. The action then leaves its own comment out.
+- **In the workflow run:** the job summary and the job's pass or fail result. The `verdict`, `mode`, `job_id`, `job_url`, `artifacts_url` and `platform_publishes` [outputs](/github-action/configuration/configuration#outputs) are available to later steps.
 - **In the IronBee Console:** runs on IronBee appear on the project's **Verifications** tab with the trigger **GitHub Actions**. The project is the repository's GitHub project unless you set `ironbee_project`. See [Verifications](/console/verifications).
 
 ---

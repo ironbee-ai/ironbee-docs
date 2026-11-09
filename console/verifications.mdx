@@ -6,10 +6,10 @@ keywords: ["test runs", "verification jobs", "run history"]
 
 A project's **Verifications** tab lists every verification run of the project:
 
-- **Runs on IronBee's infrastructure.** These are started by Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), or **Run instant verification** in the console.
+- **Runs on IronBee's infrastructure.** These are started by Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), or **Run instant verification** in the console.
 - **Verification cycles from the [IronBee CLI](/cli/concepts/how-it-works).** These are reported by your AI coding agent while it works.
 
-Open **Projects** and click a project. It opens on its **Verifications** tab. Click a row to open the run's [verification detail](/console/verification-detail) page.
+Open **Projects**, click a project, and select its **Verifications** tab; a project opens on **Code review**. The card's **Verifications** row also opens it. Click a row to open the run's [verification detail](/console/verification-detail) page.
 
 <img className="ib-shot ib-shot-light" src="/images/console/verifications/verifications-list-light.png" alt="A project's Verifications tab with Run instant verification, the date range, the Statuses, Results and Triggers filters, name search, and runs from Vercel, Netlify, the CLI and the API" />
 <img className="ib-shot ib-shot-dark" src="/images/console/verifications/verifications-list-dark.png" alt="A project's Verifications tab with Run instant verification, the date range, the Statuses, Results and Triggers filters, name search, and runs from Vercel, Netlify, the CLI and the API" />
@@ -29,14 +29,14 @@ Open **Projects** and click a project. It opens on its **Verifications** tab. Cl
 | Column | What it shows |
 |--------|---------------|
 | **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id. A [scenario](/console/scenarios) run is named after its scenario, with a **Scenario** mark under it |
-| **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **API**, **CLI** or **Console** |
-| **Source**, **Branch**, **Commit**, **PR** | The repository, branch, commit and pull request the run verified, for runs tied to a GitHub repository |
+| **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **API**, **Console** or **CLI** |
+| **Source**, **Branch**, **Commit**, **PR** | The repository, branch, commit and pull request the run verified, for runs tied to a GitHub or GitLab repository. A run bound to a pull request alone shows the pull request's branch and the commit it checked out. A CLI cycle shows what its session reported about the repository |
 | **Type** | **Web** or **API**. For CLI cycles: browser verification shows **Web**, backend shows **API**, other platforms show `-` |
 | **Status** | Where the run is |
 | **Result** | The verdict |
 | **Started**, **Duration** | When the run started and how long it took |
 | **Credits** | The credits the run used, or the most it can use while it runs. See [Credits](#credits) |
-| **Callbacks** | Whether the result was delivered back to Vercel, GitHub or Netlify |
+| **Callbacks** | Whether the result was delivered back to Vercel, GitHub, GitLab or Netlify |
 
 You can sort by **Name**, **Status** and **Started**. The newest runs come first. Times follow the **Time Format** in [Settings](/console/settings).
 
@@ -72,7 +72,13 @@ You can sort by **Name**, **Status** and **Started**. The newest runs come first
 
 ## Callbacks
 
-A run started by Vercel or Netlify reports its result back to the provider, and to GitHub when the [GitHub App](/integrations/github) is installed. The **Callbacks** column shows one entry per destination (**Vercel**, **GitHub** or **Netlify**):
+A run reports its result back to where it came from and to the repository it verified:
+
+- A run started by Vercel or Netlify reports to the provider.
+- A run bound to a commit or a pull request of a repository that the [GitHub App](/integrations/github) or a [connected GitLab group](/integrations/gitlab) covers also reports to GitHub or GitLab: a check, or a pipeline status where IronBee writes one ([Merges](/code-review/on-gitlab#merges)), on the commit, and the findings and a summary on the pull request or merge request. That covers Vercel and Netlify runs, and runs on IronBee from the GitHub Action, the GitLab component, `ironbee verify` and the API. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request).
+- A run started with **Run instant verification**, a scenario run, and a run without the repository (`--no-repo`, `ironbee_bind_repository: false`) report nowhere.
+
+The **Callbacks** column shows one entry per destination (**Vercel**, **GitHub**, **GitLab** or **Netlify**):
 
 | State | Meaning |
 |-------|---------|

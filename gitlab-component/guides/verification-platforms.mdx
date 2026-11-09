@@ -1,0 +1,67 @@
+---
+title: Local-mode platforms in GitLab
+sidebarTitle: Local-mode platforms
+description: Choose the IronBee DevTools platforms the agent verifies through when the GitLab component runs the verification on your runner.
+---
+
+When the verification runs on your GitLab runner (local mode), the agent verifies through IronBee DevTools, the same platforms the [CLI uses](/cli/concepts/how-it-works). You choose which platforms it gets.
+
+<Note>
+  These inputs apply to local mode only. On IronBee, the run verifies your web app in a browser, and the component logs a warning if you set them. See [Platform and local verification](/gitlab-component/concepts/verification-modes).
+</Note>
+
+---
+
+## The platforms
+
+| Platform | Input | Default | Verifies through |
+|----------|-------|---------|------------------|
+| Browser | `ironbee_browser_devtools` | `'true'` | A real Chromium browser: navigation, DOM, console, accessibility, screenshots, recording |
+| Backend | `ironbee_backend_devtools` | `'false'` | Real protocol calls: HTTP, gRPC, GraphQL, WebSocket, databases, logs |
+| Node.js | `ironbee_node_devtools` | `'false'` | The Node.js runtime: tracepoints, exceptions, variables, HTTP capture |
+| Python | `ironbee_python_devtools` | `'false'` | The Python runtime through debugpy: tracepoints, exceptions, logs, thread dumps |
+| Terminal | `ironbee_terminal_devtools` | `'false'` | CLI, REPL and TUI programs, driven through a pseudo-terminal |
+
+Only the browser runs by default. Turn on the others when those layers are part of the change:
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: local
+      ironbee_browser_devtools: 'true'
+      ironbee_backend_devtools: 'true'
+```
+
+<Warning>
+  The terminal platform gives the agent a shell on the runner. Turn it on only when a command-line program is what you are verifying.
+</Warning>
+
+All enabled platforms are served by one `ironbee-devtools` MCP server. Its log is written to `.ironbee/artifacts/ironbee-devtools-mcp.log` and ships with the job's [evidence artifacts](/gitlab-component/advanced/evidence).
+
+---
+
+## Browser on GitLab runners
+
+A GitLab Docker job has no user namespaces for Chromium to sandbox with, so Chromium would stop on its first navigation. The component launches it with its sandbox off for you. No configuration is needed.
+
+Chromium and its system dependencies are installed with `apt-get`, so a custom `image` needs Node 22, bash, git, curl and apt-get. The browser is cached between runs; see [Caching](/gitlab-component/configuration/configuration#caching).
+
+---
+
+## Tuning a platform
+
+To pass extra environment variables to the DevTools server, or to change other CLI settings, use `ironbee_extra_config`. See [Custom configuration](/gitlab-component/advanced/custom-configuration).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Verifying your application" icon="play" href="/gitlab-component/guides/verifying-your-app">
+    Choose the target and how to reach it.
+  </Card>
+  <Card title="Custom configuration" icon="sliders-horizontal" href="/gitlab-component/advanced/custom-configuration">
+    Tune the DevTools server and other CLI settings.
+  </Card>
+</CardGroup>
