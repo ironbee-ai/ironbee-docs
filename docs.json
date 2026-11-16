@@ -224,31 +224,6 @@
         ]
       },
       {
-        "tab": "Code review",
-        "icon": "git-pull-request",
-        "groups": [
-          {
-            "group": "Code review",
-            "icon": "git-pull-request",
-            "pages": [
-              "code-review/overview",
-              "code-review/on-github",
-              "code-review/on-gitlab",
-              "code-review/on-bitbucket"
-            ]
-          },
-          {
-            "group": "In the console",
-            "icon": "layout-dashboard",
-            "pages": [
-              "code-review/pull-requests",
-              "code-review/rules-and-memories",
-              "code-review/settings"
-            ]
-          }
-        ]
-      },
-      {
         "tab": "CLI",
         "icon": "terminal",
         "groups": [
@@ -383,6 +358,62 @@
               "console/pricing",
               "console/usage",
               "console/roles"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Features",
+        "icon": "blocks",
+        "menu": [
+          {
+            "item": "Code review",
+            "icon": "git-pull-request",
+            "description": "Reviews of every pull request and merge request",
+            "groups": [
+              {
+                "group": "Code review",
+                "icon": "git-pull-request",
+                "pages": [
+                  "code-review/overview",
+                  "code-review/on-github",
+                  "code-review/on-gitlab",
+                  "code-review/on-bitbucket"
+                ]
+              },
+              {
+                "group": "In the console",
+                "icon": "layout-dashboard",
+                "pages": [
+                  "code-review/pull-requests",
+                  "code-review/rules-and-memories",
+                  "code-review/settings"
+                ]
+              }
+            ]
+          },
+          {
+            "item": "Code wiki",
+            "icon": "book-open",
+            "description": "Pages that explain each repository's code",
+            "pages": [
+              "console/code-wiki"
+            ]
+          },
+          {
+            "item": "Code security",
+            "icon": "shield-alert",
+            "description": "Scheduled security scans of the default branch",
+            "pages": [
+              "console/code-security"
+            ]
+          },
+          {
+            "item": "Verification",
+            "icon": "list-checks",
+            "description": "Every verification run, with its evidence",
+            "pages": [
+              "console/verifications"
             ]
           }
         ]

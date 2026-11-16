@@ -144,7 +144,7 @@ Current structure as of the `docs.json` navigation configuration.
 
 ---
 
-## Code review
+## Features
 
 ### Code review
 
@@ -240,6 +240,14 @@ Current structure as of the `docs.json` navigation configuration.
 |------|-------|--------|
 | `console/code-wiki.mdx` | Code wiki of a repository | ✅ |
 | `console/code-wiki-settings.mdx` | Code wiki settings | ✅ |
+
+### Code security
+
+| File | Title | Status |
+|------|-------|--------|
+| `console/code-security.mdx` | Code security scans of a repository | ✅ |
+| `console/code-security-records.mdx` | Security records and runs | ✅ |
+| `console/code-security-settings.mdx` | Code security settings | ✅ |
 
 ### Verifications
 

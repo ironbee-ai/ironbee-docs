@@ -31,7 +31,8 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 **The console** (console.ironbee.ai) shows:
 - projects
 - code review: pull requests, findings, rules, memories and settings
-- each GitHub, GitLab or Bitbucket project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings
+- each GitHub, GitLab or Bitbucket project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings. An owner or admin can share a wiki through a public link, which opens the wiki alone at `console.ironbee.ai/share/code-wiki/...` with no account
+- each GitHub, GitLab or Bitbucket project's code security: scheduled scans of the default branch, their records and runs, with its settings. Off until an owner or admin turns it on for a repository, credit-charged, and seen by owners and admins only. It posts nothing on the pull request
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
@@ -55,6 +56,9 @@ Use these terms. When you describe something on screen, quote the console label 
 | code review | PR review, review bot | IronBee's review of a pull request. "Review" alone is fine once the context is clear |
 | finding | issue, problem | A problem a code review or a verification run reports. On a verification run's detail the console tab is **Findings**, or **Issues** for older runs and CLI cycles |
 | rule, memory | guideline, instruction, knowledge | Code review: a rule says what must or must not happen (kinds **Check** and **Skip**); a memory says what is true and never raises a finding |
+| scan, record | audit, vulnerability, issue | Code security: a scan reads the default branch (kinds **Full**, **Incremental**, **Follow-up**); a record is one problem it found. A record's verdict is **Confirmed** (a "confirmed finding", the only kind with a severity), **Lead to validate** (a "lead") or **Rejected** |
+| decision | disposition, status, triage state | Code security: what the team does with a record. The console label is **Decision** |
+| profile, execution | depth, mode, dynamic analysis | Code security settings: **Profile** is how far a scan goes; **Execution** is whether it may run the repository's code. Code review's setting is depth, not profile |
 | span | trace item, event | OpenTelemetry spans in the **Traces** tab |
 | environment, variable, secret | stage, env var, credential | Project settings |
 
@@ -65,6 +69,8 @@ Console labels, quoted verbatim:
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
 - **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
 - **Finding severity:** Critical, High, Medium, Low
+- **Security record verdict:** Confirmed, Lead to validate, Rejected. **Severity** (confirmed only): Critical, High, Medium, Low, Informational. **Decision:** Open, Accepted, Fixed elsewhere, Not an issue
+- **Security scan:** kinds Full, Incremental, Follow-up, No scan. Started by: Scheduled, Run by hand, API. **Profile:** Auto, Quick, Standard, Deep. **Scheduled scan** and the wiki's **Rebuild from scratch:** Daily, Weekly, Every two weeks, Monthly
 - **Scenario outcome:** Passed, Failed, Soft fail, Setup failed, Run error, Ran out of time, Browser tools lost, Stopped before it started, Stopped, Running, Starting. In the verification list a failed scenario run's status reads **Run error**
 
 ## Product components and their doc sections
@@ -81,6 +87,7 @@ Console labels, quoted verbatim:
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
 | `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use |
+| Code security | Console > Code security (`console/code-security*`) | The project tab, its records and runs, and the settings at the account and repository level |
 | IronBee Console | Console | Web UI at console.ironbee.ai |
 
 ## CLI conventions
@@ -107,9 +114,15 @@ Console labels, quoted verbatim:
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, GitLab, Bitbucket, Vercel, Netlify, then the GitHub Action, GitLab component and Bitbucket Pipe groups
-- **Code review:** overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings)
+- **Features:** a tab that opens a menu (`menu` in `docs.json`) of four items. **Code review** holds the code review pages: overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings). **Code wiki**, **Code security** and **Verification** are shortcuts: each lists one page, that feature's first page in the **Console** tab, and nothing else
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
+- **Console:** projects, code wiki (the wiki and its settings), code security (the scans, records and runs, settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
+
+The shortcuts depend on two things, so keep both:
+- In `docs.json` the **Features** tab comes last, after **Console**. Mintlify opens a page under the first tab that lists it, so a shortcut's page opens under **Console**, with the console's sidebar. `style.css` draws the tab after **Integrations** with `order`
+- A menu item's `href` doesn't work for this: a relative one renders as `/`, and an absolute one opens a new browser tab
+
+When a feature gets console pages, add them to the **Console** tab and give the **Features** menu a shortcut to the first one.
 
 When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep these inbound URLs working, because the product and the website link to them:
 - `/cli/get-started/getting-started`
@@ -145,6 +158,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 `index.mdx` is a custom-mode page built with the `ib-*` classes in `style.css`, whose tokens follow the ironbee.ai palette. `style.css` also restyles Mintlify's chrome: the top tabs are chips with an icon, and the active tab has a background and a border. Follow these rules when you change either:
 
 - Keep every border radius at 4px or less, including buttons, cards, chips, the code group, the top tabs and the sidebar's active page (desktop `#sidebar` and the phone menu `#mobile-nav`).
+- The **Features** tab is a menu button. `style.css` gives it the active chip while a code review page is open, and keeps its menu and the menu's rows at 4px corners. Check a new tab at 1024px, the narrowest width that shows the tab row.
 - Section eyebrow labels are neutral gray, with no accent color and no dot.
 - Check the page in light and dark themes and at mobile width.
 
@@ -176,7 +190,8 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 - Plans, prices and plan limits live only on `console/pricing.mdx`. It mirrors [ironbee.ai/pricing](https://ironbee.ai/pricing) word for word, and the website wins when they differ. Don't repeat prices or limits on other pages; link to the Pricing page instead
   - The same goes for credits: other pages say what uses credits and what's free, never how many a plan gets or a job costs
   - Plans are priced in credits. Leave out the website's session limits (its sessions row and session lines) when you mirror it
-- The public REST API has no reference docs for now. That includes running a saved scenario through the API
+- The public REST API has no reference docs for now. That includes running a saved scenario through the API and the code security routes
+- Code security: never name the skill or the models behind a scan. The run details' **Skill**, **Agents** and **Sandbox** lines stay undocumented
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`
 - A feature that hasn't reached production yet is written on a branch and published together with its release
