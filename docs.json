@@ -66,6 +66,7 @@
       "In GitLab pipelines, include the component `gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1`; it reads the `IRONBEE_API_KEY` CI/CD variable by default.",
       "In Bitbucket Pipelines, run the pipe `docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1` and pass `IRONBEE_API_KEY: $IRONBEE_API_KEY` and `BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN` under its `variables:`.",
       "Console scenarios (https://docs.ironbee.ai/console/scenarios) and CLI saved scenarios (https://docs.ironbee.ai/cli/guides/scenarios) are separate features.",
+      "Code security (https://docs.ironbee.ai/console/code-security) scans a repository's default branch on a schedule. It is off until an owner or admin turns it on for a repository, and only owners and admins see it.",
       "For plans and prices, link to https://ironbee.ai/pricing; the website is the source of truth for them."
     ]
   },
@@ -333,6 +334,15 @@
             "pages": [
               "console/code-wiki",
               "console/code-wiki-settings"
+            ]
+          },
+          {
+            "group": "Code security",
+            "icon": "shield-alert",
+            "pages": [
+              "console/code-security",
+              "console/code-security-records",
+              "console/code-security-settings"
             ]
           },
           {

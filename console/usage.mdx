@@ -1,16 +1,16 @@
 ---
 title: Credit usage
 sidebarTitle: Usage
-description: See your team's IronBee credits this month, what code review and verification used, what each job costs, and what happens when credits run out.
+description: See your team's IronBee credits this month, what each product used, what each job costs, and what happens when credits run out.
 keywords: ["quota", "consumption", "billing usage"]
 ---
 
-Code reviews and verification runs on IronBee spend one pool of credits, shared by the whole team. Your plan sets how many credits the team gets each month; see [Pricing](/console/pricing).
+Code reviews, verification runs and code security scans on IronBee spend one pool of credits, shared by the whole team. Your plan sets how many credits the team gets each month; see [Pricing](/console/pricing).
 
 The **Usage** page shows the credits this month, what each product used, and what each job costs. Everyone in the account can open it: open **Settings**, then **Workspace > Usage**.
 
-<img className="ib-shot ib-shot-light" src="/images/console/settings/usage-overview-light.png" alt="The Usage page with the Credits this month meter and This month by product, split between Code review and Verification" />
-<img className="ib-shot ib-shot-dark" src="/images/console/settings/usage-overview-dark.png" alt="The Usage page with the Credits this month meter and This month by product, split between Code review and Verification" />
+<img className="ib-shot ib-shot-light" src="/images/console/settings/usage-overview-light.png" alt="The Usage page with the Credits this month meter and This month by product, split between Code review, Verification and Code security" />
+<img className="ib-shot ib-shot-dark" src="/images/console/settings/usage-overview-dark.png" alt="The Usage page with the Credits this month meter and This month by product, split between Code review, Verification and Code security" />
 
 ---
 
@@ -33,7 +33,7 @@ A run that has already started is never stopped for credits, so the credits used
 
 ## This month by product
 
-**This month by product** splits the month's credits between **Code review** and **Verification**.
+**This month by product** splits the month's credits between **Code review**, **Verification** and **Code security**.
 
 ---
 
@@ -42,6 +42,7 @@ A run that has already started is never stopped for credits, so the credits used
 **What a job costs** is the rate card. A sentence at the top says how each product is priced: "A code review is priced by the size of what it reads and the depth chosen. A verification is priced by its started minutes."
 
 - **Code review:** a table with one row for each size, from **S** to **3XL**. **Lines read** gives the range of reviewable lines each size covers, and **Quick**, **Standard** and **Deep** give the credits a review of that size costs at each depth.
+- **Code security:** a table with one row for each repository size. **Repository lines** gives the lines each size covers, and **Quick**, **Standard** and **Deep** give two prices at each profile: a full scan, then a period with changes. A size the card doesn't price reads **by contract**.
 - **Verification:** a line with the credits for each started minute of a run.
 - **Free:** a line that lists the work that costs nothing.
 
@@ -60,6 +61,17 @@ A code review is priced before it starts, by the reviewable lines it reads and t
 
 What starts a review and the work that's free are on [Code review on GitHub pull requests](/code-review/on-github#credits). They're the same on [GitLab merge requests](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run) and [Bitbucket pull requests](/code-review/on-bitbucket#credits-and-when-a-review-doesnt-run).
 
+### Code security
+
+A [code security](/console/code-security) scan is priced at its start, before it reads anything, by the repository's size and the scan's [profile](/console/code-security-settings#profile). The size is the repository's lines outside the [paths to ignore](/console/code-security-settings#paths-to-ignore). A scan with [execution](/console/code-security-settings#execution) on costs more.
+- A full scan costs the first price on the rate card. A scheduled scan of a period with changes costs the second.
+- A scan is charged when it finishes.
+- A scan that fails, or is refused, is free.
+- A period in which the default branch didn't move is free.
+- A follow-up run, which only finishes an earlier scan, is free.
+
+A repository larger than the rate card covers is scanned by contract with IronBee.
+
 ### Verification
 
 Every verification run on IronBee uses credits, whatever started it: Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification**, or a [scenario run](/console/scenario-runs).
@@ -74,7 +86,7 @@ A run isn't charged when:
 
 These use no credits:
 - answers to questions, conversation replies, harvests after a merge, rechecks and retractions in code review
-- code analysis and the [code wiki](/console/code-wiki)
+- the [code wiki](/console/code-wiki)
 - verification cycles that your AI coding agent reports through the [IronBee CLI](/cli/concepts/how-it-works)
 
 Each run shows what it used in the **Credits** column of [Verifications](/console/verifications#credits) and on its [verification detail](/console/verification-detail#header) page.
@@ -83,7 +95,7 @@ Each run shows what it used in the **Credits** column of [Verifications](/consol
 
 ## When credits run out
 
-When the credits are all used, IronBee refuses new code reviews and new verification runs until the credits reset or the team gets more. Runs that already started finish.
+When the credits are all used, IronBee refuses new code reviews, new verification runs and new code security scans until the credits reset or the team gets more. Runs that already started finish.
 
 ### Across the console
 
@@ -104,6 +116,7 @@ For owners and billing admins, the bell in the top bar also shows **IronBee cred
 - If a run dialog is open, the same sentence shows at the top and its run button stays disabled.
 - A run created before the credits ran out, but not started yet, is refused when it would start, and uses no credits. In the list its status is **Failed**, or **Run error** for a scenario run, whose page says **Stopped before it started**. **Run details** on its [verification detail](/console/verification-detail#header) page gives the reason under **Refused**.
 - A deployment from Vercel or Netlify isn't verified, and no run appears in the list. Its GitHub or Vercel check closes as neutral, and says **IronBee did not run this verification · out of credits this month**. On GitLab, the pipeline status with that description is passed, where IronBee writes one: on a project with **Pipelines must succeed** and **Block merges** off, it writes none. On Bitbucket, the build status with that description is successful.
+- A scheduled code security scan doesn't start. The project's **Code security** tab says **The last scan did not have enough credits**, and the next scheduled scan tries again when the credits reset. **Run full scan** is unavailable, with **No credits left this month**. See [Where a scan stands](/console/code-security#where-a-scan-stands).
 - `ironbee verify` and `ironbee review` stop with an error. See [When credits run out](/cli/guides/credits#when-credits-run-out) in the CLI docs.
 
 For code review, see [When credits run out](/code-review/on-github#when-credits-run-out), and for GitLab merge requests and Bitbucket pull requests, Credits and when a review doesn't run on [GitLab](/code-review/on-gitlab#credits-and-when-a-review-doesnt-run) and [Bitbucket](/code-review/on-bitbucket#credits-and-when-a-review-doesnt-run).
@@ -147,5 +160,8 @@ While the credits load, the page shows placeholders. If they can't be loaded, it
   </Card>
   <Card title="Code review" icon="git-pull-request" href="/code-review/overview">
     How IronBee reviews pull requests and merge requests, and what a review costs.
+  </Card>
+  <Card title="Code security" icon="shield-check" href="/console/code-security">
+    Scheduled security scans of a repository's default branch, and what a scan costs.
   </Card>
 </CardGroup>

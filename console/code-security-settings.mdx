@@ -1,0 +1,121 @@
+---
+title: Code security settings
+sidebarTitle: Settings
+description: Turn code security on for a repository, and choose a scan's profile, whether it may run the code, how often it's scheduled and which paths it leaves out.
+---
+
+Code security settings decide which repositories are [scanned](/console/code-security), how far a scan goes, whether it may run the repository's code and how often it comes. You set them at two levels:
+
+- **The account:** open **Settings > Code security**. Its defaults apply to every repository.
+- **One repository:** open the project, go to its **Settings** tab and select **Code security**, or click **Scan settings** on the project's **Code security** tab.
+
+A repository follows the account's defaults until it sets its own value. Only owners and admins see these pages.
+
+---
+
+## Account settings
+
+The account page holds the defaults for every repository: **Profile**, **Execution** and **Scheduled scan**. A repository can set its own on its settings page. When repositories hold their own value of a setting, the setting counts them, such as **2 repositories set their own**.
+
+| Setting | Options | Default |
+|---------|---------|---------|
+| [**Profile**](#profile) | **Auto**, **Quick**, **Standard**, **Deep** | **Auto** |
+| [**Execution**](#execution) | **Off**, **On** | **Off** |
+| [**Scheduled scan**](#scheduled-scan) | **Daily**, **Weekly**, **Every two weeks**, **Monthly** | **Weekly** |
+
+There's no account setting that turns code security on. Each repository has its own switch, and it's off until you turn it on.
+
+### Profile
+
+The profile sets how far a scan follows what it finds. A deeper profile reads more, takes longer and costs more.
+
+| Profile | What it does |
+|---------|--------------|
+| **Auto** | Picks by the repository's size: **Standard** for smaller repositories, **Quick** for larger ones. It never picks **Deep**. The option says where the line is |
+| **Quick** | The fastest scan. It follows fewer leads |
+| **Standard** | A broader scan that follows more leads |
+| **Deep** | The most thorough scan, and the slowest |
+
+On the account page, the profiles are a table with a column for each repository size, which gives the credits of a full scan at that size. **The whole rate card** opens [Usage](/console/usage#what-a-job-costs).
+
+### Execution
+
+**Execution** decides whether a scan may run a repository's code to prove what it finds.
+
+- **Off:** the scan reads the code and never runs it. What it finds stays a lead to validate, with no severity.
+- **On:** the scan installs the dependencies and runs the code in its sandbox. A finding it reproduces is confirmed and gets a severity. A scan with execution costs more: the option shows by how much.
+
+With execution on, a scan:
+
+- runs install scripts and the repository's own code, inside the sandbox only
+- reaches the package registries while it installs. The code it runs has no network beyond itself
+- installs Node, Python and Go at the version the repository declares. Other languages are read, not run
+- is refused, free, for a checkout larger than 2 GiB. The **Code security** tab then says **Too large to scan with execution**
+
+### Scheduled scan
+
+**Scheduled scan** sets how often each repository's scheduled scan comes: **Daily**, **Weekly**, **Every two weeks** or **Monthly**. A period in which the default branch didn't move scans nothing and costs nothing.
+
+---
+
+## Repository settings
+
+A repository's page is for that repository only. Whatever isn't set there follows the account. **Account defaults** opens the account page.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-security/settings-project-light.png" alt="The Code security page of a project's settings, with the Scan this repository switch off and the Profile options Auto, Quick, Standard and Deep" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-security/settings-project-dark.png" alt="The Code security page of a project's settings, with the Scan this repository switch off and the Profile options Auto, Quick, Standard and Deep" />
+
+The page opens with **Scan this repository**:
+
+- **On:** the default branch is scanned on its schedule.
+- **Off:** nothing is scanned. The records already found are kept, not shown.
+
+Turning the switch on starts no scan by itself. The next scheduled scan reads the repository, or you can start one with [**Run full scan**](/console/code-security#run-a-full-scan).
+
+Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **3 of 3 settings follow the account, 0 set here.** When the repository sets something, it offers **Reset all to account settings**.
+
+Below it:
+
+- **Profile**, **Execution** and **Scheduled scan**, as in [Account settings](#account-settings). A setting that follows the account reads **Account default**, with **Change for every repository** to open the account page. Change one, and it reads **Set for this repository**, with a link to reset it to the account default.
+- **Paths to ignore**, which exists only on a repository's page.
+
+Once a scan has counted the repository, each profile shows its price at this repository's size, in credits: a full scan, then a period with changes. Before that, the page says the price depends on the repository's size, with **See the rate card**.
+
+### Paths to ignore
+
+**Paths to ignore** are files left out of every scan and of the repository's size, which a scan's price is counted from. Type a pattern such as `vendor/**` or `**/*.min.js`, then press Enter or click **Add a pattern**.
+
+A pattern is a glob from the repository root: `*` matches within one path segment and `**` matches across segments. The list takes up to 100 patterns, of up to 500 characters each, with at most 10 `**` in one pattern.
+
+Changing the list makes the next scan a full scan. The page says so, with the full scan's price when the repository's size is known.
+
+---
+
+## Save your changes
+
+Click **Save changes** to save, or **Discard** to drop your changes. **Code security settings saved** confirms it. If the console refuses a value, it says **Some settings were refused**.
+
+A change applies at a repository's next scan. A scan already running keeps the settings it started with.
+
+---
+
+## Who can change settings
+
+Only owners and admins see code security settings, at both levels, and only they change them. A member or a billing admin who opens a settings page's address sees **Only owners and admins see the code security settings.** See [Roles and permissions](/console/roles).
+
+An archived project's page is read-only, and says **This project is archived. Unarchive it to change its code security settings.** See [Project settings](/console/project-settings).
+
+Code security scans GitHub, GitLab and Bitbucket repositories only. On a Vercel, Netlify or CLI project, the page says **Code security scans GitHub, GitLab and Bitbucket repositories**.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Code security" icon="shield-check" href="/console/code-security">
+    What a scan does, when it runs and what it costs.
+  </Card>
+  <Card title="Usage" icon="gauge" href="/console/usage">
+    The team's credits this month and the rate card.
+  </Card>
+</CardGroup>

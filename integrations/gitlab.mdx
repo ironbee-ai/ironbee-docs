@@ -9,6 +9,7 @@ The GitLab connection links a top-level group on gitlab.com to your IronBee acco
 
 - **Code review.** IronBee reviews the merge requests of the repositories you pick, comments on what it finds and sets the **IronBee review** pipeline status, except where that status would hold merges you didn't ask it to; see [Merges](#merges). See [Code review on GitLab merge requests](/code-review/on-gitlab).
 - **Code wiki.** IronBee writes a wiki of each repository you pick, from its default branch, and keeps it current as merge requests merge. See [Code wiki of a repository](/console/code-wiki).
+- **Code security.** An owner or an admin can turn on scheduled security scans of a repository's default branch. It's off until they do. See [Code security scans of a repository](/console/code-security).
 - **Repository access.** A verification run checks out the commit it verifies. For a run from the GitLab component or `ironbee verify`, a private or internal project needs the connection for that; a public one doesn't. A Vercel or Netlify deployment of a project whose group isn't connected is verified on its URL alone, with nothing posted on GitLab. So is one whose commit the project doesn't hold, such as a fork's commit that no open merge request names.
 - **Results on the merge request.** A verification run with a verdict posts a pipeline status, inline comments on its findings and a summary note on the merge request. See [What appears on the merge request](#what-appears-on-the-merge-request).
 
@@ -79,6 +80,7 @@ Each repository's row shows its **Verification type** and its **Status**. The ro
 For each new project:
 - Code review starts, unless **Review new repositories automatically** is off. See [Code review settings](/code-review/settings).
 - The [code wiki](/console/code-wiki) starts, unless **Write a wiki for newly connected repositories** is off.
+- [Code security](/console/code-security) stays off until an owner or an admin turns it on for a repository.
 - The verification type is **None**. Runs from the GitLab component and from `ironbee verify` in that repository report to the project and name their own type.
 - Merge requests that were already open are listed in the console as **Not reviewed**. They're reviewed when someone asks, or on their next push.
 

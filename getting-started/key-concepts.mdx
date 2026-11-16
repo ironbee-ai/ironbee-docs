@@ -68,6 +68,18 @@ The **code wiki** is a set of pages IronBee writes about a GitHub, GitLab or Bit
 
 ---
 
+## Code security
+
+**Code security** is a scheduled scan of the default branch of a GitHub, GitLab or Bitbucket repository for security problems. It's off until an owner or an admin turns it on for a repository, and only owners and admins see it.
+
+- A **scan** reads the code. The first scan is a full scan, and a later scheduled scan reads what changed since the last one.
+- A **record** is one problem a scan found. A **confirmed** finding is one the scan reproduced by running the code, and has a severity. A **lead to validate** is one it could not prove yet, and has no severity.
+- A **decision** is what your team does with a record: **Open**, **Accepted**, **Fixed elsewhere** or **Not an issue**.
+
+The records are on the project's **Code security** tab. See [Code security scans of a repository](/console/code-security).
+
+---
+
 ## Verification run
 
 A **verification run** is one verification of a change: a preview deployment, a push, a pull request, or a run you start yourself. An agent reads what changed, exercises it against your running app, and records a **result** with the evidence behind it.
