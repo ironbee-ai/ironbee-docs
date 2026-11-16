@@ -26,7 +26,7 @@ The account page opens with **Defaults**, then the **Repositories** table.
 |---------|---------|---------|--------------|
 | **Write a wiki for newly connected repositories** | On, Off | On | When a repository is connected, its wiki starts right away. Off: it waits until you turn it on for that repository. A repository already connected keeps its own switch |
 | **Wiki language** | **Same as the comment language**, English, Deutsch, Español, Français, Português (Brasil), 日本語, 한국어, 中文, Türkçe, Русский | **Same as the comment language** | The language the pages are written in. Code, paths and names stay as they are. **Same as the comment language** follows the code review's [**Comment language**](/code-review/settings#output) |
-| **Rebuild from scratch** | **Daily**, **Weekly**, **Manual** | **Daily** | How often a run ignores what it read before and reads the whole repository again. A push to the default branch still updates the wiki within about ten minutes. **Manual** has no scheduled rebuild |
+| **Rebuild from scratch** | **Daily**, **Weekly**, **Every two weeks**, **Monthly** | **Weekly** | How often a run ignores what it read before and reads the whole repository again. A push to the default branch still updates the wiki within about ten minutes |
 
 When repositories hold their own values, the section counts them, such as **2 repositories set their own**.
 
@@ -55,7 +55,7 @@ The **Status** column reads:
 | **Not written yet** | "the first build starts within a few minutes" |
 | **Off** | "off for this repository", with how many pages are kept |
 
-A change takes effect on the repository's next write. Turning a wiki off keeps its pages but stops showing them. Turning it on writes them again within a few minutes. Changing the language or the cadence starts no run of its own.
+A change takes effect on the repository's next write. Turning a wiki off keeps its pages but stops showing them, and its [public link](/console/code-wiki#share-the-wiki-with-a-public-link) opens nothing. Turning it on writes them again within a few minutes, unless the wiki was refreshed or turned on a short while before. Changing the language or the cadence starts no run of its own.
 
 If no repository is connected yet, the table reads **No repository connected**: "A wiki is written for repositories connected through the GitHub App, a GitLab group or a Bitbucket workspace." See [GitHub App](/integrations/github), [GitLab](/integrations/gitlab) and [Bitbucket](/integrations/bitbucket).
 
@@ -69,7 +69,7 @@ If no repository is connected yet, the table reads **No repository connected**: 
 A repository's page opens with **Write a wiki for this repository**:
 
 - **On:** the wiki is written from the default branch and kept current as it moves.
-- **Off:** nothing new is written. The pages already written are kept, not shown.
+- **Off:** nothing new is written. The pages already written are kept, not shown. A [public link](/console/code-wiki#share-the-wiki-with-a-public-link) to the wiki opens nothing while it's off.
 
 Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **Settings: 2 of 2 follow the account, 0 set here**. It links to **Account settings** and, when the repository sets something, offers **Reset all to account settings**.
 
@@ -95,7 +95,7 @@ A pattern already in the list isn't added twice. When the list is full, its inpu
 
 The bar under the form counts what you changed, such as **2 unsaved changes**, and says when the change applies:
 
-- **Account page:** at each repository's next write. A switch turned on writes within a few minutes.
+- **Account page:** at each repository's next write. A switch turned on writes within a few minutes, unless the wiki was refreshed or turned on a short while before.
 - **Repository page:** at the next run. A run already going keeps the settings it started with.
 
 Click **Save changes** to save, or **Discard** to drop your changes. If the console refuses a value, it says **Some settings were refused**, and the changes it accepted stay saved. If you leave the page with unsaved changes, **Leave without saving?** asks you to **Leave** or **Keep editing**.
