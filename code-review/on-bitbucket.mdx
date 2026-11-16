@@ -97,7 +97,7 @@ The commands, their replies and the forms IronBee reads are the same as on GitHu
 
 A reply under IronBee's review comment works too. A command in a reply under one of its inline comments isn't read: write it in the pull request's conversation.
 
-Only the pull request's author and people with a role in the workspace can give commands: its admins, members and collaborators. `retract` needs a role in the workspace: being the author isn't enough. IronBee doesn't act on commands or questions from anyone else.
+Only people with a role in the workspace can give commands or ask questions: its admins, members and collaborators. Being the pull request's author isn't enough. IronBee doesn't act on commands or questions from anyone else, and doesn't reply to them.
 
 `retract` deletes IronBee's review comment and its inline comments, turns its other comments, the summary included, into "_(retracted)_", and the status reads **IronBee review · retracted**.
 
@@ -105,7 +105,7 @@ Only the pull request's author and people with a role in the workspace can give 
 
 ## Replies and resolved comments
 
-IronBee reads what people do with its comments, as on GitHub. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads). As with commands, only the author and people with a role in the workspace count. On Bitbucket:
+IronBee reads what people do with its comments, as on GitHub. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads). For replies, only the pull request's author and people with a role in the workspace count. On Bitbucket:
 
 - **Replies** work as on GitHub. IronBee's answer starts by mentioning you, so Bitbucket notifies you.
 - **Resolving a comment.** Resolving or reopening one of IronBee's comments reaches IronBee right away, and the recheck of the **IronBee review** status follows.

@@ -16,7 +16,7 @@ Two lists show the same rows and open the same pull request page.
 | List | Where | What it shows |
 |------|-------|---------------|
 | **Pull requests** | The sidebar's **Code review > Pull requests** | The pull requests of every repository connected to your account, newest opened first. Archived projects aren't included |
-| **Code review** tab | A project's first tab | One repository's pull requests, most recently updated first. The project picker in the page header switches to another repository |
+| **Code review** tab | A project's first tab | One repository's pull requests, most recently updated first. The project picker at the top of the page switches to another repository |
 
 Next to a project's **Code review** tab, its [Code wiki](/console/code-wiki) tab explains the repository's code.
 
@@ -34,7 +34,7 @@ Click a row in either list to open its [pull request page](#the-pull-request-pag
 
 ## Filter and search
 
-- **The date filter** in the page header shows the pull requests IronBee reviewed in that window: those whose latest review started inside it. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range**. A pull request with no review in the window isn't listed; tick [**Needs review**](#pull-requests-that-need-a-review) to see the open ones.
+- **The date filter** at the top of the page shows the pull requests IronBee reviewed in that window: those whose latest review started inside it. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range**. A pull request with no review in the window isn't listed; tick [**Needs review**](#pull-requests-that-need-a-review) to see the open ones. On a project's **Code review** tab, the header folds away when you scroll, and the project picker and the date filter stay at the end of the tab row.
 - **Number or title** finds a pull request by its number, with or without `#`, or by words from its title.
 - **Repositories** (sidebar list only) and **States** (**Open**, **Merged**, **Closed**) take several values at once. Each option shows how many pull requests it has.
 - **Author** and **Base branch** take one value. Pick it from the menu, which shows each one's count, or type a GitHub login or a branch name. **Any author** and **Any branch** clear them.
@@ -152,7 +152,7 @@ While a job runs on the pull request, the page refreshes on its own until it end
 The band under the header sums up what IronBee says of the pull request, from left to right:
 
 1. **The review**: the same word and detail line as the list's **Review** column. The commit links to the repository's host.
-2. **What's open**: the open findings by severity, such as **1 Critical · 2 High open**, or **nothing open**. Then **3 addressed** and **2 listed below the comment threshold** when there are any. These counts match the findings list under the band.
+2. **What's open**: the open findings by severity, such as **1 Critical · 2 High open**, or **nothing open**. Then **3 addressed** and **2 listed in the review body** when there are any. These counts match the findings list under the band.
 3. **The check**: **IronBee's check on a1b2c3d, the head**, or **an earlier commit** when the check isn't on the latest commit IronBee reviewed, or **no check on GitHub** (**no check on Bitbucket** on Bitbucket). After it comes the merge block in effect: **blocks a merge while medium or worse is open**, **blocks a merge while high or worse is open**, or **never blocks a merge**.
 
    On GitLab, the band reads **IronBee's result on a1b2c3d, the head** instead, because a project may carry no status of IronBee's. With **Block merges** off, the merge part reads "writes no new status that holds a merge; an earlier red one clears at the next review, a reply under a finding, a resolved thread or a push". With **Block merges** on and **Block merging when** on **Never**, it reads "a review's result never blocks a merge; where pipelines must succeed, a running one holds it". See [Merges](/code-review/on-gitlab#merges).
@@ -270,12 +270,12 @@ The findings list on the right holds every finding of the pull request, grouped 
 | **No longer applies** | **the code changed or went away** | Findings whose code changed or was removed |
 | **Turned down** | **turned down by a person: a thumbs-down, a rejecting reply, a hidden comment or a resolved thread** | Findings a person turned down on the pull request. They no longer count as open. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads) |
 | **Open** | **open, or standing after a reply** | Findings still open, including those IronBee kept after a reply on the thread |
-| **Listed below the comment threshold** | **in the review body only; never block a merge** | Findings below the **Comment on findings of** setting, and low findings that read as a minor remark. They are listed in the review body, have no comment of their own, and never hold a merge |
+| **Listed in the review body** | **in the review body only; never block a merge** | Findings below the **Comment on findings of** setting, low findings that read as a minor remark, and security findings [to validate outside the code](/code-review/on-github#the-review-body). They are listed in the review body, have no comment of their own, and never hold a merge |
 
-The groups come in that order, and a group with nothing in it is left out. **Open** always shows, so an empty one says so. Each group's heading is a button that folds or opens its rows. **Listed below the comment threshold** starts folded and the other groups start open. A group that holds the finding open in the dialog stays open. Inside a group, the findings that changed most recently come first, then the rest by severity, worst first, and by file and line. A long group shows 20 findings at first. The buttons under it, such as **Show 20 more** and **Show all 45**, show the rest, and a count such as **20 of 45 shown** says how many you see.
+The groups come in that order, and a group with nothing in it is left out. **Open** always shows, so an empty one says so. Each group's heading is a button that folds or opens its rows. **Listed in the review body** starts folded and the other groups start open. A group that holds the finding open in the dialog stays open. Inside a group, the findings that changed most recently come first, then the rest by severity, worst first, and by file and line. A long group shows 20 findings at first. The buttons under it, such as **Show 20 more** and **Show all 45**, show the rest, and a count such as **20 of 45 shown** says how many you see.
 
-<img className="ib-shot ib-shot-light" src="/images/console/code-review/pull-request-findings-light.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed below the comment threshold" />
-<img className="ib-shot ib-shot-dark" src="/images/console/code-review/pull-request-findings-dark.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed below the comment threshold" />
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/pull-request-findings-light.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed in the review body" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/pull-request-findings-dark.png" alt="The rail with the jobs on the pull request and the settings in effect for the next review, beside the findings grouped as Addressed, No longer applies, Open and Listed in the review body" />
 
 ### A finding's row
 
@@ -292,7 +292,7 @@ Click a row to open it in the [finding dialog](#the-finding-dialog).
 ### Filter the findings
 
 - **Search claims, paths and rules** matches the claim, the file path, and the rules, memories and skills the finding cites.
-- **Filter** opens a panel that narrows the list by **Severity**, **Category** and **State**, each option with its count, and to findings that **Cites a rule or memory**. **State** offers the row states and **listed below the threshold**.
+- **Filter** opens a panel that narrows the list by **Severity**, **Category** and **State**, each option with its count, and to findings that **Cites a rule or memory**. **State** offers the row states and **listed in the body**.
 - The count beside the button reads like **8 of 14 findings**. Each filter in force shows as a chip you can remove, and **Clear all** removes them all.
 
 The filters and the open finding are kept in the page's address, so a copied link opens the same view.
@@ -320,7 +320,7 @@ The sections follow in this order. A section with nothing to show is left out.
 7. **History**: what happened to the finding, in order:
    - **Posted by the review at a1b2c3d**.
    - Each later change: **Still open**, **Stands**, **Addressed**, **The code changed**, **The code went away**, **Withdrawn** or **Turned down**, with **after a reply on the thread** and the commit when they apply. IronBee's sentence about it follows. **Read the whole reply on GitHub** opens the reply, a line such as **now rated high** shows a new severity, and **the thread was resolved by someone else** says a person, not IronBee, resolved it.
-   - How the thread stands now: **Thread open on GitHub**, **Thread resolved by IronBee**, **No comment on GitHub any more**, or **Listed in the review body; no comment of its own**.
+   - How the thread stands now: **Thread open on GitHub**, **Thread resolved by IronBee**, **No comment on GitHub any more**, **Listed in the review body; no comment of its own**, or **Listed in the review body as a lead to validate outside the code; no comment of its own**.
 
 **Suggested fix** and **How it happens** appear when the review wrote them; the **Suggested fixes** and **Diagrams** settings turn them on or off.
 

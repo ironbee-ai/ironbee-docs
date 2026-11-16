@@ -7,7 +7,7 @@ keywords: ["GitLab merge request review", "AI code review", "MR review bot", "pi
 
 IronBee reviews the merge requests of a repository whose group is [connected to IronBee](/integrations/gitlab), once the repository is enabled and has code review turned on. It posts a review with inline comments, keeps a summary note on the merge request, and sets the **IronBee review** pipeline status. Everything it writes appears as the group's IronBee service account, `ironbee-<group path>`, or `ironbee-<group path>-<group id>` when that name was taken. To turn code review on, see [Code review](/code-review/overview).
 
-A review on GitLab reads, decides and reports the same way as on GitHub, so this page covers what differs. For the parts it shares, it links to [Code review on GitHub](/code-review/on-github). The text IronBee writes on GitLab says "pull request", as it does on GitHub.
+A review on GitLab reads, decides and reports the same way as on GitHub, so this page covers what differs. For the parts it shares, it links to [Code review on GitHub](/code-review/on-github). The review and the status IronBee writes on GitLab say "pull request", as they do on GitHub. The summary's heading and the map of where the findings sit say "merge request".
 
 Each review also appears in the console, with its findings. See [Pull requests](/code-review/pull-requests). To review a branch before you open a merge request, use [`ironbee review`](/cli/guides/code-review) in the CLI.
 
@@ -27,7 +27,7 @@ A merge request from a fork is reviewed too. Its **IronBee review** status never
 
 IronBee publishes a review in one batch, so GitLab sends one round of notifications for it. The review is a comment: it never approves a merge request. Whether a finding holds a merge is up to [the pipeline status](#the-ironbee-review-pipeline-status).
 
-**The review body** is a note on the merge request, with the same content as on GitHub: the **Open in IronBee** button, the head line with the counts by severity, the notes on how the review was made, the rules and memories it applied, the findings table and the map of where the findings sit. See [The review body](/code-review/on-github#the-review-body). The note can't be resolved.
+**The review body** is a note on the merge request, with the same content as on GitHub: the **Open in IronBee** button, the head line with the counts by severity, the notes on how the review was made, the rules and memories it applied, the findings table and the map of where the findings sit. The map's root names the merge request by its GitLab reference, such as `MR !42`. See [The review body](/code-review/on-github#the-review-body). The note can't be resolved.
 
 **Inline comments** are diff threads on the merge request's **Changes**, one per finding, with the same parts as on GitHub. See [Inline comments](/code-review/on-github#inline-comments). They differ in two ways:
 - A suggested fix is a GitLab suggestion, which you apply with **Apply suggestion**. A fix with a line that starts with `/` is a plain code block instead, with no one-click apply.
@@ -41,7 +41,7 @@ The severity and kind marks are the same icons as on GitHub; the kind marks come
 
 With **Pull request summary** on, IronBee keeps one summary note on the merge request and edits it in place when the merge request changes. It never writes in the merge request's description.
 
-The note is headed **Summary of this pull request**, and its first line says where it comes from: "_Written by IronBee from the code at `abc1234`._", or "_..., update 3._" after it has been rewritten. Its sections are the same as on GitHub. See [The pull request summary](/code-review/on-github#the-pull-request-summary).
+The note is headed **Summary of this merge request**, and its first line says where it comes from: "_Written by IronBee from the code at `abc1234`._", or "_..., update 3._" after it has been rewritten. Its sections are the same as on GitHub. See [The pull request summary](/code-review/on-github#the-pull-request-summary).
 
 The console's pull request page shows the same summary in its **Summary** card. See [Pull requests](/code-review/pull-requests).
 
@@ -99,7 +99,7 @@ The commands, their replies and the forms IronBee reads are the same as on GitHu
 
 A reply under IronBee's review note counts as a comment on the merge request, so commands work there too.
 
-Only the merge request's author and members of the project with the Owner, Maintainer or Developer role can give commands. `retract` needs one of those three roles: being the author isn't enough. IronBee doesn't act on commands or questions from Reporters, Guests or anyone else.
+Only members of the project with the Owner, Maintainer or Developer role can give commands or ask questions. Being the merge request's author isn't enough. IronBee doesn't act on commands or questions from Reporters, Guests or anyone else, and doesn't reply to them.
 
 `retract` deletes IronBee's review note, its inline comments, its other notes and the summary note, and the status, where IronBee writes one, reads **IronBee review · retracted**. GitLab keeps nothing of the review.
 
@@ -107,7 +107,7 @@ Only the merge request's author and members of the project with the Owner, Maint
 
 ## Replies, reactions and resolved threads
 
-IronBee reads what people do with its comments, as on GitHub. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads). As with commands, only the author and members with the Owner, Maintainer or Developer role count. On GitLab:
+IronBee reads what people do with its comments, as on GitHub. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads). For replies and reactions, only the merge request's author and members with the Owner, Maintainer or Developer role count. On GitLab:
 
 - **Reactions** are GitLab's emoji reactions. A thumbs-up or a thumbs-down counts as on GitHub; heart, tada and rocket count as a thumbs-up, and confused as a thumbs-down.
 - **Hiding a comment** has no counterpart on GitLab.

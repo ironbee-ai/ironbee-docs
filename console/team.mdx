@@ -25,6 +25,8 @@ Search by name or email. Click the **User**, **Invited At**, **Accepted At** or 
 
 To change a member's role, pick a new one in the **Role** column and confirm with **Change role**. To remove someone, click **Remove** in the **Actions** column and confirm **Remove member?**. Nobody can change their own role, and the owner role can't be assigned.
 
+Removing an admin, or changing their role to **Member** or **Billing Admin**, also deletes the invitations they sent that weren't accepted yet. Those links stop working, so invite the people again.
+
 ---
 
 ## Invite a teammate
@@ -40,7 +42,7 @@ The recipient has 7 days to accept. If the email can't be sent, the dialog shows
 
 The **Invites** tab lists invitations that are pending or expired, with their **Email**, **Role**, **Status** and **Expires** date:
 - **Revoke** a pending one, and confirm **Revoke invitation?**.
-- **Resend** an expired one.
+- **Resend** an expired one. A renewed invitation takes a seat again, so when none is free the page says **All seats in your plan are in use. Remove a member or upgrade to invite more people.**, as the invite dialog does. See [Pricing](/console/pricing).
 
 <img className="ib-shot ib-shot-light" src="/images/console/settings/team-invites-light.png" alt="Team page on the Invites tab, with the Invite member button, a Pending invitation with Revoke and an Expired invitation with Resend" />
 <img className="ib-shot ib-shot-dark" src="/images/console/settings/team-invites-dark.png" alt="Team page on the Invites tab, with the Invite member button, a Pending invitation with Revoke and an Expired invitation with Resend" />

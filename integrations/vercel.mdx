@@ -33,7 +33,7 @@ In the console, open **Integrations** in the sidebar, select **Vercel**, and cli
 <img className="ib-shot ib-shot-dark" src="/images/console/integrations/vercel-connect-dark.png" alt="Connect Vercel to IronBee, showing the Vercel team, its projects, the IronBee account picker and the Connect button" />
 
 <Note>
-  Only accounts where you hold the **owner** or **admin** role appear in the picker. If the page says the installation is no longer pending, it expired or was already completed. Open your Vercel team, go to the IronBee integration and install it again.
+  Only accounts where you hold the **owner** or **admin** role appear in the picker. Only the IronBee user who comes back from Vercel can finish the connection, so stay signed in as the same user. If the page says the installation is no longer pending, it expired, was already completed, or was started by another user. Open your Vercel team, go to the IronBee integration and install it again.
 </Note>
 
 ---
@@ -190,7 +190,8 @@ When a project leaves the installation's scope, or you uninstall the integration
 | Neutral, "IronBee could not complete this verification" | The repository is private and the GitHub App doesn't cover it, or the run hit an error. Check the GitHub App, then re-request the check |
 | The run verifies broad behavior instead of what the commit changed | The repository isn't on GitHub, gitlab.com or bitbucket.org, the project's GitLab group or Bitbucket workspace isn't connected, or no pull request or merge request was found for the commit. See [GitHub App](/integrations/github), [GitLab](/integrations/gitlab) and [Bitbucket](/integrations/bitbucket) |
 | "This install link is incomplete" during installation | The integration was installed on a personal Vercel account. Install it again on a team |
-| The connect page says the installation is no longer pending | It expired or was already completed. Install the integration again from your Vercel team |
+| The connect page says the installation is no longer pending | It expired, was already completed, or another IronBee user started it. Install the integration again from your Vercel team |
+| **Could not confirm this installation yet** | IronBee couldn't confirm that the installation is yours, for example because of a network error or a sign-in that lapsed. The link is still good: click **Try again** |
 
 ---
 

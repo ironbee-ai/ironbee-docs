@@ -24,6 +24,7 @@ ironbee review show                            # this worktree's newest review a
 - Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
 - IronBee can reach the repository the review targets: the GitHub App is installed for it, its GitLab group is connected, or its Bitbucket workspace is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab or Bitbucket, where the CLI adds that the group, or the workspace, needs connecting in the IronBee console. Either way, the CLI lists your checkout's github.com, gitlab.com and bitbucket.org remotes so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
+- With an OAuth token, your [role](/console/roles) in the account is owner, admin or member. A billing admin's token can't start or cancel a review: the API refuses it with `FORBIDDEN`. `--dry-run` works for every role, and the account API key isn't tied to a role.
 - Your team has [credits](/cli/guides/credits) left this month.
 - git 2.25 or later, and the full history: in a shallow clone, run `git fetch --unshallow` first.
 
@@ -234,7 +235,7 @@ Each finding also carries `blocking`: whether it blocks under the review's **gat
 |------|-------------|
 | `--gate <level>` | What blocks for this run: `low`, `medium`, `high` or `critical` for a standing finding at or above it, or `never` for nothing |
 
-A finding listed because it's below the repository's comment threshold never blocks, whatever the gate.
+A finding listed because it's below the repository's comment threshold never blocks, whatever the gate. Neither does a security finding the reviewer lists as one to validate outside the code.
 
 The result names its gate as `result.gate`: `blockAt` is the severity or `never`, and `source` is `request` for `--gate` or `repository` for the merge gate. With `--dry-run --json`, the document carries `gate` when you passed `--gate`. `--fail-on` stays its own severity, whatever the gate.
 
