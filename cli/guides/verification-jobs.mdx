@@ -73,6 +73,8 @@ An OAuth token from any source wins over an API key from any source. The command
 
 So on a machine where you ran `ironbee login`, the stored OAuth token wins over an `IRONBEE_API_KEY` or `IRONBEE_SERVICE_API_KEY` you export. Export `IRONBEE_ACCESS_TOKEN` or `IRONBEE_SERVICE_OAUTH_TOKEN` to override it.
 
+An OAuth token acts with your [role](/console/roles) in the account. Starting or cancelling a job needs the owner, admin or member role: the API refuses a billing admin's token with `FORBIDDEN`. The account API key isn't tied to a role.
+
 `ironbee verify` reads the global, project and local config files. It doesn't read the repository's [personal file](/cli/configuration/configuration#the-personal-file), so a credential kept only there doesn't reach it. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
 
 ---

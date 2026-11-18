@@ -11,6 +11,7 @@ It also reviews your pull requests the way a careful teammate would, reading eac
 You can use any of these, or all of them:
 
 - **Code review on your pull requests.** Install the IronBee GitHub App, or connect a GitLab group or a Bitbucket workspace, and IronBee reviews every pull request or merge request in the repositories it covers. Its findings land as comments on the pull request and in the console.
+- **Code security on your repositories.** On the same GitHub, GitLab or Bitbucket connection, an owner or an admin can turn on scheduled security scans of a repository's default branch. What a scan finds is kept as records in the console, for your team to decide on.
 - **On your deployments and pull requests.** Connect Vercel or Netlify, or add the GitHub Action, the GitLab component or the Bitbucket Pipe, and IronBee verifies each preview deployment, pull request or merge request on its own infrastructure. The result lands on the pull request, on the deployment, and in the console.
 - **Inside your AI coding agent.** The IronBee CLI gives Claude Code, Cursor and Codex the tools to verify their own changes in a real browser, a running backend or a terminal before they call the work done.
 
@@ -28,6 +29,9 @@ Teams using agentic development today face:
 <CardGroup cols={2}>
   <Card title="Code review on every pull request" icon="message-square-code" href="/code-review/overview">
     Every pull request or merge request gets a review with inline comments, suggested fixes, a summary and a check that can hold a merge. Your team's rules and memories steer it.
+  </Card>
+  <Card title="Security scans of the default branch" icon="shield-alert" href="/console/code-security">
+    Turn code security on for a repository, and IronBee scans its default branch on a schedule. Each record says where the problem is, how it could be used and how to fix it.
   </Card>
   <Card title="Verification on every change" icon="shield-check">
     Every preview deployment on Vercel or Netlify, every push or pull request with the GitHub Action, every merge request or push to the default branch with the GitLab component, and every pull request or push with the Bitbucket Pipe starts a verification run. An agent reads the change and exercises it against your running app.

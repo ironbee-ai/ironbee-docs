@@ -101,7 +101,11 @@ Public previews need nothing. For protected previews:
 
   If the secret can't be saved, the dialog says why:
   - **Netlify did not accept this password. Check it in the project's Visitor access settings on Netlify and try again.**
-  - **This project is not password-protected on Netlify, or its site is not connected here. Turn password protection on there first, or choose another type.**
+  - **This project is not password-protected on Netlify. Turn password protection on there first, or choose another type.**
+  - **Netlify has no address on record for this project's site, so its password page cannot be reached. Reconnect the site, or choose another type.**
+  - **This project's site address on record is not https, so the password is not sent to it. Give the site an https address on Netlify, or choose another type.**
+  - **This project's site address on record is not a public address, so IronBee does not sign in to it.**
+  - **Netlify's password page for this project did not answer. Try again in a moment.**
 
   While the site has a password, its panel on Netlify shows **This project is password protected.** as a reminder to add the password to IronBee.
 - **Basic authentication:** add an **HTTP headers** secret with an `Authorization` header in the project's **Settings > Secrets**.

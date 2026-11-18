@@ -57,6 +57,7 @@ Under it comes the heading **IronBee Code Review**, the same in every **Comment 
 - **The team's rules and memories** the review applied ("Applied 2 rules and 1 memory: ..."), and any of the repository's rule files it left out as invalid, with why. See [Rules and memories](/code-review/rules-and-memories).
 - **The findings table:** one row per finding, most severe first. The first column holds the severity and kind marks, **where** links to the line at the reviewed commit, and **what** links to the finding's inline comment. After 10 rows, the rest fold under **+N more**.
 - **Findings below the comment threshold:** the findings whose severity is under the **Comment on findings of** setting, folded under **N below the comment threshold**. A low finding that reads as a minor remark is listed there too, whatever that setting says. They get no inline comment of their own and never hold a merge.
+- **Findings to validate outside the code:** security findings that rest on a fact the repository doesn't settle, such as how a deployment, a proxy or an identity provider is configured, folded under **N to validate outside the code**. Each row shows the severity the finding would have, and ends with "to validate:" and what to check. A review at **Standard** depth lists them. They get no inline comment of their own and never hold a merge.
 - **A diagram** of where the findings sit: the folders and files of the change, each finding colored by its severity. See [Diagrams](#diagrams).
 - **The feedback line:** "_👍 or 👎 on a comment teaches the next review._"
 
@@ -263,7 +264,7 @@ The summary starts with the commit, the change's size, how long the review took 
 
 The **Action required** conclusion holds a merge only where the branch's protection rules require the **IronBee review** check. Without that, it's information only.
 
-Only open findings count toward the conclusion. A finding listed below the comment threshold never counts, and neither does a finding whose thread a person resolved or that a person [turned down](#replies-reactions-and-resolved-threads). When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
+Only open findings count toward the conclusion. A finding listed below the comment threshold, or to validate outside the code, never counts, and neither does a finding whose thread a person resolved or that a person [turned down](#replies-reactions-and-resolved-threads). When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
 
 A neutral check never holds a merge. Its title names what happened:
 
@@ -293,7 +294,7 @@ Write a command in a comment on the pull request's **Conversation** tab, mention
 | `@ironbee-ai resume` | Starts automatic reviews again | "Resumed: the next push is reviewed again." |
 | `@ironbee-ai retract` | Takes IronBee's review off the pull request: deletes its inline comments and its own comments, replaces each review body with "_(retracted)_", since GitHub keeps a submitted review, removes the summary section from the description, and sets the check to neutral. What a verification run posted on the pull request stays | None. The check's summary reads "retracted" |
 
-Only the pull request's author and people whose GitHub association with the repository is owner, member or collaborator can give commands. IronBee doesn't act on commands or questions from anyone else. `retract` needs one of those three associations: being the pull request's author isn't enough.
+Only people who can write to the repository can give commands or ask questions: those whose permission on it is write, maintain or admin. Being the pull request's author isn't enough, so the author of a pull request from a fork who can't push to your repository isn't heard. IronBee doesn't act on commands or questions from anyone else, and doesn't reply to them.
 
 IronBee reads a command in these forms:
 
@@ -316,16 +317,16 @@ The command words are English, whatever the **Comment language**.
 
 ## Replies, reactions and resolved threads
 
-IronBee reads what people do with its comments. As with commands, only the pull request's author and people whose association with the repository is owner, member or collaborator count.
+IronBee reads what people do with its comments. For replies and reactions, only the pull request's author and people whose GitHub association with the repository is owner, member or collaborator count. A question that mentions `@ironbee-ai` in the conversation follows the rule for [commands](#commands) instead.
 
 | What you do | What IronBee does | Setting |
 |-------------|-------------------|---------|
 | Reply under one of IronBee's inline comments with a question, or an argument against the finding | Answers on the thread right away, from the code at the newest commit. If you're right, it withdraws the finding and resolves the thread. Otherwise it says the finding stands, or that the code can't settle it. It answers up to three times on one thread, and not on a thread a person resolved or hid | **Answer questions** |
 | Reply that turns the finding down, such as "won't fix" or "intended" | At the next review, records the finding as turned down, without a reply. IronBee doesn't raise it again | Always |
-| Give an IronBee comment a thumbs-up or a thumbs-down | At the next review, a comment with more thumbs-down than thumbs-up is turned down and not raised again, and later reviews learn from it. Heart, hooray and rocket count as a thumbs-up, confused as a thumbs-down | **Learn from the team's reactions** |
+| Give an IronBee comment a thumbs-up or a thumbs-down | At the next review, a comment that more people gave a thumbs-down than a thumbs-up is turned down and not raised again, and later reviews learn from it. Each person counts once, however many reactions they add. Heart, hooray and rocket count as a thumbs-up, confused as a thumbs-down | **Learn from the team's reactions** |
 | Hide an IronBee comment | At the next review, the comment is turned down and not raised again, whatever the reason you chose. Hidden as spam, off-topic or a duplicate, it also teaches later reviews. Hidden as resolved or outdated, it doesn't | **Learn from the team's reactions** |
 | Resolve one of IronBee's threads | The finding no longer counts as open, and IronBee [rechecks the check](#conclusions) right away. At the next review, the finding is recorded as turned down, and later reviews don't raise it again. A thread resolved without a code change also teaches later reviews | **Block merging when** sets what the recheck concludes. Learning needs **Learn from the team's reactions** |
-| Mention `@ironbee-ai` with a question in the conversation | Answers in a reply | Always |
+| Mention `@ironbee-ai` with a question in the conversation | Answers in a reply, when you can write to the repository | Always |
 
 A finding that's turned down gets no reply. It leaves the open counts and no longer holds a merge. With **Close fixed threads** on **Resolve the thread**, IronBee resolves its thread. In the console, it's listed under **Turned down**; see [Findings](/code-review/pull-requests#findings).
 

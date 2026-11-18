@@ -98,10 +98,10 @@ html:not(.dark) img.ib-mark-dark {
   display: none;
 }
 
-/* Top tabs (Get started, Integrations, CLI, Console). Mintlify draws them as
-   dim text over a hairline underline, which reads more like a caption than a
-   menu. Give each tab an icon, a hit area and a hover state, and mark the
-   active one with a chip. Corners stay at 4px. */
+/* Top tabs (Get started, Integrations, Features, CLI, Console). Mintlify draws
+   them as dim text over a hairline underline, which reads more like a caption
+   than a menu. Give each tab an icon, a hit area and a hover state, and mark
+   the active one with a chip. Corners stay at 4px. */
 .nav-tabs {
   gap: 4px !important;
   margin-left: -12px;
@@ -111,6 +111,8 @@ html:not(.dark) img.ib-mark-dark {
   height: 34px !important;
   align-self: center;
   padding: 0 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
   border: 1px solid transparent;
   border-radius: 4px;
   font-size: 14px;
@@ -135,6 +137,62 @@ html:not(.dark) img.ib-mark-dark {
 /* Mintlify's underline, replaced by the chip */
 .nav-tabs .nav-tabs-item > div.absolute {
   display: none;
+}
+
+.nav-tabs .nav-tabs-item > svg {
+  flex-shrink: 0;
+}
+
+/* docs.json lists the Features tab last, after Console, so that a console page
+   its menu points at opens under Console (Mintlify shows a page under the first
+   tab that lists it). Draw it after Integrations all the same. */
+.nav-tabs > button.nav-tabs-item {
+  order: 1;
+}
+
+.nav-tabs > a[href^='/cli/'],
+.nav-tabs > a[href^='/console/'] {
+  order: 2;
+}
+
+/* The Features tab is a menu button, not a link, so it carries no data-active.
+   Mintlify marks it with font-semibold while one of its pages is open: give it
+   the same chip as an active tab. */
+.nav-tabs button.nav-tabs-item {
+  cursor: pointer;
+}
+
+.nav-tabs button.nav-tabs-item:hover,
+.nav-tabs button.nav-tabs-item[data-state='open'] {
+  color: #0a0b0b !important;
+  background-color: rgba(10, 11, 11, 0.05);
+}
+
+.nav-tabs button.nav-tabs-item.font-semibold {
+  color: #0a0b0b !important;
+  background-color: rgba(10, 11, 11, 0.06);
+  border-color: rgba(10, 11, 11, 0.12);
+}
+
+.dark .nav-tabs button.nav-tabs-item:hover,
+.dark .nav-tabs button.nav-tabs-item[data-state='open'] {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .nav-tabs button.nav-tabs-item.font-semibold {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* The menu a tab opens, and its rows: 4px corners like everything else. */
+div[role='menu']:has(.nav-dropdown-item) {
+  border-radius: 4px !important;
+}
+
+.nav-dropdown-item {
+  border-radius: 4px !important;
 }
 
 .dark .nav-tabs .nav-tabs-item {

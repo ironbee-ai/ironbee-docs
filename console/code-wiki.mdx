@@ -15,7 +15,7 @@ The wiki is on each project's **Code wiki** tab, after **Code review**. The proj
 
 - **When a repository is connected.** Its first wiki starts within a few minutes, unless **Write a wiki for newly connected repositories** is off. Until it's ready, the tab reads **Writing the first wiki**: "A repository takes 5 to 15 minutes to read. This page updates by itself."
 - **When the default branch moves.** A push to the default branch, such as a merged pull request or merge request, updates the wiki about ten minutes later. Pushes that land close together are written in one update.
-- **On a schedule.** **Rebuild from scratch** sets how often a run ignores what it read before and reads the whole repository again: **Daily**, **Weekly** or **Manual**, with no scheduled rebuild. A scheduled rebuild is skipped when nothing changed since the last one.
+- **On a schedule.** **Rebuild from scratch** sets how often a run ignores what it read before and reads the whole repository again: **Daily**, **Weekly**, **Every two weeks** or **Monthly**. A scheduled rebuild is skipped when nothing changed since the last one.
 - **When you click Refresh.** See [Refresh the wiki](#refresh-the-wiki).
 
 While the wiki is written again, the pages you're reading stay up, under a band that says **Writing the pages again** and which commit they're from. When several repositories in your account are written at the same time, a run can wait its turn: the band reads **Waiting to start**, with a time.
@@ -91,9 +91,70 @@ The wiki says where each claim comes from. A small file mark after a sentence ho
 
 ## Refresh the wiki
 
-Click **Refresh**, at the top right of the tab, to write the wiki again from the default branch now. **Refresh queued** confirms it; the run starts within a few minutes and the tab follows it.
+Click **Refresh**, at the end of the tab row, to write the wiki again from the default branch now. **Refresh queued** confirms it; the run starts within a few minutes and the tab follows it.
 
-You can refresh a repository's wiki once an hour. Within the hour, IronBee says **Refreshed less than an hour ago, again at** a time. The button is unavailable while a run is already going, or while the wiki is off for the repository.
+After a refresh, the next one has to wait a while. Until then, IronBee says **Refreshed recently, again at** a time. The button is unavailable while a run is already going, or while the wiki is off for the repository.
+
+---
+
+## Share the wiki with a public link
+
+An owner or an admin can make a repository's wiki readable through a public link. Anyone with the link reads the wiki in their browser. They need no IronBee account.
+
+The link shows every page of the wiki: how the repository is laid out, its file paths, its commands and the titles of merged pull requests. It gives no access to the repository itself.
+
+### Create the link
+
+1. Click **Share**, next to **Refresh**.
+2. In **Share this wiki**, choose when the link expires and whether file references link to the repository's host. See [Change the link](#change-the-link).
+3. Click **Create public link**.
+4. Click **Copy link** to copy the address, or **Open** to open it in a new tab.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-wiki/wiki-share-create-light.png" alt="The Share this wiki dialog before a link exists, with what the link shows, the Link expires menu, the Link file references to GitHub switch and the Create public link button" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-wiki/wiki-share-create-dark.png" alt="The Share this wiki dialog before a link exists, with what the link shows, the Link expires menu, the Link file references to GitHub switch and the Create public link button" />
+
+While the link is open, the button reads **Public link**. Members and billing admins see **Public link on** in its place: they can see that the wiki is public, but not the link's address.
+
+### Change the link
+
+Click **Public link** to open the dialog again. It shows the link, when it was created, and:
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-wiki/wiki-share-manage-light.png" alt="The Share this wiki dialog of an open link, with the Public link address, Copy link, the Link expires menu, the Link file references to GitHub switch, Reset link and Turn off sharing" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-wiki/wiki-share-manage-dark.png" alt="The Share this wiki dialog of an open link, with the Public link address, Copy link, the Link expires menu, the Link file references to GitHub switch, Reset link and Turn off sharing" />
+
+| Setting | What it does |
+|---------|--------------|
+| **Link expires** | **Never**, or in 7, 30 or 90 days. An expired link opens nothing. The dialog then says **This link has expired**: pick a new expiry to open it again at the same address |
+| **Link file references to GitHub**, or to GitLab or Bitbucket | On: the sources in the wiki link to the files on the repository's host. A visitor without access to the repository lands on the host's not-found page. Off: the references are shown as text |
+| **Reset link** | Writes a new address. The current one stops working for everyone who has it |
+| **Turn off sharing** | The link stops working for everyone who has it. Sharing again later writes a new address |
+
+**Reset link** and **Turn off sharing** ask you to confirm first.
+
+### What a visitor sees
+
+The link opens the wiki alone, with none of the console around it: the page list, the pages with their sources, when the wiki was written, and a switch between the light and dark theme. A visitor can't refresh the wiki or see anything else in your account.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-wiki/wiki-public-light.png" alt="A wiki opened through its public link: the repository's name and Code wiki in the top bar with the theme switch, the page list on the left and the Overview page" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-wiki/wiki-public-dark.png" alt="A wiki opened through its public link: the repository's name and Code wiki in the top bar with the theme switch, the page list on the left and the Overview page" />
+
+| The page says | What it means |
+|---------------|---------------|
+| **This link does not open a wiki** | The link expired or was turned off, or the address is incomplete. Ask whoever shared it for a new link |
+| **This wiki is being written** | The first pages aren't ready yet. The page shows them when they are |
+
+### When the link stops working
+
+A link opens nothing while:
+
+- it's past its expiry
+- the wiki is off for the repository
+- the project is archived
+- the repository is no longer connected
+
+The link itself is kept. It opens the wiki again, at the same address, once that changes. Until then, **Share** is unavailable and says why, and the dialog of an open link says that the link opens nothing for now. You can still reset it or turn it off.
+
+When an owner or an admin leaves the account, or their role changes to member or billing admin, every public link in the account gets a new address. Copy the new address from the dialog and share it again.
 
 ---
 
@@ -118,6 +179,7 @@ If a later run fails, the tab keeps showing the pages from the last run that fin
 |--------|:-----:|:-----:|:------:|:-------------:|
 | Read the wiki | Yes | Yes | Yes | Yes |
 | **Refresh** | Yes | Yes | Yes | No |
+| Create, change and turn off the [public link](#share-the-wiki-with-a-public-link) | Yes | Yes | No | No |
 | Change [Code wiki settings](/console/code-wiki-settings) | Yes | Yes | No | No |
 
 See [Roles and permissions](/console/roles).

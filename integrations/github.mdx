@@ -8,6 +8,7 @@ The IronBee GitHub App connects your repositories to IronBee. It gives IronBee s
 
 - **Code review.** IronBee reviews the pull requests of the repositories the App covers, comments on what it finds and sets the **IronBee review** check. See [Code review of pull requests](/code-review/overview).
 - **Code wiki.** IronBee writes a wiki of each repository the App covers, from its default branch, and keeps it current as pull requests merge. See [Code wiki of a repository](/console/code-wiki).
+- **Code security.** An owner or an admin can turn on scheduled security scans of a repository's default branch. It's off until they do. See [Code security scans of a repository](/console/code-security).
 - **Repository access.** A verification run checks out the commit it verifies. A private repository needs the App for that; a public one doesn't.
 - **The pull request behind a deployment.** For [Vercel](/integrations/vercel) and [Netlify](/integrations/netlify) deployments, the App finds the pull request behind the deployed commit. The run then verifies the pull request's changes.
 - **Checks and comments.** For a verification run on a repository the App covers, IronBee opens a check on the commit, posts an inline comment on each finding, and posts the result as a pull request comment. This covers Vercel and Netlify deployments, and runs on IronBee from the GitHub Action, `ironbee verify` and the API.
@@ -30,6 +31,7 @@ Owners and admins can start from the console. Open **Integrations** in the sideb
   <Step title="Connect it to your IronBee account">
     GitHub sends you back to IronBee.
     - If you aren't signed in, IronBee asks **Which IronBee account is this for?** **Sign in** connects the installation to your account. **Continue with GitHub** uses the IronBee user of your GitHub account and creates one if it has none.
+    - GitHub's confirmation of the installation can arrive a moment after you do. Until then the page reads **Waiting for GitHub**, and goes on by itself as soon as GitHub confirms.
     - On **Connect GitHub to IronBee**, check the **GitHub organization** and the **Repositories**, pick the **IronBee account** and click **Connect**. When you installed the App yourself and administer exactly one account, this happens automatically.
 
     <img className="ib-shot ib-shot-light" src="/images/console/integrations/github-choose-account-light.png" alt="The Which IronBee account is this for? screen, with the Sign in and Continue with GitHub buttons" />
@@ -42,7 +44,7 @@ Owners and admins can start from the console. Open **Integrations** in the sideb
 </Steps>
 
 <Note>
-  Connecting an installation requires the **owner** or **admin** role in IronBee. If a different GitHub account installed the App, IronBee asks you to **Confirm this installation is yours**. Click **Confirm with GitHub** and authorize with the GitHub account that ran the installation.
+  Connecting an installation requires the **owner** or **admin** role in IronBee. Only the GitHub account that installed the App, asked for it, or approved the request as an organization owner can connect it. If that isn't the GitHub account on your IronBee user, the page asks **Installed it with another GitHub account?** Click **Confirm with GitHub** and authorize with that GitHub account. The installation then connects to the IronBee account you pick.
 </Note>
 
 ---
@@ -53,6 +55,7 @@ Installing the App makes every repository it covers a project, named after the r
 
 - Code review starts, unless **Review new repositories automatically** is off. See [Code review settings](/code-review/settings).
 - The [code wiki](/console/code-wiki) starts, unless **Write a wiki for newly connected repositories** is off. See [Code wiki settings](/console/code-wiki-settings).
+- [Code security](/console/code-security) stays off until an owner or an admin turns it on for a repository.
 - The verification type is **None**. Runs from the GitHub Action and from `ironbee verify` in that repository report to the project and name their own type.
 
 A repository that was already a project keeps its verification type and settings, and an archived project stays archived.
@@ -75,7 +78,7 @@ A repository stays a project while the App covers it. To stop reviewing one, tur
 
 | Access | Why |
 |--------|-----|
-| Repository contents (read and write) | Read the code to review a pull request and to write the code wiki, and check out the commit under verification during a run. The write access is what GitHub requires to resolve a review thread; IronBee uses it for nothing else |
+| Repository contents (read and write) | Read the code to review a pull request, to write the code wiki and to scan the default branch when code security is on, and check out the commit under verification during a run. The write access is what GitHub requires to resolve a review thread; IronBee uses it for nothing else |
 | Issues (read) | Read the issues a pull request links to, and receive the `@ironbee-ai` commands in pull request comments |
 | Pull requests (read and write) | Find the pull request behind a commit, post a verification's result as a comment with inline comments on its findings, and post code reviews, their replies and the summary in the description |
 | Checks (read and write) | Open the **IronBee Verification** check on the commit and complete it with the verdict, and set the **IronBee review** check |
@@ -163,6 +166,8 @@ Changes on GitHub flow back automatically:
 | The verification works from a thin changeset | No pull request heads the commit, so the run compares against the commit's parent |
 | A repository reads **Not enabled** under **Integrations > GitHub** | It didn't become a project when the App took it in. Choose **Enable** in its actions menu |
 | **Already connected elsewhere** | The installation is connected to another IronBee account. Uninstall and reinstall the App to move it |
+| **GitHub has not confirmed this installation yet** | GitHub's confirmation hasn't reached IronBee. Click **Check again** shortly. If it keeps waiting, uninstall the IronBee App in your organization's GitHub settings and install it again, or email [support@ironbee.ai](mailto:support@ironbee.ai) |
+| **This installation is no longer pending** | The installation expired or was already connected. Run the installation again from GitHub |
 
 ---
 

@@ -9,6 +9,7 @@ The Bitbucket connection links a workspace on bitbucket.org to your IronBee acco
 
 - **Code review.** IronBee reviews the pull requests of the repositories you pick, comments on what it finds, keeps a summary comment and sets the **IronBee review** build status. See [Code review on Bitbucket pull requests](/code-review/on-bitbucket).
 - **Code wiki.** IronBee writes a wiki of each repository you pick, from its default branch, and keeps it current as pull requests merge. See [Code wiki of a repository](/console/code-wiki).
+- **Code security.** An owner or an admin can turn on scheduled security scans of a repository's default branch. It's off until they do. See [Code security scans of a repository](/console/code-security).
 - **Repository access.** A verification run checks out the commit it verifies. For a run from the Bitbucket Pipe or `ironbee verify`, a private repository needs the connection for that; a public one doesn't. A Vercel or Netlify deployment of a repository whose workspace isn't connected is verified on its URL alone, with nothing posted on Bitbucket. So is one whose commit the repository doesn't hold.
 - **Results on the pull request.** A verification run with a verdict posts a build status, inline comments on its findings and a summary comment on the pull request. See [What appears on the pull request](#what-appears-on-the-pull-request).
 
@@ -100,6 +101,7 @@ Each repository's row shows its **Verification type** and its **Status**. The ro
 For each new project:
 - Code review starts, unless **Review new repositories automatically** is off. See [Code review settings](/code-review/settings).
 - The [code wiki](/console/code-wiki) starts, unless **Write a wiki for newly connected repositories** is off.
+- [Code security](/console/code-security) stays off until an owner or an admin turns it on for a repository.
 - The verification type is **None**. Runs from the Bitbucket Pipe and from `ironbee verify` in that repository report to the project and name their own type.
 - Pull requests that were already open are listed in the console as **Not reviewed**. They're reviewed when someone asks, or on their next push.
 
