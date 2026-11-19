@@ -1,0 +1,235 @@
+---
+title: Self-hosted runner on Bitbucket Pipelines
+sidebarTitle: On Bitbucket
+description: Run IronBee code review in your own Bitbucket Pipelines on bitbucket.org, start it on comments with a trigger app, and gate merges with merge checks.
+keywords: ["Bitbucket Pipelines code review", "Bitbucket Cloud", "Forge app", "merge checks", "build status", "Bitbucket Premium"]
+---
+
+On Bitbucket, the [self-hosted runner](/code-review/self-hosted-runner/overview) is a block in your repository's `bitbucket-pipelines.yml`: one custom pipeline, `ironbee-code-review`, and the two triggers that start it on a pull request's events. A small Forge app of your own, the **trigger app**, starts it on a comment. A step in your repository's Pipelines runs IronBee's reviewer with your own model. It posts its review on the pull request, and writes a build status named **Code Review Result** on the head commit, which Bitbucket's merge checks count.
+
+Nothing of IronBee's runs in your workspace but the image. The block is text in your own file, and the trigger app is registered in your own Atlassian developer account, deployed by you and installed on your workspace. IronBee holds no token of yours and no app of its own there.
+
+This page explains the setup and what to decide. The runner's repository is the full reference, with every variable and message: [ironbee-ai/ironbee-bitbucket-runner](https://github.com/ironbee-ai/ironbee-bitbucket-runner).
+
+---
+
+## Where it runs
+
+This release serves repositories on **bitbucket.org**, on every Bitbucket plan. A merge holds on **Code Review Result** only on Premium; see [Merge checks](#merge-checks).
+
+Pull requests from forks aren't reviewed: Bitbucket runs no pipeline for them, and nothing of the reviewer's appears on them.
+
+---
+
+## How it fits together
+
+| What | Where | What for |
+|---|---|---|
+| **Pipelines** turned on | each reviewed repository | the review runs in the repository's own Pipelines |
+| The **variables** | each reviewed repository, or the workspace | the API key, the registry token, and the model's settings and key ([below](#the-variables)) |
+| The **block** | each reviewed repository's `bitbucket-pipelines.yml` | the custom pipeline `ironbee-code-review` and its two triggers |
+| The **trigger app** | your Atlassian developer space, installed on the workspace | starts the pipeline for a comment that's for the reviewer ([below](#the-trigger-app)) |
+| `IRONBEE_TRIGGER_APP` | a variable of the workspace | records the trigger app and its release, so a later setup finds it. No secret |
+| A **project in IronBee** | the IronBee console | its settings, rules and memories, and the list of its pull requests and runs |
+
+What starts a run:
+
+| On the pull request | Started by | What the run does |
+|---|---|---|
+| Opened, pushed, or a draft marked ready | Bitbucket's trigger | Reviews the head: a first round, then follow-ups, when the settings let it |
+| Edited: its title, description or reviewers | Bitbucket's trigger | Reviews nothing new, and deals with what waits in the conversation |
+| A reply on one of the reviewer's threads | the trigger app | Answers it |
+| A comment that addresses `@ironbee-ai` | the trigger app | Obeys the command, or answers the question |
+
+Each run reads from the pull request what's due, and one that finds nothing due ends before it calls IronBee. Without the trigger app, a reply or a command waits for the pull request's next push or edit. Saving its description is such an edit.
+
+---
+
+## Before you start
+
+- The runner is enabled on your account, and you have the account's API key and a registry token. See [What you need](/code-review/self-hosted-runner/overview#what-you-need).
+- The **admin** permission on each repository to review: turning Pipelines on and writing its variables need it. Writing the workspace's variables instead needs a workspace admin.
+- A model, and its key where it needs one.
+- For comments, the trigger app: a **workspace admin**, since only an admin installs an app, with Node.js 22 or later and Atlassian's Forge CLI (`npm install -g @forge/cli`), and a **developer space** in Atlassian's developer console, made once in the browser. See [Whose power it is](#whose-power-it-is) for what the setup asks.
+
+---
+
+## Set it up
+
+`ironbee runner setup` takes every step from your machine:
+
+```bash
+npm install -g @ironbee-ai/cli
+export BITBUCKET_TOKEN IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY FORGE_EMAIL FORGE_API_TOKEN
+ironbee runner setup --host bitbucket \
+  --repos acme/shop,acme/payments \
+  --model-provider anthropic \
+  --developer-space <your developer space's id>
+```
+
+It acts as you with `BITBUCKET_TOKEN`, an Atlassian API token of yours with Bitbucket scopes, made at id.atlassian.com for the setup. The trigger app's step signs in to Forge with `FORGE_EMAIL` and `FORGE_API_TOKEN`, or a `forge login`. Neither token is stored or sent to IronBee. Revoke both when the setup is done.
+
+It registers the repositories with IronBee, which makes each one's project in the console, turns Pipelines on, writes [the variables](#the-variables), adds [the block](#the-block) to `bitbucket-pipelines.yml`, sets up [the trigger app](#the-trigger-app) once for the workspace, and runs the probe: a run that reads the repository and IronBee's API, writes nothing, and fails with what's wrong. It doesn't set the merge checks; see [Merge checks](#merge-checks). For each step and flag, `ironbee runner add` and `ironbee runner check`, see [`ironbee runner` on Bitbucket](/cli/guides/runner#on-bitbucket).
+
+To take the same steps by hand, see the runner's [Setup](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/setup.md).
+
+### The block
+
+The block adds one custom pipeline beside your own, and one condition under each of the `pullrequest-created` and `pullrequest-updated` triggers. It replaces nothing: your own pipelines and triggers stay as they are.
+
+- **The step's image** is IronBee's runner image, named by digest, so what runs is what the release tested. Pipelines pulls it with `IRONBEE_REGISTRY_TOKEN`.
+- **The step clones nothing.** The reviewer makes its own clone with the step's own token, which Bitbucket gives the step with the four scopes the block lists: reading and writing pull requests, reading the repository, and reading git.
+- **One run of a pull request at a time,** through a concurrency group. A second waits its turn, and a started run is never cancelled. The step stops after two hours.
+- **Its release** is named in a comment on the pipeline's line. Keep the block's lines as released. `ironbee runner setup --update` moves the block to a later release, keeping your `runs-on`.
+
+A pull request's events run the file its source branch brings. A branch cut before the block reached the default branch starts nothing until it takes the default branch in.
+
+The block as a release ships it is the runner's [template](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/templates/bitbucket-pipelines.yml).
+
+### The variables
+
+A step takes no input but its environment, so everything is a Pipelines variable, each repository's by default:
+
+| Variable | For | Secured |
+|---|---|---|
+| `IRONBEE_API_KEY` | IronBee's API | Yes |
+| `IRONBEE_REGISTRY_TOKEN` | the image's registry | Yes |
+| `IRONBEE_MODEL_PROVIDER` | `anthropic`, `bedrock` or `openai`. Required | No |
+| `IRONBEE_MODEL_KEY`, `IRONBEE_MODEL_HEADERS` | the model's key, and extra headers for its endpoint | Yes |
+| `IRONBEE_MODEL_URL`, `IRONBEE_MODEL_NAME`, `IRONBEE_MODEL_CA_CERTIFICATE`, `IRONBEE_MODEL_PREFIX`, `IRONBEE_MODEL_MAX_OUTPUT`, `AWS_REGION` | the model's endpoint and settings | No |
+| `IRONBEE_JEV_KEY` | your Typesafe key, only for the optional classifier [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier) | Yes |
+| `IRONBEE_KNOWLEDGE_REPOSITORY`, `IRONBEE_KNOWLEDGE_REF` | the [rules repository](/code-review/self-hosted-runner/overview#the-rules-repository) | No |
+| `IRONBEE_KNOWLEDGE_TOKEN` | a repository access token of the rules repository, with read access | Yes |
+| `IRONBEE_IGNORE_PATHS`, `IRONBEE_TARGET_BRANCHES`, `IRONBEE_SKIP_TITLE_KEYWORDS` | a repository left without a project in IronBee | No |
+| `IRONBEE_API_URL`, `IRONBEE_RUN_REPORTS` | IronBee's API address, only when IronBee gives you another; `false` to turn the run reports off | No |
+
+A Pipelines variable holds no line break, so a value of more than one line, such as headers, certificates or a list, is given as `base64:` followed by the value in base64. The setup command writes it that way. Workspace variables reach every pipeline of every repository in the workspace, so keep the secrets in each repository's own unless you mean that.
+
+---
+
+## The trigger app
+
+Bitbucket starts no pipeline on a comment, and a webhook can't start one. A Forge app can: Atlassian runs its function when a comment is made, and the function can start a pipeline. The trigger app is such an app, of your own. One app serves every repository of the workspace.
+
+- **One function,** on a new pull request comment. For a person's comment that addresses `@ironbee-ai`, or a reply on one of the reviewer's threads, on an open pull request from the repository itself, it starts the `ironbee-code-review` pipeline, as Bitbucket's own trigger would. It hands the run nothing: the run finds the comment in the conversation.
+- **Three scopes:** reading pull requests, and reading and starting pipelines. No repository or git scope, so its own token reads no file of your repositories.
+- **Nothing outside Atlassian:** no remote, no address it may fetch, no storage.
+- **Its log** holds ids and outcomes, never a comment's text, a title or a branch name. Read it with `forge logs -e production`, signed in to Forge as one of the app's developers.
+- **Its cost:** a delivery takes seconds as a rule, up to three minutes. Each comment that's for the reviewer is then one run. Forge bills an app's use to its developer, you, past a free allowance a trigger doesn't come near.
+
+You're its developer: IronBee holds no token of it, can't change its code, and sees nothing of what it does. A later release's source is deployed with `ironbee runner setup --update`.
+
+### Whose power it is
+
+The app's `write:pipeline` scope starts a pipeline in a repository of the workspace, its steps given that repository's variables: the app's function starts the review pipeline, `ironbee-code-review`, as Bitbucket's own trigger would. The app is deployed by the Atlassian account that registered it and by every account its developer space lets deploy. It belongs to that account, not to the workspace, and IronBee holds none of it. So, before it registers anything, the setup says this and asks four things of you:
+
+1. **Register the app in a developer space your company keeps for it, with more than one administrator,** so the app needn't leave with a person.
+2. **Keep that space to the people who administer the workspace.**
+3. **Revoke the Atlassian API token of the setup** (`FORGE_API_TOKEN`) when the command has ended.
+4. **Deploy to Forge's production environment only.**
+
+A workspace that won't carry this goes without the app: pass `--no-trigger-app`, and replies and commands wait for the pull request's next push or edit. To remove the app later, run `forge uninstall -e production -p Bitbucket -s bitbucket.org/<workspace>`, then delete the workspace's `IRONBEE_TRIGGER_APP` variable.
+
+See the runner's [The trigger app](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/trigger-app.md).
+
+---
+
+## Where the step runs
+
+- **Atlassian's runners** work for a model reachable from the internet.
+- **A model inside your network needs a Bitbucket runner of yours there,** named by the step's `runs-on`: `self.hosted` and `linux` for an `amd64` runner, `self.hosted` and `linux.arm64` for an `arm64` one. It must be a Linux Docker runner, version 6.1.0 or later. Pass `--runs-on` to the setup command.
+- **The network:** the step connects to bitbucket.org, your model's endpoint and IronBee's API (`api.service.ironbee.ai`), and the image is pulled from Docker Hub. If you turn on [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier), it also connects to Typesafe's endpoint, `api.typesafe.ai`.
+- **A Premium workspace that limits access to listed IP addresses,** or that requires two-step verification, works from Atlassian's runners: neither reaches the step's own token. The IP list does reach the repository access token that reads a rules repository. From an address the list doesn't hold, that read is refused and the review goes on without your rules, so run the step on a runner of yours at a listed address to have them read.
+
+**Build minutes.** On Atlassian's runners, every run uses build minutes of your workspace's plan. Every pull request event starts a run: an open, a push, an edit, and each comment that's for the reviewer. A run that finds nothing due is short, but it's still a run. A runner of yours uses none. A workspace that has spent its minutes starts no pipeline, so no review and no status, until the plan's month turns or the runs move to your runner. See the runner's [Where the step runs](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/compute.md).
+
+---
+
+## Merge checks
+
+Two build statuses of the review stand on a pull request's head commit, and Bitbucket's merge checks count both, as they count every build status on the head:
+
+- **Code Review Result,** the reviewer's own. `FAILED` for a blocking review, and `SUCCESSFUL` for a passing review. When nothing was reviewed, such as a draft, a setting or a license problem, it's `SUCCESSFUL`, and its description gives the reason.
+- **Pipeline - custom: ironbee-code-review,** which Bitbucket writes for the review pipeline itself: in progress while a run is under way or waits its turn, then the run's result.
+
+| What happened | **Code Review Result** |
+|---|---|
+| A review read the head | `FAILED` when open findings reach **Block merging when**, `SUCCESSFUL` otherwise |
+| A run reviewed nothing | `SUCCESSFUL` with the reason, only on a head with no status and no review of the reviewer's |
+| `@ironbee-ai retract` | `SUCCESSFUL`, marked retracted. Bitbucket can't delete a build status |
+| `@ironbee-ai review` on a head already read | Written again from the pull request's comments, nothing read again |
+
+The step exits successfully for everything a passing status or nothing answers, so a license problem, a setting or an unreachable IronBee never shows a failed build. It fails only where a pass would say more than is true: for example, a review was posted and couldn't be concluded. The next run on that head writes the conclusion first. A run killed, or an image that can't be pulled, fails the review pipeline too, and where builds block, that holds the merge until it's put right.
+
+### Make merges wait for it
+
+Set these in the repository's **Repository settings > Branch restrictions**, on a branch's merge settings:
+
+- **Minimum number of successful builds for the last commit with no failed builds and no in progress builds:** a merge waits until no build on the head is failed or in progress. A blocking review is a failed build, and a review under way is a build in progress.
+- **Prevent a merge with unresolved merge checks,** on Premium only. Without it, the checks only warn and the merge button works.
+
+The second makes every merge check of the branch hold a merge, not the builds check alone: approvals, no changes requested, completed tasks and the rest. The reviewer never requests changes, so **No changes are requested** only reacts to people: a person's request for changes holds the merge until it's taken back, or, with **Reset requested changes when the source branch is modified**, until the next push to the source branch.
+
+`ironbee host merge-check acme/shop` adds both where they're missing, on the default branch or the one `--branch` names, asking before each change. See [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check). `ironbee runner check` reports what the default branch has.
+
+The cloud's build status is named **IronBee review**. Since a merge check counts every build and names none, moving a repository from the cloud to the runner changes nothing in its branch restrictions.
+
+### What the status is worth
+
+The status reflects the findings nobody who counts has turned down. The pull request's author can close a finding with a reply, and someone who can write to the repository can resolve a thread, `retract`, or `pause` and then push.
+
+- **It holds a merge only on Premium,** with both branch restrictions set.
+- **The merge check names no status, so it can't require that a review ran.** A head no run was started for, such as a branch without the block, holds nothing of the reviewer's.
+
+See the runner's [Merge checks](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/merge-checks.md) and [Identity](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/identity.md).
+
+---
+
+## On the pull request
+
+The reviewer posts a comment for each finding, then the review's body, so a round's comments appear one by one. A run killed halfway leaves comments that the next run removes. With **Pull request summary** on, the summary is a comment of its own, never the description. Comments and the status appear as `Bitbucket Pipelines`, the identity of every step's token.
+
+| Command | What it does |
+|---|---|
+| `@ironbee-ai review` | Reviews what was pushed since the last round. With nothing pushed, it rewrites the status from the pull request's comments |
+| `@ironbee-ai full review` | Reads the whole pull request again |
+| `@ironbee-ai pause` | Stops automatic reviews of the pull request |
+| `@ironbee-ai resume` | Starts them again |
+| `@ironbee-ai retract` | Takes back every comment of the reviewer's on the pull request, and marks the status retracted |
+
+- **Who may command:** people with the write or admin permission on the repository. A command from anyone else still starts a run through the trigger app, which ends before it calls IronBee.
+- **Replies:** a reply on one of the reviewer's threads, from the pull request's author or someone with write or admin permission, gets an answer while **Answer questions** is on.
+- **Address it** as `@ironbee-ai`. A mention of the `Bitbucket Pipelines` user isn't its name.
+- **A comment on a merged or declined pull request** starts nothing, and neither does a comment from an app.
+- **A pull request holds at most 200 comments** on Bitbucket. A round that can't post its comments is published as its body alone.
+
+---
+
+## Troubleshooting
+
+Look first at the pull request's builds, then at the repository's **Pipelines**: every run is a pipeline of `ironbee-code-review`, and its log says what the runner read and decided. For a comment that started nothing, read the trigger app's log with `forge logs -e production`. Then run `ironbee runner check`, or `ironbee runner check --probe` to run the probe.
+
+| What you see | What to do |
+|---|---|
+| No pipeline and no status on a pull request | The block is missing on its source branch. Merge the default branch into it; its next push or edit starts a run |
+| No pipeline for any pull request | Pipelines is off, the block isn't on the default branch yet, or the workspace has spent its build minutes |
+| The image can't be pulled, on every pull request | `IRONBEE_REGISTRY_TOKEN` is missing or wrong. Set it again, then `ironbee runner check --probe` |
+| The step waits and no runner takes it | `runs-on` names labels no runner of yours has, or the runner is offline |
+| A comment started nothing | The trigger app isn't installed, or the comment wasn't for the reviewer. Its log says which |
+| **Run pipeline** on a pull request's source branch fails | That's on purpose: it isn't a pull request's run. Comment `@ironbee-ai review`, or push |
+| A `SUCCESSFUL` status that says nothing was reviewed | The reason is in its description. The license, IronBee's refusal and the cloud reviewing the repository read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting) |
+
+The runner's [Troubleshooting](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/troubleshooting.md) lists every message.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="ironbee runner" icon="terminal" href="/cli/guides/runner">
+    Set up, extend and check a runner from your machine.
+  </Card>
+  <Card title="Self-hosted runner overview" icon="server" href="/code-review/self-hosted-runner/overview">
+    The license, models, settings and what reaches IronBee.
+  </Card>
+</CardGroup>

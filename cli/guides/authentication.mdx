@@ -20,7 +20,7 @@ Running [`ironbee login`](/cli/get-started/getting-started#step-3-sign-in) opens
 ironbee login
 ```
 
-The login flow waits up to five minutes for the browser to finish, including signing in if you need to; press `Ctrl+C` to cancel. By default the token is named after your machine's hostname so you can recognize it later in the Console and pass `--name` to set your own label:
+The login flow waits up to five minutes for the browser to finish, including signing in if you need to; press `Ctrl+C` to cancel. The CLI prints the sign-in address too, so you can open it by hand. It opens only an `http` or `https` address, handing it to your system's opener (`open` on macOS, `xdg-open` on Linux, the system's `rundll32` on Windows) without a shell; with a console URL of any other kind, it opens nothing and prints a warning. By default the token is named after your machine's hostname so you can recognize it later in the Console and pass `--name` to set your own label:
 
 ```bash
 ironbee login --name "work-laptop"
@@ -83,6 +83,8 @@ If both are present, the OAuth token takes priority on the wire. In practice:
 Both `IRONBEE_SERVICE_OAUTH_TOKEN` and `IRONBEE_SERVICE_API_KEY` override whatever is on disk, so a CI runner can supply a credential without touching `~/.ironbee/config.json`. The legacy `IRONBEE_OAUTH_TOKEN` / `IRONBEE_API_KEY` forms fill only the deprecated `collector.*` fallback keys - they're used **only when the matching `service.*` key is unset** (except by [`ironbee verify`](/cli/guides/verification-jobs#credentials), `ironbee review` and `ironbee credits`, which treat `IRONBEE_API_KEY` as a high-priority override, although an OAuth token from any source still wins over it), so on a machine that has run a recent `ironbee login` (which writes `service.oauthToken`) prefer the `IRONBEE_SERVICE_*` forms. See [Environment variables](/cli/configuration/environment-variables) for precedence details.
 
 [`ironbee review`](/cli/guides/code-review) and [`ironbee credits`](/cli/guides/credits) pick the credential in the [same order](/cli/guides/verification-jobs#credentials) as `ironbee verify`, `IRONBEE_ACCESS_TOKEN` included, but read it only from the flags, the environment, the repository's personal file and the global config.
+
+On a checkout whose remote is on a host other than github.com, gitlab.com and bitbucket.org, `ironbee review`, `ironbee verify` and your sessions' background worker also use the credential to ask IronBee which hosts are [your account's GitHub and GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts). A credential of any role can. They need no token of the Git host for that.
 
 ---
 

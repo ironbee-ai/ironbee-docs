@@ -1,0 +1,148 @@
+---
+title: The GitHub Action on GitHub Enterprise
+sidebarTitle: GitHub Enterprise
+description: Run the IronBee GitHub Action on GitHub Enterprise Cloud, a GHE.com tenant, or a GitHub Enterprise Server through its ghes entry point.
+keywords: ["GitHub Enterprise", "GHES", "GHE.com", "GitHub Enterprise Server", "actions-sync", "GitHub Connect", "self-hosted runners", "IP allow list"]
+---
+
+The IronBee GitHub Action runs on GitHub Enterprise Cloud, on a GHE.com tenant and on a GitHub Enterprise Server as it does on github.com, with the same inputs, outputs and report. Every call it makes to GitHub goes to the run's own host, with the workflow's token. What differs:
+
+| Where the workflow runs | What changes |
+|---|---|
+| github.com, in an organization of a GitHub Enterprise Cloud enterprise | Nothing, unless an IP allow list filters the workflow's token. See [Under an IP allow list](#under-an-ip-allow-list) |
+| A GHE.com tenant | The workflow is the same as on github.com. See [On a tenant with data residency](#on-a-tenant-with-data-residency) |
+| A GitHub Enterprise Server | The workflow names the server's own entry point, `ironbee-ai/ironbee-action/ghes@v1`, and runs on your own runners. See [On GitHub Enterprise Server](#on-github-enterprise-server) |
+
+---
+
+## Before you start
+
+- **To verify on IronBee,** register your tenant or server in the console and install the App it creates there, on the repository's organization. See [GitHub Enterprise](/integrations/github-enterprise). A repository on GitHub Enterprise Cloud on github.com only needs the [IronBee GitHub App](/integrations/github).
+- **The console's setup steps** open for your host's repositories from the host's **Set up the Action** on **Integrations > GitHub**, or from the prompt on a project's card. They list the repositories of the host's accepted installations, and link to the repository's secrets page and to a new workflow file on your host, filled in. On a server, they also ask for your **Runner label**.
+- **The IronBee CLI** the action installs is the latest release, unless `ironbee_cli_version` pins one. Leave it unset, or pin 0.54.0 or newer: an older CLI sends your repository as github.com's repository of the same name.
+
+---
+
+## Platform or local on an enterprise host
+
+Off github.com, the action counts the repository as private whatever its visibility, since IronBee reads it only through the App registered for your host. So with `verification_mode: auto`, the action runs locally when an Anthropic credential is set, and on IronBee otherwise. Once the App covers the repository, set `verification_mode: platform`. See [How `auto` decides](/github-action/concepts/verification-modes#how-auto-decides).
+
+---
+
+## Under an IP allow list
+
+When your organization or enterprise keeps an IP allow list, the host accepts the workflow's token only from listed addresses. Run the workflow on your own runners, or on GitHub's larger runners with static IP addresses, and list those addresses. GitHub's standard hosted runners have no fixed address, so the workflow fails there.
+
+IronBee's own calls to your host, such as the check and the comments of a run on IronBee, come from IronBee's address, which goes on the list too. See [IP allow lists](/integrations/github-enterprise#ip-allow-lists).
+
+---
+
+## On a tenant with data residency
+
+On a GHE.com tenant, the workflow is the one github.com takes, with `ironbee-ai/ironbee-action@v1`: your tenant takes the action from github.com. See [Add the workflow](/github-action/get-started/getting-started#add-the-workflow).
+
+- **Runners.** Your tenant has GitHub's hosted Linux runners, so `runs-on: ubuntu-latest` works. Under an IP allow list, use runners with listed addresses.
+- **An Actions policy.** If your enterprise or organization allows only selected actions, allow `ironbee-ai/ironbee-action` and the actions GitHub creates: the action uses `actions/setup-node`, `actions/cache` and `actions/upload-artifact`.
+
+---
+
+## On GitHub Enterprise Server
+
+Your server needs GitHub Actions turned on, which needs its external storage, and runners of your own: a server has no hosted runners. Name the server's entry point, `ironbee-ai/ironbee-action/ghes@v1`, and your runner's label in `runs-on`:
+
+```yaml
+name: IronBee Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ironbee-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ironbee-ai/ironbee-action/ghes@v1
+        with:
+          ironbee_api_key: ${{ secrets.IRONBEE_API_KEY }}
+          verification_mode: platform
+          verification_apply_fix: false
+          # Where the app runs during the workflow: on this runner ...
+          app_install_command: npm ci
+          app_build_command: npm run build
+          app_start_command: npm run start
+          app_port: 3000
+          # ... or at a preview URL instead of the four lines above:
+          # app_url: https://preview.example.com
+```
+
+`ironbee-ai/ironbee-action/ghes@v1` is the same action, with the same inputs and outputs, except for how it uploads its artifacts. A server serves no v4 of `actions/upload-artifact`, and github.com refuses v3 even in a step it skips. So `ironbee-ai/ironbee-action@v1` names v4 and skips its uploads on a server, and the `ghes` entry point names `v3.2.2` and uploads there. A workflow on a server that names `ironbee-ai/ironbee-action@v1` still runs, without the artifacts, as long as the server holds `actions/upload-artifact@v4`, which that entry point names.
+
+### The actions your server must hold
+
+A server looks for an action on the instance first, so a site admin makes each of these available at the version named:
+
+| Action | Version | Used by |
+|---|---|---|
+| `actions/checkout` | `v4` | The workflow above |
+| `ironbee-ai/ironbee-action` | `v1` | The workflow above, which names its `ghes` entry point |
+| `actions/setup-node` | `v4` | The action |
+| `actions/cache` | `v4` | The action |
+| `actions/upload-artifact` | `v3.2.2` | The action's `ghes` entry point |
+
+There are two ways, as GitHub documents them:
+- **`actions-sync`** copies an action's repository from github.com onto the server, with its tags. The copy keeps its name, `ironbee-ai/ironbee-action`, with both entry points, so the workflow's `uses:` line stays as it is. Keep the copy public on the server, or internal with its Actions access setting open to your enterprise's repositories. Sync again to take a new release: the copy doesn't follow github.com by itself.
+- **GitHub Connect,** with your server allowed to use actions from github.com. Your server ships its own copies of GitHub's actions, which win over github.com's. Where a copy lacks a version above, such as `actions/upload-artifact`'s `v3.2.2`, update that copy with `actions-sync`, or remove it so github.com's answers.
+
+### What your runners must have
+
+A plain machine lacks what GitHub's hosted images carry:
+- `gh`, `jq`, `git` and `curl`
+- GitHub Actions Runner 2.327.1 or newer, in every mode: the runner loads `actions/upload-artifact@v3.2.2`, which runs on Node 24, when it sets up the job, even where the upload is skipped
+- in local mode, the right to install the browser's system packages: root, or `sudo` without a password
+- when a private authority signed your server's certificate, the machine trusting it, and `NODE_EXTRA_CA_CERTS` set to the authority's file in the runner's environment. The CLI the action installs is a Node program, and Node reads its extra authorities from there
+
+### The report has no download link
+
+The `ghes` entry point uploads the evidence and the application log with `actions/upload-artifact@v3.2.2`, which gives no download address. So the report carries no download link, and the `artifacts_url` output stays empty: find the artifacts among the workflow run's artifacts. A run on IronBee keeps its evidence in the console, as anywhere. See [Evidence](/github-action/advanced/evidence).
+
+### A server named by an IP address or by one label
+
+Such a server can't be registered, and the CLI names no repository on it. Set `ironbee_bind_repository: false`, to verify the running application without the repository, or `verification_mode: local`. Otherwise a run on IronBee stops, saying no GitHub, GitLab or Bitbucket repository could be identified.
+
+---
+
+## What the runners must reach
+
+On a GHE.com tenant and on a server, the runners reach, on 443:
+- IronBee's API and collector, `api.service.ironbee.ai` and `collector.service.ironbee.ai`
+- on IronBee with the application on the runner, the verification tunnel's endpoint, an address the IronBee API gives each run, with no fixed name
+- the npm registry, for the IronBee CLI and, in local mode, IronBee DevTools and Claude Code
+- Anthropic's API, whenever fixing is on or the mode is local
+- in local mode, Playwright's browser download and your system's package mirrors
+- github.com, from which `actions/setup-node` downloads Node
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="GitHub Enterprise" icon="server" href="/integrations/github-enterprise">
+    Register your tenant or server, and install the App.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/github-action/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

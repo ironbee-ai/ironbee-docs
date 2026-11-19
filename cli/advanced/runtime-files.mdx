@@ -22,6 +22,7 @@ Machine-wide state, shared across all your projects:
 | `projects/<token>/` | **Per-session runtime data** for each project, in the default `external` [runtime location](#where-per-session-data-lives). `<token>` is derived from the project's path, so each project gets its own folder. Holds the same `sessions/<id>/` tree described below. |
 | `projects/<token>/personal.json` | The repository's [personal file](/cli/configuration/configuration#the-personal-file), written by `ironbee config set --personal`. Linked worktrees share it. |
 | `projects/<token>/reviews/` | The stored [code reviews](/cli/guides/code-review#read-a-review-again), the newest 20 per worktree. |
+| `projects/<token>/sessions/vcs-hosts.json` | [Your account's GitHub and GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts), as IronBee last named them, fetched again after a day. Written readable by you only (`0600`). With `runtime.location` set to `in-project`, it's `<project>/.ironbee/sessions/vcs-hosts.json`. |
 
 ---
 

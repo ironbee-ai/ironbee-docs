@@ -6,23 +6,24 @@ description: Review your branch with ironbee review before you open a pull reque
 
 `ironbee review` reviews your branch against the repository's default branch, the way a pull request (on GitLab, a merge request) of it would be reviewed, without opening one. The review runs on IronBee: the CLI sends what the remote doesn't have yet, the reviewer reads the change, and the findings come back to your terminal. A second review of the branch [follows the first](#follow-up-reviews), and reads only what changed since.
 
-```bash
-ironbee review                                 # the Review area on a terminal, the text form in CI
-ironbee review --dry-run                       # what would be sent, what is left out, and the price
-ironbee review --plain --fail-on high          # exit 4 when a new or open finding at or above high exists
-ironbee review --format sarif > review.sarif   # for GitHub code scanning
-ironbee review --include-unstaged --include-untracked --exclude 'fixtures/**'   # the working tree as it is, less one folder
-ironbee review --fresh                         # a new first review, even when a follow-up is possible
-ironbee review show                            # this worktree's newest review again
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee review` | The Review area on a terminal, the text form in CI |
+| `ironbee review --dry-run` | What would be sent, what is left out, and the price |
+| `ironbee review --plain --fail-on high` | Exit 4 when a new or open finding at or above high exists |
+| `ironbee review --format sarif > review.sarif` | For GitHub code scanning |
+| `ironbee review --include-unstaged --include-untracked --exclude 'fixtures/**'` | The working tree as it is, less one folder |
+| `ironbee review --fresh` | A new first review, even when a follow-up is possible |
+| `ironbee review show` | This worktree's newest review again |
 
 ---
 
 ## Before you start
 
-- The repository is bound to a project of your team: a **github.com** repository connected through the [IronBee GitHub App](/integrations/github), a **gitlab.com** project whose group is connected in the console, or a **bitbucket.org** repository whose workspace is connected in the console. Otherwise the API refuses the review with `NOT_FOUND`: no project of the team is bound to the repository.
+- The repository is bound to a project of your team: a **github.com** repository connected through the [IronBee GitHub App](/integrations/github), a **gitlab.com** project whose group is connected in the console, or a **bitbucket.org** repository whose workspace is connected in the console. On a GHE.com tenant or a GitHub Enterprise Server, the repository is connected through the App made for that host (see [GitHub Enterprise](/integrations/github-enterprise)), and on a GitLab Dedicated tenant or a Self-Managed server, through its group connected on the registered host (see [GitLab Dedicated and Self-Managed](/integrations/gitlab-self-managed)). Otherwise the API refuses the review with `NOT_FOUND`: no project of the team is bound to the repository.
+- A remote on a host other than github.com, gitlab.com and bitbucket.org is on one of [your account's GitHub or GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts). Otherwise the CLI refuses it before anything is sent.
 - Code review is turned on for the repository. It is on by default; see [Code review settings](/code-review/settings). Otherwise the API refuses it with `CODE_REVIEW_DISABLED`.
-- IronBee can reach the repository the review targets: the GitHub App is installed for it, its GitLab group is connected, or its Bitbucket workspace is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab or Bitbucket, where the CLI adds that the group, or the workspace, needs connecting in the IronBee console. Either way, the CLI lists your checkout's github.com, gitlab.com and bitbucket.org remotes so you can pick another with `--remote`.
+- IronBee can reach the repository the review targets: the GitHub App is installed for it, its GitLab group is connected, or its Bitbucket workspace is connected. Otherwise the API refuses it with `GITHUB_INSTALLATION_MISSING` on GitHub, or `VCS_NOT_CONNECTED` on GitLab or Bitbucket, where the CLI adds that the group, or the workspace, needs connecting in the IronBee console. Either way, the CLI lists your checkout's remotes on github.com, gitlab.com, bitbucket.org and your account's GitHub and GitLab hosts, by host, so you can pick another with `--remote`.
 - You're signed in with [`ironbee login`](/cli/guides/authentication), or a credential comes from the environment. See [Where the review goes, and as whom](#where-the-review-goes-and-as-whom).
 - With an OAuth token, your [role](/console/roles) in the account is owner, admin or member. A billing admin's token can't start or cancel a review: the API refuses it with `FORBIDDEN`. `--dry-run` works for every role, and the account API key isn't tied to a role.
 - Your team has [credits](/cli/guides/credits) left this month.
@@ -41,7 +42,7 @@ After a local rebase or merge, the diff is the same one a pull request would sho
 
 | Flag | Description |
 |------|-------------|
-| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository, a gitlab.com project or a bitbucket.org repository |
+| `--remote <name>` | The remote to review against (default: the one the branch is pushed to). It must be a github.com repository, a gitlab.com project or a bitbucket.org repository, or a repository on one of your account's GitHub or GitLab hosts |
 | `--base <ref>` | Review against this ref instead of the default branch. It must be on the remote |
 | `-C, --project-dir <dir>` | Where to start looking for the repository root (default `.`) |
 
@@ -118,6 +119,8 @@ sending:
   switches    includeUnstaged=false (the default), includeUntracked=false (the default)
 ```
 
+On a GitHub or GitLab host other than github.com and gitlab.com, the `repository` line names the host, such as `repository  acme/shop on ghes.acme.com (remote origin)`. A GitLab project there goes by its full path.
+
 The `size` line counts every changed file and line. Its reviewable lines are what the review is [priced](/cli/guides/credits#what-a-run-costs) by: they leave out lock, generated, vendored, minified and binary files, data files under a test or fixture folder, and files the change deletes. A [follow-up](#follow-up-reviews) is priced by the lines changed since instead.
 
 The block can also carry:
@@ -133,7 +136,7 @@ Under that, it names every path it left out and why:
 
 It also lists the nested `.ironbee/config.json` files whose exclusions joined, the folders a starred pattern matched while their files are sent, and `not sent` lines that count the files with unstaged changes and the untracked files the switches would send.
 
-`--dry-run` stops there. It prints the block, the files in the patch and the price, and starts no review. When there's nothing to review, or nothing changed since the last review, it asks for no price, and the JSON then has no `estimate`. To get the price it sends only the repository, the size and the settings, plus, on a follow-up, the previous review's id and the lines changed since. With `--json`, it prints the same as one JSON document, whose `estimate` holds `credits`, `sizeClass`, `depth`, `reviewableLines` and `left`. `sizeClass` is the API's code, so `XXXL` there reads `3XL` in the text form. When the price can't be looked up, `estimate` is `null`, `estimateError` holds its `code` and `message`, and the command still exits `0`.
+`--dry-run` stops there. It prints the block, the files in the patch and the price, and starts no review. When there's nothing to review, or nothing changed since the last review, it asks for no price, and the JSON then has no `estimate`. To get the price it sends only the repository, the size and the settings, plus, on a follow-up, the previous review's id and the lines changed since. With `--json`, it prints the same as one JSON document, with a `host` beside the `repository` on a GitHub or GitLab host other than github.com and gitlab.com, and an `estimate` that holds `credits`, `sizeClass`, `depth`, `reviewableLines` and `left`. `sizeClass` is the API's code, so `XXXL` there reads `3XL` in the text form. When the price can't be looked up, `estimate` is `null`, `estimateError` holds its `code` and `message`, and the command still exits `0`.
 
 The JSON's `followUp` is the review the run would follow, with its `previousJobId`, the `round`, and the `lines` and `files` changed since, or `null` for a first review. On a follow-up, `estimate.reviewableLines` and `estimate.sizeClass` are those of the lines priced, and `estimate.read` says what the price is on: `delta` for the lines changed since, `whole` for the whole change again, or `nothing`. When nothing changed since the last review, the block says that no review would be created and nothing spent, and the JSON carries `unchangedSince`.
 
@@ -162,6 +165,8 @@ The endpoints, the credential and the two switches decide where your code goes, 
 4. the global config, `~/.ironbee/config.json`
 
 It never reads them from a file inside the checkout, such as the committed `config.json`, `config.local.json` or a nested `.ironbee/` file. A value it finds there is ignored with a warning. That way a repository you cloned can't send your code to another endpoint, or under another team's credential.
+
+When the remote is on a host other than github.com, gitlab.com and bitbucket.org, the command first asks the same API, with the same credential, which hosts are [your account's GitHub and GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts). That request names no repository and sends no code.
 
 - A personal file that exists but can't be used refuses the run, rather than falling back to the global config. That's the case when it was written for another repository, or when it, or a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
 - A global config that isn't owned by you or is world-writable loses these keys. The warning prints the `chmod` command that fixes it.
@@ -316,12 +321,12 @@ When the result names its gate, the header shows it, who set it and the blocking
 
 `ironbee review` is short for `ironbee review run`, which takes every flag above. The other subcommands read a review back:
 
-```bash
-ironbee review show [<job-id>]            # render a review again (default: this worktree's newest)
-ironbee review status <job-id>            # read a review back from the API
-ironbee review status <job-id> --watch    # follow a review to its end
-ironbee review cancel <job-id> [reason]   # ask a review to stop
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee review show [<job-id>]` | Render a review again (default: this worktree's newest) |
+| `ironbee review status <job-id>` | Read a review back from the API |
+| `ironbee review status <job-id> --watch` | Follow a review to its end |
+| `ironbee review cancel <job-id> [reason]` | Ask a review to stop |
 
 - `show` and `status` take the output flags above (`--format`, `--plain`, `--json`, `--min-severity`, `--fail-on`), plus `-C`, `--remote` and `--api-url`.
 - `cancel` takes `-C`, `--remote` and `--api-url`.
@@ -336,11 +341,11 @@ ironbee review cancel <job-id> [reason]   # ask a review to stop
 - `--queue-wait <seconds>` ends the watch when the review hasn't started within it (default `900`), and exits `3`. The review stays queued.
 - When a review created from this checkout ends, the watch completes the stored copy of it.
 
-A shell that limits how long a command may run, such as an AI agent's, can create the review and then repeat a bounded watch until it ends:
+A shell that limits how long a command may run, such as an AI agent's, can create the review and then repeat a bounded watch until it ends. The first line creates the review and prints the job, the second exits `3` while the review still runs:
 
 ```bash
-ironbee review --no-wait --json                                  # create it and print the job
-ironbee review status <job-id> --watch --max-wait 540 --json     # exit 3 while it still runs
+ironbee review --no-wait --json
+ironbee review status <job-id> --watch --max-wait 540 --json
 ```
 
 The CLI stores each review under `~/.ironbee/projects/<token>/reviews/`, keeping the newest 20 per worktree. Linked worktrees of one repository share the folder. See [Runtime files](/cli/advanced/runtime-files).

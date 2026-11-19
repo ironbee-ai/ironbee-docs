@@ -1,0 +1,284 @@
+---
+title: Self-hosted runner setup with ironbee runner
+sidebarTitle: Self-hosted runner
+description: Set up, extend and check IronBee's self-hosted code review runner on GitHub, GitLab or Bitbucket from your machine with ironbee runner setup, add and check.
+---
+
+`ironbee runner` sets up IronBee's [self-hosted runner](/code-review/self-hosted-runner/overview) from your machine: code review in your own GitHub Actions, GitLab CI/CD or Bitbucket Pipelines, with your own model. It signs in to your host as you, registers the repositories with IronBee, stores the secrets in your CI and adds the runner's file.
+
+On GitHub, `setup` signs in through `gh`, stores the secrets and adds the workflow file by a pull request. On GitLab, it signs in as the top-level group's Owner and makes everything for the projects named. On Bitbucket, it acts with `BITBUCKET_TOKEN`: it turns Pipelines on, writes the variables and the block, sets up the trigger app and runs the probe. The example sets up each host, then adds a project on GitLab, checks GitHub, where `--fix` would also repair what the check finds, and checks Bitbucket with the probe:
+
+```bash
+ironbee runner setup --host github --repos acme/shop,acme/payments --model-provider anthropic
+
+ironbee runner setup --host gitlab --group acme --projects acme/shop,acme/payments \
+  --runner-project acme-reviewer/ironbee-runner --model-provider anthropic
+
+ironbee runner setup --host bitbucket --repos acme/shop,acme/payments --model-provider anthropic \
+  --developer-space <id>
+
+ironbee runner add acme/billing --host gitlab --runner-project acme-reviewer/ironbee-runner
+ironbee runner check --host github --repos acme/shop,acme/payments
+ironbee runner check --host bitbucket --repos acme/shop --probe
+```
+
+| Command | What it does |
+|---|---|
+| `ironbee runner setup` | Sets a runner up for the repositories named |
+| `ironbee runner add <repository>...` | Serves more repositories (projects on GitLab) with a runner that's set up |
+| `ironbee runner check` | Reads the setup and says what's missing or wrong. `--fix` repairs it |
+
+Every step also has a by-hand version in the runner's own guide, and a setup made by hand is the same as one the command made: `check` reads either. Each step first reads what exists and changes only what's missing, so you can run a command again after a failure.
+
+---
+
+## Before you start
+
+- CLI 0.54.0 or later, and Node.js 22 or later.
+- The self-hosted runner enabled on your IronBee account, and a registry token from IronBee for the runner's image. See [What you need](/code-review/self-hosted-runner/overview#what-you-need).
+- Your account's API key, from the console's [Account page](/console/account). The command registers the repositories with it.
+- The rights the host's section below lists, and its sign-in.
+
+---
+
+## The host
+
+`--host github`, `--host gitlab` or `--host bitbucket` names the host. Without it, the command takes the host from this directory's git remote, and asks when it can't tell.
+
+- **An SSH remote's host** is the one its `~/.ssh/config` alias reaches, as `ssh -G` reads it.
+- **A remote on a host other than github.com, gitlab.com or bitbucket.org** is GitHub or GitLab when it's one of your account's GitHub or GitLab hosts. The command reads that list from IronBee with `IRONBEE_API_KEY`, else your [`ironbee login`](/cli/guides/authentication) sign-in, and keeps it for a day.
+- **GitHub's host** is the remote's, else `GH_HOST`, else github.com. **GitLab's** is the remote's, else `GITLAB_HOST`, else gitlab.com.
+
+---
+
+## What it's given
+
+### The secrets
+
+Each secret comes from its environment variable, or is asked for in a terminal and typed unseen. The command writes none of them to disk, prints none of them, and sends none to IronBee: they go from your machine into your CI's secrets or variables.
+
+| Environment variable | What | When |
+|---|---|---|
+| `IRONBEE_API_KEY` | Your account's API key | Always: the registrations need it |
+| `IRONBEE_REGISTRY_TOKEN` | The registry token for IronBee's image | Asked where the CI doesn't hold it yet |
+| `IRONBEE_MODEL_KEY` | Your model's key | Asked where the CI doesn't hold it yet. Leave it empty for an endpoint that takes none |
+| `IRONBEE_MODEL_HEADERS` | Extra headers for your model's endpoint, one `name=value` a line | From the environment only |
+| `IRONBEE_KNOWLEDGE_TOKEN` | A read-only token for the rules repository | From the environment only, or asked where the host needs one |
+| `IRONBEE_JEV_KEY` | Your Typesafe key, only for the optional classifier [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier) | From the environment only |
+
+A value already in your CI is treated the host's way. On GitHub, a secret that's there is kept. On GitLab, a value you give is written over the variable that's there, and a variable you give no value for is kept. On Bitbucket, a variable that's there is left as it is, since a secured value can't be read back.
+
+### The flags every host takes
+
+| Flag | What |
+|---|---|
+| `--host <host>` | `github`, `gitlab` or `bitbucket` |
+| `--model-provider <provider>` | `anthropic`, `bedrock` or `openai` |
+| `--model-url <url>` | The model's endpoint, when it isn't the provider's public one |
+| `--model-name <name>` | One model for every task. Required for `openai` with `--model-url` |
+| `--model-ca-certificate <file>` | A PEM file: the private authority that signed your model endpoint's certificate |
+| `--model-prefix <prefix>` | Bedrock's inference profile prefix |
+| `--model-max-output <tokens>` | The most output tokens a model turn may ask for |
+| `--aws-region <region>` | Bedrock's region |
+| `--knowledge-repository <path>`, `--knowledge-ref <ref>` | The [rules repository](/code-review/self-hosted-runner/overview#the-rules-repository), and a branch or tag of it |
+| `--ignore-paths`, `--target-branches`, `--skip-labels`, `--skip-title-keywords` | For a repository left without a project in IronBee, each a comma list. Bitbucket takes no `--skip-labels` |
+| `--run-reports false` | A run tells IronBee only that it started |
+| `--version <version>` | The release a new file names. The latest when not given |
+| `--update` | Moves the release an existing file names, to the latest or to `--version` |
+| `--component <project>@<ref>` | GitHub and GitLab only: another workflow repository or component project and its version, such as your copy. No release is read. On Bitbucket, [`--source`](#on-bitbucket) names a local copy instead |
+| `-y, --yes` | Agrees beforehand to what the command would ask you to confirm |
+
+What a flag doesn't give, the command asks for in a terminal. Without a terminal, it stops and names the flag.
+
+The command calls IronBee only to register the repositories and to read your account's hosts. It uses the CLI's API address, `IRONBEE_API_URL` or the global config's. When that address isn't the default, a file it writes names it in `ironbee-api-url` on GitHub and GitLab, and on Bitbucket it writes the Pipelines variable `IRONBEE_API_URL` with the other variables. Nothing is written to disk but the account's list of hosts.
+
+---
+
+## On GitHub
+
+```bash
+export IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY
+ironbee runner setup --host github --repos acme/shop,acme/payments --model-provider anthropic
+```
+
+**The sign-in** is your own, through GitHub's CLI, `gh`: `gh auth login`, or `GH_TOKEN` in the environment. The command stores no GitHub credential and sends none to IronBee. You need to administer each repository's Actions secrets, and to push a workflow file there, which takes the token's `workflow` scope.
+
+| Flag | What |
+|---|---|
+| `--repos <list>` | The repositories, `owner/name`, separated by commas |
+| `--org <organization>` | Every repository of the organization that you administer and that isn't archived, in place of `--repos` |
+| `--org-secrets` | The organization's secrets, visible to the repositories named, in place of each repository's own |
+| `--direct` | Commit the workflow file to the default branch, in place of a pull request |
+| `--runs-on <label>` | A self-hosted runner's label, or a JSON list of labels |
+| `--github-ca-certificate <file>` | GitHub Enterprise Server: a PEM file, the private authority that signed the server's certificate |
+
+What `setup` does, in this order:
+
+1. **Registers the repositories** with IronBee. A refusal, such as the runner not enabled, the license ended or suspended, or a repository IronBee's cloud reviews, ends the command before anything changes on GitHub.
+2. **Stores the secrets** through `gh`, each repository's own by default. With `--org-secrets`, they're the organization's: the command checks that your sign-in has the `admin:org` scope (`gh auth refresh -s admin:org`) and that the repositories can read organization secrets, which a private repository on GitHub Free can't. A secret that's there is never set again: the repositories named are added to its list.
+3. **Adds the workflow file,** `.github/workflows/ironbee-review.yml`, at the release, with the model's inputs and the repository's default branch in its `push` trigger. By default it's on a branch of its own, `ironbee/runner-setup`, with a pull request, which is the first one reviewed. With `--direct`, it's committed to the default branch. A file that's there is left as it is, and `--update` moves only the release it names.
+4. **Prints** what it made and kept, and that **Code Review Result** becomes a required check through your branch protection, which the command doesn't set.
+
+`ironbee runner check` reads, for each repository: the workflow file on the default branch and its release against the latest; that the secrets it passes exist, by name; that GitHub Actions is on and may call the runner's workflow; the registration; and whether **Code Review Result** is required, as information. Your own GitHub App, a self-hosted runner, the rules repository's content and branch protection aren't the command's.
+
+### GitHub Enterprise
+
+On GHE.com and GitHub Enterprise Server, the host is the clone's remote, or `GH_HOST` with `--host github`. Every `gh` call goes to that host, and each repository is registered as `<host>:owner/name`.
+
+- **`--component <owner>/<name>@<tag>`** names your copy of the runner's repository on that host, and its release.
+- **`--runs-on`** is required on a server, which has no hosted runners. Add `--github-ca-certificate <file>` when a private authority signed the server's certificate.
+- **`IRONBEE_RUNNER_TOKEN`,** a read-only token that can read your copy, is asked for and stored as an Actions secret and a Dependabot secret. On github.com it's asked for too, for a copy that isn't public. On GHE.com, a rules repository needs `IRONBEE_KNOWLEDGE_TOKEN`.
+- **On a server,** the file calls the workflow without a queue, names your copy in `runner-repository`, and grants `actions: write`.
+
+`check` also reads your copy's visibility and Actions access, and says when a file lacks what its host needs. See [GitHub Enterprise](/code-review/self-hosted-runner/github#github-enterprise).
+
+---
+
+## On GitLab
+
+```bash
+export IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY
+ironbee runner setup --host gitlab \
+  --group acme \
+  --projects acme/shop,acme/payments \
+  --runner-project acme-reviewer/ironbee-runner \
+  --model-provider anthropic \
+  --notify-email platform-team@acme.example
+```
+
+**The sign-in** acts as you, an Owner of the top-level group, for the command's length:
+
+- **In the browser,** the default: the command opens GitLab's authorization page for IronBee's OAuth application, with the `api` scope, and waits up to five minutes. GitLab answers on `http://127.0.0.1:7471/ironbee/gitlab-callback`, so port 7471 must be free. The token stays in the command's memory and is revoked when it ends.
+- **`GITLAB_TOKEN`,** for a machine with no browser: a personal access token of yours with the `api` scope. The command neither stores nor revokes it, so make a short-lived one and revoke it after.
+
+You need to be an Owner of the top-level group, and a Maintainer or Owner of each project to review.
+
+| Flag | What |
+|---|---|
+| `--group <group>` | The top-level group whose service account reviews. You're its Owner |
+| `--projects <list>` | The projects to review, `group/project`, separated by commas |
+| `--group-projects <group>` | Every project of a group and its subgroups, in place of `--projects` |
+| `--runner-project <namespace/name>` | The runner project, found or made there |
+| `--service-account <username>` | The service account's username, when not `ironbee-runner-<group path>`. An account the command didn't make is never taken over |
+| `--notify-email <address>` | Where GitLab mails the service account's notices, such as its token's expiry |
+| `--runner-tags <tags>` | Your own runner's tags, for every job, separated by commas |
+| `--sweep-every <minutes>` | The sweep's interval: 10, 12, 15, 20, 30 or 60 minutes, such as `30m` or `1h`. 10 by default |
+| `--group-hooks` | Premium: one pair of webhooks on the group, in place of each project's |
+| `--gitlab-client-id <id>` | The OAuth application of your instance, for the browser sign-in off gitlab.com |
+
+What `setup` does, in this order. The order never leaves a trigger on a runner project that isn't locked down:
+
+1. **Registers the projects** with IronBee. A refusal ends the command before anything is made on GitLab.
+2. **The service account:** found or made in the group, and made a Developer of each reviewed project and of the rules repository.
+3. **The runner project:** found or made. The command lists everyone who is or would be a Maintainer or Owner of it, and every protected branch or tag rule that admits less than a Maintainer. It corrects the project's own rules when you agree, and stops unless you confirm the rest. Then it makes the project private, lets no one use pipeline variables, protects the default branch for Maintainers alone, and turns off auto-cancel.
+4. **The variables,** protected, and masked and hidden where GitLab can mask the value. The service account's token is made here and written in the same step.
+5. **The file,** `.gitlab-ci.yml`, with the component's include. GitLab's CI lint checks it before it's committed. A file that's there keeps its release and gains the new projects' lines.
+6. **The trigger owner, the triggers and the sweep.** A trigger for each project; right after the first one, a call that checks the runner project refuses pipeline variables. The sweep's schedule is made only where a project gates its merges, and played once.
+7. **The webhooks** on each reviewed project, or the group's pair with `--group-hooks`.
+8. **The probe:** one delivery that must run IronBee's images end to end. It starts no review and counts no developer.
+
+`ironbee runner add <project>` takes the same steps for the projects named, and needs only `IRONBEE_API_KEY` of the secrets. Give `--group` when the runner project is in a personal namespace.
+
+`ironbee runner check --runner-project <namespace/name>` reads the runner project's settings, the variables' names, the file through GitLab's CI lint and its release against the latest, each project's webhooks, the service account's memberships and token, the triggers, the sweep and each registration, and ends with the probe. Run it after any change made by hand to the runner project.
+
+| Flag | What |
+|---|---|
+| `--fix` | Repairs what it found, such as a webhook GitLab turned off, a missing sweep, or a project moved or renamed |
+| `--rotate-token` | Replaces the service account's token. The old one lives on for the runs under way |
+| `--revoke-now` | With `--rotate-token`, revokes the old token at once, for a leaked one |
+
+### GitLab Dedicated and Self-Managed
+
+On your own instance, the host is the clone's remote, or `GITLAB_HOST` with `--host gitlab`. Every GitLab call goes to that instance, which must run GitLab 19.4 or later, and each project is registered as `<host>:<path>`.
+
+- **The sign-in is a token first.** `GITLAB_TOKEN`, a token of yours on the instance with the `api` scope, is used there only when `GITLAB_HOST` names the instance. Otherwise the browser signs in through an OAuth application of the instance: name it with `--gitlab-client-id`, `IRONBEE_GITLAB_CLIENT_ID` or the [`runner.gitlab.clientId`](/cli/configuration/configuration#self-hosted-runner-setup) config key. It's not confidential, has the `api` scope, and redirects to `http://127.0.0.1:7471/ironbee/gitlab-callback`. `ironbee host setup` makes one.
+- **`--component <group>/<project>@<tag>`** names your public copy of the component and its release, from 1.0.0 on. `setup`, `add` and `check --fix` require it, and refuse `--version`.
+- **The service account:** where the instance lets only administrators create one, the command shows GitLab's refusal and the setting that lets an Owner do it.
+- **Its token** is asked for 364 days, and where the instance refuses that, for 180, 90, 60, 30 or 7.
+- **One webhook is tested** with a push event, which reviews nothing, since an instance refuses its webhooks' calls to itself until an administrator allows them.
+- **A private certificate authority:** set `NODE_EXTRA_CA_CERTS` to its file on your machine.
+
+To prepare the instance as its administrator, and to copy the component there, see [`ironbee host setup`](/cli/guides/hosts#ironbee-host-setup). See also [GitLab Dedicated and Self-Managed](/code-review/self-hosted-runner/gitlab#gitlab-dedicated-and-self-managed).
+
+---
+
+## On Bitbucket
+
+```bash
+export BITBUCKET_TOKEN IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY FORGE_EMAIL FORGE_API_TOKEN
+ironbee runner setup --host bitbucket --repos acme/shop,acme/payments --model-provider anthropic \
+  --developer-space <your developer space's id>
+```
+
+**The sign-in** is `BITBUCKET_TOKEN`, an Atlassian API token of yours, or asked and typed unseen. Make it at id.atlassian.com for the setup, with the nearest expiry date, and revoke it after. The command never stores it or sends it to IronBee. It needs these scopes, each ending in `:bitbucket`: `read:repository`, `write:repository`, `admin:repository`, `read:pullrequest`, `write:pullrequest`, `read:pipeline`, `write:pipeline` and `admin:pipeline`. Before anything changes, the command tries what each step needs and names any scope the token lacks.
+
+You need the admin permission on each repository, and to be a workspace admin for `--workspace-variables` or the trigger app.
+
+**The trigger app's step** needs Node.js, npm, Atlassian's Forge CLI (`npm install -g @forge/cli`) and a developer space, made once in Atlassian's developer console. It signs in to Forge with `FORGE_EMAIL` and `FORGE_API_TOKEN`, your Atlassian account's email and an API token of it, or with a `forge login`. Revoke that token when the command has ended. When one of these is missing, the command names it and goes on without the app.
+
+| Flag | What |
+|---|---|
+| `--repos <list>` | The repositories, `workspace/repository`, separated by commas |
+| `--workspace-variables` | The workspace's variables in place of each repository's. A workspace admin. Every pipeline of the workspace reads them |
+| `--direct` | Commit to the default branch in place of a pull request: only a new file, or a block `--update` moves |
+| `--runs-on <label,...>` | Your own runner's labels: `self.hosted,linux` for `amd64`, `self.hosted,linux.arm64` for `arm64` |
+| `--version <release>` | A release's whole name, such as `1.0.0` |
+| `--no-trigger-app` | Leave the trigger app out. Replies and commands then wait for the pull request's next push or edit |
+| `--developer-space <id>` | The Atlassian developer space the trigger app is registered in |
+| `--trigger-app-name <name>` | The trigger app's name, when not `ironbee-runner-trigger` |
+| `--source <directory>` | A local copy of the runner repository's layout, read in place of a release |
+
+What `setup` does, in this order:
+
+1. **Registers the repositories** with IronBee. A refusal ends the command before anything changes on Bitbucket.
+2. **Turns Pipelines on** where it's off. When Bitbucket refuses, for example because it asks your account for two-step verification, the command says to turn it on in the repository's settings, and goes on.
+3. **Writes the variables,** the secrets secured. A value of more than one line is written as `base64:` followed by the value in base64.
+4. **Adds the block** to `bitbucket-pipelines.yml` as text, in your file's own indentation, keeping every other byte, and reads the result back before it's written. A file that exists is always changed by a pull request from the branch `ironbee-runner-setup`. `--update` replaces a block's lines whole, keeping its `runs-on`.
+5. **Sets up the trigger app,** once for the workspace. It says whose the app will be and asks you to go on, then fetches the release's app source, runs `npm ci --ignore-scripts`, registers the app in your developer space, records it as the workspace variable `IRONBEE_TRIGGER_APP` at once, deploys it to Forge's production environment and installs it on the workspace.
+6. **Reports** what it made, kept and found, never a secret, and what gates a merge in each repository.
+
+Then it runs **the probe** on each repository whose default branch holds the block: the review pipeline, started on the default branch's head, which reads the repository and IronBee's API and writes nothing. A setup that opened a pull request probes after the merge, with `ironbee runner check --probe`.
+
+`ironbee runner check --repos <list>` reads the block and its release against the latest, Pipelines, the variables by name, the registration, the trigger app and, signed in to Forge, its installation, and the default branch's merge checks, as information. `--fix` repairs what the steps make, and `--probe` runs the probe.
+
+**Code Review Result** holds a merge only on Bitbucket Premium, with the branch's merge checks set. `ironbee host merge-check` sets them; see [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check). `check` names it where they're missing.
+
+---
+
+## Environment variables
+
+| Variable | Read by | What |
+|---|---|---|
+| `IRONBEE_API_KEY` | every host | Your account's API key |
+| `IRONBEE_REGISTRY_TOKEN`, `IRONBEE_MODEL_KEY`, `IRONBEE_MODEL_HEADERS`, `IRONBEE_KNOWLEDGE_TOKEN`, `IRONBEE_JEV_KEY` | every host | [The secrets](#the-secrets) |
+| `IRONBEE_RUNNER_TOKEN` | GitHub | A read-only token for your copy of the runner's repository |
+| `IRONBEE_API_URL` | every host | IronBee's API address, only when IronBee gives you another |
+| `GH_TOKEN`, `GH_HOST` | GitHub | `gh`'s sign-in, and the GitHub host when the remote doesn't name it |
+| `GITLAB_TOKEN`, `GITLAB_HOST` | GitLab | A personal access token in place of the browser sign-in, and the GitLab instance when the remote doesn't name it |
+| `IRONBEE_GITLAB_CLIENT_ID` | GitLab | Your instance's OAuth application, for the browser sign-in |
+| `BITBUCKET_TOKEN` | Bitbucket | Your Atlassian API token |
+| `FORGE_EMAIL`, `FORGE_API_TOKEN` | Bitbucket | Forge's sign-in, for the trigger app |
+| `NODE_EXTRA_CA_CERTS` | every host | A private certificate authority your host's certificate is signed by |
+
+---
+
+## Exit codes
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Nothing the command found is an error |
+| `1` | An error: a step was refused, or `check` found something wrong |
+| `2` | A flag it can't read |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Self-hosted runner" icon="server" href="/code-review/self-hosted-runner/overview">
+    What the runner is, its license, models and settings.
+  </Card>
+  <Card title="Host setup" icon="wrench" href="/cli/guides/hosts">
+    Prepare a GitLab instance, or set a Bitbucket branch's merge checks.
+  </Card>
+</CardGroup>

@@ -7,11 +7,13 @@ description: Every project in your account, with its code reviews, verification 
 
 A project is one of:
 
-- a **GitHub** repository. Installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project
-- a **GitLab** repository. In a [connected GitLab group](/integrations/gitlab), each repository you pick becomes a project, named by its path after the group with `/` as `-`: `acme/platform/backend` is `platform-backend`
+- a **GitHub** repository. Installing the [IronBee GitHub App](/integrations/github) makes every repository it covers a project. On GHE.com or GitHub Enterprise Server, so does the IronBee App registered on your host. See [GitHub Enterprise](/integrations/github-enterprise)
+- a **GitLab** repository. In a [connected GitLab group](/integrations/gitlab), each repository you pick becomes a project, named by its path after the group with `/` as `-`: `acme/platform/backend` is `platform-backend`. The same goes for a group on a GitLab Self-Managed or Dedicated instance registered to your account. See [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed)
 - a **Bitbucket** repository. In a [connected Bitbucket workspace](/integrations/bitbucket), each repository you pick becomes a project, named by its slug: `acme/shop` is `shop`
 - a **Vercel** project or a **Netlify** site that an owner or admin enabled from [Integrations](/integrations/overview)
-- a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a github.com, gitlab.com or bitbucket.org repository reports to that repository's GitHub, GitLab or Bitbucket project instead
+- a **CLI** project: the name your IronBee CLI reports under. A CLI checkout of a repository on github.com, gitlab.com or bitbucket.org reports to that repository's GitHub, GitLab or Bitbucket project instead, and so does one on a GitHub Enterprise or GitLab host IronBee knows for your account. See the IronBee CLI on [GitHub Enterprise](/integrations/github-enterprise#the-ironbee-cli) and [GitLab Self-Managed](/integrations/gitlab-self-managed#the-ironbee-cli)
+
+With the [self-hosted runner](/code-review/self-hosted-runner/overview), a repository the runner reviews gets a GitHub, GitLab or Bitbucket project too, even with no connection.
 
 Click a project to open its **Code review** tab. Its other tabs are [Code wiki](/console/code-wiki), [Code security](/console/code-security), [Verifications](/console/verifications), [Scenarios](/console/scenarios) and [Settings](/console/project-settings). Only owners and admins see **Code security**.
 
@@ -47,7 +49,7 @@ The date filter in the page header sets the window every number on the page cove
 
 Each project card shows:
 
-- **The header**: the provider's logo, the project's name and where it lives. A GitHub, GitLab or Bitbucket project shows its repository, such as **GitHub · acme/shop**, **GitLab · acme/platform/backend** or **Bitbucket · acme/storefront**. A Vercel or Netlify project shows its verification type, such as **Vercel · Web**. On the right, the card shows when the project was last active, when it was created if it hasn't run yet, or **nothing in this window**. The menu offers **Project settings** and, for a GitHub, GitLab or Bitbucket project, **Open on GitHub**, **Open on GitLab** or **Open on Bitbucket**.
+- **The header**: the provider's logo, the project's name and where it lives. A GitHub, GitLab or Bitbucket project shows its repository, such as **GitHub · acme/shop**, **GitLab · acme/platform/backend** or **Bitbucket · acme/storefront**. A repository on your own GitHub or GitLab host shows the host first, such as **GitHub · github.acme.com/acme/shop**, and its links open on that host. A Vercel or Netlify project shows its verification type, such as **Vercel · Web**. On the right, the card shows when the project was last active, when it was created if it hasn't run yet, or **nothing in this window**. The menu offers **Project settings** and, for a GitHub, GitLab or Bitbucket project, **Open on GitHub**, **Open on GitLab** or **Open on Bitbucket**.
 - **Code review**: the open findings, with critical and high named, such as **1 critical · 1 high open**, or **No open findings**. While a review runs, the row says **Reviewing #N**. The bars below count the pull requests reviewed in each slice of the window, by their state now: open, merged and closed. Click the row to open the project's pull requests, or click a bar to open the pull requests of that slice.
 - **Verifications**: the pass rate and the latest result, such as **92% · passed 2h ago**, or **Running** with the run's name while a run is in progress. The bars below count the runs in each slice of the window, with how many failed. Click the row to open the project's verifications, or click a bar to open that run or the runs in that slice.
 - **Code wiki**: how many pages the [wiki](/console/code-wiki) has and when it was built, such as **38 pages · built 3h ago**, or where it stands: **Writing the first version**, **Refreshing**, **Not built yet**, **The first version failed** or **Off**. When a later rebuild failed, the line adds **refresh failed** after the page count.
@@ -60,8 +62,13 @@ Some rows say why there's nothing to show yet:
 | **Code review**, **Code wiki** | **GitHub, GitLab and Bitbucket only**, with **Connect GitHub, GitLab or Bitbucket** | Code review and the code wiki run on GitHub, GitLab and Bitbucket repositories. Vercel, Netlify and CLI projects don't have them |
 | **Code review** | **Not connected**, with **Install the GitHub App**, **Connect its GitLab group** or **Connect its Bitbucket workspace** | The repository isn't covered by the IronBee GitHub App, or its GitLab group or Bitbucket workspace isn't connected |
 | **Code wiki** | **Needs the GitHub App**, or **Not connected** on a GitLab or Bitbucket project | The same: the repository isn't covered by the GitHub App, or its GitLab group or Bitbucket workspace isn't connected |
+| **Code review** | **By its workflow**, or **By its runner project** on GitLab and **By its pipeline** on Bitbucket | Your account uses the [self-hosted runner](/code-review/self-hosted-runner/overview), and no connection covers the repository, so its runner reviews it in your own CI. The row's link opens the project's **Code review** tab, which [lists what the runner reviewed](/code-review/pull-requests#pull-requests-a-self-hosted-runner-reviewed) |
+| **Code review** | **Off in IronBee's cloud**, with **Turn on** for owners and admins | With the self-hosted runner, a connected repository whose code review is off. IronBee's cloud doesn't review it, and its own runner, where it has one, still does |
 | **Verifications** | **Not set up**, with **Install the IronBee Action**, **Install the IronBee Component** or **Install the IronBee Pipe** | A GitHub, GitLab or Bitbucket repository that hasn't run a verification yet. If you've already added the GitHub Action, the GitLab component or the Bitbucket Pipe, the next pull request or merge request starts the first run |
 | **Verifications** | **No runs yet** | A Vercel, Netlify or CLI project that hasn't run yet. The card says what starts its first run, such as **The next Vercel deployment starts a web verification of shop-web.** |
+
+<img className="ib-shot ib-shot-light" src="/images/console/projects/projects-runner-cards-light.png" alt="Two GitHub project cards on an account with the self-hosted runner: one whose Code review row reads Off in IronBee's cloud with Turn on, and one whose row reads By its workflow, Reviewed by its IronBee workflow" />
+<img className="ib-shot ib-shot-dark" src="/images/console/projects/projects-runner-cards-dark.png" alt="Two GitHub project cards on an account with the self-hosted runner: one whose Code review row reads Off in IronBee's cloud with Turn on, and one whose row reads By its workflow, Reviewed by its IronBee workflow" />
 
 ---
 
@@ -78,7 +85,7 @@ The list has these columns:
 |--------|---------------|
 | **Project** | The project name |
 | **Provider** | GitHub, GitLab, Bitbucket, Vercel, Netlify or CLI, with the verification type below it |
-| **Code Review** | Open pull requests and their critical and high findings, such as **3 open · 1 high**, or **Reviewing #N**, **No open pull requests** or **Off** |
+| **Code Review** | Open pull requests and their critical and high findings, such as **3 open · 1 high**, or **Reviewing #N**, **No open pull requests** or **Off**. With the self-hosted runner, it can also read **Off in IronBee's cloud**, or **By its workflow** (**By its runner project** on GitLab, **By its pipeline** on Bitbucket) |
 | **Runs** | The run strip: the window laid out as a time axis. Click a slot to open its runs |
 | **Success Rate** | The share of verifications that passed |
 | **Verifications**, **Fixes** | Counts in the window |
@@ -86,7 +93,15 @@ The list has these columns:
 | **Code Wiki** | **Ready**, **Writing**, **Refreshing**, **Failed**, **Refresh failed**, **Not built yet** or **Off** |
 | **Last Active** | When the project was last active |
 
-Click **Project**, **Success Rate**, **Verifications**, **Fixes** or **Last Active** to sort. In card view, the sort menu offers **Project Name**, **Success Rate**, **Verifications**, **Fixes** and **Last Activity**.
+Click **Project**, **Code Review**, **Success Rate**, **Verifications**, **Fixes** or **Last Active** to sort. **Code Review** sorts by open findings.
+
+In card view, the sort menu offers:
+
+- **Sort by:** **Project name** and **Last activity**
+- **Code review:** **Open findings**, **Open pull requests** and **Reviewed pull requests**
+- **Verifications:** **Verifications** and **Success rate**
+
+Pick the option in use again to reverse the order. Open findings sort by severity: critical first, then high, medium and low. A project without code review comes last whichever way the order runs. Until you pick an order, the page is sorted by last activity. The order you pick is kept in your browser.
 
 The view you pick lasts until you reload the page. To change the default view, open **Settings > Visual** and set **Default View**. On a phone, projects always show as cards.
 

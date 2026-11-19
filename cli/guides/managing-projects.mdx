@@ -21,12 +21,12 @@ Installing doesn't contact the console. Your sessions report to a console projec
 
 To target a specific client explicitly:
 
-```bash
-ironbee install --client claude   # Claude Code
-ironbee install --client cursor   # Cursor
-ironbee install --client codex    # Codex CLI
-ironbee install --client all      # every detected client
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee install --client claude` | Claude Code |
+| `ironbee install --client cursor` | Cursor |
+| `ironbee install --client codex` | Codex CLI |
+| `ironbee install --client all` | Every detected client |
 
 When you don't pass `--client` (and IronBee can't uniquely detect one), install shows a **checkbox multi-select** so you can set up **any combination** of clients in one pass - **space** toggles a client, **`a`** selects all, **Enter** confirms. With **no** client detected, the first client is pre-checked; with **several** detected, install shows the same picker with the detected clients pre-checked so you confirm (or trim) the set rather than silently installing into all of them. Confirming with nothing selected aborts. In a non-interactive shell (`-y`, CI, piped stdin), multiple detected clients are all installed without a prompt - the historical behavior.
 
@@ -51,11 +51,11 @@ Which verification mode?
 
 Skip the prompt with `--mode`:
 
-```bash
-ironbee install --mode assist     # tools installed, manual /ironbee-verify only (default)
-ironbee install --mode enforce    # full enforcement - block completion until verified
-ironbee install --mode monitor    # monitoring-only - no enforcement, no platform picker
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee install --mode assist` | Tools installed, manual `/ironbee-verify` only (default) |
+| `ironbee install --mode enforce` | Full enforcement: block completion until verified |
+| `ironbee install --mode monitor` | Monitoring-only: no enforcement, no platform picker |
 
 Picking `enforce` opens two follow-up pickers: [strictness](/cli/guides/verification#strict-mode) (non-strict / strict) and then [fix enforcement](/cli/guides/verification#fix-enforcement-block-on-a-fail-or-just-report-it) (fix-enforce / report-only). Skip them with `--strict` (its absence keeps the existing or default non-strict choice) and `--fix` / `--no-fix` - all enforce-only; a non-interactive `--mode enforce` skips both pickers regardless.
 
@@ -87,10 +87,10 @@ When the analysis finishes, IronBee **replaces** your checkboxes with its recomm
 
 Skip the prompt with `--platforms` (a comma-separated subset of `browser,node,python,backend,android,terminal`):
 
-```bash
-ironbee install --platforms browser,node   # enable just these two
-ironbee install --platforms ""             # disable all cycles (incl. the default-on browser)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee install --platforms browser,node` | Enable just these two |
+| `ironbee install --platforms ""` | Disable all cycles (including the default-on browser) |
 
 The selection is written to the committed project config before the artifacts render, so it's equivalent to running the [`ironbee browser` / `node` / `python` / `backend` / `android` / `terminal`](/cli/guides/verification#enable-or-disable-a-platform) toggles. Install records the **full** platform state explicitly - an `enable` flag for every cycle (`browser`, `node`, `python`, `backend`, `android`, `terminal`) - so the committed `config.json` plainly shows what's on and what's off. In a non-interactive shell with no `--platforms` flag (or in monitoring-only mode, including a just-chosen `--mode monitor`), the platform config is left untouched.
 
@@ -104,10 +104,10 @@ The last step (skipped in monitoring-only mode, or when no headless-capable clie
 
 Control it non-interactively with a tri-state flag:
 
-```bash
-ironbee install --checks       # run the analysis and accept the suggested set (skip the yes/no gate)
-ironbee install --no-checks    # skip the checks step entirely
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee install --checks` | Run the analysis and accept the suggested set (skip the yes/no gate) |
+| `ironbee install --no-checks` | Skip the checks step entirely |
 
 With no flag, checks are offered only on an interactive terminal and skipped otherwise. This is the same flow as the standalone [`ironbee checks suggest`](/cli/guides/verification#let-ironbee-suggest-your-checks) command, which you can re-run anytime; re-suggesting is additive, so it never clobbers checks you've hand-tuned.
 
@@ -117,18 +117,18 @@ The devtools MCP server is launched via `npx` against a [pinned version](#the-de
 
 It runs automatically on an interactive install (skipped under `--json`, in a non-interactive shell, or when installing from the [TUI](/cli/guides/interactive-mode), which tips you to run it standalone) and is controlled with a tri-state flag:
 
-```bash
-ironbee install --prefetch      # force the prefetch, even non-interactively
-ironbee install --no-prefetch   # skip it - the first MCP start installs lazily
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee install --prefetch` | Force the prefetch, even non-interactively |
+| `ironbee install --no-prefetch` | Skip it: the first MCP start installs lazily |
 
 Set the [`IRONBEE_NO_PREFETCH`](/cli/configuration/environment-variables#advanced) env var as a global kill-switch. On the install path, monitoring-only projects (no devtools artifacts) and custom `ironbeeDevTools.mcp` entries are skipped automatically. An interactive `ironbee browser enable` also prefetches (it's the moment a browser-less warm cache would need browser binaries). And you can warm the cache standalone, anytime:
 
-```bash
-ironbee devtools prefetch                       # warm the pinned devtools for this project
-ironbee devtools prefetch --browsers chromium   # override the browser set (csv; also firefox, webkit, chromium-headless, none)
-ironbee devtools prefetch -p <dir> --json       # target another project; {ok, status, spec, browsers, detail}
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee devtools prefetch` | Warm the pinned devtools for this project |
+| `ironbee devtools prefetch --browsers chromium` | Override the browser set (csv; also `firefox`, `webkit`, `chromium-headless`, `none`) |
+| `ironbee devtools prefetch -p <dir> --json` | Target another project; prints `{ok, status, spec, browsers, detail}` |
 
 Unlike the install step, the standalone command is deliberately permissive - a project with no rendered devtools entry (monitoring-only included) warms a default `chromium` plan anyway; pass `--browsers none` for a package-only warm. Exit codes: `0` completed (including already-warm), `1` failed, `2` skipped (npx unavailable or the kill-switch set). When a CLI upgrade triggers the [auto re-render](#auto-re-rendering-after-an-upgrade), that pass re-runs the prefetch across your registered projects too; a patch that changes nothing structural doesn't, so after a pin-only bump run `ironbee devtools prefetch` yourself.
 
@@ -180,10 +180,10 @@ This removes the hooks, skill, rule, MCP server entry, and permissions IronBee a
 | `--all` | Remove IronBee from **every** registered project. Prompts for confirmation first. |
 | `-y`, `--yes` | Skip the confirmation prompt (required with `--all` in scripts/CI). |
 
-```bash
-ironbee uninstall --all        # asks before wiping every project
-ironbee uninstall --all --yes  # no prompt - for scripts
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee uninstall --all` | Asks before wiping every project |
+| `ironbee uninstall --all --yes` | No prompt: for scripts |
 
 ---
 
@@ -193,10 +193,10 @@ IronBee tracks the projects it's installed in at `~/.ironbee/projects.json`. Thi
 
 You normally don't manage it by hand; `ironbee install` adds a project automatically, and `ironbee uninstall` removes it. Two commands let you adjust the inventory **without touching any installed files**:
 
-```bash
-ironbee register     # add the current project to the inventory
-ironbee unregister   # remove the current project from the inventory
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee register` | Add the current project to the inventory |
+| `ironbee unregister` | Remove the current project from the inventory |
 
 - **`register`** - retrofit a project that was set up manually (or before the inventory existed) so it shows up for `install --all` and global-config notices. No artifacts are written.
 - **`unregister`** - drop an entry without uninstalling anything. Works even if the project directory has already been deleted.
@@ -238,10 +238,10 @@ To suppress the auto re-render entirely (CI, locked-down machines), set [`IRONBE
 
 Each CLI release drives one **exact, pinned** version of the `@ironbee-ai/devtools` package - the pin is baked into every rendered MCP server entry (`npx -y @ironbee-ai/devtools@<version>`), so a given CLI build always runs one immutable devtools build. The pin is a build-time constant, deliberately **not** a config key (point `ironbeeDevTools.mcp` at your own entry if you need a different build). Read it programmatically:
 
-```bash
-ironbee devtools version          # bare version on stdout, script-friendly: 0.53.0
-ironbee devtools version --json   # {"name":"@ironbee-ai/devtools","version":"0.53.0","spec":"@ironbee-ai/devtools@0.53.0"}
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee devtools version` | Prints the bare version on stdout, script-friendly: `0.53.0` |
+| `ironbee devtools version --json` | Prints `{"name":"@ironbee-ai/devtools","version":"0.53.0","spec":"@ironbee-ai/devtools@0.53.0"}` |
 
 The output carries nothing else (no banner, no update notice), so `V=$(ironbee devtools version)` is safe in scripts - it's the contract for downstream tooling that bundles or pre-fetches devtools at its own build time.
 

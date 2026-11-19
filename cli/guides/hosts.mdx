@@ -1,0 +1,188 @@
+---
+title: Prepare enterprise hosts with ironbee host
+sidebarTitle: Enterprise hosts
+description: Prepare a GitLab Self-Managed server or Dedicated tenant, let IronBee's address into a GitLab group, and enforce Bitbucket Premium merge checks from the CLI.
+keywords: ["ironbee host", "GitLab Self-Managed", "GitLab Dedicated", "IP restriction", "Bitbucket Premium", "merge checks", "branch restrictions"]
+---
+
+`ironbee host` makes from your machine what you would otherwise set up by hand on GitLab or Bitbucket for IronBee. Each command reads what's there first, asks before each change, and changes nothing on a second run.
+
+| Command | What it prepares |
+|---------|------------------|
+| `ironbee host setup gitlab.acme.com` | A GitLab Self-Managed server or Dedicated tenant |
+| `ironbee host setup gitlab.acme.com --runner --components tools` | The same, for the self-hosted runner and the components' copies too |
+| `ironbee host allow-address acme` | IronBee's address in a gitlab.com group's IP restriction |
+| `ironbee host allow-address acme gitlab.acme.com` | The same, in a group on your own instance |
+| `ironbee host merge-check acme/shop` | Bitbucket Cloud Premium: a failed build holds a merge into the default branch |
+
+Use CLI 0.54.0 or newer. The commands act with your own tokens on GitLab or Bitbucket, and each token goes only to the host the command names.
+
+---
+
+## ironbee host setup
+
+For an administrator of a GitLab Self-Managed server or a GitLab Dedicated tenant. It prepares the instance for IronBee: the OAuth application, the instance's settings and, on request, what the self-hosted runner and the components' copies need. It ends by opening the console's registration form, filled in. See [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed).
+
+Paste a token of an administrator of the instance at the prompt:
+
+```bash
+read -rs GITLAB_TOKEN && export GITLAB_TOKEN
+ironbee host setup gitlab.acme.com
+```
+
+`read -rs` keeps the token out of your shell's history.
+
+### Sign in
+
+- **To GitLab:** `GITLAB_TOKEN`, a personal access token of an administrator of the instance, with the scope `api`, and `admin_mode` where the instance has Admin Mode on. Without `admin_mode`, GitLab hides that the token is an administrator's, and the command stops. There's no browser sign-in, since the application it would go through is what the command makes. The CLI neither keeps nor revokes the token: make it for the setup alone, with the nearest expiry date, and revoke it once the command has run.
+- **To IronBee:** the command reads IronBee's address, its webhook host and the console's address with your [`ironbee login`](/cli/guides/authentication), or `IRONBEE_API_KEY`. Nothing of your instance reaches IronBee.
+
+### What it does
+
+The host is the instance's own name, as the registration takes it: `https://` is taken off, with no path and no port. gitlab.com needs no setup, and the command says so. It checks that the instance runs GitLab 19.2 or newer and that the token's user is an administrator, then takes these steps:
+
+| Step | What it does | By hand |
+|------|--------------|---------|
+| The application | Keeps an application named `IronBee` that fits. Where there's none, makes an instance-wide one, not confidential, with the scope `api` and both redirect URIs, and prints its ID. An application of that name that doesn't fit (confidential, without the console's redirect URI, or without the scope `api`) stops the command: remove or rename it in the **Admin area**'s **Applications**, then run the command again | [The application](/integrations/gitlab-self-managed#the-application) |
+| Service accounts | Turns on **Allow top-level group owners to create Service accounts** where it's off. On the Community Edition, there's nothing to set | [The instance's settings](/integrations/gitlab-self-managed#the-instances-settings) |
+| Outbound requests | Adds IronBee's webhook host to **Local IP addresses and domain names that hooks and integrations can access**, where the instance blocks all requests but that list. It never turns the block on or off | [The instance's settings](/integrations/gitlab-self-managed#the-instances-settings) |
+| With `--runner` | Adds the instance's own name to the same list, where its hooks may not call the instance itself. The self-hosted runner's hooks need it | [Self-hosted runner](/code-review/self-hosted-runner/gitlab) |
+| With `--components <group>` | Makes the copies of IronBee's two components. See [The components' copies](#the-components-copies) | A mirror of each project |
+| The end | Names what no API offers: IronBee's address, for the firewall in front of your instance or your tenant's IP allowlist in Switchboard. With copies, it names the verification component's include and the runner's `--component`. Then it prints, and opens where it can, the console's registration form with the host and the application's ID filled in | [Register the instance](/integrations/gitlab-self-managed#register-the-instance) |
+
+With `--runner`, the command warns about an instance older than the runner's GitLab 19.4, where `ironbee runner setup` stops until it's upgraded, and still takes its steps.
+
+The command changes neither token lifetimes, nor **Disable personal access tokens**, nor the Git access protocols: those stay the administrator's choices. A setting GitLab's API refuses, or answers without taking, is left to you, with GitLab's words and its place in the **Admin area**. While an instance blocks all requests but its allowlist, GitLab refuses every settings change until the hosts named in its own settings' addresses are on that list too, and its refusal names those settings.
+
+The registration itself stays in the console: it's an act on your IronBee account, by an owner or admin, and the CLI holds no credential that could make it. The form saves nothing until you click **Register**. Add a CA bundle there when a private authority signed the instance's certificate.
+
+### The components' copies
+
+GitLab includes a component only from the instance the pipeline runs on, so your instance keeps a copy of each of IronBee's components. `--components <group>` makes `<group>/ironbee-gitlab`, for the [GitLab component](/gitlab-component/guides/self-managed), and `<group>/ironbee-gitlab-runner`, for the self-hosted runner:
+
+- It makes the group and the two projects, public, where they're absent. A subgroup's parent must already exist.
+- It changes the visibility of nothing it finds. The group and the runner's copy must be public; the verification component's copy may be internal.
+- It pushes the branches and tags of `gitlab.com/ironbee-ai/ironbee-gitlab` and `gitlab.com/ironbee-ai/ironbee-gitlab-runner` into the copies with your machine's git, 2.31 or newer, moved tags included. It reads gitlab.com anonymously.
+- The push asks GitLab to start no pipeline: each project carries IronBee's own release pipeline, which isn't meant to run on your runners.
+- A branch or tag the copy holds at another commit than gitlab.com is pushed with force, as a mirror's is, so commits the copy has of its own on it are overwritten; one gitlab.com doesn't have is left alone. Where the branch's protection allows no force push, GitLab refuses it, and the command says so.
+
+Run the command again after each release of a component to bring the copies up to it.
+
+### A private certificate authority
+
+When a private authority signed your instance's certificate:
+- **The CLI** is a Node program and doesn't read your system's trust store. Set `NODE_EXTRA_CA_CERTS` to the authority's PEM file. Node adds it to its own roots, so gitlab.com and IronBee are still trusted.
+- **git,** for the push of `--components`, reads your system's trust store, or the authority's file for your instance alone: `git config --global http.https://gitlab.acme.com/.sslCAInfo /path/to/ca.pem`. The setting is global since the command pushes from a directory of its own.
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `<host>` | The instance's own name, as in `https://<host>` |
+| `--runner` | Also prepare the instance for the self-hosted runner |
+| `--components <group>` | Copy the verification and the runner components from gitlab.com into this group |
+| `-y, --yes` | Make each change without asking first |
+
+With no terminal and no `--yes`, each change is left undone, and the command says so.
+
+---
+
+## ironbee host allow-address
+
+For an Owner of a top-level group that restricts access by IP address, on GitLab Premium or Ultimate. It adds IronBee's address to the group's list, on gitlab.com unless you name your instance. The first line is for a group on gitlab.com, the second for a group on your instance:
+
+```bash
+ironbee host allow-address acme
+ironbee host allow-address acme gitlab.acme.com
+```
+
+- It reads the group. Where the group's list holds no address or range that covers IronBee's address, it asks, then adds the address. A group that restricts no address is left as it is, and the command says so.
+- Run it from an address the group already allows. The restriction holds for your own calls too, and GitLab answers a group as missing to any other address, which the command then says.
+- GitLab keeps a group's IP restriction on its top-level group, so a subgroup is refused.
+- A Dedicated tenant's own IP allowlist is kept in Switchboard, which no command reaches. See [GitLab Dedicated](/integrations/gitlab-self-managed#gitlab-dedicated).
+
+It reads IronBee's address with your `ironbee login` or `IRONBEE_API_KEY`, and signs in to GitLab as the group's Owner:
+- **A token first.** `GITLAB_TOKEN`, a personal access token of yours on the host the command acts on, with the scope `api`. It goes to that host alone.
+- **Else the browser.** On gitlab.com, through IronBee's own application. On your instance, through an OAuth application of that instance: name its ID with `--gitlab-client-id`, `IRONBEE_GITLAB_CLIENT_ID` or `runner.gitlab.clientId` in the global config. The application `ironbee host setup` makes serves, since it holds the CLI's redirect URI, `http://127.0.0.1:7471/ironbee/gitlab-callback`; one made by hand takes it as a second redirect URI. Port 7471 of your machine must be free, and the sign-in's token is revoked when the command ends.
+
+| Flag | Description |
+|------|-------------|
+| `<group>` | The top-level group's path |
+| `[host]` | A GitLab Self-Managed server's or Dedicated tenant's name. Default: gitlab.com |
+| `--gitlab-client-id <id>` | The instance's OAuth application the browser sign-in goes through, when `GITLAB_TOKEN` isn't set. Required off gitlab.com for that sign-in |
+| `-y, --yes` | Make the change without asking first |
+
+See [Premium and Ultimate groups](/integrations/gitlab#premium-and-ultimate-groups) for the steps by hand.
+
+---
+
+## ironbee host merge-check
+
+For a repository admin on Bitbucket Cloud. On a Premium workspace, Bitbucket holds a merge on a build status only on a branch with two branch restrictions, which IronBee doesn't set for you. The command adds them to the branch merges go into, each where it's absent:
+
+- **The builds check:** "Minimum number of successful builds for the last commit with no failed builds and no in progress builds", set to 1.
+- **The enforcement:** "Prevent a merge with unresolved merge checks". Without it, the checks only warn.
+
+On Free and Standard, merge checks only warn, whatever is set. See [Hold merges on Premium](/code-review/on-bitbucket#hold-merges-on-premium) for what holds a merge once both are on, and what to check before you turn them on.
+
+With no `--branch`, the command works on the repository's default branch; the last line names another branch:
+
+```bash
+read -rs BITBUCKET_TOKEN && export BITBUCKET_TOKEN
+ironbee host merge-check acme/shop
+ironbee host merge-check acme/shop --branch release
+```
+
+`BITBUCKET_TOKEN` is an Atlassian API token of yours, the one the `ironbee runner` commands take, with the scopes `read:repository:bitbucket` and `admin:repository:bitbucket`. Where it isn't set, the command asks for it on a terminal, typed unseen; with no terminal, it stops. It sends the token to api.bitbucket.org alone, and makes no call to IronBee.
+
+| Flag | Description |
+|------|-------------|
+| `[repository]` | `workspace/repository` on bitbucket.org, or a clone's URL. Default: the git remote of the directory you run it in: the remote your branch pushes to, else its upstream's, else `origin`, else the only remote. A repository on another host is refused: there, a required check is set in the host's own settings |
+| `--branch <name>` | The branch merges go into, by its name, not a pattern. Default: the repository's default branch. A name the repository has no branch of stops the command before it changes anything |
+| `-y, --yes` | Make each change without asking first |
+
+### What it does
+
+| Step | What it does | By hand |
+|------|--------------|---------|
+| The repository | Reads it with your token, and its default branch | |
+| The branch's restrictions | Reads every merge check set for the branch: by its name, by a pattern that takes it, or by its type in the repository's branching model, and the enforcement | **Repository settings > Branch restrictions** |
+| The builds check | Where absent, asks: "Add to acme/shop's main the merge check that asks for at least 1 successful build on a pull request's last commit, with none failed or in progress? [Y/n]". One that's there is left as it is, whatever its count | Tick **Minimum number of successful builds for the last commit with no failed builds and no in progress builds**, with 1 |
+| The enforcement | Where absent, asks, after naming every other merge check of the branch. Where Bitbucket refused the builds check, it's left undone, even with `--yes`: run the command again | Tick **Prevent a merge with unresolved merge checks** |
+| The end | Reads the branch again and says what's on it now, under "What is on acme/shop's main now" | |
+
+Before it asks about the enforcement, the command names every other merge check of the branch, because the enforcement makes each of them hold a merge too: a number of approvals, no changes requested, every task completed, and so on. A custom merge check an app defines is set up elsewhere, and the command doesn't read it. Where the branch has "No changes are requested" without "Reset requested changes when the source branch is modified", it says that a request for changes then holds a merge even after the fix. IronBee's review never requests changes, so that check only reacts to people's requests. The command doesn't add that reset: a repository admin ticks **Reset requested changes when the source branch is modified** in the same place.
+
+- **It adds and never takes away.** A restriction that's there isn't changed, a second run changes nothing and says so, and no flag removes one. Remove a restriction in **Repository settings > Branch restrictions**, whoever set it.
+- **It reads no plan,** so its words say both: on a Premium workspace the checks hold a merge, and on Free and Standard they only warn. Where Bitbucket refuses the enforcement, the command adds that the workspace's plan can be why.
+- **A change it doesn't make is said:** one you declined, or one it can't ask about with no terminal and no `--yes`, with where a repository admin makes it by hand.
+- **A refusal is Bitbucket's, in its words.** A token without `admin:repository:bitbucket` is refused at the first read of the branch's restrictions, before anything is written, and the command stops there. From an address your workspace's IP allowlist doesn't hold, Bitbucket answers "To access this repository, an admin must whitelist your IP."; run the command from an address on the list. See [Bitbucket Cloud Premium](/integrations/bitbucket#bitbucket-cloud-premium).
+
+---
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Nothing is an error. Warnings don't count: a change left undone, and in `setup` a setting of the instance GitLab refused or didn't take, which is left to you |
+| `1` | An error: any other step was refused, or the command stopped |
+| `2` | A flag error: an argument it can't read, gitlab.com given to `setup`, a subgroup given to `allow-address`, no git remote to take the repository from, or a repository on another host than bitbucket.org |
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="GitLab Self-Managed and Dedicated" icon="gitlab" href="/integrations/gitlab-self-managed">
+    Register your instance and connect its groups.
+  </Card>
+  <Card title="Merges on Bitbucket" icon="git-pull-request" href="/code-review/on-bitbucket#hold-merges-on-premium">
+    What holds a merge once the merge checks are enforced.
+  </Card>
+  <Card title="Self-hosted runner" icon="server" href="/cli/guides/runner">
+    Set up the self-hosted runner with `ironbee runner`.
+  </Card>
+  <Card title="Authentication" icon="key" href="/cli/guides/authentication">
+    Sign in with `ironbee login`, or use an API key.
+  </Card>
+</CardGroup>

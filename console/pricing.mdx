@@ -1,9 +1,9 @@
 ---
 title: Pricing
-description: IronBee's Free, Team and Enterprise plans and credits, and how owners and billing admins manage the plan, seats and invoices in the console.
+description: IronBee's Free, Team and Enterprise plans and credits, and how owners and billing admins manage the plan, seats, credits and invoices in the console.
 ---
 
-IronBee has three plans: **Free**, **Team** and **Enterprise**. Start free, upgrade when your team needs more. Every plan includes code review, verification and Code wiki.
+IronBee has three plans: **Free**, **Team** and **Enterprise**. Start free, upgrade when your team needs more. Every plan includes code review, verification, Code wiki and code security.
 
 The plans and prices on this page mirror [ironbee.ai/pricing](https://ironbee.ai/pricing), the current source. If this page and the website ever differ, go by the website.
 
@@ -30,6 +30,7 @@ The tables quote the website.
 | AI code review, Quick to Deep | Yes | Yes | Yes |
 | Code review concurrency | 1 review at a time | 10 reviews at a time | Concurrency by contract |
 | Code wiki, no credits | Yes | Yes | Yes |
+| Code security scans, Quick to Deep | Yes | Yes | Yes |
 | AI coding visibility & intelligence | Yes | Yes | Yes |
 | Advanced search and analytics | Yes | Yes | Yes |
 
@@ -45,17 +46,28 @@ The tables quote the website.
 
 ### Credits
 
-- Credits are one monthly pool per account, shared by code review and verification. A small Quick review costs about 1 credit, and so does one minute of a verification run. Credits reset each month on your plan date and do not carry over.
+- Credits are one monthly pool per account, shared by code review, verification and code security. A small Quick review costs about 1 credit, and so does one minute of a verification run. Credits reset each month on your plan date and do not carry over.
 - A review is priced by the lines it reads and the depth you choose. Up to 400 lines it costs 1 credit at Quick, 2 at Standard and 3 at Deep, and larger changes cost more. A follow-up push is priced on the new lines only, and a review that fails is free.
 - Verification costs one credit for each started minute of a run, setup included. A run that fails on our side before the agent first answers is free.
-- When credits run out, new reviews and verifications wait until your credits reset, and a run that has already started always finishes. On Team, each seat you add brings 100 more credits a month. Code wiki keeps working: it uses no credits.
+- A security scan is priced by the size of the repository and the profile you choose. A full scan of a repository up to 10,000 lines costs 30 credits at Quick, 60 at Standard and 120 at Deep, and larger repositories cost more. After the first full scan, a scan reads only what changed and costs about a third. With execution on, a scan costs 1.5 times the price. The price is shown before a scan starts, and a scan that fails costs nothing. Neither does a period with no change.
+- When credits run out, new reviews and verifications wait until your credits reset, and a run that has already started always finishes. A scheduled security scan waits for them too. On Team, each seat you add brings 100 more credits a month. Code wiki keeps working: it uses no credits.
 
 In the console, **Settings > Usage** shows what your team spent and what a job costs. See [Credit usage](/console/usage).
+
+#### Buy credits
+
+On Free and Team, owners and billing admins can also buy credits in the console, beside the monthly pool:
+- A credit costs \$0.25, in US dollars.
+- One purchase is from 100 to 40,000 credits, up to \$10,000, in whole credits.
+- Purchased credits are spent after the month's credits are used up.
+- Each purchase stays valid for 12 months. Purchased credits don't reset each month.
+
+See [Add credits](#add-credits).
 
 ### Seats and billing
 
 - Team costs \$15 per seat per month billed monthly, or \$12 per seat per month billed annually, about 20% less. You can switch between the two at any time. The **Annual** switch says **Save 20%**.
-- On Team, you pay only for the seats you purchase, from 4 seats, and can change them as your team changes. Every seat adds 100 credits a month to the pool code review and verification share.
+- On Team, you pay only for the seats you purchase, from 4 seats, and can change them as your team changes. Every seat adds 100 credits a month to the pool code review, verification and code security share.
 - Free needs no credit card.
 - You can upgrade, downgrade, or cancel at any time, and moving back to Free keeps your account within the Free plan limits.
 
@@ -76,6 +88,7 @@ The header shows the account's name and its current plan. The page has two tabs:
 The **Pricing Plans** tab shows:
 - **Sessions this period**: your session usage. See [Session usage](#session-usage)
 - **Credits this month**: the credits used, how many are left and when they reset. See [Credits this month](#credits-this-month)
+- on Free and Team, **Add credits**, to buy credits beside the plan's monthly credits. See [Add credits](#add-credits)
 - the **Monthly** and **Annual** switch, which shows Team's price for each billing interval
 - a card for each plan. **Current plan** marks yours. On Team, the Team card also shows your seats and billing interval, such as **15 seats · Monthly**
 
@@ -153,7 +166,22 @@ Until the first usage snapshot, the meter shows **Usage data is being collected*
 
 **Credits this month**, next to **Sessions this period**, shows how many of the month's credits your team used, how many are left, and **Resets** with the date. On Enterprise with credits by contract, it can read **Unlimited**.
 
-When the team has used most of its credits, the meter warns with the share used. When none are left, it reads **No credits left**: new reviews and verifications are refused until the credits reset. A run that already started finishes. To get more, an owner or a billing admin can add seats on Team, upgrade to Team, or pay an open invoice, depending on the plan. See [Credit usage](/console/usage).
+When the account holds purchased credits, the meter counts them too: the total adds them to the monthly credits, and what's left says how many of them are purchased.
+
+When the team has used most of its credits, the meter warns with the share used. When none are left, it reads **No credits left**: new reviews and verifications are refused until the credits reset. A run that already started finishes. To get more, an owner or a billing admin can buy credits on Free or Team, add seats on Team, upgrade to Team, or pay an open invoice, depending on the plan. See [Credit usage](/console/usage).
+
+### Add credits
+
+On Free and Team, a strip under the meters lets you buy credits beside the plan's monthly credits. Under **Add credits**, it says:
+- what a credit costs, and the smallest and the largest purchase. See [Buy credits](#buy-credits)
+- that bought credits are spent after the monthly ones, and how long they stay valid
+- once the account holds purchased credits, how many are left and the first to expire, with **See the purchases on the Usage page**
+
+Its **Add credits** button opens the dialog that picks the number of credits and goes on to Stripe Checkout. See [Buy credits](/console/usage#buy-credits).
+
+Unlike the monthly credits, purchased credits don't reset each month: each purchase stays valid for 12 months. Each purchase's invoice is on the [History](#history) tab.
+
+The strip doesn't show on Enterprise, on a plan with unlimited credits, or when IronBee sets the account's credits by contract.
 
 ### Banners across the console
 
@@ -162,8 +190,8 @@ A plan problem also shows as a banner at the top of every console page, one at a
 | Banner | When | Button |
 |--------|------|--------|
 | **Session limit reached** | The account used its sessions for the period. New telemetry is rejected until the period resets | **Upgrade**, for owners and billing admins |
-| "This team has used all of its IronBee credits for this month." | No credits are left. New reviews and verifications are refused until the credits reset | The way to add credits for owners and billing admins. Others read who can add them |
-| "This team has used 80% of its IronBee credits for this month." | 80% of the month's credits are used | The same as above, and **Dismiss** |
+| "This team has used all of its IronBee credits for this month." | No credits are left, purchased ones included. New reviews and verifications are refused until the credits reset | **Add credits** for owners and billing admins on Free and Team, and the way to add seats, upgrade or pay. Others read who can add credits |
+| "This team has used 80% of its IronBee credits for this month." | 80% of the credits, purchased ones included, are used | **Add credits** for owners and billing admins on Free and Team, otherwise the same as above, and **Dismiss** |
 | **Payment past due** | IronBee couldn't charge your card | **Update payment method**, for owners and billing admins |
 | **More people than seats** | More people use the account than its plan has seats | **Manage team** for owners and admins, **View pricing** for billing admins |
 
@@ -173,7 +201,7 @@ You can close the **More people than seats** banner. It comes back later while t
 
 ## History
 
-The **History** tab lists the account's invoices, one year at a time. Pick the year in the top-right corner.
+The **History** tab lists the account's invoices, one year at a time: the plan's, and one for each credit purchase. Pick the year in the top-right corner.
 
 <img className="ib-shot ib-shot-light" src="/images/console/settings/pricing-history-light.png" alt="History tab with a year picker and a table of invoices with their date, description, amount, Paid status and a Download PDF link" />
 <img className="ib-shot ib-shot-dark" src="/images/console/settings/pricing-history-dark.png" alt="History tab with a year picker and a table of invoices with their date, description, amount, Paid status and a Download PDF link" />

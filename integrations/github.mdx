@@ -14,7 +14,7 @@ The IronBee GitHub App connects your repositories to IronBee. It gives IronBee s
 - **Checks and comments.** For a verification run on a repository the App covers, IronBee opens a check on the commit, posts an inline comment on each finding, and posts the result as a pull request comment. This covers Vercel and Netlify deployments, and runs on IronBee from the GitHub Action, `ironbee verify` and the API.
 - **Sign-in with GitHub.** You can create your IronBee account and sign in with your GitHub account.
 
-The [IronBee GitHub Action](/github-action/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same installation to check out private repositories, and to post their results on the pull request. For GitLab, see [GitLab](/integrations/gitlab), and for Bitbucket, [Bitbucket](/integrations/bitbucket).
+The [IronBee GitHub Action](/github-action/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same installation to check out private repositories, and to post their results on the pull request. For GitLab, see [GitLab](/integrations/gitlab), and for Bitbucket, [Bitbucket](/integrations/bitbucket). For a GHE.com tenant or a GitHub Enterprise Server, see [GitHub Enterprise](/integrations/github-enterprise).
 
 ---
 
@@ -154,6 +154,13 @@ Changes on GitHub flow back automatically:
 
 ---
 
+## GitHub Enterprise
+
+- **An organization of a GitHub Enterprise Cloud enterprise on github.com** installs this App, as any organization does. If the organization or the enterprise keeps an IP allow list, add IronBee's address to it, or GitHub refuses IronBee's calls and nothing is reviewed. See [IP allow lists](/integrations/github-enterprise#ip-allow-lists).
+- **A GHE.com tenant or a GitHub Enterprise Server** can't install this App. Register the host in the **GitHub Enterprise** section of **Integrations > GitHub**, and IronBee creates an App of its own there. See [Register a tenant or a server](/integrations/github-enterprise#register-a-tenant-or-a-server).
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
@@ -168,6 +175,7 @@ Changes on GitHub flow back automatically:
 | **Already connected elsewhere** | The installation is connected to another IronBee account. Uninstall and reinstall the App to move it |
 | **GitHub has not confirmed this installation yet** | GitHub's confirmation hasn't reached IronBee. Click **Check again** shortly. If it keeps waiting, uninstall the IronBee App in your organization's GitHub settings and install it again, or email [support@ironbee.ai](mailto:support@ironbee.ai) |
 | **This installation is no longer pending** | The installation expired or was already connected. Run the installation again from GitHub |
+| Nothing is reviewed or analyzed in an organization of a GitHub Enterprise Cloud enterprise | The organization or the enterprise keeps an IP allow list without IronBee's address. See [IP allow lists](/integrations/github-enterprise#ip-allow-lists) |
 
 ---
 
@@ -182,5 +190,8 @@ Changes on GitHub flow back automatically:
   </Card>
   <Card title="GitHub Action" icon="github" href="/github-action/get-started/getting-started">
     Verify every push and pull request from your own workflow.
+  </Card>
+  <Card title="GitHub Enterprise" icon="server" href="/integrations/github-enterprise">
+    GitHub Enterprise Cloud, a GHE.com tenant, or your own server.
   </Card>
 </CardGroup>

@@ -27,7 +27,7 @@ A pull request from a fork in the same workspace is reviewed too. A pull request
 
 ## The review IronBee posts
 
-IronBee posts an inline comment for each finding, then the review comment. Bitbucket has no batched review, so it sends a notification for each comment. The review never approves a pull request. Whether a finding holds a merge is up to [the build status](#the-ironbee-review-build-status).
+IronBee posts an inline comment for each finding, then the review comment. Bitbucket has no batched review, so it sends a notification for each comment. The review never approves a pull request or requests changes. Whether a finding holds a merge is up to [the build status](#the-ironbee-review-build-status).
 
 **The review comment** is a comment on the pull request, with the same content as the review body on GitHub: the **Open in IronBee** button, the head line with the counts by severity, the notes on how the review was made, the rules and memories it applied and the findings table. See [The review body](/code-review/on-github#the-review-body).
 
@@ -79,9 +79,37 @@ IronBee always writes its build statuses on Bitbucket. The **Block merges** sett
 
 The status counts toward Bitbucket's merge check **Minimum number of successful builds for the last commit**, set in a branch restriction's merge settings:
 - On every plan, a running or failed **IronBee review** status shows as a warning on the pull request.
-- On a Premium plan, where an admin turns the merge check on, it holds the merge: a running review until it ends, and a blocking result until it's fixed.
+- On a Premium plan, where the merge check is turned on and enforced, it holds the merge: a running review until it ends, and a blocking result until it's fixed.
 
 **Block merging when** decides which findings make the result blocking. Set to **Never**, a review's result never fails the status. See [Code review settings](/code-review/settings).
+
+### Hold merges on Premium
+
+On a Premium workspace, Bitbucket holds a merge on a build status only on a branch with two branch restrictions:
+- **Minimum number of successful builds for the last commit with no failed builds and no in progress builds**, with a count of 1 or more
+- **Prevent a merge with unresolved merge checks**, which turns every merge check of the branch from a warning into a condition of the merge. On Free and Standard, merge checks only warn, whatever is set
+
+IronBee doesn't set them: its app holds no admin permission on your repositories. A repository admin ticks both in **Repository settings > Branch restrictions**, on the branch merges go into, or runs [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check), which adds each where it's absent.
+
+Before you turn them on:
+- **The enforcement holds every merge check of the branch, not IronBee's alone:** a number of approvals, default reviewers' approvals, no changes requested, every task completed, every comment resolved, at most a number of commits behind. A branch that asked for two approvals as a warning refuses every merge without them from then on.
+- **"No changes are requested" only reacts to people.** IronBee's review never requests changes, so only a person's request for changes holds a merge under the enforcement, until it's taken back. With **Reset requested changes when the source branch is modified**, ticked in the same place, the next push to the source branch clears it.
+- **The builds check counts every build on the last commit,** IronBee's and any other tool's, and names none. Any successful build satisfies it, so it doesn't prove a review ran. What it does is hold a merge on a review that failed.
+- **A pull request nothing reports a build on can't merge.** Where IronBee is the only tool that writes builds, a pull request IronBee doesn't review, such as one its settings leave out, gets no build and waits, until a repository admin merges it another way or relaxes the restriction.
+
+Once both are on, the pull request's last commit decides:
+
+| On the last commit | The merge |
+|--------------------|-----------|
+| An IronBee review or verification is running | Waits |
+| An IronBee review or verification failed | Is refused |
+| An IronBee review or verification ended without failing: it passed, had nothing to say, was cancelled, or met an error on IronBee's side | Isn't held by IronBee's status, which is successful |
+| The pipeline that runs the [Bitbucket Pipe](/bitbucket-pipe/guides/running-in-pipelines#the-step-result) or the [self-hosted runner](/code-review/self-hosted-runner/bitbucket) is running, or failed | Waits, or is refused |
+| Nothing reported a build | Is refused: the check asks for one successful build |
+| Another tool's build failed, or is running | Is refused, or waits |
+| Another merge check of the branch is unresolved | Is refused |
+
+Bitbucket's refusal names each unresolved check, such as "1 successful build on last commit" or "No failed builds on last commit".
 
 ---
 
@@ -118,6 +146,14 @@ IronBee reads what people do with its comments, as on GitHub. See [Replies, reac
 ## Credits and when a review doesn't run
 
 Credits, the situations in which no review runs, and what happens when the team's credits run out are the same as on GitHub, with the **IronBee review** build status in place of the check. See [When a review doesn't run](/code-review/on-github#when-a-review-doesnt-run) and [Credits](/code-review/on-github#credits).
+
+---
+
+## On a Premium workspace
+
+Code review on a Premium workspace works as on any other. The workspace's IP allowlist and required two-step verification don't apply to IronBee's app, so reviews go on with both turned on, and no address of IronBee's goes on the list. See [Bitbucket Cloud Premium](/integrations/bitbucket#bitbucket-cloud-premium). What Premium adds is a merge that waits for the review; see [Hold merges on Premium](#hold-merges-on-premium).
+
+To review pull requests in your own Bitbucket Pipelines instead, with your own model, use the [self-hosted runner](/code-review/self-hosted-runner/bitbucket).
 
 ---
 

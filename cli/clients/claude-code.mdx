@@ -44,12 +44,11 @@ IronBee installs the `/ironbee-verify` slash command, which the agent (or you) c
 
 Run a verification cycle for the current changes. By default it exercises the areas affected by what changed. You can also pass a **custom scenario** describing exactly what to verify - either inline or as a path to a file:
 
-```bash
-/ironbee-verify                                    # default - exercise the changed pages/endpoints
-/ironbee-verify log in as admin, open /billing,    # inline scenario - verify exactly this flow
-  and confirm the invoice total updates
-/ironbee-verify ./scenarios/checkout.md            # a scenario file (any location, any format)
-```
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-verify` | Default: exercise the changed pages and endpoints |
+| `/ironbee-verify log in as admin, open /billing, and confirm the invoice total updates` | Inline scenario: verify exactly this flow |
+| `/ironbee-verify ./scenarios/checkout.md` | A scenario file (any location, any format) |
 
 When a scenario is supplied it is **authoritative**: it replaces the default "exercise the changed pages" guidance, and the verifier drives precisely the flows, states, and endpoints it names. A scenario *file* is read at run time, so you can keep reusable test scripts in your repo. The completion gate is unchanged - every active cycle's required tools must still run for a `pass`.
 
@@ -63,12 +62,12 @@ An optional leading word picks what happens on a fail: the default is **verify-o
 
 Review your working tree with [`ironbee review`](/cli/guides/code-review) and report the findings. `fix` also fixes the blocking findings, `fix loop` reviews again after each fix pass, and `price` only asks what the review would cost:
 
-```bash
-/ironbee-review                  # review the working tree and report it
-/ironbee-review fix              # review, then fix the blocking findings once
-/ironbee-review fix loop high    # fix and review again, with high and above blocking
-/ironbee-review price            # what the review would cost
-```
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-review` | Review the working tree and report it |
+| `/ironbee-review fix` | Review, then fix the blocking findings once |
+| `/ironbee-review fix loop high` | Fix and review again, with high and above blocking |
+| `/ironbee-review price` | What the review would cost |
 
 The main agent runs it in the conversation, without a sub-agent. A review spends your team's credits, so the command carries `disable-model-invocation: true` in every mode, and the model never starts a review on its own. See [From a coding agent](/cli/guides/code-review#from-a-coding-agent) for every mode and option.
 
@@ -158,10 +157,10 @@ The view only displays what IronBee records. Verification works the same without
 
 The view is on by default when install detects Claude Code 2.1.287 or later. Control it with [`claude.mod.enable`](/cli/configuration/configuration#claude-claude-code-only), then re-run `ironbee install`:
 
-```bash
-ironbee config set claude.mod.enable false   # never install the view
-ironbee config set claude.mod.enable true    # install it even when the Claude Code version can't be detected
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee config set claude.mod.enable false` | Never install the view |
+| `ironbee config set claude.mod.enable true` | Install it even when the Claude Code version can't be detected |
 
 Set it to `true` when you use the Claude Code desktop app, which ships its own copy of Claude Code that install can't find. [`ironbee session view`](/cli/advanced/inspecting-sessions#ironbee-session-view) prints the same view in any terminal.
 

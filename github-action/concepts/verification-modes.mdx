@@ -38,6 +38,8 @@ With `verification_mode: auto`, the action decides from two things it can check 
 
 The first line of the run's log names the mode and the reason.
 
+On a GHE.com tenant or a GitHub Enterprise Server, the repository counts as private whatever its visibility: IronBee reads it only through the App registered for its host. See [GitHub Enterprise](/github-action/guides/github-enterprise#platform-or-local-on-an-enterprise-host).
+
 <Tip>
   If your repository is private and the [IronBee GitHub App](/integrations/github) covers it, set `verification_mode: platform` explicitly. Otherwise `auto` runs on your runner whenever an Anthropic credential is set.
 </Tip>

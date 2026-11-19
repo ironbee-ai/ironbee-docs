@@ -31,6 +31,12 @@ Your **account** is the workspace your team shares. It holds your projects, inte
 
 ---
 
+## Credits
+
+Code reviews, verification runs and code security scans spend **credits** from one pool the whole team shares. The plan sets the monthly credits, which reset on the account's own date each month. On Free and Team, owners and billing admins can also buy credits, which are spent after the monthly ones and stay valid for 12 months. The code wiki and the CLI's verification cycles use none. See [Credit usage](/console/usage) and [Pricing](/console/pricing).
+
+---
+
 ## Project
 
 A **project** is what IronBee verifies:
@@ -60,6 +66,8 @@ A **code review** is IronBee's review of a pull request in a GitHub repository t
 
 Pull requests and their findings appear under **Code review** in the console and on the project's **Code review** tab. See [Code review of pull requests](/code-review/overview).
 
+The same holds on [GitHub Enterprise](/integrations/github-enterprise) and on [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed), once the host is registered. To run the review in your own CI instead, with your own model provider, use the [self-hosted runner](/code-review/self-hosted-runner/overview).
+
 ---
 
 ## Code wiki
@@ -75,8 +83,9 @@ The **code wiki** is a set of pages IronBee writes about a GitHub, GitLab or Bit
 - A **scan** reads the code. The first scan is a full scan, and a later scheduled scan reads what changed since the last one.
 - A **record** is one problem a scan found. A **confirmed** finding is one the scan reproduced by running the code, and has a severity. A **lead to validate** is one it could not prove yet, and has no severity.
 - A **decision** is what your team does with a record: **Open**, **Accepted**, **Fixed elsewhere** or **Not an issue**.
+- One scan runs at a time in an account; the scan that has waited longest goes next.
 
-The records are on the project's **Code security** tab. See [Code security scans of a repository](/console/code-security).
+The records are on the project's **Code security** tab. See [Code security](/code-security/overview) and [Code security scans of a repository](/console/code-security).
 
 ---
 

@@ -46,7 +46,7 @@ When a teammate [invites you](/console/team#invite-a-teammate), you get an email
 <img className="ib-shot ib-shot-light" src="/images/console/settings/invitation-light.png" alt="You've been invited page showing the inviting teammate, the account, the invited email, the role and the expiry date, with Continue with Google, Continue with GitHub and Sign in with email buttons" />
 <img className="ib-shot ib-shot-dark" src="/images/console/settings/invitation-dark.png" alt="You've been invited page showing the inviting teammate, the account, the invited email, the role and the expiry date, with Continue with Google, Continue with GitHub and Sign in with email buttons" />
 
-Signing up through the invitation link joins the team without creating an account of your own. If you signed up another way, a banner tells you about the pending invitation.
+Signing up through the invitation link joins the team without creating an account of your own. To sign up with a password, click **Sign in with email**, then **Create one**, and use the invited address. You verify it with a code, as on any sign-up, and the console then opens the invitation. If an earlier sign-up with that address was never finished, the invitation's sign-up replaces it, unless it was started in the last half hour. If you signed up another way, a banner tells you about the pending invitation.
 
 ---
 
@@ -68,7 +68,7 @@ If you belong to more than one account, the top bar shows an account button with
 <img className="ib-shot ib-shot-light" src="/images/console/settings/connect-cli-light.png" alt="Connect CLI page asking you to sign in to authorise the IronBee CLI, with Continue with Google, Continue with GitHub and Continue with email buttons" />
 <img className="ib-shot ib-shot-dark" src="/images/console/settings/connect-cli-dark.png" alt="Connect CLI page asking you to sign in to authorise the IronBee CLI, with Continue with Google, Continue with GitHub and Continue with email buttons" />
 
-The CLI then holds a personal [OAuth token](/console/access-tokens) for that account. If the authorization fails, the page shows the error and an **Authorize** button to try again. See [CLI authentication](/cli/guides/authentication).
+The CLI then holds a personal [OAuth token](/console/access-tokens) for that account. If the authorization fails, the page shows the error and an **Authorize** button to try again. The page sends the token only back to the CLI on your own machine: a **Connect CLI** link that points anywhere else shows **Invalid request** and authorizes nothing. See [CLI authentication](/cli/guides/authentication).
 
 ---
 

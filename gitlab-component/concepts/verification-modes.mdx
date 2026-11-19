@@ -39,6 +39,8 @@ With `verification_mode: auto`, the component decides from two things it can che
 
 The first line of the plan in the job log names the mode and the reason.
 
+On a GitLab Self-Managed server or a GitLab Dedicated tenant, the project counts as private whatever its visibility: IronBee reads it only through its group's connection on the registered instance. See [Self-Managed and Dedicated](/gitlab-component/guides/self-managed#platform-or-local-on-your-instance).
+
 <Tip>
   If your project is private or internal and its group is [connected to IronBee](/integrations/gitlab), set `verification_mode: platform` explicitly. Otherwise `auto` runs on your runner whenever an Anthropic credential is set.
 </Tip>

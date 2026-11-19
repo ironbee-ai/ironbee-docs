@@ -5,7 +5,7 @@ description: What IronBee posts on a GitHub pull request, how the IronBee review
 keywords: ["PR review", "AI code review bot", "pull request review bot", "GitHub PR comments", "required status check"]
 ---
 
-IronBee reviews the pull requests of a repository that's connected through the [IronBee GitHub App](/integrations/github) and has code review turned on. It posts a review with inline comments, adds a summary to the pull request's description, and sets the **IronBee review** check. Everything it writes appears as `ironbee-ai[bot]`. To turn code review on, see [Code review](/code-review/overview).
+IronBee reviews the pull requests of a repository that's connected through the [IronBee GitHub App](/integrations/github) and has code review turned on. It posts a review with inline comments, adds a summary to the pull request's description, and sets the **IronBee review** check. Everything it writes appears as `ironbee-ai[bot]`, or on a GHE.com tenant or a GitHub Enterprise Server, as the App IronBee created there; see [On GitHub Enterprise](#on-github-enterprise). To turn code review on, see [Code review](/code-review/overview).
 
 Each review also appears in the console, with its findings. See [Pull requests](/code-review/pull-requests). To review a branch before you open a pull request, use [`ironbee review`](/cli/guides/code-review) in the CLI.
 
@@ -372,6 +372,22 @@ When the team's credits for the month are used up, IronBee doesn't review, answe
 - A review, automatic or asked for, sets a neutral **IronBee review · out of credits this month** check and reads nothing. If the commit already has an **IronBee review** check, IronBee leaves that check as it is, so a refusal never lifts a blocking result, and replies on the pull request instead.
 - A question, `pause` or `resume` gets a reply: "This team's IronBee credits for this month are used up, so this pull request was not reviewed. Reviews start again when the credits reset or the team's allowance is raised."
 - A reply under one of IronBee's comments gets no answer.
+
+---
+
+## On GitHub Enterprise
+
+Code review works on GitHub Enterprise as this page describes. What differs:
+
+- **GitHub Enterprise Cloud on github.com** uses the same App, so nothing on this page changes. If the organization or the enterprise keeps an IP allow list without IronBee's address, GitHub refuses IronBee's calls and no review runs. See [IP allow lists](/integrations/github-enterprise#ip-allow-lists).
+- **On a GHE.com tenant or a GitHub Enterprise Server,** IronBee works through the App it created on your host when you [registered it](/integrations/github-enterprise#register-a-tenant-or-a-server):
+  - **The mention** is the App's slug on your host, which GitHub makes from the App's name: `@ironbee-ai` with the default name, **IronBee AI**. The commands, their replies and the forms IronBee reads are the same.
+  - **IronBee's reviews, comments and checks** are signed `<slug>[bot]`: `ironbee-ai[bot]` with the default name.
+  - **The badges and icons** in IronBee's comments are images at `console.ironbee.ai`, as on github.com. Where your host leaves images to the reader's browser and that browser can't reach the console, each shows as its text.
+  - **The repository's project** is filed under your host, apart from a github.com repository of the same name, with its own settings, rules and memories. It takes the repository's name alone, so the repository is enabled only while no other project of the account has that name. The console links its pull requests to your host.
+  - **The IronBee review check** concludes as on github.com, and holds a merge where the branch's protection rules require it.
+
+To review pull requests in your own GitHub Actions instead, with your own model, use the [self-hosted runner](/code-review/self-hosted-runner/github). It serves GitHub Enterprise Cloud, GHE.com and GitHub Enterprise Server, a server IronBee can't reach from the internet included.
 
 ---
 

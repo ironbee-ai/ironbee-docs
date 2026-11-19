@@ -2,7 +2,7 @@
 title: Bitbucket
 description: Connect a Bitbucket Cloud workspace so IronBee can review your pull requests, write the code wiki, and report verification runs on the pull request.
 icon: "/images/icons/bitbucket.svg"
-keywords: ["Bitbucket", "Bitbucket Cloud", "bitbucket.org", "pull request", "Bitbucket workspace", "Forge app"]
+keywords: ["Bitbucket", "Bitbucket Cloud", "bitbucket.org", "pull request", "Bitbucket workspace", "Forge app", "Bitbucket Premium", "IP allowlist", "merge checks"]
 ---
 
 The Bitbucket connection links a workspace on bitbucket.org to your IronBee account. IronBee works in the workspace through its own app, which a workspace admin installs, and never under your name. The connection gives IronBee:
@@ -16,7 +16,7 @@ The Bitbucket connection links a workspace on bitbucket.org to your IronBee acco
 The [IronBee Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same connection to check out private repositories.
 
 <Note>
-  Only Bitbucket Cloud, on bitbucket.org, is supported. Bitbucket Data Center and Server aren't supported, and neither is a personal workspace: Atlassian installs IronBee's app on shared workspaces only. Bitbucket isn't a way to sign in to IronBee: you connect a workspace from an IronBee account you're signed in to.
+  Only Bitbucket Cloud, on bitbucket.org, is supported, on every Bitbucket plan, Premium included; see [Bitbucket Cloud Premium](#bitbucket-cloud-premium). Bitbucket Data Center and Server aren't supported, and neither is a personal workspace: Atlassian installs IronBee's app on shared workspaces only. Bitbucket isn't a way to sign in to IronBee: you connect a workspace from an IronBee account you're signed in to.
 </Note>
 
 ---
@@ -144,7 +144,7 @@ A cancelled run, or one with no verdict, gets the build status only. So does a r
 
 ### Merges
 
-IronBee's build statuses count toward Bitbucket's merge check on successful builds for the last commit. Bitbucket warns about it on every plan, and holds the merge only on a Premium plan, where an admin turns the merge check on. IronBee always writes its statuses on Bitbucket: the **Block merges** code review setting is GitLab's alone. What a review's result does is set by **Block merging when**. See [Merges](/code-review/on-bitbucket#merges).
+IronBee's build statuses count toward Bitbucket's merge check on successful builds for the last commit. Bitbucket warns about it on every plan, and holds the merge only on a Premium plan, where a repository admin turns the merge check on and enforces it. IronBee always writes its statuses on Bitbucket: the **Block merges** code review setting is GitLab's alone. What a review's result does is set by **Block merging when**. See [Merges](/code-review/on-bitbucket#merges).
 
 ---
 
@@ -155,6 +155,37 @@ The workspace's row also shows when it last synced. IronBee syncs each workspace
 **Suspended.** When Bitbucket stops letting IronBee's app into the workspace, the row reads **This connection is suspended**, with the reason, such as "Bitbucket has sent IronBee no token for a while, so the app may have been uninstalled." Nothing is reviewed or verified until it's connected again: click **Open the workspace's IronBee page**, and press **Connect to IronBee** there. The repository pick stays as it was.
 
 **Disconnect.** Click **Disconnect** on the workspace's row. The workspace's repositories stop being reviewed and verified; their projects stay in IronBee with their history. The app stays installed on Bitbucket: the dialog links the workspace's installed apps, where an admin can remove it. To connect again, open the workspace's IronBee page and press **Connect to IronBee**.
+
+---
+
+## Bitbucket Cloud Premium
+
+A workspace on the Premium plan needs nothing for IronBee that any other workspace doesn't. You connect it as above, with nothing to register, and no IronBee plan is asked for.
+
+### The IP allowlist and two-step verification
+
+**No address of IronBee's goes on your workspace's IP allowlist.** **Restrict access to certain IP addresses** and **Require two-step verification**, on the workspace's **Workspace settings > Access controls** page, are rules for people and for the tokens that stand for people. Bitbucket says so on that page: "Access controls don't apply to add-ons." IronBee works through its app, and its other parts run as steps of your own pipelines, so with both rules on they keep working:
+
+| What calls Bitbucket | With what | With both rules on |
+|---|---|---|
+| Code review, the code wiki, code security, and a verification run's status and comments | IronBee's app | Works |
+| IronBee's page in **Workspace settings > Forge Apps** | IronBee's app | Works |
+| The [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), in your pipelines | The step's own token | Works |
+| The [self-hosted runner](/code-review/self-hosted-runner/bitbucket), in your pipelines | The step's own token | Works, except its read of your rules repository from an address the list doesn't hold |
+| The IronBee CLI's Bitbucket commands on your machine | Your own Atlassian API token, `BITBUCKET_TOKEN` | Refused from an address the list doesn't hold |
+
+**The IronBee CLI on your machine.** `ironbee runner setup`, `add` and `check`, and [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check), call Bitbucket with your own token, which Premium's policies hold:
+- **The allowlist.** From an address that isn't on the list, Bitbucket refuses everything in a repository with "To access this repository, an admin must whitelist your IP.", and the commands show that sentence. Run them from an address on the list.
+- **Two-step verification.** With it required, run the commands as an account that has it turned on.
+- **Atlassian Guard.** Where an authentication policy forbids your managed accounts API tokens, or caps their lifetime, run them as an account the policy lets hold a token.
+
+Where `BITBUCKET_TOKEN` is set, the CLI also reads Bitbucket with it when an agent session stops, to link the session to its pull request. From an address off the list, that read is refused, and the session's records name no pull request. `ironbee review` calls Bitbucket with nothing of yours, so it works from anywhere.
+
+**Atlassian Guard** gives SAML single sign-on, user provisioning and authentication policies for managed accounts. IronBee signs in as no account, so none of it reaches IronBee's app, and no Guard setting uninstalls or silences it.
+
+### Merge checks
+
+On Premium, Bitbucket can hold a merge on a failed or running build status, IronBee's among them. It takes two branch restrictions on the branch merges go into, which IronBee doesn't set for you: [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check) adds them, or a repository admin adds them by hand. See [Hold merges on Premium](/code-review/on-bitbucket#hold-merges-on-premium) for what they hold, and what to check before you turn them on.
 
 ---
 
@@ -169,7 +200,8 @@ The workspace's row also shows when it last synced. IronBee syncs each workspace
 | A repository is missing from the list | It was created moments ago. Click **Sync now** |
 | The connection reads **Suspended** | The app was uninstalled, or Bitbucket no longer lets it into the workspace. Open the workspace's IronBee page and press **Connect to IronBee** |
 | A pull request from a fork in another workspace gets no review | IronBee reviews pull requests from repositories of the connected workspace only |
-| Merges aren't held by IronBee | The workspace's plan isn't Premium, or the merge check on successful builds isn't turned on |
+| Merges aren't held by IronBee | The workspace's plan isn't Premium, or the branch doesn't have both the merge check on successful builds and **Prevent a merge with unresolved merge checks**. See [Merge checks](#merge-checks) |
+| The CLI's Bitbucket commands fail with "To access this repository, an admin must whitelist your IP." | Your workspace's IP allowlist refuses your own token from this address. Run them from an address on the list |
 
 ---
 

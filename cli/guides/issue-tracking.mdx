@@ -55,11 +55,11 @@ Linear is cloud-only, so there's no base-URL step: paste your **Personal API key
 
 ## GitHub Issues
 
-GitHub needs **no setup and no stored credential** - it's driven through the [`gh` CLI](https://cli.github.com), which owns its own auth. The integration is **automatically active** whenever `gh` is installed *and* authenticated (`gh auth status`). Run `ironbee integrations github setup` only to check the connection, grant write access, or opt out:
+GitHub needs **no setup and no stored credential** - it's driven through the [`gh` CLI](https://cli.github.com), which owns its own auth. The integration is **automatically active** whenever `gh` is installed *and* authenticated (`gh auth status`). Run `ironbee integrations github setup` only to check the connection, grant write access, or opt out. The first line is for when `gh` isn't authenticated yet. The second is optional: it probes the connection, sets `writeEnabled` and sets the scope:
 
 ```bash
-gh auth login                            # if gh isn't authenticated yet
-ironbee integrations github setup        # optional - probe + writeEnabled + scope
+gh auth login
+ironbee integrations github setup
 ```
 
 Two GitHub-specific details:
@@ -71,11 +71,11 @@ Two GitHub-specific details:
 
 ## Suspend or re-enable a tracker
 
-The integration activates by **configuration presence** - a configured Jira/Linear credential (or an authenticated `gh`) turns it on. To suspend one without deleting its config:
+The integration activates by **configuration presence** - a configured Jira/Linear credential (or an authenticated `gh`) turns it on. To suspend one without deleting its config, run the first line (the config is kept, the artifacts are stripped); the second drops the kill-switch:
 
 ```bash
-ironbee integrations jira disable    # suspend (config kept; artifacts stripped)
-ironbee integrations jira enable     # drop the kill-switch
+ironbee integrations jira disable
+ironbee integrations jira enable
 ```
 
 Same for `linear` and `github`. Both re-render the installed client artifacts and accept the usual `-g` / `--local` / `--client` target flags. `ironbee integrations --help` lists every available provider.
@@ -88,14 +88,12 @@ Once a tracker is connected (and verification is in enforce or assist mode), ins
 
 One command, four modes:
 
-```bash
-/ironbee-issue-track PROJ-123             # full loop - read the ticket, verify the changes
-                                          # against its acceptance criteria, report back
-/ironbee-issue-track read:PROJ-123        # intake only - read and digest the ticket
-/ironbee-issue-track report:PROJ-123      # report the LAST verification to the ticket
-                                          # (never re-verifies; errors if none ran)
-/ironbee-issue-track triage my open bugs  # ad-hoc - any free-form tracker instruction
-```
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-issue-track PROJ-123` | Full loop: read the ticket, verify the changes against its acceptance criteria, report back |
+| `/ironbee-issue-track read:PROJ-123` | Intake only: read and digest the ticket |
+| `/ironbee-issue-track report:PROJ-123` | Report the LAST verification to the ticket (never re-verifies; errors if none ran) |
+| `/ironbee-issue-track triage my open bugs` | Ad-hoc: any free-form tracker instruction |
 
 `<ref>` can be an exact issue key or free text - the integration searches the tracker, proceeding on a single match and asking you to choose when there are several. With more than one tracker connected, pick one with an optional leading provider word: `/ironbee-issue-track linear ENG-42`.
 
@@ -124,16 +122,18 @@ For Jira and Linear the gate is mechanical (the write tools aren't even exposed 
 Independent of the agent-facing command, IronBee links every agent turn to your version control - this is what makes a session's verification record reportable per issue in the Console:
 
 1. Each agent turn is stamped with its **git ref** (repo, branch, commit).
-2. A background worker resolves the **pull request(s)** the commit belongs to (via GitHub, the merge requests on gitlab.com, or the pull requests on bitbucket.org), retroactively - a PR opened an hour after the work is picked up on a later pass.
+2. A background worker resolves the **pull request(s)** the commit belongs to (via GitHub, the merge requests on GitLab, or the pull requests on bitbucket.org), retroactively - a PR opened an hour after the work is picked up on a later pass.
 3. The turn's **issues** are attributed from every available signal: the GitHub issues the PR closes, the tickets the agent read during the session, plus issue keys mined from the branch name, commit messages, and the PR title - validated against the tracker (a key that doesn't resolve is dropped).
 
 The result ships as one `vcs_link` event per agent turn, so the Console can show verification outcomes **per issue and per PR**. Each event carries a deterministic ID and is re-emitted whenever the resolution improves (a PR opened later, an issue transitioned), so the record catches up on its own. Attribution runs in every mode - enforce, assist, even monitoring-only - and auto-enables whenever a collector is configured; opt out with [`vcs.enable`](/cli/configuration/configuration#vcs-linkage). The `projectKeys` / `teamKeys` allow-lists from setup keep false positives out (and disambiguate Jira from Linear, since both use the `ABC-123` shape).
 
-On gitlab.com, the worker reads the merge requests that hold the commit, or for a commit none holds yet, the branch's open ones. It reads them with `GITLAB_TOKEN` when it's set, and anonymously otherwise, so a private project then reports `unauthenticated`. GitLab adds no closing issues of its own: a turn's issues come from the tickets the agent read, the branch name, the commit messages and the merge request titles.
+On a GHE.com tenant or a GitHub Enterprise Server, the worker reads pull requests only when the host is the GitHub Actions runner's own server or one of [your account's GitHub hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts), with a token meant for that host; see [Issue-tracker credentials](/cli/configuration/environment-variables#issue-tracker-credentials). Any other host reports `unsupported_remote`.
+
+On GitLab, the worker reads the merge requests that hold the commit, or for a commit none holds yet, the branch's open ones. That's on gitlab.com, and on your account's GitLab hosts, a GitLab Dedicated tenant or a Self-Managed server, where the project is the remote's full path and every read goes to that host. It reads them with `GITLAB_TOKEN` when it's set and meant for that host, and anonymously otherwise, so a private project then reports `unauthenticated`. The token goes to one host only: in a GitLab CI job, the job's own server; else the host `GITLAB_HOST` names; else gitlab.com. See [Issue-tracker credentials](/cli/configuration/environment-variables#issue-tracker-credentials). GitLab adds no closing issues of its own: a turn's issues come from the tickets the agent read, the branch name, the commit messages and the merge request titles.
 
 On bitbucket.org, a Bitbucket Pipelines step reads its own pull request, `BITBUCKET_PR_ID`, with `BITBUCKET_TOKEN` when it's set and anonymously otherwise, so a private repository needs the token. Anywhere else the worker needs `BITBUCKET_TOKEN`, a Bitbucket access token: it lists the repository's open pull requests and matches the commit, else the branch, and for a fork it asks the parent repository for the fork's own pull requests. Without the token the status is `unauthenticated`. Bitbucket adds no closing issues of its own.
 
-Separately from the linkage, for a checkout of a github.com repository every event carries the repository's `owner/repo`, so the console files the session under the repository's [GitHub project](/cli/concepts/projects). A gitlab.com checkout's events carry the project's full path, for its GitLab project, and a bitbucket.org checkout's carry the repository's `workspace/repo_slug`, for its Bitbucket project. That happens even with `vcs.enable` set to `false`.
+Separately from the linkage, for a checkout of a github.com repository every event carries the repository's `owner/repo`, so the console files the session under the repository's [GitHub project](/cli/concepts/projects). A gitlab.com checkout's events carry the project's full path, for its GitLab project, and a bitbucket.org checkout's carry the repository's `workspace/repo_slug`, for its Bitbucket project. On one of your account's GitHub or GitLab hosts, they carry the same with the host before it: `<host>:owner/repo` or `<host>:<path>`. That happens even with `vcs.enable` set to `false`.
 
 <Warning>
   VCS linkage sends **repository and branch names** to the Collector, and branch names can carry sensitive text (`fix/CVE-…`, `feat/acme-corp-…`). It's independent of [privacy mode](/cli/advanced/privacy) (which gates devtools payloads) - opt out of the linkage itself with `ironbee config set vcs.enable false`.

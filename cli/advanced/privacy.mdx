@@ -11,17 +11,17 @@ It's **opt-in and off by default**: a fresh install ships full detail so your Co
 
 ## Enable or disable
 
-```bash
-ironbee privacy enable    # redact - stop shipping detail/artifacts
-ironbee privacy disable   # back to the default (full detail)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee privacy enable` | Redact: stop shipping detail and artifacts |
+| `ironbee privacy disable` | Back to the default (full detail) |
 
 By default these write to the project config (committed, so the whole team inherits it). Use `-g`/`--global` to apply it across all your projects, or `--local` for a gitignored personal override that nobody else sees.
 
-```bash
-ironbee privacy enable --global    # redact everywhere on this machine
-ironbee privacy enable --local     # just you, not committed
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee privacy enable --global` | Redact everywhere on this machine |
+| `ironbee privacy enable --local` | Just you, not committed |
 
 Both commands re-render your installed client artifacts so the change lands in the DevTools MCP env. Narrow that re-render to one client with `--client <name>` (or `--client all`); by default it applies to the clients detected in the project.
 
@@ -93,17 +93,17 @@ To stop sending your session data entirely, suspend the Collector (`collector.en
 <Note>
   [VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues) sends **repository and branch names** through the CLI's own pipeline, which privacy mode doesn't touch (it gates the DevTools payloads). If branch names in your repos can carry sensitive text, opt out of the linkage itself with `ironbee config set vcs.enable false`.
 
-  For a checkout of a github.com repository, every event, including the DevTools events, also carries the repository's `owner/repo`, so the console can file it under the [GitHub project](/cli/concepts/projects). A gitlab.com checkout's events carry the project's full path, for its GitLab project, and a bitbucket.org checkout's carry the repository's `workspace/repo_slug`, for its Bitbucket project. That's independent of `vcs.enable`. The only way to stop it is to suspend the Collector.
+  For a checkout of a github.com repository, every event, including the DevTools events, also carries the repository's `owner/repo`, so the console can file it under the [GitHub project](/cli/concepts/projects). A gitlab.com checkout's events carry the project's full path, for its GitLab project, and a bitbucket.org checkout's carry the repository's `workspace/repo_slug`, for its Bitbucket project. On one of [your account's GitHub or GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts), they carry the same with the host before it: `<host>:owner/repo` or `<host>:<path>`. That's independent of `vcs.enable`. The only way to stop it is to suspend the Collector.
 </Note>
 
 ---
 
 ## Config equivalent
 
-The command is a convenience wrapper around one [config key](/cli/configuration/configuration#privacy):
+The command is a convenience wrapper around one [config key](/cli/configuration/configuration#privacy). This line does the same as `ironbee privacy enable`:
 
 ```bash
-ironbee config set privacy.enable true     # same as: ironbee privacy enable
+ironbee config set privacy.enable true
 ```
 
 Both paths write the same `privacy.enable` value and re-render artifacts. The key is read from disk when the DevTools env is built, so the layer that wins (`local > project > global`) is the one that takes effect.

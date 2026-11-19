@@ -41,12 +41,12 @@ ironbee queue drain
 
 Jobs whose failures are **permanent** land in a **dead-letter** queue so they don't block healthy traffic. Transient failures (network errors, `429`, `5xx`) are retried on the next drain; anything else - an auth rejection (`401`/`403`, e.g. an expired credential) or any other `4xx` - is dead-lettered on the **first** attempt rather than retried pointlessly. Events dead-lettered under a bad credential won't auto-deliver later: fix the credential, then re-queue them with `dead-letter retry` (`dead-letter stats` shows the `auth:*` category). Inspect and recover them:
 
-```bash
-ironbee queue dead-letter list                # list failed entries
-ironbee queue dead-letter stats               # histogram of failure categories
-ironbee queue dead-letter retry <job_id>      # re-queue one entry by its job id
-ironbee queue dead-letter clear               # empty the dead-letter file
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee queue dead-letter list` | List failed entries |
+| `ironbee queue dead-letter stats` | Histogram of failure categories |
+| `ironbee queue dead-letter retry <job_id>` | Re-queue one entry by its job id |
+| `ironbee queue dead-letter clear` | Empty the dead-letter file |
 
 | Command | Notable options |
 |---------|-----------------|
@@ -63,10 +63,10 @@ Every `queue` subcommand also takes `--project-dir <dir>` to target a specific p
 
 Destructive cleanup of queue state. Use with care:
 
-```bash
-ironbee queue purge --snapshots                      # delete all snapshot files, unprocessed
-ironbee queue purge --sessions older-than=14d        # remove queue dirs older than 14 days
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee queue purge --snapshots` | Delete all snapshot files, unprocessed |
+| `ironbee queue purge --sessions older-than=14d` | Remove queue dirs older than 14 days |
 
 | Option | Description |
 |--------|-------------|

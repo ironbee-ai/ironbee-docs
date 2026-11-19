@@ -1,7 +1,7 @@
 ---
 title: How integrations work
 description: Connect GitHub, GitLab, Bitbucket, Vercel or Netlify, turn repositories, projects and sites into IronBee projects, and see where results land.
-keywords: ["GitHub", "GitLab", "Bitbucket", "Vercel", "Netlify", "preview deployments"]
+keywords: ["GitHub", "GitLab", "Bitbucket", "Vercel", "Netlify", "preview deployments", "GitHub Enterprise", "GitLab Self-Managed", "GitLab Dedicated", "Bitbucket Premium"]
 ---
 
 Integrations connect IronBee to where your code lives and deploys. The GitHub App, the GitLab connection and the Bitbucket connection make your repositories projects, so IronBee reviews their pull requests and merge requests. IronBee also verifies your changes:
@@ -23,9 +23,9 @@ Owners and admins open **Integrations** in the console's sidebar. The page lists
 
 | Provider | What you install | What starts a run |
 |----------|------------------|-------------------|
-| [GitHub](/integrations/github) | The IronBee GitHub App | No verification run on its own. It reviews pull requests, and gives runs access to your repositories and pull requests |
+| [GitHub](/integrations/github) | The IronBee GitHub App, or on a GHE.com tenant or a GitHub Enterprise Server, an App IronBee creates there | No verification run on its own. It reviews pull requests, and gives runs access to your repositories and pull requests |
 | [GitHub Action](/github-action/get-started/getting-started) | A workflow file in your repository | Pushes, pull requests, `/ironbee-verify` comments, schedules and manual runs |
-| [GitLab](/integrations/gitlab) | A connection to a top-level group, from the console | No verification run on its own. It reviews merge requests, and gives runs access to your projects and merge requests |
+| [GitLab](/integrations/gitlab) | A connection to a top-level group, from the console, on gitlab.com or on a [registered instance](/integrations/gitlab-self-managed) | No verification run on its own. It reviews merge requests, and gives runs access to your projects and merge requests |
 | [GitLab component](/gitlab-component/get-started/getting-started) | An `include` in your `.gitlab-ci.yml` | Merge requests, pushes to the default branch, schedules and manual pipelines |
 | [Bitbucket](/integrations/bitbucket) | IronBee's app on a workspace, connected from its settings | No verification run on its own. It reviews pull requests, and gives runs access to your repositories and pull requests |
 | [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started) | A step in your `bitbucket-pipelines.yml` | Pull requests, pushes to a branch, schedules and manual pipelines |
@@ -33,6 +33,22 @@ Owners and admins open **Integrations** in the console's sidebar. The page lists
 | [Netlify](/integrations/netlify) | The IronBee Netlify extension | Deploy previews and branch deploys of enabled sites |
 
 You can connect more than one. A common setup is Vercel or Netlify for deployments, plus the GitHub App, the GitLab connection or the Bitbucket connection so the runs verify each pull request's or merge request's changes and report on it.
+
+---
+
+## Enterprise hosts
+
+IronBee also works on the enterprise offerings of GitHub, GitLab and Bitbucket. Where the host is your own instance or tenant, you register it in the console first, and IronBee reaches it over the internet from one address:
+
+| Where your repositories are | What you do | See |
+|---|---|---|
+| github.com, in a GitHub Enterprise Cloud enterprise | Install the GitHub App, and add IronBee's address to your IP allow lists | [GitHub Enterprise](/integrations/github-enterprise) |
+| A GHE.com tenant, or a GitHub Enterprise Server | Register the host under **GitHub Enterprise** on **Integrations > GitHub**, then install the App it creates there | [GitHub Enterprise](/integrations/github-enterprise) |
+| gitlab.com, in a group on Premium or Ultimate | Connect the group, and add IronBee's address to the group's IP restriction | [GitLab](/integrations/gitlab#premium-and-ultimate-groups) |
+| A GitLab Self-Managed server, or a GitLab Dedicated tenant | Register the host under **GitLab Self-Managed and Dedicated** on **Integrations > GitLab**, then connect its groups | [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed) |
+| bitbucket.org, in a workspace on Premium | Connect the workspace, with nothing more | [Bitbucket](/integrations/bitbucket#bitbucket-cloud-premium) |
+
+Registering a host needs the Enterprise plan; see [Pricing](/console/pricing). A github.com, gitlab.com or bitbucket.org connection works on every plan. To review in your own CI with your own model instead, so that IronBee never calls your host, use the [self-hosted runner](/code-review/self-hosted-runner/overview).
 
 ---
 

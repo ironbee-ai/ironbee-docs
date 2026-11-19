@@ -1,0 +1,267 @@
+---
+title: Self-hosted runner on GitHub Actions
+sidebarTitle: On GitHub
+description: Run IronBee code review as a reusable workflow in your GitHub Actions, on github.com, GHE.com or GitHub Enterprise Server, and gate merges on its check.
+keywords: ["GitHub Actions code review", "reusable workflow", "required status check", "GHES", "GHE.com", "GitHub Enterprise Server"]
+---
+
+On GitHub, the [self-hosted runner](/code-review/self-hosted-runner/overview) is a reusable workflow, `ironbee-ai/ironbee-github-runner`, that a workflow file in each of your repositories calls. A job in your GitHub Actions runs IronBee's reviewer on your pull requests, with your own model. It posts its review with inline comments on the pull request, and writes a check run named **Code Review Result** that you can make a required check.
+
+This page explains the setup and what to decide. The runner's repository is the full reference, with every input, secret and message: [ironbee-ai/ironbee-github-runner](https://github.com/ironbee-ai/ironbee-github-runner).
+
+---
+
+## Where it runs
+
+- **github.com,** including GitHub Enterprise Cloud's organizations, with their policies and managed users.
+- **GHE.com,** GitHub Enterprise Cloud with data residency.
+- **GitHub Enterprise Server 3.19 or later,** with GitHub Actions on, including a server IronBee can't reach from the internet.
+
+IronBee never calls your host: the job reads your repository, calls your model and calls IronBee's API. See [GitHub Enterprise](#github-enterprise) for what differs off github.com. Pull requests from forks aren't reviewed, since GitHub gives a fork's run no secrets and a read-only token.
+
+---
+
+## Before you start
+
+- The runner is enabled on your account, and you have the account's API key and a registry token. See [What you need](/code-review/self-hosted-runner/overview#what-you-need).
+- You can administer each repository's Actions secrets and push a workflow file to it. For organization secrets, you're an owner of the organization.
+- A model, and its key where it needs one.
+- For the setup command: GitHub's CLI, `gh`, signed in (`gh auth login`, or `GH_TOKEN` in the environment), with the `workflow` scope.
+
+---
+
+## Set it up
+
+`ironbee runner setup` takes every step from your machine, through your `gh` sign-in. Export the secrets first, or let the command ask for them:
+
+```bash
+npm install -g @ironbee-ai/cli
+export IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY
+ironbee runner setup --host github --repos acme/shop,acme/payments --model-provider anthropic
+```
+
+It registers the repositories with IronBee, which makes each one's project in the console, stores the secrets as Actions secrets, and adds [the workflow file](#the-workflow-file) by a pull request, which is the first pull request reviewed. It doesn't make **Code Review Result** a required check; see [Make it required](#make-it-required). For each step and flag, `ironbee runner add` and `ironbee runner check`, see [`ironbee runner` on GitHub](/cli/guides/runner#on-github).
+
+To take the same steps by hand, see the runner's [Setup](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/setup.md).
+
+### The workflow file
+
+The file the setup adds calls the runner's workflow at a release:
+
+```yaml
+name: IronBee
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  merge_group:
+  push:                           # registers the repository when this file reaches the default branch
+    branches: [main]              # your default branch
+    paths: ['.github/workflows/ironbee-review.yml']
+  workflow_dispatch:              # and when the workflow is started by hand
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  issues: read
+jobs:
+  code-review:
+    name: Code Review
+    uses: ironbee-ai/ironbee-github-runner/.github/workflows/code-review.yml@v1
+    with:
+      model-provider: anthropic
+    secrets:
+      ironbee-api-key: ${{ secrets.IRONBEE_API_KEY }}
+      registry-token: ${{ secrets.IRONBEE_REGISTRY_TOKEN }}
+      model-key: ${{ secrets.IRONBEE_MODEL_KEY }}
+```
+
+- **The triggers:** a pull request opened, pushed, reopened or marked ready starts a review. A reply on one of the reviewer's threads starts an answer, and a comment in the conversation that addresses the reviewer starts a command or an answer. `merge_group` gives a merge queue's group a passing check. The last two register the repository.
+- **The permissions:** to read the repository, post the review and its replies, write the check, and read the issues a pull request links. Resolving the threads of fixed findings needs `contents: write` too, which the file doesn't grant by default.
+- **The release:** `@v1` follows the newest 1.x release. The setup writes the exact latest release instead, which you move with `ironbee runner setup --update`.
+
+The most used inputs:
+
+| Input | For |
+|---|---|
+| `model-provider` | `anthropic`, `bedrock` or `openai`. Required |
+| `model-url`, `model-name` | an endpoint of your own, and one model for every task: required for `openai` with `model-url` |
+| `aws-region` | Bedrock's region. Required for `bedrock` |
+| `runs-on` | a self-hosted runner's label, or a JSON list of labels in a string. `ubuntu-latest` when not given |
+| `knowledge-repository` | your [rules repository](/code-review/self-hosted-runner/overview#the-rules-repository), `owner/name` |
+| `app-slug` | your own GitHub App's slug ([below](#who-it-writes-as)) |
+| `ironbee-run-reports` | `false` to tell IronBee only that a run started |
+
+The secrets are `ironbee-api-key`, `registry-token` and `model-key`, plus `model-headers`, `knowledge-token`, `jev-key` (your Typesafe key, only for the optional classifier [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier)), and `app-id` with `app-private-key` where you use them. Every input and secret is in the runner's [Setup](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/setup.md#every-input-and-secret).
+
+### Registering a repository
+
+A registered repository has its project in the console before its first pull request, so its settings are in place for its first review. The setup command registers each repository. Otherwise:
+
+- **The workflow file reaching the default branch** registers it, through the `push` trigger, as does starting the workflow by hand.
+- **The first run** registers it when nothing else has. A file added by a pull request runs on that pull request first, so that pull request is reviewed with the account's settings.
+
+---
+
+## Where the job runs
+
+- **A model reachable from the internet,** such as your Anthropic, Bedrock or OpenAI account, works from GitHub's own runners.
+- **A model inside your network needs a self-hosted runner there.** Name it in `runs-on`: one label, or a JSON list of labels in a string, such as `'["self-hosted","linux"]'`. A YAML list is refused.
+- **A self-hosted runner** needs Linux with Docker, on `amd64` or `arm64`, and `bash`, `jq`, `gh`, `curl` and `docker`. Rootless Docker works, and Docker with `userns-remap` doesn't. A proxy set on the machine is passed on to the runner.
+
+The job connects to GitHub, your model's endpoint, IronBee's API (`api.service.ironbee.ai`) and Docker Hub, for the image. If you turn on [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier), it also connects to Typesafe's endpoint, `api.typesafe.ai`.
+
+The review step stops after two hours. One run of a pull request runs at a time: a push or a comment during a run waits for it, and the run that starts next reviews the newest head.
+
+---
+
+## Who it writes as
+
+The reviewer reads the repository and writes its comments and the check with one identity. IronBee holds neither credential.
+
+| | The job token (default) | Your own GitHub App |
+|---|---|---|
+| What you set up | nothing | a GitHub App installed on the repositories, with Contents read, Pull requests read and write, Checks read and write and Issues read. Its id and private key as the secrets `app-id` and `app-private-key`, and its slug as the `app-slug` input |
+| Comments and the check appear as | `github-actions[bot]` | your App |
+| People address it as | `@ironbee-ai`, matched as text | `@` and your App's slug, a real mention |
+
+Other workflows also write as `github-actions[bot]`. Your own App takes the comments and the check out of that shared identity.
+
+**Dependabot.** GitHub runs a Dependabot pull request's workflow without the repository's secrets, so it's not reviewed. Under the job token it gets a passing check. Under your own App it gets no check at all, so where the check is required, give Dependabot the App's id and key as Dependabot secrets. To have its pull requests reviewed, give Dependabot the other secrets too.
+
+See the runner's [Identity](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/identity.md).
+
+---
+
+## The Code Review Result check
+
+Each head commit of a pull request gets at most one **Code Review Result** check run. A pull request usually shows it as `IronBee / Code Review Result`, beside the workflow's job, `IronBee / Code Review / Job`. The job's result is green unless the run itself failed, and it's not the one to require.
+
+| Conclusion | When |
+|---|---|
+| Success | A review found no open finding at or above the **Block merging when** threshold |
+| Action required | An open finding reaches the threshold. The check's text lists the blocking findings, with links to their comments |
+| Neutral | Nothing was reviewed: a setting skipped the pull request, it was too large, the license or IronBee refused the run, IronBee couldn't be reached, or the workflow is set wrong. The title reads "Not reviewed", and the text gives the reason in one sentence. A `retract` turns a review's conclusion neutral too |
+
+A neutral check is written only on a head that holds no check and no review of the reviewer's, so it never replaces a review's conclusion. Only a later review of that head, a `retract` or a push turns **Action required** into anything weaker.
+
+When a run reads nothing new on a head, such as after the branch was updated from its base, it posts no review there and concludes from the pull request's comments as they are. If that conclusion is **Action required**, it first posts a short review on the head, with no inline comments, saying how many findings stay open.
+
+The cloud's check is named **IronBee review**. If you move a repository from the cloud to the runner, change a branch rule that requires **IronBee review** to require **Code Review Result** instead, once the workflow file is on the default branch.
+
+### Make it required
+
+Add `Code Review Result` as a required status check in the branch's protection rule or ruleset, by that name alone.
+
+- **Neutral passes a required check.** A setting, a license problem or a run that couldn't start never holds a merge.
+- **A run cancelled before its job started leaves no check,** and a required check then waits. Re-run the workflow, push, or comment `@ironbee-ai review`.
+- **Merge queue:** keep the `merge_group` trigger, so the group's commit gets its check.
+- **Forks:** a fork's pull request gets no check, so a repository that takes pull requests from forks can't require it.
+- **A pull request with a merge conflict** runs no workflow, so a push onto it gets no review and no check until the conflict is gone.
+- **A push made with a workflow's own token, or that skips CI,** starts no run of its own.
+
+### What the check is worth
+
+The check reflects the findings nobody who counts has turned down. The pull request's author can close a finding with a reply or a thumbs-down, and someone who can write to the repository can resolve a thread, `retract`, or `pause` and then push.
+
+See the runner's [The Code Review Result check](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/required-check.md).
+
+---
+
+## On the pull request
+
+The reviewer posts a review with an inline comment for each finding, and with **Pull request summary** on, adds its summary to the pull request's description after the author's own text. A later push starts a follow-up round that reads only what changed since.
+
+Comment a command on the pull request's **Conversation** tab. Under your own App, use `@` and its slug instead of `@ironbee-ai`.
+
+| Command | What it does |
+|---|---|
+| `@ironbee-ai review` | Reviews what was pushed since the last round. With nothing pushed, it rewrites the check from the pull request's comments |
+| `@ironbee-ai full review` | Reads the whole pull request again |
+| `@ironbee-ai pause` | Stops automatic reviews of the pull request |
+| `@ironbee-ai resume` | Starts them again |
+| `@ironbee-ai retract` | Takes back every comment of the reviewer's on the pull request, and turns the check neutral |
+
+- **Who may command:** people with write, maintain or admin permission on the repository.
+- **Replies:** a reply on one of the reviewer's threads, from the pull request's author or the repository's owners, members and collaborators, gets an answer while **Answer questions** is on.
+- **Turned down or resolved:** a reply that turns a finding down, and a thread someone resolves, count at the next review that reads the pull request again: a push, or `@ironbee-ai full review`. An answer that withdraws a finding moves the check at the next review, or at `@ironbee-ai review`.
+- **Bots:** a comment a bot writes, the reviewer's own included, starts nothing.
+
+---
+
+## GitHub Enterprise
+
+The runner serves repositories on GitHub Enterprise Cloud, GHE.com and GitHub Enterprise Server. There's no host to register with IronBee, no IronBee address to allow, and no certificate to give IronBee. A server IronBee can't reach from the internet is served when its runners reach IronBee's API, Docker Hub and your model.
+
+| | Enterprise Cloud on github.com | GHE.com | GitHub Enterprise Server |
+|---|---|---|---|
+| The workflow file you call | `code-review.yml` | `code-review.yml`, or `code-review-no-queue.yml` where your tenant refuses it | `code-review-no-queue.yml` |
+| Where it is | the runner's repository, or your copy where a policy asks for one | your copy on the tenant | your copy on the server |
+| The `runner-token` secret | for a copy that isn't public | always | always |
+| The `runner-repository` input | not read | not read | your copy, `owner/name` |
+| Runners | any | GitHub's Linux runners, or yours | yours, with Docker |
+| The `github-ca-certificate` input | - | - | when a private authority signed the server's certificate |
+
+IronBee files the repository as `<host>:owner/name`, so it gets a project of its own, apart from a github.com repository of the same name. A host named by an IP address, or by a single label with no dot, is refused.
+
+### Your copy of the runner's repository
+
+A workflow on github.com can't be called from GHE.com or a server, so there you call a copy of `ironbee-ai/ironbee-github-runner` on your own host. On github.com, an enterprise that allows no workflows from outside keeps a copy too.
+
+- **Make it** from a release, keeping the tags: mirror the repository, or on a server use `actions-sync`. To move to a later release, copy again and change the tag in `uses:`.
+- **Call it** at a release tag in place of `ironbee-ai/ironbee-github-runner`. On a server, name it again in `runner-repository`.
+- **Give `runner-token`,** a read-only token that can read the copy, as an Actions secret and as a Dependabot secret of the same name. Under SAML single sign-on, authorize the token for the organization.
+
+### On GitHub Enterprise Server
+
+- **The runners are yours:** Linux with Docker, `amd64` or `arm64`, GitHub Actions Runner 2.327.1 or later, reaching your server, Docker Hub, IronBee's API and your model.
+- **The two actions the workflow names,** `actions/checkout` and `actions/create-github-app-token`, at the versions it pins, must be on the server. A site admin makes them available with `actions-sync` or GitHub Connect.
+- **The workflow without a queue,** `code-review-no-queue.yml`, since a server keeps only one waiting run of a group. The calling file grants `actions: write`, and holds the review's job alone: a run that replaces a waiting review starts it again at its end.
+- **A private certificate authority:** give its certificates in `github-ca-certificate`. The runner's machine must trust the server already.
+
+### Enterprise Cloud's policies
+
+- **An IP allow list:** GitHub accepts the job's token only from listed addresses. Run the job on your own runners, or on GitHub's larger runners with static addresses, and list them.
+- **Only the enterprise's own actions and workflows allowed:** choose **Allow enterprise, and select non-enterprise, actions and reusable workflows** with **Allow actions created by GitHub**, and keep a copy of the runner's repository.
+- **A repository a managed user owns** isn't served.
+
+`ironbee runner` sets these hosts up too: it takes the host from the clone's remote or `GH_HOST`, and needs `--component` naming your copy and its tag, and `--runs-on` on a server. See [`ironbee runner`](/cli/guides/runner#github-enterprise). To use IronBee's cloud on these hosts instead, see [GitHub Enterprise](/integrations/github-enterprise).
+
+The runner's [On GitHub Enterprise](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/setup.md#on-github-enterprise) covers each host in full.
+
+---
+
+## Troubleshooting
+
+Look first at the **Code Review Result** check, whose neutral text says why nothing was reviewed, and at the workflow job's log. The runner's lines there say what it read and decided, and a problem starts with `error:`, `warning:`, `failed:` or `IronBee`. Then run `ironbee runner check`, which reads the whole setup.
+
+| What you see | What to do |
+|---|---|
+| "IronBee's self-hosted review is not enabled for this account; contact IronBee." | Contact IronBee |
+| "The licence for IronBee's self-hosted review has ended; contact IronBee to renew it." | Renew the license. The next event is reviewed |
+| "IronBee's cloud reviews this repository; turn its code review off in the console before the runner reviews it." | Turn off **Review pull requests in this repository** in the project's **Settings > Code review**, or remove the workflow |
+| "This version of the IronBee runner is no longer served; move the workflow to ..." | Move the workflow to the version it names |
+| "IronBee could not be reached, so this pull request was not reviewed." | Check that the job reaches `api.service.ironbee.ai`, then re-run the workflow |
+| "The review did not run; the workflow's log says why." | The image couldn't be pulled, its container didn't start, or the step was cancelled or timed out. Check the log and the `registry-token` secret, then re-run |
+| "This run of the workflow lacked the `ironbee-api-key` or `registry-token` secret ..." | Pass both secrets in the workflow file. For Dependabot, see [Who it writes as](#who-it-writes-as) |
+| `error: <input>: <why>` in the log | A configuration error, such as no `model-key` on a provider's own endpoint. Fix the input it names |
+| `failed: model_unreachable` or `failed: model_refused` | Check `model-url`, the network, `runs-on`, `model-key`, `model-headers` and the model's name |
+| No check at all on a head | A run cancelled before it started. Re-run the workflow, or comment `@ironbee-ai review` |
+
+The runner's [Troubleshooting](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/troubleshooting.md) lists every message.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="ironbee runner" icon="terminal" href="/cli/guides/runner">
+    Set up, extend and check a runner from your machine.
+  </Card>
+  <Card title="Self-hosted runner overview" icon="server" href="/code-review/self-hosted-runner/overview">
+    The license, models, settings and what reaches IronBee.
+  </Card>
+</CardGroup>

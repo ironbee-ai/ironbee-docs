@@ -2,10 +2,10 @@
 title: Code security scans of a repository
 sidebarTitle: Code security
 description: IronBee scans a connected repository's default branch for security problems on a schedule, and records what it finds for your team to decide on.
-keywords: ["security scan", "vulnerability scan", "security audit", "SAST"]
+keywords: ["security scan", "vulnerability scan", "SAST"]
 ---
 
-IronBee scans the default branch of a GitHub repository the [IronBee GitHub App](/integrations/github) covers, or of a repository you picked in a [connected GitLab group](/integrations/gitlab) or [Bitbucket workspace](/integrations/bitbucket), for security problems. Each thing a scan finds is kept as a record, with where it is in the code, how it could be used and how to fix it. Your team then decides what to do with each record.
+IronBee scans the default branch of a GitHub repository the [IronBee GitHub App](/integrations/github) covers, or of a repository you picked in a [connected GitLab group](/integrations/gitlab) or [Bitbucket workspace](/integrations/bitbucket), for security problems. Each thing a scan finds is kept as a record, with where it is in the code, how it could be used and how to fix it. Your team then decides what to do with each record. Repositories on a [GitHub Enterprise](/integrations/github-enterprise) host or a [GitLab Self-Managed or Dedicated](/integrations/gitlab-self-managed) instance registered to your account can be scanned too.
 
 Code security is off until an owner or an admin turns it on for a repository. A scan uses [credits](#credits). Only owners and admins see code security: the tab, its records and its settings.
 
@@ -25,7 +25,7 @@ A scan reads the code and writes a record for each problem it finds. Every recor
 
 A scan can confirm a finding only when it may run the repository's code. That's the [**Execution**](/console/code-security-settings#execution) setting, and it's off by default. With **Execution** off, a scan reads the code and never runs it, so everything it finds stays a lead to validate.
 
-Code security works in the console only. It posts no comment, check or status on a pull request or merge request, and it changes nothing in the repository.
+Code security works in the console and through the [API](/code-security/api) only. It posts no comment, check or status on a pull request or merge request, and it changes nothing in the repository.
 
 To read the records and decide on them, see [Security records and runs](/console/code-security-records).
 
@@ -38,7 +38,7 @@ Open the project's **Code security** tab. While it's off, the tab says **Code se
 <img className="ib-shot ib-shot-light" src="/images/console/code-security/security-off-light.png" alt="The band on the Code security tab that says Code security is off for this repository, with the Turn on button and the What a scan costs link" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-security/security-off-dark.png" alt="The band on the Code security tab that says Code security is off for this repository, with the Turn on button and the What a scan costs link" />
 
-Turning it on starts no scan by itself. The next scheduled scan reads the default branch, or you can start one now with [**Run full scan**](#run-a-full-scan). Connecting a repository or pushing to it doesn't start a scan either.
+Turning it on starts no scan by itself, but a repository that has never been scanned is due at once: its first scheduled scan, a full scan, usually starts within minutes, once no other code security scan of your account is waiting or running and the team has credits left. You can also start it now with [**Run full scan**](#run-a-full-scan). Connecting a repository or pushing to it doesn't start a scan.
 
 ---
 
@@ -46,6 +46,7 @@ Turning it on starts no scan by itself. The next scheduled scan reads the defaul
 
 - **On a schedule.** [**Scheduled scan**](/console/code-security-settings#scheduled-scan) sets how often a scan comes: **Daily**, **Weekly**, **Every two weeks** or **Monthly**. A period in which the default branch didn't move scans nothing and costs nothing.
 - **By hand.** **Run full scan** starts one now. See [Run a full scan](#run-a-full-scan).
+- **Through the API.** An owner's or admin's credential, or the account API key, can start one. See [Start a scan](/code-security/api#start-a-scan).
 
 There are three kinds of scan:
 
@@ -53,9 +54,9 @@ There are three kinds of scan:
 |------|---------------|
 | **Full** | The whole default branch. The first scan of a repository is a full scan, and so is one you run by hand, or the next one after its [**Paths to ignore**](/console/code-security-settings#paths-to-ignore) changed |
 | **Incremental** | What changed since the last scan. A scheduled scan after the first one is incremental |
-| **Follow-up** | What a scan had to put off. It starts after that scan, on the same commit, and is free |
+| **Follow-up** | What a scan had to put off. It starts after that scan, on the same commit, and is free. At most two follow-up runs come right after a scan. What they still leave waits for the next scheduled scan, or a full scan you run by hand |
 
-A scan takes up to two hours. One scan runs at a time in your account, so a second one waits its turn.
+A scan takes up to two hours. One scan runs at a time in your account, whichever repository it reads, so the others wait their turn. When a scan ends, the scan that has waited longest goes next, in any of your repositories. A follow-up run waits its turn too, behind the scans queued before it. See [One scan at a time](/code-security/how-a-scan-works#one-scan-at-a-time).
 
 ---
 
@@ -67,10 +68,10 @@ Until a scan has finished and its records are ready, a band at the top of the ta
 |--------------|---------------|
 | **Code security is off for this repository** | Nothing is scanned. An owner or an admin can click **Turn on**. **What a scan costs** opens the rate card on [Usage](/console/usage#what-a-job-costs) |
 | **The first scan has not run yet** | It comes at the next scheduled time, or now with **Run full scan** |
-| **A scan is waiting to start** | It starts within a few minutes, or at the time the band shows |
+| **A scan is waiting to start** | It starts within a few minutes, or at the time the band shows. While a scan of another repository in your account runs, it waits for that one to end |
 | **A scan is getting ready** | The repository is being counted. The scan's price shows once it's counted, and nothing is charged before that |
 | **A scan is running** | The result shows on the tab when the scan ends |
-| **The last scan did not have enough credits** | The scan didn't start, and nothing was charged. The next scheduled scan tries again when the credits reset. **Usage and credits** opens [Usage](/console/usage) |
+| **The last scan did not have enough credits** | The team has no credits left this month, or the last scan cost more than the credits left and didn't start. Nothing was charged. While no credits are left, no scheduled scan starts; once the credits reset or the team gets more, the next one starts when it's due. After a scan refused for its price, the next scheduled scan comes one **Scheduled scan** period later, as after any scan. **Usage and credits** opens [Usage](/console/usage) |
 | **This repository is larger than the rate card covers** | A scan at this size needs a contract with IronBee. Nothing was charged. **Edit paths to ignore** opens the repository's settings, because ignored paths are left out of the count |
 | **Too large to scan with execution** | The checkout is too large to scan with **Execution** on. Nothing was charged. **Open scan settings** opens the repository's settings, where you can turn **Execution** off |
 | **The last scan failed** | The band gives the reason. Nothing was charged, and the records below are from the last scan that finished |
@@ -109,9 +110,9 @@ A dialog asks **Run a full scan of** the project, and shows what the scan costs 
 - the scan's price at the repository's size and profile, and what **Execution** adds when it's on
 - **This scan**, the total, and **Left this month, after it**
 
-Before a repository's first scan, its size isn't known yet. The dialog then shows a table of the sizes with the price of a full scan at each, and the button reads **Count and scan**. The scan counts the repository first. If the counted price is higher than the credits left, the scan is refused and nothing is charged.
+Before a repository's first scan, its size isn't known yet. The dialog then asks **Run the first scan of** the project, shows a table of the sizes with the price of a full scan at each, and the button reads **Count and scan**. The scan counts the repository first. If the counted price is higher than the credits left, the scan is refused and nothing is charged.
 
-Click the run button, which names the credits, to start. **Full scan queued** confirms it. The scan starts within a few minutes and the tab follows it.
+Click the run button, which names the credits, to start. **Full scan queued** confirms it. The scan starts within a few minutes, after any scan your account queued before it, and the tab follows it.
 
 You can run a full scan of a repository by hand once an hour. The button is unavailable, and says why when you hover over it, when:
 
@@ -125,7 +126,7 @@ You can run a full scan of a repository by hand once an hour. The button is unav
 
 ## Credits
 
-A scan uses credits from the same monthly pool as code review and verification. Its price depends on the repository's size, counted in lines outside the paths to ignore, on the [**Profile**](/console/code-security-settings#profile) and on [**Execution**](/console/code-security-settings#execution). A full scan costs more than a period with changes.
+A scan uses the team's credits, as code review and verification do. Its price depends on the repository's size, counted in lines outside the paths to ignore, on the [**Profile**](/console/code-security-settings#profile) and on [**Execution**](/console/code-security-settings#execution). A full scan costs more than a period with changes.
 
 - The price is counted at the start of the scan, before anything is read.
 - A scan is charged when it finishes. A scan that fails, or is refused, costs nothing.
@@ -145,7 +146,7 @@ The prices are on the rate card on [Usage](/console/usage#what-a-job-costs).
 | **No code security for this project** | The repository isn't connected through the GitHub App, a GitLab group or a Bitbucket workspace, or the project is archived |
 | **Only owners and admins see code security** | You opened the tab's address as a member or a billing admin. Ask an owner or an admin for access |
 
-When code security is turned off for a repository, its records and runs are kept but not shown. Turn it on again to see them.
+When code security is turned off for a repository, its records are kept, and its runs within your plan's retention, but they aren't shown. Turn it on again to see them.
 
 ---
 
