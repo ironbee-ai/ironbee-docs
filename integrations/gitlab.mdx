@@ -2,7 +2,7 @@
 title: GitLab
 description: Connect a top-level GitLab group so IronBee can review your merge requests, write the code wiki, and report verification runs on the merge request.
 icon: "/images/icons/gitlab.svg"
-keywords: ["GitLab", "gitlab.com", "merge request", "GitLab group", "service account"]
+keywords: ["GitLab", "gitlab.com", "merge request", "GitLab group", "service account", "GitLab Premium", "GitLab Ultimate", "IP restriction"]
 ---
 
 The GitLab connection links a top-level group on gitlab.com to your IronBee account. IronBee works in the group through a service account it creates there, and never under your name. The connection gives IronBee:
@@ -16,7 +16,7 @@ The GitLab connection links a top-level group on gitlab.com to your IronBee acco
 The [IronBee GitLab component](/gitlab-component/get-started/getting-started) and [`ironbee verify`](/cli/guides/verification-jobs) use the same connection to check out private projects.
 
 <Note>
-  Only gitlab.com is supported. Self-managed GitLab and GitLab Dedicated aren't supported yet. GitLab isn't a way to sign in to IronBee: you connect a group from an IronBee account you're signed in to.
+  This page covers groups on gitlab.com, on every tier. For a GitLab Self-Managed server or a GitLab Dedicated tenant, see [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed). GitLab isn't a way to sign in to IronBee: you connect a group from an IronBee account you're signed in to.
 </Note>
 
 ---
@@ -58,10 +58,51 @@ When you connect, IronBee creates a service account in the group as a Maintainer
 | **Your IronBee sign-in was lost** | The connect can't finish without it, and nothing was connected. Sign in again, then start again |
 | **You own no top-level GitLab group** | You're not an Owner of any top-level group. **Create a group on GitLab** opens GitLab |
 | **This group belongs to another IronBee account** | A group connects to one account at a time. An owner or admin of that account can disconnect it |
-| **GitLab did not confirm you own this group** | Connecting takes the group's Owner role on GitLab and the owner or admin role in IronBee. Nothing was connected |
+| **GitLab did not confirm you own this group** | Connecting takes the group's Owner role on GitLab and the owner or admin role in IronBee. Nothing was connected. The message also names IronBee's address, for a group that refuses even its Owner from there. A group's IP restriction normally lets its Owner through: the connect completes, and the connection is suspended until the address is added. See [Premium and Ultimate groups](#premium-and-ultimate-groups) |
 | **Could not complete the connection** | Start again. If it keeps failing, try again in a few minutes |
 
 Each message has **Start again**.
+
+---
+
+## Premium and Ultimate groups
+
+A group on gitlab.com's Premium or Ultimate tier connects as above, with nothing to register and no IronBee plan asked for. What can stop IronBee is a restriction of access by IP address.
+
+Every call IronBee makes to gitlab.com comes from one IPv4 address, `52.35.245.203`, and so does every clone: connecting the group, code review, the code wiki, code security and verification.
+
+### A group that restricts access by IP address
+
+The restriction holds for IronBee's service account too, so gitlab.com refuses IronBee's calls and clones until IronBee's address is on the group's list, and nothing is reviewed or analyzed. GitLab can't take an integration's address by itself, so an Owner of the group adds it, before the group is connected:
+
+<Steps>
+  <Step title="Open the group's settings">
+    On gitlab.com, open the top-level group, then **Settings > General**, and expand **Permissions and group features**.
+  </Step>
+  <Step title="Add IronBee's address">
+    In **Restrict access by IP address**, add `52.35.245.203/32` beside the ranges already there, and click **Save changes**.
+  </Step>
+</Steps>
+
+Or run [`ironbee host allow-address`](/cli/guides/hosts#ironbee-host-allow-address) with the group's path, as its Owner, from an address the group already allows. It adds IronBee's address where the list doesn't hold it, and leaves a group that restricts no address as it is.
+
+**If the address is missing:**
+- **When you connect the group,** the connect's calls go with your own sign-in, which gitlab.com lets through as the group's Owner, so the connect itself completes. The first sync that follows, made with IronBee's service account, is refused, and the connection is suspended at once. Add the address: the connection becomes active again within a few minutes, with nothing to reconnect.
+- **On a connected group,** when the group turns the restriction on later or IronBee's address leaves its list, gitlab.com answers IronBee as though the group were gone, and IronBee suspends the connection. gitlab.com answers the same way when IronBee's service account was removed from the group, so the console names both causes. Check both: once the address is on the list, the connection becomes active again by itself within a few minutes. If the service account was removed, an Owner clicks **Reconnect**.
+
+### Your own pipelines under the restriction
+
+The [GitLab component](/gitlab-component/get-started/getting-started) and the [self-hosted runner](/code-review/self-hosted-runner/gitlab) run in your own pipelines and call gitlab.com with the pipeline's tokens, from the address of the runner that runs the job, not from IronBee's. Run their jobs on runners of your own whose addresses are on the group's list: gitlab.com lets its hosted runners through the restriction to clone the repository and for nothing else.
+
+- For the component's job, `ironbee-verify`, redeclare it in your `.gitlab-ci.yml` with your runners' `tags:`.
+- For the self-hosted runner, name your runners' tags in its `runner-tags` input.
+
+A group that only the self-hosted runner reviews needs no address of IronBee's on its list: IronBee never calls gitlab.com for it.
+
+### SAML single sign-on and enterprise users
+
+- **SAML single sign-on** needs nothing more. IronBee's service account isn't a person, and gitlab.com checks single sign-on neither on API requests nor on a service account's tokens. The one grant a person gives, the Owner's authorization when the group is connected, is made in the Owner's browser, signed in through your identity provider as usual.
+- **A group that stops its enterprise users from using personal access tokens** doesn't affect IronBee: that setting doesn't reach the tokens of IronBee's service account.
 
 ---
 
@@ -142,6 +183,8 @@ The group's row also shows when it last synced. IronBee syncs each group every f
 
 **Suspended.** When GitLab stops accepting IronBee's tokens or service account, the row reads **This connection is suspended**, with the reason, such as "IronBee's service account is no longer a Maintainer of this group." Nothing is reviewed or verified until you reconnect: an Owner of the group clicks **Reconnect** and authorizes GitLab again. The webhooks and the repository pick stay as they are.
 
+When the reason reads "GitLab no longer shows this group to IronBee", IronBee's service account was removed from the group, or the group restricts access by IP address and doesn't allow IronBee's address. Once the address is on the group's list, the connection becomes active again by itself within a few minutes. See [Premium and Ultimate groups](#premium-and-ultimate-groups).
+
 **Disconnect.** GitLab tells IronBee nothing when access is removed on its side, so you disconnect from the console: click **Disconnect** on the group's row. IronBee takes its webhooks off the group's projects, removes its **IronBee reader** accounts from them, and revokes its own tokens. The repositories stop being reviewed and verified; their projects stay in IronBee with their history. The service account stays on the group, because it can't remove itself. An Owner can remove it from the group's service accounts page, which **Open the group's service accounts** opens, and a later connect reuses it if it's still there.
 
 ---
@@ -155,6 +198,8 @@ The group's row also shows when it last synced. IronBee syncs each group every f
 | **You own no top-level GitLab group** | You aren't an Owner of a top-level group on gitlab.com |
 | A repository is missing from the list | It was created moments ago, is shared into the group, or is archived. Click **Sync now** |
 | The connection reads **Suspended** | The service account was removed or demoted, or its tokens were revoked. **Reconnect** |
+| The connection reads **Suspended**, "GitLab no longer shows this group to IronBee" | The group restricts access by IP address without IronBee's address, or the service account was removed. Add the address; see [Premium and Ultimate groups](#premium-and-ultimate-groups) |
+| The component's job fails its calls to gitlab.com in a group that restricts access by IP address | It runs on a GitLab-hosted runner. Run it on a runner of yours whose address is on the group's list |
 | Merges aren't held by IronBee | **Block merges** is off, the default. See [Merges](/code-review/on-gitlab#merges) |
 
 ---
@@ -167,6 +212,9 @@ The group's row also shows when it last synced. IronBee syncs each group every f
   </Card>
   <Card title="GitLab component" icon="gitlab" href="/gitlab-component/get-started/getting-started">
     Verify every merge request and push from your own pipeline.
+  </Card>
+  <Card title="GitLab Self-Managed and Dedicated" icon="server" href="/integrations/gitlab-self-managed">
+    Register your own instance or tenant, then connect its groups.
   </Card>
   <Card title="Vercel" icon="/images/icons/vercel.svg" href="/integrations/vercel">
     Verify preview deployments as a Vercel deployment check.

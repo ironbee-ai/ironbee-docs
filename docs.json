@@ -66,7 +66,8 @@
       "In GitLab pipelines, include the component `gitlab.com/ironbee-ai/ironbee-gitlab/verify@v1`; it reads the `IRONBEE_API_KEY` CI/CD variable by default.",
       "In Bitbucket Pipelines, run the pipe `docker://ghcr.io/ironbee-ai/ironbee-bitbucket:v1` and pass `IRONBEE_API_KEY: $IRONBEE_API_KEY` and `BITBUCKET_OAUTH_TOKEN: $BITBUCKET_OAUTH_TOKEN` under its `variables:`.",
       "Console scenarios (https://docs.ironbee.ai/console/scenarios) and CLI saved scenarios (https://docs.ironbee.ai/cli/guides/scenarios) are separate features.",
-      "Code security (https://docs.ironbee.ai/console/code-security) scans a repository's default branch on a schedule. It is off until an owner or admin turns it on for a repository, and only owners and admins see it.",
+      "Code security (https://docs.ironbee.ai/code-security/overview) scans a repository's default branch on a schedule. It is off until an owner or admin turns it on for a repository, and only owners and admins see it.",
+      "The self-hosted runner (https://docs.ironbee.ai/code-review/self-hosted-runner/overview) runs IronBee code review in your own GitHub Actions, GitLab CI/CD or Bitbucket Pipelines, with your own model provider; set it up with `ironbee runner setup`.",
       "For plans and prices, link to https://ironbee.ai/pricing; the website is the source of truth for them."
     ]
   },
@@ -120,7 +121,9 @@
             "pages": [
               "integrations/overview",
               "integrations/github",
+              "integrations/github-enterprise",
               "integrations/gitlab",
+              "integrations/gitlab-self-managed",
               "integrations/bitbucket",
               "integrations/vercel",
               "integrations/netlify"
@@ -145,7 +148,8 @@
                   "github-action/guides/running-in-ci",
                   "github-action/guides/comment-trigger",
                   "github-action/guides/verifying-your-app",
-                  "github-action/guides/verification-platforms"
+                  "github-action/guides/verification-platforms",
+                  "github-action/guides/github-enterprise"
                 ]
               },
               "github-action/configuration/configuration",
@@ -176,7 +180,8 @@
                 "pages": [
                   "gitlab-component/guides/running-in-ci",
                   "gitlab-component/guides/verifying-your-app",
-                  "gitlab-component/guides/verification-platforms"
+                  "gitlab-component/guides/verification-platforms",
+                  "gitlab-component/guides/self-managed"
                 ]
               },
               "gitlab-component/configuration/configuration",
@@ -253,6 +258,8 @@
               "cli/guides/verification-jobs",
               "cli/guides/code-review",
               "cli/guides/credits",
+              "cli/guides/runner",
+              "cli/guides/hosts",
               "cli/guides/scenarios",
               "cli/guides/issue-tracking",
               "cli/guides/interactive-mode"
@@ -309,15 +316,6 @@
             "pages": [
               "console/code-wiki",
               "console/code-wiki-settings"
-            ]
-          },
-          {
-            "group": "Code security",
-            "icon": "shield-alert",
-            "pages": [
-              "console/code-security",
-              "console/code-security-records",
-              "console/code-security-settings"
             ]
           },
           {
@@ -389,6 +387,16 @@
                   "code-review/rules-and-memories",
                   "code-review/settings"
                 ]
+              },
+              {
+                "group": "Self-hosted runner",
+                "icon": "server",
+                "pages": [
+                  "code-review/self-hosted-runner/overview",
+                  "code-review/self-hosted-runner/github",
+                  "code-review/self-hosted-runner/gitlab",
+                  "code-review/self-hosted-runner/bitbucket"
+                ]
               }
             ]
           },
@@ -404,8 +412,25 @@
             "item": "Code security",
             "icon": "shield-alert",
             "description": "Scheduled security scans of the default branch",
-            "pages": [
-              "console/code-security"
+            "groups": [
+              {
+                "group": "Code security",
+                "icon": "shield-alert",
+                "pages": [
+                  "code-security/overview",
+                  "code-security/how-a-scan-works",
+                  "code-security/api"
+                ]
+              },
+              {
+                "group": "In the console",
+                "icon": "layout-dashboard",
+                "pages": [
+                  "console/code-security",
+                  "console/code-security-records",
+                  "console/code-security-settings"
+                ]
+              }
             ]
           },
           {

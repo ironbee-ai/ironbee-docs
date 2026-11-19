@@ -11,10 +11,10 @@ Most of the time you'll review sessions in the [Console](https://console.ironbee
 
 Show what IronBee knows about a session right now:
 
-```bash
-ironbee session view                     # the most recently active session
-ironbee session view --session <id>      # one session
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee session view` | The most recently active session |
+| `ironbee session view --session <id>` | One session |
 
 It prints:
 - the one-line state: edits waiting, the running cycle with each platform's progress, the verdict, or why the gate blocked

@@ -44,12 +44,11 @@ IronBee's entries are **merged** into your existing Codex config and `AGENTS.md`
 
 Codex has no user-defined slash commands, so IronBee's manual verification trigger is exposed as a **skill you mention by name**. Type `$ironbee-verify` in the Codex prompt to run a verification cycle for the current changes. As with [`/ironbee-verify` in Claude Code](/cli/clients/claude-code#slash-commands), you can pass a **custom scenario** - inline text or a path to a scenario file - that defines exactly what to verify:
 
-```bash
-$ironbee-verify                              # default - exercise the changed pages/endpoints
-$ironbee-verify check that the cart total    # inline scenario
-  recalculates after removing an item
-$ironbee-verify ./scenarios/checkout.md      # a scenario file
-```
+| Command | What it does |
+|---------|--------------|
+| `$ironbee-verify` | Default: exercise the changed pages and endpoints |
+| `$ironbee-verify check that the cart total recalculates after removing an item` | Inline scenario |
+| `$ironbee-verify ./scenarios/checkout.md` | A scenario file |
 
 When a scenario is supplied it is authoritative and replaces the default "exercise the changed paths" flow; the completion gate is unchanged. As in Claude Code, an optional leading `fix` switches the default verify-only run into a fix-and-re-verify loop (`$ironbee-verify fix`) - see [Verify-only vs. fix mode](/cli/guides/verification#verify-only-vs-fix-mode). Only the invocation syntax differs from Claude Code.
 
@@ -65,10 +64,10 @@ The same mention syntax applies to the other commands - `$ironbee-review` for a 
 
 `$ironbee-review` runs [`ironbee review`](/cli/guides/code-review) on your working tree and reports the findings, with the same modes as `/ironbee-review` in Claude Code: `fix` fixes the blocking findings, `fix loop` and `fix rounds:<n>` review again after each fix pass, and `price` asks what the review would cost.
 
-```bash
-$ironbee-review              # review the working tree and report it
-$ironbee-review fix loop     # fix and review again until nothing blocks, up to the cap
-```
+| Command | What it does |
+|---------|--------------|
+| `$ironbee-review` | Review the working tree and report it |
+| `$ironbee-review fix loop` | Fix and review again until nothing blocks, up to the cap |
 
 The main agent runs it in both delivery modes, without a sub-agent. A review spends your team's credits, so Codex never invokes the skill on its own: its `agents/openai.yaml` sets `allow_implicit_invocation: false`. See [From a coding agent](/cli/guides/code-review#from-a-coding-agent) for every mode and option.
 
@@ -98,10 +97,10 @@ Codex 0.154 and later ignore the `mcp_servers` and `sandbox_mode` settings in an
 
 IronBee also sets `[features.multi_agent_v2]` with `default_wait_timeout_ms = 600000`, so a single `wait_agent` call blocks for up to 10 minutes while the verifier works, instead of polling. If Codex's sub-agent machinery regresses, you can fall back to driving the tools from the **main agent** instead:
 
-```bash
-ironbee codex verifier mode main-agent   # main agent drives the devtools tools directly
-ironbee codex verifier mode sub-agent    # back to the default delegated verifier
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee codex verifier mode main-agent` | The main agent drives the devtools tools directly |
+| `ironbee codex verifier mode sub-agent` | Back to the default delegated verifier |
 
 | Mode | What changes |
 |------|--------------|

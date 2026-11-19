@@ -9,13 +9,13 @@ description: "Run a verification on IronBee with ironbee verify: a web app in a 
 
 Nothing runs in your editor: no AI client, no local devtools server, no completion gate. It's the same kind of verification your agent performs locally, packaged as a command you can run from any shell or CI pipeline. Each job appears in the console as a verification run on the project's [Verifications](/console/verifications) tab.
 
-```bash
-ironbee verify run web --url https://preview.example.com     # verify a deployed web app
-ironbee verify run web --port 3000                           # verify a local app through a tunnel
-ironbee verify run api --url https://api.preview.example.com # verify a deployed API
-ironbee verify status <job-id>                               # read a job back
-ironbee verify cancel <job-id> "superseded by a newer build" # ask a job to stop
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verify run web --url https://preview.example.com` | Verify a deployed web app |
+| `ironbee verify run web --port 3000` | Verify a local app through a tunnel |
+| `ironbee verify run api --url https://api.preview.example.com` | Verify a deployed API |
+| `ironbee verify status <job-id>` | Read a job back |
+| `ironbee verify cancel <job-id> "superseded by a newer build"` | Ask a job to stop |
 
 <Note>
   Earlier CLI versions used `ironbee verify [session-id]` for a **local dry-run** of a session's verdict checks. That command is now [`ironbee verdict`](/cli/advanced/inspecting-sessions#ironbee-verdict). `ironbee verify` is exclusively the cloud verification job runner.
@@ -75,7 +75,9 @@ So on a machine where you ran `ironbee login`, the stored OAuth token wins over 
 
 An OAuth token acts with your [role](/console/roles) in the account. Starting or cancelling a job needs the owner, admin or member role: the API refuses a billing admin's token with `FORBIDDEN`. The account API key isn't tied to a role.
 
-`ironbee verify` reads the global, project and local config files. It doesn't read the repository's [personal file](/cli/configuration/configuration#the-personal-file), so a credential kept only there doesn't reach it. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table.
+`ironbee verify` reads the global, project and local config files. It doesn't read the repository's [personal file](/cli/configuration/configuration#the-personal-file), so a credential kept only there doesn't reach it. With no credential at all, the command fails with `no IronBee credential`. The credential is **never a CLI argument**, so it can't leak through the process table. An override set to an empty or blank value counts as unset.
+
+When your remote is on a host other than github.com, gitlab.com and bitbucket.org, the command also uses the credential to ask IronBee which hosts are your account's GitHub and GitLab hosts, before it binds the run. See [Your account's GitHub and GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts).
 
 ---
 
@@ -160,22 +162,27 @@ By default the run is bound to your repository and current commit, so the verdic
 | `--no-repo` | Don't bind the run to a repository at all |
 
 The binding attaches only when it would actually work:
-- The remote must be on **GitHub**, **gitlab.com** or **bitbucket.org**. A gitlab.com project is bound by its full path, such as `acme/platform/backend`, through its group connected in the IronBee console. A bitbucket.org repository is bound by its `workspace/repo_slug`, through its workspace connected in the console. A self-managed GitLab server and Bitbucket Data Center or Server aren't supported.
+- The remote must be on **github.com**, **gitlab.com** or **bitbucket.org**, or on one of [your account's GitHub or GitLab hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts): a GHE.com tenant, a GitHub Enterprise Server, a GitLab Dedicated tenant or a Self-Managed server. A gitlab.com project is bound by its full path, such as `acme/platform/backend`, through its group connected in the IronBee console. A bitbucket.org repository is bound by its `workspace/repo_slug`, through its workspace connected in the console. Bitbucket Data Center and Server aren't supported.
+- On one of your account's hosts, the repository is bound with its host: `<host>:owner/repo` on GitHub, and on GitLab the project's full path, `<host>:<path>`. A server named by an IP address or a single-label name is never bound, so pass `--no-repo` there. Without it, the run goes on without repository context, and a run with `--commit` or `--pr` stops.
 - A commit derived from local HEAD must be **reachable from a remote-tracking branch**. An unpushed HEAD produces a warning, and the run proceeds **unbound** rather than pointing at code the service can't read. An explicit `--commit`, or the CI job's commit, is taken at face value.
 - A dirty working tree only warns. The run stays bound to the committed SHA, which it reads from GitHub, GitLab or Bitbucket, so what the agent reads and what's on your disk may differ.
 - On Bitbucket, the run also names the branch, so its build status reaches the pull request: the Pipelines step's `BITBUCKET_BRANCH`, or your branch's name on the remote when that remote branch holds the commit. An explicit `--commit`, or a `--pr` other than the step's own, names no branch. A name over 200 characters, or with characters other than letters, digits, `.`, `_`, `/` and `-`, isn't sent, and the CLI warns that the run's status may not reach its pull request.
 
-A bound run on a repository the [IronBee GitHub App](/integrations/github) covers, on a gitlab.com project whose [group is connected](/integrations/gitlab), or on a bitbucket.org repository whose [workspace is connected](/integrations/bitbucket), reports its result there: a check, a build status, or a pipeline status where IronBee writes one ([Merges](/code-review/on-gitlab#merges)), on the commit, and on an open pull or merge request an inline comment on each finding in the diff and a summary comment. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request). To keep the run off the repository, pass `--no-repo`.
+A bound run on a repository the [IronBee GitHub App](/integrations/github) covers (on a GHE.com tenant or a GitHub Enterprise Server, the App made for that host: see [GitHub Enterprise](/integrations/github-enterprise)), on a GitLab project whose [group is connected](/integrations/gitlab) (on a GitLab Dedicated or Self-Managed instance, see [GitLab Dedicated and Self-Managed](/integrations/gitlab-self-managed)), or on a bitbucket.org repository whose [workspace is connected](/integrations/bitbucket), reports its result there: a check, a build status, or a pipeline status where IronBee writes one ([Merges](/code-review/on-gitlab#merges)), on the commit, and on an open pull or merge request an inline comment on each finding in the diff and a summary comment. See [What appears on the pull request](/integrations/github#what-appears-on-the-pull-request). To keep the run off the repository, pass `--no-repo`.
 
-In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository (on GitLab, connect the project's group in the console; on Bitbucket, its workspace), or re-run with `--no-repo`.
+In GitHub Actions the binding is automatic: `GITHUB_REPOSITORY`, `GITHUB_SHA` and `GITHUB_REF` fill in the repo, commit and pull request. On a GHE.com tenant or a GitHub Enterprise Server, the host in `GITHUB_SERVER_URL` goes with them, and counts as one of your account's GitHub hosts without asking IronBee. The job is declared with a `github_actions` trigger, so the console shows it as **GitHub Actions**. If the job fails with a repository checkout error, grant the [IronBee GitHub App](/integrations/github) access to the repository (on GitLab, connect the project's group in the console; on Bitbucket, its workspace), or re-run with `--no-repo`.
 
-In a gitlab.com CI job of the same project, the binding is automatic too, even on a detached checkout. The run binds to the merge request in `CI_MERGE_REQUEST_IID` when it's that project's, else to the commit in `CI_COMMIT_SHA`. The job is declared with a `gitlab_ci` trigger, so the console shows it as **GitLab CI**. A gitlab.com remote is never bound through `GITHUB_REPOSITORY`. See [Environment variables](/cli/configuration/environment-variables#verification-jobs-code-reviews-and-credits).
+In a GitLab CI job of the same project, the binding is automatic too, even on a detached checkout. The run binds to the merge request in `CI_MERGE_REQUEST_IID` when it's that project's, else to the commit in `CI_COMMIT_SHA`. That works on gitlab.com, and on a GitLab Dedicated or Self-Managed instance served at the root of `https://<CI_SERVER_HOST>`, whose host counts as one of your account's GitLab hosts without asking IronBee. The job is declared with a `gitlab_ci` trigger, so the console shows it as **GitLab CI**. A GitLab remote is never bound through `GITHUB_REPOSITORY`. See [Environment variables](/cli/configuration/environment-variables#verification-jobs-code-reviews-and-credits).
 
 In a Bitbucket Pipelines step of the same repository, the binding is automatic too. The run binds to the pull request in `BITBUCKET_PR_ID`, else to the commit in `BITBUCKET_COMMIT` (a short one is expanded with git), and names the step's `BITBUCKET_BRANCH`. The job is declared with a `bitbucket_pipelines` trigger, so the console shows it as **Bitbucket Pipelines**. A bitbucket.org remote is never bound through `GITHUB_REPOSITORY`.
 
-A CI trigger has to match the repository's host: GitHub Actions goes with a GitHub repository, GitLab CI with a gitlab.com project, and Bitbucket Pipelines with a bitbucket.org repository. The API refuses a job bound to, or claiming, a repository of another host. To verify across hosts, pass `--no-repo` and `--project <name>`.
+A CI trigger has to match the repository's host: GitHub Actions goes with a GitHub repository, GitLab CI with a GitLab project, and Bitbucket Pipelines with a bitbucket.org repository. The API refuses a job bound to, or claiming, a repository of another host. To verify across hosts, pass `--no-repo` and `--project <name>`.
 
-**Which project.** Without `--project`, the project name comes from your repository. That's the `origin` remote's repository name, else the first remote's, else the repository folder's name. A gitlab.com project is named by the path after its group, with `/` as `-`. A checkout of a github.com repository, a gitlab.com project or a bitbucket.org repository whose name matches reports to that repository's own project. For a job, that's the repository the run is bound to, the remote your branch is pushed to: a branch pushed to a fork, or to another host, reports to that repository's project when its name matches, and claims none otherwise. In GitHub Actions, GitLab CI or Bitbucket Pipelines, the job reports to the GitHub, GitLab or Bitbucket project with that name. `--project <name>` names the project explicitly and doesn't claim a repository's project. See [How IronBee identifies your project](/cli/concepts/projects).
+<Note>
+  Before CLI 0.54, a run in GitHub Actions on a GHE.com tenant or a GitHub Enterprise Server was bound to github.com's repository of the same name, and a remote on a GitLab Dedicated or Self-Managed instance bound nothing. Use CLI 0.54.0 or later on these hosts.
+</Note>
+
+**Which project.** Without `--project`, the project name comes from your repository. That's the `origin` remote's repository name, else the first remote's, else the repository folder's name. A GitLab project is named by the path after its group, with `/` as `-`. A checkout of a github.com repository, a gitlab.com project, a bitbucket.org repository, or a repository on one of your account's GitHub or GitLab hosts, whose name matches reports to that repository's own project. For a job, that's the repository the run is bound to, the remote your branch is pushed to: a branch pushed to a fork, or to another host, reports to that repository's project when its name matches, and claims none otherwise. In GitHub Actions, GitLab CI or Bitbucket Pipelines, the job reports to the GitHub, GitLab or Bitbucket project with that name. `--project <name>` names the project explicitly and doesn't claim a repository's project. See [How IronBee identifies your project](/cli/concepts/projects).
 
 ---
 
@@ -275,11 +282,11 @@ A failure that produced **no job** prints a machine-readable error envelope inst
 
 ## `ironbee verify status` and `cancel`
 
-```bash
-ironbee verify status <job-id>            # one read: status + verdict (exit 3 if not terminal)
-ironbee verify status <job-id> --watch    # poll until the job is terminal
-ironbee verify cancel <job-id> [reason]   # ask the job to stop, with an optional reason for the record
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verify status <job-id>` | One read: status and verdict (exit 3 if not terminal) |
+| `ironbee verify status <job-id> --watch` | Poll until the job is terminal |
+| `ironbee verify cancel <job-id> [reason]` | Ask the job to stop, with an optional reason for the record |
 
 `status` accepts the same `--json`, `--api-url` and `-C, --project-dir` flags as `run`, plus `--queue-wait <seconds>` with `--watch`. As an observer it never cancels: if the queue wait elapses, it just warns that the job is still queued. For a finished job, it also prints the `credits` line.
 

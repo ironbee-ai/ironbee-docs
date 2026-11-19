@@ -4,7 +4,7 @@ sidebarTitle: Credits
 description: How ironbee review and ironbee verify spend your team's monthly credits, how to check the balance, and what happens when credits run out.
 ---
 
-[Code reviews](/cli/guides/code-review) and [verification jobs](/cli/guides/verification-jobs) spend one pool of credits per team, each month. The CLI tells you what a run used, and `ironbee credits` shows what your team has left. Your plan sets the monthly allowance; see [Pricing](/console/pricing).
+[Code reviews](/cli/guides/code-review) and [verification jobs](/cli/guides/verification-jobs) spend one pool of credits per team, each month. The CLI tells you what a run used, and `ironbee credits` shows what your team has left. Your plan sets the monthly allowance; see [Pricing](/console/pricing). On Free and Team, an owner or a billing admin can also [buy credits](/console/usage#buy-credits) in the console, which are spent once the monthly allowance is used up.
 
 ---
 
@@ -20,10 +20,10 @@ Every price the CLI prints is in credits.
 
 ## ironbee credits
 
-```bash
-ironbee credits          # this month's credits for your team
-ironbee credits --json   # the API's answer as JSON
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee credits` | This month's credits for your team |
+| `ironbee credits --json` | The API's answer as JSON |
 
 It prints the month's use, the use by product, and the date the credits reset:
 
@@ -33,7 +33,9 @@ credits   <used> of <allowance> used this month · <left> left · resets <date>
           an owner or a billing admin can add seats
 ```
 
-The last line says how to raise the allowance, when there's a way. An unlimited allowance reads `unlimited`, with no such line.
+`<left>` is what a run can still spend: what's left of the monthly allowance plus the purchased credits the team has left. With purchased credits, `<used>` can pass `<allowance>` while credits are still left. The second line shows code review and verification; the console's [Usage](/console/usage) page also shows code security.
+
+The last line says how to raise the allowance, when there's a way. It doesn't mention buying credits, which an owner or a billing admin on Free or Team can do in the console. An unlimited allowance reads `unlimited`, with no such line.
 
 | Flag | Description |
 |------|-------------|
@@ -74,7 +76,7 @@ When `CI` is set to any non-empty value, `false` and `0` included, a run's lines
 
 ## When credits run out
 
-When your team is out of credits, the API refuses to create the job with `402 CREDITS_EXHAUSTED`. The CLI says when the credits reset, how many are left, and how to raise the allowance, then exits `1`:
+When your team is out of credits, purchased credits included, the API refuses to create the job with `402 CREDITS_EXHAUSTED`. The CLI says when the credits reset, how many are left, and how to raise the allowance, then exits `1`:
 
 | The line ends with | Who can act |
 |--------------------|-------------|
@@ -82,6 +84,8 @@ When your team is out of credits, the API refuses to create the job with `402 CR
 | `an owner or a billing admin can upgrade to Team` | An owner or billing admin, on the console's [Pricing](/console/pricing#upgrade-to-team) page |
 | `an owner or a billing admin can pay the open invoice` | An owner or billing admin |
 | `ask IronBee to raise the allowance` | Contact [support@ironbee.ai](mailto:support@ironbee.ai) |
+
+On Free and Team, an owner or a billing admin can also [buy credits](/console/usage#buy-credits) in the console, unless IronBee sets the account's credits by contract.
 
 A review the team can't afford in full reads `not enough credits left this month for this review`. A job that's refused for credits when it starts fails with `credits_exhausted` and says why. Under `CI`, the numbers are left out, and so is a hint about an unpaid invoice.
 
@@ -92,6 +96,7 @@ With `--json`, the failure envelope carries the numbers as `error.credits`, next
              "credits": { "left": 0, "allowance": "…", "resetsAt": "…", "topUp": "add_seats" } } }
 ```
 
+- `left` counts purchased credits too; `allowance` is the monthly allowance alone.
 - `needed` appears only on a code review, whose price is known before it's created.
 - `topUp` is `add_seats`, `upgrade`, `pay_invoice`, `contact`, or `null` when there's no way up.
 

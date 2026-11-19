@@ -29,10 +29,10 @@ The machinery is installed (the [`/ironbee-verify`](#verify-only-vs-fix-mode) co
 
 <img src="/images/cli/verification-mode-selection_assist.png" alt="Verification-mode picker with the cursor on assist, described as tools installed but not enforced" style={{borderRadius:'8px',width:'100%'}} />
 
-Assist keeps verification *available* but never *required* - the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion. Assist is also **manual-trigger-only**: the installed commands are marked user-only (the model can't auto-invoke them, and their descriptions don't cost context tokens) and the verifier/scenario sub-agents carry a non-proactive stance, so nothing fires unless you ask - see [Claude Code → Assist mode: commands are user-only](/cli/clients/claude-code#assist-mode-commands-are-user-only). The message the agent gets when a session starts says so too: verify only when you ask, and submit no verdict outside a verification you asked for. To switch to it later:
+Assist keeps verification *available* but never *required* - the agent can verify on demand (and every manual cycle is recorded to the Collector) without a gate that blocks task completion. Assist is also **manual-trigger-only**: the installed commands are marked user-only (the model can't auto-invoke them, and their descriptions don't cost context tokens) and the verifier/scenario sub-agents carry a non-proactive stance, so nothing fires unless you ask - see [Claude Code → Assist mode: commands are user-only](/cli/clients/claude-code#assist-mode-commands-are-user-only). The message the agent gets when a session starts says so too: verify only when you ask, and submit no verdict outside a verification you asked for. To switch to it later, run this (assist is the default: manual `/ironbee-verify` only, nothing enforced):
 
 ```bash
-ironbee verification auto disable   # assist (default) - manual /ironbee-verify only, nothing enforced
+ironbee verification auto disable
 ```
 
 ### Enforce mode
@@ -43,10 +43,10 @@ The agent must pass every active cycle before it can mark a task complete. The b
 
 Enforce is opt-in - turn on the automatic-enforcement sub-toggle:
 
-```bash
-ironbee verification auto enable    # enforce - block task completion until every active cycle passes
-ironbee verification auto disable   # back to assist (the default)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verification auto enable` | Enforce: block task completion until every active cycle passes |
+| `ironbee verification auto disable` | Back to assist (the default) |
 
 <Note>
   `ironbee verification enable` only flips the master toggle; the mode it resolves to still depends on `auto` (assist unless you've also run `verification auto enable`).
@@ -68,10 +68,10 @@ The first is **how strict** the gate is about [N/A verdicts](#when-a-change-has-
 
 To set it later (rather than at install):
 
-```bash
-ironbee verification strict enable    # reject all N/A verdicts - every active cycle needs real evidence
-ironbee verification strict disable    # back to the default - N/A verdicts accepted (and recorded)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verification strict enable` | Reject all N/A verdicts: every active cycle needs real evidence |
+| `ironbee verification strict disable` | Back to the default: N/A verdicts accepted (and recorded) |
 
 With strict on, a verdict that tries to mark a cycle not-applicable is **blocked**, and the agent has to produce the cycle's required tools. Strict only matters in **enforce mode** (in assist and monitoring-only there's no gate to enforce it). It's read live by the gate, so it takes effect on the next session without re-rendering artifacts. Strict maps to the [`verification.strict`](/cli/configuration/configuration#verification) config key and accepts the usual `-g`/`--global` and `--local` target flags. For how N/A verdicts work in the first place, see [N/A verdicts](#when-a-change-has-nothing-to-verify-na-verdicts) below.
 
@@ -81,10 +81,10 @@ Enforce mode actually enforces **two** things: that the agent *verifies* at all 
 
 With fix enforcement **off** (report-only), the agent still must run every active cycle and submit a real verdict - but a **fail** verdict no longer loops it. The gate lets the turn end, records the verdict as *reported, not enforced*, and instructs the agent to state the unresolved issues plainly rather than claim the change works. Retries aren't consumed. Think of it as a third point between full enforce (auto-verify + fix until pass) and assist (nothing enforced): **verification is mandatory, fixing is your call**.
 
-```bash
-ironbee verification fix disable   # report-only - a failing verdict is reported, not looped on
-ironbee verification fix enable    # back to the default - a failing verdict blocks until fixed
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verification fix disable` | Report-only: a failing verdict is reported, not looped on |
+| `ironbee verification fix enable` | Back to the default: a failing verdict blocks until fixed |
 
 It maps to the [`verification.fix`](/cli/configuration/configuration#verification) config key (default `true`), accepts the usual `-g`/`--global` and `--local` target flags, is read live by the gate, and only matters in enforce mode. At install, pass `--fix` / `--no-fix` with `--mode enforce` to skip the picker.
 
@@ -102,10 +102,10 @@ The agent is never blocked and none of the verification machinery is installed (
 
 Switch to it (or back) anytime:
 
-```bash
-ironbee verification disable   # monitoring-only - no machinery, tracking only
-ironbee verification enable    # re-enable verification (resolves to assist unless auto is on)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verification disable` | Monitoring-only: no machinery, tracking only |
+| `ironbee verification enable` | Re-enable verification (resolves to assist unless auto is on) |
 
 <Note>
   `auto` only matters while verification is enabled. If `verification.enable` is `false` (monitoring-only), the mode is monitoring regardless of `auto`, and `ironbee verification auto …` warns that it has no effect until you re-enable verification.
@@ -188,14 +188,14 @@ Here's each platform, and what its row looks like in that picker.
 
 To change platforms **after** install (rather than re-running it), each has an `enable` / `disable` subcommand:
 
-```bash
-ironbee node enable       # turn on Node.js runtime verification
-ironbee python enable     # turn on Python runtime verification (needs debugpy in the target env)
-ironbee backend enable    # turn on backend protocol verification
-ironbee android enable    # turn on Android device/emulator verification
-ironbee terminal enable   # turn on terminal (CLI / REPL / TUI) verification
-ironbee browser disable   # turn off the browser cycle (e.g. backend-only projects)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee node enable` | Turn on Node.js runtime verification |
+| `ironbee python enable` | Turn on Python runtime verification (needs debugpy in the target env) |
+| `ironbee backend enable` | Turn on backend protocol verification |
+| `ironbee android enable` | Turn on Android device/emulator verification |
+| `ironbee terminal enable` | Turn on terminal (CLI / REPL / TUI) verification |
+| `ironbee browser disable` | Turn off the browser cycle (e.g. backend-only projects) |
 
 Re-enabling is the inverse: `ironbee browser enable`, `ironbee node disable`, and so on. Changes are written to the project config and your client's hooks/tools are re-rendered automatically.
 
@@ -270,11 +270,11 @@ The model reads your `package.json` scripts, `Makefile`, `justfile`, `pyproject.
 
 **The same flow, standalone.** Run it anytime afterward - to add checks to a project you already set up, or re-suggest after big changes - with `ironbee checks suggest`:
 
-```bash
-ironbee checks suggest                 # analyze the project and propose verification.checks
-ironbee checks suggest --validate      # run each proposal once and drop the ones that fail before writing
-ironbee checks suggest --yes           # accept the full suggested set (for scripts/CI)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee checks suggest` | Analyze the project and propose `verification.checks` |
+| `ironbee checks suggest --validate` | Run each proposal once and drop the ones that fail before writing |
+| `ironbee checks suggest --yes` | Accept the full suggested set (for scripts/CI) |
 
 | Flag | Description |
 |------|-------------|
@@ -377,11 +377,11 @@ A **pass** verdict can still list issues. They're advisory: the change counts as
 
 By default the verifier runs on the **same model as the main conversation**. Pin it to a specific model - for example to verify on something cheaper or faster than your main coding model - with `ironbee verification model`:
 
-```bash
-ironbee verification model sonnet --client claude   # pin Claude's verifier
-ironbee verification model gpt-5.5 --client codex    # pin Codex's verifier
-ironbee verification model sonnet                    # pin the one installed verifier client
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee verification model sonnet --client claude` | Pin Claude's verifier |
+| `ironbee verification model gpt-5.5 --client codex` | Pin Codex's verifier |
+| `ironbee verification model sonnet` | Pin the one installed verifier client |
 
 The command always writes a per-client setting. `--client` is **optional when exactly one verifier-capable client is installed**, and **required when none or both** (Claude and Codex) are detected, since one model name rarely works for both. `--client cursor` is rejected, because Cursor has no verifier sub-agent. To set one model for every client, use `ironbee config set verification.model sonnet`. To go back to inheriting the session model:
 
@@ -401,11 +401,11 @@ The setting accepts the usual `-g`/`--global` and `--local` target flags and re-
 
 When you trigger `/ironbee-verify` by hand (or `$ironbee-verify` on Codex), an optional leading word picks what happens on a **fail** verdict:
 
-```bash
-/ironbee-verify              # verify-only (default) - report the verdict and stop
-/ironbee-verify fix          # fix-and-re-verify - on a fail, fix the issues and loop until it passes
-/ironbee-verify fix log in as admin, open /billing   # fix mode + a custom scenario
-```
+| Command | What it does |
+|---------|--------------|
+| `/ironbee-verify` | Verify-only (default): report the verdict and stop |
+| `/ironbee-verify fix` | Fix-and-re-verify: on a fail, fix the issues and loop until it passes |
+| `/ironbee-verify fix log in as admin, open /billing` | Fix mode plus a custom scenario |
 
 | Mode | Leading word | On a fail verdict |
 |------|--------------|-------------------|

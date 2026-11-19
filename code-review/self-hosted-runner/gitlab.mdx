@@ -1,0 +1,265 @@
+---
+title: Self-hosted runner on GitLab CI/CD
+sidebarTitle: On GitLab
+description: Run IronBee code review in your own GitLab CI/CD from a runner project, on gitlab.com, GitLab Dedicated or Self-Managed, and gate merges on its status.
+keywords: ["GitLab CI/CD code review", "CI/CD component", "merge request review", "Pipelines must succeed", "GitLab Self-Managed", "GitLab Dedicated"]
+---
+
+On GitLab, the [self-hosted runner](/code-review/self-hosted-runner/overview) is a CI/CD component, `code-review`, in IronBee's project `gitlab.com/ironbee-ai/ironbee-gitlab-runner`, listed in GitLab's CI/CD Catalog. A project of yours, the **runner project**, includes the component and nothing else. Your reviewed projects send their merge request and comment events to the runner project's pipeline trigger through webhooks, and its pipelines run IronBee's reviewer with your own model. It publishes its review on the merge request, and writes a status named **Code Review Result** into the merge request's pipeline, which holds a merge where you ask it to.
+
+This page explains the setup and what to decide. The component's project is the full reference, with every input, variable and message: [ironbee-ai/ironbee-gitlab-runner](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner).
+
+---
+
+## Where it runs
+
+- **gitlab.com.**
+- **GitLab Dedicated and GitLab Self-Managed 19.4 or later,** Enterprise or Community Edition, on any tier, including an instance IronBee can't reach from the internet. See [GitLab Dedicated and Self-Managed](#gitlab-dedicated-and-self-managed).
+
+IronBee never calls your instance: the jobs read your projects, call your model and call IronBee's API. Merge requests from forks aren't reviewed, since a fork's pipelines run in the fork.
+
+---
+
+## How it fits together
+
+| What | Where | What for |
+|---|---|---|
+| A **service account** | your top-level group | the identity the reviewer reads and writes as: a Developer of each reviewed project and of the rules repository, a Reporter of the runner project |
+| The **runner project** | where you choose | a private project that holds the component's include and the secrets, as its own protected CI/CD variables |
+| The **trigger owner** | a service account of the runner project | owns the runner project's triggers and the sweep's schedule, apart from the reviewer's identity |
+| A **pipeline trigger token** for each reviewed project | the runner project | the address each project's webhooks call |
+| **Two webhooks** for each reviewed project | each reviewed project, or one pair on its group on Premium | merge request events, and comments |
+| The **sweep's schedule** | the runner project, only where a project gates its merges | settles what a lost event or a dead run left ([below](#the-sweep)) |
+| A **project in IronBee** for each reviewed project | the IronBee console | its settings, rules and memories, and the list of its merge requests and runs |
+
+Nothing changes in a reviewed project's own `.gitlab-ci.yml`. The secrets live only in the runner project, as protected variables, out of reach of a merge request's author, and one runner project can serve many projects.
+
+**Where the runner project goes.** The runner project's Maintainers and Owners, directly or through its groups, manage its variables. Put it where those are the people who administer the reviewer: if the reviewed projects' group has Maintainers who don't, make a top-level group of its own for the runner project first. gitlab.com makes no top-level group through its API, so that step is yours.
+
+---
+
+## Before you start
+
+- The runner is enabled on your account, and you have the account's API key and a registry token. See [What you need](/code-review/self-hosted-runner/overview#what-you-need).
+- A top-level group on gitlab.com that you're an **Owner** of: only its Owner can create the group's service account. On gitlab.com, that Owner verifies their identity once before the group's first service account.
+- The **Maintainer** role, or Owner, on each project to review: its webhooks need it.
+- A model, and its key where it needs one.
+
+---
+
+## Set it up
+
+`ironbee runner setup` takes every step from your machine, signed in to GitLab as you. Export the secrets first, or let the command ask for them:
+
+```bash
+npm install -g @ironbee-ai/cli
+export IRONBEE_API_KEY IRONBEE_REGISTRY_TOKEN IRONBEE_MODEL_KEY
+ironbee runner setup --host gitlab \
+  --group acme \
+  --projects acme/shop,acme/payments \
+  --runner-project acme-reviewer/ironbee-runner \
+  --model-provider anthropic \
+  --notify-email platform-team@acme.example
+```
+
+It signs in through your browser, on GitLab's authorization page for IronBee's OAuth application, and revokes that token when it ends. Nothing of the sign-in reaches IronBee. On a machine with no browser, set `GITLAB_TOKEN` to a short-lived personal access token of yours with the `api` scope.
+
+It registers the projects with IronBee, which makes each one's project in the console, then makes what [How it fits together](#how-it-fits-together) lists, among them the webhooks "IronBee merge requests" and "IronBee comments". Before it goes on with the runner project, it lists everyone who reaches its secrets and asks you to confirm. It ends with the probe, one delivery that must run IronBee's images end to end, so a registry token that can't pull, runner tags no runner has or a mistyped key shows up now, not at the first merge request. For each step and flag, `ironbee runner add` and `ironbee runner check`, see [`ironbee runner` on GitLab](/cli/guides/runner#on-gitlab).
+
+These stay yours: the browser approval, the identity verification on gitlab.com, a top-level group of its own for the runner project where you need one, and gating merges.
+
+To take the same steps by hand in GitLab's pages, see the component's [Setup](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/setup.md).
+
+### The runner project's file
+
+```yaml
+include:
+  - component: gitlab.com/ironbee-ai/ironbee-gitlab-runner/code-review@v1
+    inputs:
+      projects: |
+        acme/shop
+        acme/payments
+      model-provider: anthropic
+```
+
+- `projects` lists the reviewed projects' paths, one a line. They're the only projects a run acts on.
+- Keep nothing else in the file: a `workflow:`, a `default:` or a job of your own would reach the component's jobs.
+- `@v1` follows the newest 1.x release. The setup writes the exact latest release instead, which `ironbee runner setup --update` moves.
+
+The model's inputs are the same as on GitHub: `model-provider`, `model-url`, `model-name`, `model-ca-certificate`, `model-prefix`, `model-max-output` and `aws-region`. Beside them, `runner-tags` names your own runner, `knowledge-repository` your [rules repository](/code-review/self-hosted-runner/overview#the-rules-repository), and `ironbee-run-reports` turns the run reports off. See the component's [Inputs](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner#inputs).
+
+### The variables
+
+The runner project's own CI/CD variables, each protected, never set on its group:
+
+| Variable | For |
+|---|---|
+| `IRONBEE_API_KEY` | IronBee's API |
+| `DOCKER_AUTH_CONFIG` | your registry token, as Docker's configuration of Docker Hub, with which GitLab's runner pulls IronBee's images |
+| `IRONBEE_GITLAB_TOKEN` | the service account's token, with which the reviewer reads and writes |
+| `IRONBEE_MODEL_KEY` | your model's key |
+| `IRONBEE_MODEL_HEADERS` | extra headers for your model's endpoint, one `name=value` a line, as a file variable |
+| `IRONBEE_KNOWLEDGE_TOKEN` | the rules repository, when the service account can't read it |
+| `IRONBEE_JEV_KEY` | your Typesafe key, only for the optional classifier [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier) |
+
+---
+
+## The service account
+
+The reviewer reads your merge requests and writes its reviews, replies and status as a service account of your top-level group, with a personal access token stored in the runner project. IronBee holds no GitLab credential of yours.
+
+- **Its name:** "IronBee code review runner", username `ironbee-runner-<group path>` unless you name another with `--service-account`. Give it a name of its own, never that of the IronBee account in a group connected to IronBee's cloud, which is another reviewer.
+- **People address it** as `@ironbee-ai`, or by its username, which GitLab's autocomplete offers.
+- **Its token** has the `api` scope and the longest life the group allows, a year at most. GitLab mails its expiry notices only to an address you give with `--notify-email`. `ironbee runner check --rotate-token` replaces it.
+
+See the component's [The service account](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/service-account.md).
+
+---
+
+## Where the jobs run
+
+- **gitlab.com's runners** work for a model reachable from the internet.
+- **A model inside your network needs a runner of yours there.** Name its tags in the `runner-tags` input, and every job of the component runs on it.
+- **Your runner's executor runs a job's image:** Docker, Docker Autoscaler or Kubernetes, on `amd64` or `arm64`. The shell executor can't run these jobs.
+- **The network:** the jobs connect to GitLab, your model's endpoint and IronBee's API (`api.service.ironbee.ai`), and the runner pulls from Docker Hub. If you turn on [Jev](/code-review/self-hosted-runner/overview#jev-an-optional-classifier), they also connect to Typesafe's endpoint, `api.typesafe.ai`.
+
+| Job | Runs | Stopped after |
+|---|---|---|
+| `decide` | for every delivery: reads it, and starts a review where one is due | 10 minutes |
+| `review-<project id>-<iid>` | for each review, answer or command, one at a time for each merge request | 2 hours |
+| `sweep` | at each interval of the sweep's schedule | 30 minutes |
+
+**Compute minutes.** On gitlab.com's runners, every job spends the compute minutes of the runner project's own top-level group, whatever plan the reviewed projects' group has. Every delivery runs a decide job, the reviewer's own notes included, and the sweep adds a job at each interval. A group that has spent its minutes runs no job at all, reviews included. A runner of yours spends none. See the component's [Where the jobs run](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/compute.md).
+
+### The trigger budget
+
+On gitlab.com, one runner project can create at most 25 pipelines a minute through its triggers, a gitlab.com limit. Every event a hook sends is one, whether or not it's for the reviewer, and most are the reviewer's own notes: a round of eight comments is about ten deliveries. Past the limit, a delivery is lost, and a hook that fails four times in a row is turned off for a while. A team whose projects often review several merge requests at once splits them among more runner projects. Self-Managed GitLab sets no such limit by default. See the component's [The trigger budget](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/budget.md).
+
+---
+
+## Gating merges
+
+The reviewer writes the **Code Review Result** status into the merge request's head pipeline, the one GitLab's **Pipelines must succeed** reads. Whether it holds a merge is up to you:
+
+| **Pipelines must succeed** | **Block merges** | The runner |
+|---|---|---|
+| Off | Either | Writes every conclusion. They don't hold a merge a person makes, though an auto-merge waits on a failed one |
+| On | Off, the default | Writes none, and turns any failed or running status of its own in the head pipeline into a pass, so nothing of the reviewer's holds the merge |
+| On | On | **Gates:** a blocking review fails the head pipeline, and a review under way holds the merge while it runs |
+
+**Block merges** is the console's code review setting for GitLab repositories, on the account's **Code review** settings as **Block merges on GitLab** and on each GitLab repository's, and **Block merging when** sets which findings block. See [Code review settings](/code-review/settings#on-the-pull-request).
+
+| The review concluded | The status | Its description |
+|---|---|---|
+| No open finding at or above **Block merging when** | `success` | the open count, such as `Nothing open` or `3 open · 1 high` |
+| An open finding at or above it | `failed` | the blocking count, such as `1 blocking · 3 open · 1 high` |
+| Nothing was reviewed, or a `retract` | `success` | `Not reviewed: ` and the reason, or `Retracted` |
+
+### To gate
+
+1. Turn on **Pipelines must succeed** in each project's **Settings > Merge requests > Merge checks**.
+2. Turn on **Block merges on GitLab** in the account's code review settings in the console, or **Block merges** in the project's.
+3. Turn on **All threads must be resolved** beside them, recommended. A finding the reviewer placed on the diff is a thread, and a thread holds the merge whatever becomes of a pipeline.
+4. Keep a working sweep. The setup makes its schedule when a project gates at setup time. If you turn gating on later, run `ironbee runner check --fix`, which makes the schedule and plays it once.
+
+### The running status
+
+Where you gate, a run that begins a review holds the merge while it works: the merge request's pipeline shows the **Code Review Result** job running, "Review under way". The runner writes it only while a sweep job of the runner project has succeeded in the last three hours, since a running status a dead run leaves is settled by the sweep. A team that gates waits for the review, minutes as a rule.
+
+### The sweep
+
+The sweep is a scheduled pipeline of the runner project, every ten minutes by default and never less often than hourly, made only where a project gates its merges. It finds open merge requests whose head pipeline holds no status of the reviewer's, such as after a lost delivery or a pipeline started by hand, and has each one reviewed or its conclusion written again. It also settles a running status a dead run left. GitLab keeps a schedule no more often than the plan of the runner project's top-level group allows, which on gitlab.com's Free tier is hourly. See the component's [The sweep](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/sweep.md).
+
+### What the status is worth
+
+The status reflects the findings nobody who counts has turned down. The merge request's author can close a finding with a reply or a thumbs-down, and someone with the Developer role can resolve a thread, `retract`, or `pause` and then push.
+
+- **A run that never began its review** holds nothing until the sweep finds its head: an image that couldn't be pulled, a lost delivery, or a newer pipeline of the same commit. The status is a signal that can be late, not a lock.
+- **A merge request from a protected branch,** such as `develop` into `main`, is reviewed with no status, since GitLab takes a status into that pipeline only from someone who may push or merge there. Its open threads still hold it under **All threads must be resolved**. See the component's [Protected source branches](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/protected-branches.md) to opt in.
+
+See the component's [Gating merges](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/merge-gate.md).
+
+---
+
+## On the merge request
+
+The reviewer publishes each round whole: its comments, then the review's note. With **Pull request summary** on, the summary is a note of its own, never the description. A later push starts a follow-up round that reads only what changed since.
+
+| Command | What it does |
+|---|---|
+| `@ironbee-ai review` | Reviews what was pushed since the last round. With nothing pushed, it rewrites the status from the merge request's notes |
+| `@ironbee-ai full review` | Reads the whole merge request again |
+| `@ironbee-ai pause` | Stops automatic reviews of the merge request |
+| `@ironbee-ai resume` | Starts them again |
+| `@ironbee-ai retract` | Takes back every comment of the reviewer's on the merge request, and turns the status into `Retracted` |
+
+- **Who may command:** people with the Developer role or above. The service account's username works as well as `@ironbee-ai`.
+- **Replies:** a reply on one of the reviewer's threads, from the merge request's author or a member with the Developer role or above, gets an answer while **Answer questions** is on.
+- **Turned down or resolved:** a reply that turns a finding down, and a thread someone resolves, count at the next review that reads the merge request again.
+- **Bots:** the reviewer's own notes and a bot's notes start nothing.
+
+---
+
+## GitLab Dedicated and Self-Managed
+
+The runner serves projects on a GitLab Dedicated tenant and on a GitLab Self-Managed server running GitLab 19.4 or later. There's no host to register in IronBee's console, no IronBee address to let in, and no IronBee plan asked: the runner follows its own license. An instance IronBee can't reach from the internet is served when its runners reach IronBee's API, Docker Hub and your model.
+
+| | gitlab.com | Dedicated and Self-Managed |
+|---|---|---|
+| The component | IronBee's project on gitlab.com | your copy of it on the instance, public |
+| The include | `gitlab.com/ironbee-ai/ironbee-gitlab-runner/code-review@v1` | `$CI_SERVER_FQDN/<your copy's path>/code-review@v1`, at a tag |
+| The machines | gitlab.com's runners, or yours | yours, and on Dedicated the tenant's hosted runners too |
+| The service account | made by the group's Owner | made by an administrator, or by an Owner once an administrator allows it. On the Community Edition, by an Owner |
+| The webhooks | call gitlab.com | call your instance itself, once an administrator allows it |
+| A private certificate authority | - | named in your runners' `tls-ca-file`, which the jobs then trust |
+| How IronBee files a project | `acme/shop` | `gitlab.acme.com:acme/shop`, a project of its own in the console |
+
+**Your copy of the component.** GitLab includes a component only from the instance the pipeline runs on, so the runner project includes a copy on your instance. It must be public: the pipelines run as the trigger owner, a service account, which can't read an internal or private project it isn't a member of. Make it with a pull mirror where your tier has one, or by pushing the branches and tags, with `-o ci.skip`. Bring it up to date for each new release.
+
+**The administrator's steps.** An administrator of the instance allows top-level group Owners to create service accounts, and adds the instance's own host name to the hosts webhooks may reach. Where the instance keeps the Public level from its users, an administrator also makes your copy public. `ironbee host setup <host> --runner --components <group>` takes the first two steps and makes the group and the copy, public, where they're absent. It changes the visibility of nothing it finds: a group that exists must already be public, or the step stops and asks you to make it public or name another group. See [`ironbee host setup`](/cli/guides/hosts#ironbee-host-setup).
+
+**With the setup command** on your instance, set `GITLAB_HOST` to it and `GITLAB_TOKEN` to a token of yours there, or name the instance's OAuth application for the browser sign-in. Add `--component <your copy's path>@<tag>`. See [`ironbee runner`](/cli/guides/runner#gitlab-dedicated-and-self-managed).
+
+**`@ironbee-ai` on your instance** notifies a user or group of that name, where one exists. Address the reviewer by its service account's username there.
+
+This release doesn't serve:
+
+- an instance served under a path, such as `https://acme.com/gitlab`, or on a port other than 443
+- an instance named by an IP address, or by a single label with no dot
+- GitLab older than 19.4
+- an instance that lets no project be public
+- an image registry other than Docker Hub, except a mirror of Docker Hub that keeps the image's reference and digest
+- GitLab Dedicated for Government
+
+To use IronBee's cloud on these instances instead, see [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed). The component's [On GitLab Dedicated and Self-Managed](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/setup.md#on-gitlab-dedicated-and-self-managed) covers each step in full.
+
+---
+
+## Troubleshooting
+
+Look first at the **Code Review Result** job in the merge request's pipeline, then at the runner project's **Build > Pipelines**. Every delivery is a pipeline there: the `decide` job's log says in one line, starting with `decide:`, what it made of the delivery, and the review job's log says what the runner read and decided. A reviewed project's **Settings > Webhooks** shows whether GitLab turned a hook off, and each delivery's answer. Then run `ironbee runner check`, which reads the whole setup and ends with the probe.
+
+| What you see | What to do |
+|---|---|
+| No pipeline in the runner project | Look at the hook's **Recent events**. A hook GitLab turned off, or a trigger that answers 404: `ironbee runner check --fix` makes it again. 400 past 25 pipelines a minute: the [trigger budget](#the-trigger-budget). A refusal on every hook after a change to the file: `ironbee runner check` lints it |
+| The review job waits and never starts | `runner-tags` names tags no runner has, or the runner is offline |
+| The review job fails before the runner starts | The images couldn't be pulled: check `DOCKER_AUTH_CONFIG` |
+| No status on the merge request | The review job's log says why, in a line that starts with `check: none written`. Most often **Pipelines must succeed** is on and **Block merges** off, which writes none, or the head pipeline is on a protected branch. A newer pipeline of the same commit carries no status either: comment `@ironbee-ai review` |
+| "Not reviewed: ..." | The reason is in the sentence. The license, IronBee's refusal and the cloud reviewing the project read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting) |
+| `error: <input>: <why>` in the review job's log | A configuration error. Fix the input it names |
+| A running status stays | The run died while it reviewed. The sweep settles it within its interval, or comment `@ironbee-ai review` |
+
+The component's [Troubleshooting](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/docs/troubleshooting.md) lists every message.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="ironbee runner" icon="terminal" href="/cli/guides/runner">
+    Set up, extend and check a runner from your machine.
+  </Card>
+  <Card title="Self-hosted runner overview" icon="server" href="/code-review/self-hosted-runner/overview">
+    The license, models, settings and what reaches IronBee.
+  </Card>
+</CardGroup>

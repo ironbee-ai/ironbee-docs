@@ -1,0 +1,155 @@
+---
+title: Code security of your repositories
+sidebarTitle: Overview
+description: IronBee scans the default branch of your GitHub, GitLab and Bitbucket repositories for security problems on a schedule, and can run the code to prove them.
+keywords: ["vulnerability scan", "SAST", "dynamic analysis", "application security testing"]
+---
+
+Code security scans the default branch of a repository for security problems, on a schedule you choose. Each problem a scan finds is kept as a record: where it is in the code, the path to it from an entry point, how it could be used and how to fix it. With **Execution** on, a scan also installs the repository's dependencies and runs its code in a sandbox, and a finding it reproduces there is confirmed and gets a severity.
+
+- **In the console:** each project's **Code security** tab shows the scans, the records and the runs, and the settings pages choose how a scan runs. See [Code security scans of a repository](/console/code-security).
+- **Through the API:** read the records and runs, set your team's decisions, start a scan and change the settings. See [Code security API](/code-security/api).
+
+Code security is off until an owner or an admin turns it on for a repository. A scan uses [credits](#credits), and only owners and admins see code security.
+
+---
+
+## What it is, and what it isn't
+
+Code security and [code review](/code-review/overview) read the same repositories through the same connection, but they do different jobs:
+
+| | Code security | Code review |
+|---|---|---|
+| **What it reads** | The default branch, as it stands | Each pull request or merge request, before it merges |
+| **When** | On a schedule, or when an owner or admin starts a scan | When a pull request opens or gets a push, or when someone asks |
+| **Where the results go** | The console and the API only | The pull request, and the console |
+
+Code security posts nothing on a pull request or merge request: no comment, no check, no pipeline status, no build status. It doesn't start from a push and doesn't scan other branches. It never changes the repository: a record's fix is shown for you to apply. The code it runs stays in its sandbox, so it never reaches your deployments or any other live service. To test a running app, use [verification](/console/verifications).
+
+---
+
+## Where it runs
+
+Code security scans repositories on every Git host IronBee connects to:
+
+| Host | How the repository is connected |
+|---|---|
+| GitHub: github.com, including organizations of a GitHub Enterprise Cloud enterprise | The [IronBee GitHub App](/integrations/github) |
+| GitHub: a GHE.com tenant, or a GitHub Enterprise Server of your own | A [registered tenant or server](/integrations/github-enterprise) |
+| GitLab: gitlab.com | A [connected group](/integrations/gitlab) |
+| GitLab: a GitLab Self-Managed server, or a GitLab Dedicated tenant | A [registered instance](/integrations/gitlab-self-managed) |
+| Bitbucket Cloud (bitbucket.org) | A [connected workspace](/integrations/bitbucket) |
+
+It works the same on each host. A scan clones the repository through the connection IronBee already has, reads only the code, and writes nothing to the host. On a registered tenant, server or instance, the clone comes from IronBee's one address, like every other call IronBee makes there.
+
+Scans run on IronBee's infrastructure:
+
+- **Each scan runs on a machine of its own.**
+- **The code it runs has no network access.** With **Execution** on, only the dependency install reaches the public package registries.
+- **The scan is given no secrets:** none of the project's secrets, variables or environments, and the code it runs can't reach the token used for the clone or any IronBee credential.
+
+See [Where it runs](/code-security/how-a-scan-works#where-it-runs) and [What a scan is given](/code-security/how-a-scan-works#what-a-scan-is-given).
+
+The [self-hosted runner](/code-review/self-hosted-runner/overview) reviews pull requests in your own CI and doesn't run code security, so a host that IronBee can't reach from the internet has no code security.
+
+Vercel, Netlify and CLI projects have no code security. Connect the project's repository through one of the hosts above to scan it.
+
+---
+
+## Turn it on
+
+Code security is turned on one repository at a time. An owner or an admin does one of these:
+
+- clicks **Turn on** on the project's **Code security** tab. See [Turn it on](/console/code-security#turn-it-on).
+- turns on **Scan this repository** in the project's **Settings > Code security**. See [Repository settings](/console/code-security-settings#repository-settings).
+- sets `enabled` to `true` through the API. See [Change a repository's settings](/code-security/api#change-a-repositorys-settings).
+
+There's no account setting that turns it on for every repository. The account's settings hold the defaults each repository follows: the profile, execution and how often a scan comes.
+
+A repository that has never been scanned is due at once, so its first scan, a full scan, comes within minutes of turning code security on, once no other code security scan of your account is waiting or running and the team has credits left. See [When a scan runs](/code-security/how-a-scan-works#when-a-scan-runs).
+
+Once code security is off for a repository, no scan of it starts. Its records are kept, and its runs within your plan's retention. They aren't shown, and come back when you turn it on again.
+
+---
+
+## What a scan does
+
+A scan reads the default branch and writes a record for each problem it finds. Three settings shape it, at the account and for each repository:
+
+- **Profile:** how far a scan follows what it finds. **Auto** (the default) picks **Standard** for smaller repositories and **Quick** for larger ones, and never **Deep**. See [Profile](/console/code-security-settings#profile).
+- **Execution:** whether a scan may run the repository's code to prove what it finds. Off by default. See [Running your code](/code-security/how-a-scan-works#running-your-code).
+- **Scheduled scan:** how often a scan comes: **Daily**, **Weekly** (the default), **Every two weeks** or **Monthly**.
+
+Each repository also has **Paths to ignore**: files left out of every scan and of the repository's size.
+
+The first scan of a repository is a **Full** scan of the whole branch. After that, a scheduled scan is **Incremental**: it reads what changed since the last scan. A scan that couldn't read everything in one run puts the rest off to a **Follow-up** run, which is free. A period in which the branch didn't move scans nothing. See [How a scan works](/code-security/how-a-scan-works).
+
+---
+
+## Records, verdicts and decisions
+
+A **record** is one problem a scan found. A later scan that sees the same problem again updates its record instead of adding another. Every record has a verdict:
+
+- **Confirmed:** the scan reproduced the problem by running the code. Only a confirmed finding has a severity: **Critical**, **High**, **Medium**, **Low** or **Informational**.
+- **Lead to validate:** the scan couldn't prove it yet. The record says what blocks a verdict and how to validate it yourself. With **Execution** off, everything a scan finds stays a lead.
+- **Rejected:** a scan found that it doesn't hold.
+
+Your team's **decision** says what you do with a record: **Open**, **Accepted**, **Fixed elsewhere** or **Not an issue**. A decision holds while the record's verdict and severity stay the same. When you fix a problem in the code, leave its record **Open**: a later scan that reads the changed code checks the record again, and can reject it once the problem is gone. A scan changes only the records it reports, so until one does, the record stays as it was.
+
+To read a record, set a decision and see every scan that ran, see [Security records and runs](/console/code-security-records).
+
+---
+
+## Credits
+
+Code security uses the team's credits, as code review and verification do. A scan is priced when it starts, before it reads anything, by the repository's size outside the paths to ignore, the profile and whether **Execution** is on. It's charged when it finishes.
+
+What uses credits:
+
+- a full scan: the first scan, one you ask for with **Run full scan** or through the API, and the next scan after **Paths to ignore** changed
+- a scheduled or API scan of a period in which the default branch moved
+- **Execution**, which makes a scan cost more
+
+What's free:
+
+- a follow-up run, which finishes a scan already paid for
+- a period in which the default branch didn't move, or changed only in ignored paths
+- a scan that fails, or that's refused before it reads the code, such as when the credits left don't cover it
+- reading records and runs, setting decisions and changing settings, in the console or through the API
+
+When the team has no credits left, no scheduled scan starts and **Run full scan** is unavailable until the credits reset or the team gets more. A repository larger than the rate card covers is scanned by contract with IronBee.
+
+The rates are under **What a job costs** on [Credit usage](/console/usage#what-a-job-costs). Each plan's credits are on [Pricing](/console/pricing).
+
+---
+
+## Who can see it
+
+Only owners and admins see code security: the **Code security** tab, its records and runs, and its settings at both levels. Only they turn it on, start a scan, set a decision and change the settings. Members and billing admins don't see the tab or the settings pages. See [Roles and permissions](/console/roles).
+
+Through the API, the account API key acts as an owner, and a personal OAuth token acts with its user's role, so it works for owners and admins only. See [Authentication](/code-security/api#authentication).
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="How a scan works" icon="scan-search" href="/code-security/how-a-scan-works">
+    What a scan reads, when it runs, follow-up runs, and what running your code means.
+  </Card>
+  <Card title="Code security API" icon="code" href="/code-security/api">
+    Read records and runs, set decisions, start a scan and change the settings.
+  </Card>
+  <Card title="Code security in the console" icon="shield-check" href="/console/code-security">
+    The project's tab: where a scan stands, the scan summary and Run full scan.
+  </Card>
+  <Card title="Security records and runs" icon="shield-alert" href="/console/code-security-records">
+    Read a record, decide on it, and see every scan that ran.
+  </Card>
+  <Card title="Code security settings" icon="settings" href="/console/code-security-settings">
+    Choose the profile, the schedule, execution and the paths a scan leaves out.
+  </Card>
+  <Card title="Code review" icon="git-pull-request" href="/code-review/overview">
+    Reviews of every pull request and merge request, before they merge.
+  </Card>
+</CardGroup>

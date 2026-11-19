@@ -161,6 +161,15 @@ Without the `BITBUCKET_OAUTH_TOKEN`, the report stays in the step log, and the p
 
 The last step of the pipe fails it, and with it the step, when the verification fails or ends without a verdict. A failed step fails the commit's pipeline build, which the **Minimum number of successful builds for the last commit** merge check counts. The outputs are written to `.ironbee/outputs.env`, where the step's `after-script` reads `IRONBEE_VERDICT` (`pass`, `fail`, `not_applicable` or `unknown`) and the other [outputs](/bitbucket-pipe/configuration/configuration#outputs), whether the pipe passed or failed.
 
+### Under enforced merge checks
+
+Bitbucket writes a build of its own for each pipeline, named after it, such as `Pipeline - pullrequests: **` for a `pull-requests: '**'` pipeline, beside IronBee's statuses. On a Premium workspace whose branch has **Prevent a merge with unresolved merge checks** on, the merge check counts that build like any other:
+- While the pipeline runs, a merge waits.
+- When the pipe fails its step, a merge is refused until the pipeline runs again on that commit and succeeds. The pipe fails its step whenever no passing verdict arrived: a failed verification, and also one that didn't run or ended without a verdict, such as when IronBee can't be reached. Run the pipeline again.
+- A fix commit has no build of its own, so a merge of it is refused until something reports a build on it.
+
+See [Hold merges on Premium](/code-review/on-bitbucket#hold-merges-on-premium).
+
 ---
 
 ## Forks

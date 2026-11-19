@@ -28,7 +28,7 @@ Only `ironbee_api_key` is required. Every run also needs a target: `app_url`, or
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
 | `ironbee_api_key` | Required | Both | Your IronBee account API key, from **Settings > Account** in the console. Store it as a repository secret |
-| `ironbee_cli_version` | `latest` | Both | IronBee CLI version to install, such as `0.45.0` |
+| `ironbee_cli_version` | `latest` | Both | IronBee CLI version to install, such as `0.54.0`. On a GHE.com tenant or a GitHub Enterprise Server, pin 0.54.0 or newer: an older CLI sends the repository as github.com's repository of the same name. See [GitHub Enterprise](/github-action/guides/github-enterprise) |
 | `ironbee_project` | Repository name | Platform | The project the run reports to |
 | `ironbee_environment` | Empty | Platform | The project environment the run is against, by name. Selects that environment's variables and secrets on top of the project-wide ones. A new name is created by the first run that uses it. Empty falls back to the deployment environment on `deployment` and `deployment_status` events |
 | `ironbee_api_url` | Empty | Platform | IronBee API base URL. Leave empty |
@@ -132,7 +132,7 @@ Every `true`/`false` input also accepts `1`/`0`, `yes`/`no` and `on`/`off`. Any 
 | `mode` | Where the verification ran: `platform` or `local` |
 | `job_id` | The verification run's id. Platform mode only; after a fix, the re-verification's id |
 | `job_url` | Link to the run in the IronBee Console. Platform mode only, once the run has started |
-| `artifacts_url` | Download URL for the evidence artifact. Local mode only; evidence from a run on IronBee is in the console |
+| `artifacts_url` | Download URL for the evidence artifact. Local mode only; evidence from a run on IronBee is in the console. Empty on GitHub Enterprise Server too, where the artifact version gives no address |
 | `platform_publishes` | `true` when IronBee publishes the run on the repository itself: the check on the commit, and on a pull request its review and comment. The action then posts no report comment. `false` otherwise, and always in local mode |
 
 ```yaml

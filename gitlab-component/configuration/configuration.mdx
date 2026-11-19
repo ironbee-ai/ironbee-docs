@@ -37,7 +37,7 @@ Only `ironbee_api_key` is required, and it reads the `IRONBEE_API_KEY` CI/CD var
 | Input | Default | Mode | Description |
 |-------|---------|------|-------------|
 | `ironbee_api_key` | `$IRONBEE_API_KEY` | Both | Your IronBee account API key, from **Settings > Account** in the console. Store it as a masked CI/CD variable |
-| `ironbee_cli_version` | `latest` | Both | IronBee CLI version to install, such as `0.52.0`. Empty means `latest` |
+| `ironbee_cli_version` | `latest` | Both | IronBee CLI version to install, such as `0.54.0`. Empty means `latest`. On a GitLab Self-Managed server or Dedicated tenant, pin 0.54.0 or newer: an older CLI names no repository for a job off gitlab.com |
 | `ironbee_project` | Empty | Platform | The project the run reports to. Empty derives it from the git remote |
 | `ironbee_environment` | Empty | Platform | The project environment the run is against, by name. Selects that environment's variables and secrets on top of the project-wide ones. A new name is created by the first run that uses it. Empty falls back to the job's own `environment:` (`CI_ENVIRONMENT_NAME`) |
 | `ironbee_api_url` | Empty | Platform | IronBee API base URL. Leave empty |

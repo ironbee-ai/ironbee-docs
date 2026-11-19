@@ -45,7 +45,9 @@ Current structure as of the `docs.json` navigation configuration.
 |------|-------|--------|
 | `integrations/overview.mdx` | How integrations work | ✅ |
 | `integrations/github.mdx` | GitHub App | ✅ |
+| `integrations/github-enterprise.mdx` | GitHub Enterprise Cloud and Server | ✅ |
 | `integrations/gitlab.mdx` | GitLab | ✅ |
+| `integrations/gitlab-self-managed.mdx` | GitLab Self-Managed and Dedicated | ✅ |
 | `integrations/bitbucket.mdx` | Bitbucket | ✅ |
 | `integrations/vercel.mdx` | Vercel | ✅ |
 | `integrations/netlify.mdx` | Netlify | ✅ |
@@ -73,6 +75,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `github-action/guides/comment-trigger.mdx` | Verify from a pull request comment | ✅ |
 | `github-action/guides/verifying-your-app.mdx` | Verifying your application | ✅ |
 | `github-action/guides/verification-platforms.mdx` | Local-mode platforms | ✅ |
+| `github-action/guides/github-enterprise.mdx` | The GitHub Action on GitHub Enterprise | ✅ |
 
 #### Advanced
 
@@ -103,6 +106,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `gitlab-component/guides/running-in-ci.mdx` | Running in GitLab CI/CD | ✅ |
 | `gitlab-component/guides/verifying-your-app.mdx` | Verifying your application in GitLab | ✅ |
 | `gitlab-component/guides/verification-platforms.mdx` | Local-mode platforms in GitLab | ✅ |
+| `gitlab-component/guides/self-managed.mdx` | The GitLab component on Self-Managed and Dedicated | ✅ |
 
 #### Advanced
 
@@ -163,6 +167,31 @@ Current structure as of the `docs.json` navigation configuration.
 | `code-review/rules-and-memories.mdx` | Code review rules and memories | ✅ |
 | `code-review/settings.mdx` | Code review settings | ✅ |
 
+### Self-hosted runner
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-review/self-hosted-runner/overview.mdx` | Self-hosted runner for code review | ✅ |
+| `code-review/self-hosted-runner/github.mdx` | Self-hosted runner on GitHub Actions | ✅ |
+| `code-review/self-hosted-runner/gitlab.mdx` | Self-hosted runner on GitLab CI/CD | ✅ |
+| `code-review/self-hosted-runner/bitbucket.mdx` | Self-hosted runner on Bitbucket Pipelines | ✅ |
+
+### Code security
+
+| File | Title | Status |
+|------|-------|--------|
+| `code-security/overview.mdx` | Code security of your repositories | ✅ |
+| `code-security/how-a-scan-works.mdx` | How a code security scan works | ✅ |
+| `code-security/api.mdx` | Code security API | ✅ |
+
+### Code security in the console
+
+| File | Title | Status |
+|------|-------|--------|
+| `console/code-security.mdx` | Code security scans of a repository | ✅ |
+| `console/code-security-records.mdx` | Security records and runs | ✅ |
+| `console/code-security-settings.mdx` | Code security settings | ✅ |
+
 ---
 
 ## CLI
@@ -191,6 +220,8 @@ Current structure as of the `docs.json` navigation configuration.
 | `cli/guides/verification-jobs.mdx` | Verification jobs | ✅ |
 | `cli/guides/code-review.mdx` | Code review of your local checkout | ✅ |
 | `cli/guides/credits.mdx` | Credits for code reviews and verifications | ✅ |
+| `cli/guides/runner.mdx` | Self-hosted runner setup with ironbee runner | ✅ |
+| `cli/guides/hosts.mdx` | Prepare enterprise hosts with ironbee host | ✅ |
 | `cli/guides/scenarios.mdx` | CLI saved scenarios | ✅ |
 | `cli/guides/issue-tracking.mdx` | Issue tracking | ✅ |
 | `cli/guides/interactive-mode.mdx` | Interactive mode (TUI) | ✅ |
@@ -240,14 +271,6 @@ Current structure as of the `docs.json` navigation configuration.
 |------|-------|--------|
 | `console/code-wiki.mdx` | Code wiki of a repository | ✅ |
 | `console/code-wiki-settings.mdx` | Code wiki settings | ✅ |
-
-### Code security
-
-| File | Title | Status |
-|------|-------|--------|
-| `console/code-security.mdx` | Code security scans of a repository | ✅ |
-| `console/code-security-records.mdx` | Security records and runs | ✅ |
-| `console/code-security-settings.mdx` | Code security settings | ✅ |
 
 ### Verifications
 

@@ -5,7 +5,7 @@ description: Every pull request IronBee reviews, with its review status and open
 keywords: ["PRs", "review issues", "bugs found in review"]
 ---
 
-The console lists the pull requests of your connected repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github). Where a label on these pages names GitHub, such as **Open on GitHub**, a GitLab or Bitbucket repository's pages name GitLab or Bitbucket.
+The console lists the pull requests of your connected repositories with what IronBee's code review said about each one. Open a pull request to read its findings, follow the jobs that ran on it, and see the settings its next review will use. How a review works is covered in [Code review](/code-review/overview), and what it posts on GitHub in [Code review on GitHub](/code-review/on-github). Where a label on these pages names GitHub, such as **Open on GitHub**, a GitLab or Bitbucket repository's pages name GitLab or Bitbucket. A repository on your own GitHub Enterprise or GitLab host keeps the GitHub or GitLab labels, and its links open on that host.
 
 ---
 
@@ -124,6 +124,34 @@ Before IronBee has published a review, the column shows `-`, or **after the revi
 | **Nothing matches** | The filters leave no pull request. **Clear filters** resets them |
 | **No repository connected** | Sidebar list: "Code review runs on repositories connected through the GitHub App, a GitLab group or a Bitbucket workspace." **Integrations** opens the integrations page |
 | **Code review runs on GitHub, GitLab and Bitbucket repositories** | **Code review** tab of a Vercel, Netlify or CLI project: "This project is not one. Pick a repository above." **Open integrations** leads to setting one up |
+
+---
+
+## Pull requests a self-hosted runner reviewed
+
+With the [self-hosted runner](/code-review/self-hosted-runner/overview), IronBee reviews pull requests in your own CI: a workflow on GitHub, a runner project on GitLab, or a pipeline on Bitbucket. A project's **Code review** tab lists what the runner reviewed, built from the runs it reports. No title or text of a pull request reaches IronBee, and of its author only a number, for the license's developer count. So the rows hold numbers, states and commits only, and a row has no pull request page.
+
+The tab shows this list when the repository has runs of the runner, or when your account uses the runner and no connection covers the repository. A connected repository that has runs of the runner shows two lists: **Reviewed by IronBee's cloud**, then **Reviewed by the workflow**, or **Reviewed by the runner project** on GitLab and **Reviewed by the pipeline** on Bitbucket. The sidebar's **Pull requests** list holds the cloud's reviews only.
+
+| Column | What it shows |
+|--------|---------------|
+| **Pull Request** | The number, which opens the pull request on its host, and the repository. On GitLab, the column is **Merge Request** and the number reads `!N` |
+| **Last Review** | **Reviewed**, with the commit and when; **Retracted**, when the review was taken back; or **Not reviewed**, with **last skipped:** and the reason, such as **draft** or **too large** |
+| **Open · Blocking · Fixed** | The last review's findings: open, blocking a merge, and fixed. Hover to read them |
+| **Rounds** | How many review rounds the pull request has had |
+| **Latest Run** | The newest run's status, **Running**, **Succeeded**, **Failed**, **Cancelled**, **Skipped** or **Never completed**, with the reason when it skipped or failed, then its kind and when it started |
+
+The date filter applies: the list holds the pull requests whose latest run started in the window. With none, it says **No runs yet**, or **No runs in this window** when older ones exist.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/runner-pull-requests-light.png" alt="A Code review tab listing the pull requests the IronBee workflow reviewed, with Last Review, Open, Blocking and Fixed counts, Rounds and Latest Run" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/runner-pull-requests-dark.png" alt="A Code review tab listing the pull requests the IronBee workflow reviewed, with Last Review, Open, Blocking and Fixed counts, Rounds and Latest Run" />
+
+Click a row to open its runs beside the list, newest first. Each run shows its kind (**Review**, **Answer**, **Follow-up** or **Retract**), its status, the commit and the runner's version, then what it did: the **Round**, what it **Read** (**the whole change**, **what changed since the last round** or **nothing new**), the **Depth**, the **Size**, **Lines** and **Files**, the **Replies** and how long it **Took**. Under them come its findings by state, and the model calls and tokens it used. A follow-up round after a push is a **Review** run; **Follow-up** is a run on words addressed to the reviewer in the conversation, and **Answer** a run on a question in one of its threads.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/runner-run-drawer-light.png" alt="The runs of a pull request beside the list: an Answer run with its replies, then a Review run with its round, what it read, depth, size, lines, files, findings and models" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/runner-run-drawer-dark.png" alt="The runs of a pull request beside the list: an Answer run with its replies, then a Review run with its round, what it read, depth, size, lines, files, findings and models" />
+
+If the runner's run reports are off, IronBee keeps only that a run started, so those runs list no pull request. The tab says so, and names the setting that turns them off: the workflow's or the runner project's `ironbee-run-reports` input, or the pipeline's `IRONBEE_RUN_REPORTS` variable.
 
 ---
 

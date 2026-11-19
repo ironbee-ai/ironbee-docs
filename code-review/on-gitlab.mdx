@@ -25,7 +25,7 @@ A merge request from a fork is reviewed too. Its **IronBee review** status never
 
 ## The review IronBee posts
 
-IronBee publishes a review in one batch, so GitLab sends one round of notifications for it. The review is a comment: it never approves a merge request. Whether a finding holds a merge is up to [the pipeline status](#the-ironbee-review-pipeline-status).
+IronBee publishes a review in one batch, so GitLab sends one round of notifications for it. The review is a comment: it never approves a merge request or requests changes. Whether a finding holds a merge is up to [the pipeline status](#the-ironbee-review-pipeline-status).
 
 **The review body** is a note on the merge request, with the same content as on GitHub: the **Open in IronBee** button, the head line with the counts by severity, the notes on how the review was made, the rules and memories it applied, the findings table and the map of where the findings sit. The map's root names the merge request by its GitLab reference, such as `MR !42`. See [The review body](/code-review/on-github#the-review-body). The note can't be resolved.
 
@@ -119,6 +119,19 @@ IronBee reads what people do with its comments, as on GitHub. See [Replies, reac
 ## Credits and when a review doesn't run
 
 Credits, the situations in which no review runs, and what happens when the team's credits run out are the same as on GitHub, with the **IronBee review** status in place of the check. See [When a review doesn't run](/code-review/on-github#when-a-review-doesnt-run) and [Credits](/code-review/on-github#credits). On a project with **Pipelines must succeed** and **Block merges** off, IronBee writes no status, so a review refused for credits says so in a reply on the merge request. A review that's too large or already reviewed shows only in the console there.
+
+---
+
+## On GitLab Premium, Ultimate, Self-Managed and Dedicated
+
+Code review works on these as this page describes: the same service account and mention, the same pipeline status, and the same **Block merges** setting. What differs:
+
+- **A group that restricts access by IP address,** on Premium and Ultimate, gitlab.com or your own instance, holds IronBee's service account to its list. Until IronBee's address is on it, IronBee suspends the group's connection and nothing is reviewed. See [Premium and Ultimate groups](/integrations/gitlab#premium-and-ultimate-groups).
+- **On a GitLab Self-Managed server or a GitLab Dedicated tenant,** the group connects through the instance you [registered](/integrations/gitlab-self-managed):
+  - **The badges and icons** in IronBee's notes are images loaded from `console.ironbee.ai`, by your reader's browser or by your instance's asset proxy where an administrator turned one on. Where neither reaches the console, each shows as its text.
+  - **The repository's project** is filed under your instance, apart from a gitlab.com project of the same path, with its own settings, rules and memories. It takes the path after the group as its name, so the repository is enabled only while no other project of the account has that name. The console links its merge requests to your instance.
+
+To review merge requests in your own GitLab CI/CD instead, with your own model, use the [self-hosted runner](/code-review/self-hosted-runner/gitlab). It serves a Self-Managed server or a Dedicated tenant IronBee can't reach from the internet too.
 
 ---
 

@@ -114,11 +114,11 @@ It is **advisory in this release**: the agent must follow the guidance as part o
 
 The feature is on by default. Tune it under the `verification.context` key. See [Configuration → Verification context](/cli/configuration/configuration#verification-context) for the full table. The common knobs:
 
-```bash
-ironbee config set verification.context.enable false      # turn it off entirely
-ironbee config set verification.context.commitDepth 0     # uncommitted work only
-ironbee config set verification.context.source actions    # skip git, use IronBee's own file_change events
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee config set verification.context.enable false` | Turn it off entirely |
+| `ironbee config set verification.context.commitDepth 0` | Uncommitted work only |
+| `ironbee config set verification.context.source actions` | Skip git, use IronBee's own `file_change` events |
 
 These keys are read live at verification time, so a change takes effect on the next session without re-rendering client artifacts.
 

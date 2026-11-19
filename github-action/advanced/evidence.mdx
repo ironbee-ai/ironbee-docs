@@ -46,7 +46,7 @@ A run on your runner records to the IronBee Console and also uploads the `ironbe
 - `claude-output.log` holds the agent's output.
 - `ironbee-devtools-mcp.log` is the DevTools server's log.
 
-The report links to the artifact, and the `artifacts_url` output carries its download URL for later steps.
+The report links to the artifact, and the `artifacts_url` output carries its download URL for later steps. On GitHub Enterprise Server, the action's `ghes` entry point uploads the artifacts with a version that gives no address, so the report has no link and `artifacts_url` stays empty: find the artifacts among the workflow run's artifacts. See [GitHub Enterprise](/github-action/guides/github-enterprise#the-report-has-no-download-link).
 
 ---
 

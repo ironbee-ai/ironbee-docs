@@ -32,13 +32,13 @@ The CLI never writes a config file inside the checkout through a symbolic link: 
 
 ## Editing config from the CLI
 
-```bash
-ironbee config get <key>            # read the effective (merged) value
-ironbee config set <key> <value>    # write to the project config
-ironbee config unset <key>          # remove a value (idempotent)
-ironbee config list                 # print the merged effective config
-ironbee config path                 # print the project config file path
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee config get <key>` | Read the effective (merged) value |
+| `ironbee config set <key> <value>` | Write to the project config |
+| `ironbee config unset <key>` | Remove a value (idempotent) |
+| `ironbee config list` | Print the merged effective config |
+| `ironbee config path` | Print the project config file path |
 
 **Targeting a layer:**  `set`, `unset`, and the read commands accept `-g`/`--global` or `--local` to act on a specific layer (default is the project config). `list` and `get` also take `--project` to read one layer in isolation:
 
@@ -71,7 +71,7 @@ ironbee config set --personal review.includeUntracked true
 |-----|------|---------|-------------|
 | `ignoredVerifyPatterns` | `string[]` | `[]` *(plus always-on test-file defaults)* | Glob patterns excluded from **all** cycles. Checked first a match here activates no cycle, whatever else matches. Your patterns are **unioned on top of** a built-in default set that always excludes test files (`**/*.spec.*`, `**/*.test.*`, `**/__tests__/**`, `**/__mocks__/**`, `**/test_*.py`, `**/*_test.py`, `**/tests/**`, `**/conftest.py`), so a test-only edit never triggers a runtime-verification cycle even if you set nothing. |
 | `maxRetries` | `number` | `3` | Failed verification attempts allowed before the agent may complete anyway (reporting unresolved issues). Caps both the gate's retry count across all active cycles and the streak of consecutive failed verdicts for one change. |
-| `params` | `object` | *(unset)* | User-defined string→string map consumed by [`${param:<name>}` placeholders](#placeholders-param-env-built-ins) elsewhere in the config. Merged per key across layers (local wins). Not artifact-affecting (read live). |
+| `params` | `object` | *(unset)* | User-defined string→string map consumed by [`${param:<name>}` placeholders](#placeholders) elsewhere in the config. Merged per key across layers (local wins). Not artifact-affecting (read live). |
 
 ```json
 {
@@ -86,9 +86,9 @@ ironbee config set --personal review.includeUntracked true
 
 ---
 
-## Placeholders - `${param:}`, `${env:}`, built-ins
+## Placeholders
 
-Config **string** values can interpolate placeholders that IronBee resolves at **read time**, so one committed config can carry per-developer or per-environment values without hand-editing. Three forms are supported:
+Config **string** values can interpolate placeholders that IronBee resolves at **read time**, so one committed config can carry per-developer or per-environment values without hand-editing. Three forms are supported, `${param:...}`, `${env:...}` and the built-ins:
 
 | Form | Reads from | Example |
 |------|-----------|---------|
@@ -389,7 +389,7 @@ The personal file holds one repository's settings outside the checkout, at `~/.i
 
 - It holds only what `ironbee review` reads: the two switches, the endpoints, the credentials, `review.exclude`, `review.settings.*` and `params.*`.
 - Only `ironbee review` and `ironbee credits` read it. `ironbee verify`, the hooks that send your sessions to the Collector, and the devtools servers don't, so a credential stored only in the personal file doesn't reach them.
-- It records the remote's `owner/repo`, a gitlab.com project's full path, or a bitbucket.org repository's `workspace/repo_slug`, and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
+- It records the remote's `owner/repo`, a GitLab project's full path, or a bitbucket.org repository's `workspace/repo_slug`, and the repository it was written for. `ironbee review` checks both on every read, and refuses a file written for another repository, or one that, like a folder above it under `~/.ironbee`, isn't owned by you or is world-writable.
 - It's written readable by you only (`0600`, in a `0700` folder).
 - There's one per repository, for one `owner/repo`, GitLab project or Bitbucket repository. Writing it for another repository's remote, or over a file it can't use (not valid JSON, no repository recorded, or failing the ownership check), replaces the file rather than merging into it, and the CLI says so. Its other values, a stored credential included, are dropped.
 
@@ -459,7 +459,7 @@ Connect Jira, Linear, or GitHub Issues - see the [Issue Tracking guide](/cli/gui
 
 ## VCS linkage
 
-Links each agent turn to the pull request it produced, the merge request on gitlab.com, or the pull request on bitbucket.org, and the issues the turn is attributed to, such as those a GitHub PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
+Links each agent turn to the pull request it produced on GitHub, the merge request on GitLab, or the pull request on bitbucket.org, and the issues the turn is attributed to, such as those a GitHub PR closes - the join key that makes verification data attributable to an issue instead of an opaque session ID. A GitHub or GitLab host other than github.com and gitlab.com is read when it's one of [your account's hosts](/cli/concepts/projects#your-accounts-github-and-gitlab-hosts). It runs in every mode (enforce / assist / monitoring-only) and auto-enables whenever a collector is configured. See [Issue Tracking → VCS linkage](/cli/guides/issue-tracking#vcs-linkage-sessions-to-prs-and-issues).
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -476,6 +476,17 @@ Links each agent turn to the pull request it produced, the merge request on gitl
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `console.url` | `string` | derived: `https://console.<domain>` | Explicit Console base URL override, used to build the `🔗 View in IronBee` timeline deep-links in [issue-tracker reports](/cli/guides/issue-tracking#using-it-ironbee-issue-track). Normally unset - it derives from [`service.domain`](#service-identity), which `ironbee login` persists, so self-hosted consoles link correctly. Read live. |
+
+---
+
+## Self-hosted runner setup
+
+These keys tune the GitLab browser sign-in of [`ironbee runner`](/cli/guides/runner) and of [`ironbee host allow-address`](/cli/guides/hosts#ironbee-host-allow-address). They're read only from the global config, and the environment wins over them.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `runner.gitlab.clientId` | `string` | IronBee's application on gitlab.com | The id of the OAuth application the browser sign-in goes through: not confidential, scope `api`. IronBee's own application exists on gitlab.com only, so on a GitLab Dedicated or Self-Managed instance, name an application of that instance. `--gitlab-client-id` and `IRONBEE_GITLAB_CLIENT_ID` win over it. A `GITLAB_TOKEN` meant for the instance skips the browser sign-in. |
+| `runner.gitlab.redirect` | `string` | `http://127.0.0.1:7471/ironbee/gitlab-callback` | The loopback address the application registers as its redirect URI, which GitLab compares exactly, port included. The command listens there for the sign-in's answer. Env: `IRONBEE_GITLAB_REDIRECT`. |
 
 ---
 

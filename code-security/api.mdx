@@ -1,0 +1,622 @@
+---
+title: Code security API
+sidebarTitle: API
+description: Read a repository's code security records and runs, set your team's decisions, start a scan and change the settings through IronBee's REST API.
+keywords: ["REST API", "security findings API", "vulnerability API"]
+---
+
+The code security API serves what the project's **Code security** tab and the code security settings pages show. Use it to pull records into your own tracker, record your team's decisions from another tool, start a scan from a script, or turn code security on for many repositories at once.
+
+| Method | Path | What it does |
+|--------|------|--------------|
+| `GET` | `/v1/code-analysis/projects/{projectId}/security` | [Where a repository stands](#where-a-repository-stands) |
+| `GET` | `/v1/code-analysis/projects/{projectId}/security/records` | [List records](#list-records) |
+| `GET` | `/v1/code-analysis/projects/{projectId}/security/records/{recordId}` | [Get a record](#get-a-record) |
+| `PUT` | `/v1/code-analysis/projects/{projectId}/security/records/{recordId}/disposition` | [Set a decision](#set-a-decision) |
+| `GET` | `/v1/code-analysis/projects/{projectId}/security/runs` | [List runs](#list-runs) |
+| `POST` | `/v1/code-analysis/projects/{projectId}/security/run` | [Start a scan](#start-a-scan) |
+| `GET` | `/v1/code-security/settings` | [Get the account's settings](#get-the-accounts-settings) |
+| `PATCH` | `/v1/code-security/settings` | [Change the account's settings](#change-the-accounts-settings) |
+| `GET` | `/v1/code-security/projects/{projectId}/settings` | [Get a repository's settings](#get-a-repositorys-settings) |
+| `PATCH` | `/v1/code-security/projects/{projectId}/settings` | [Change a repository's settings](#change-a-repositorys-settings) |
+
+For what code security does, see [Code security of your repositories](/code-security/overview).
+
+---
+
+## Base URL
+
+```
+https://api.service.ironbee.ai
+```
+
+Every path on this page starts with `/v1`. Requests and responses are JSON. Times are ISO 8601 strings in UTC.
+
+---
+
+## Authentication
+
+Send one credential with each request:
+
+| Credential | Header | Acts as |
+|------------|--------|---------|
+| The [account API key](/console/account#account-api-key) | `X-API-Key: <key>` | The account, with an owner's access |
+| A personal [OAuth token](/console/access-tokens) | `Authorization: Bearer <token>`, or `X-OAuth-Token: <token>` | You, with your [role](/console/roles) in the account |
+
+Code security takes an owner or an admin. The account API key always passes. An OAuth token passes when its user is an owner or an admin of the account, checked on every request, so a token whose user became a member is refused from then on. A member's or a billing admin's token is refused with `403 FORBIDDEN` on every route here, reads included.
+
+Use the API key for scripts and CI, and keep it in a secret store. If a request carries both a token and the API key, the token is used, and a token that isn't valid is refused even when the key is.
+
+```bash
+export IRONBEE_API_KEY=<your-account-api-key>
+export PROJECT_ID=<project-id>
+```
+
+The examples on this page use these two variables. The record examples also use `RECORD_ID`, set under [Get a record](#get-a-record).
+
+---
+
+## IDs
+
+- **Project ID:** a project's ID is in its address in the console, `https://console.ironbee.ai/projects/<project-id>/...`. Only a project of a connected GitHub, GitLab or Bitbucket repository has code security.
+- **Record ID:** each record's `id`, 64 hexadecimal characters, from [List records](#list-records).
+- **Scan ID:** each scan's `id`, or `jobId` in a run.
+
+A project ID that doesn't belong to your account, isn't a connected repository, or belongs to an archived project answers `404 NOT_FOUND`, and so does an ID that isn't well formed.
+
+---
+
+## Responses and errors
+
+A response can carry fields this page doesn't list, and a field with a closed list of values can gain new values. Ignore the fields you don't know, and treat an unknown value as a later addition.
+
+An error answers with a status and a JSON body:
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Request query failed validation",
+    "details": [
+      { "field": "verdict", "message": "verdict must be a comma-separated list of confirmed, needs_validation, rejected" }
+    ]
+  }
+}
+```
+
+| Status | `code` | When |
+|--------|--------|------|
+| 400 | `BAD_REQUEST` | A query parameter or the body failed validation, or the JSON is malformed. `details` names each field. [List records](#list-records) and [List runs](#list-runs) also refuse a query parameter they don't read, or one given twice; the other routes ignore query parameters |
+| 400 | `INVALID_SETTINGS` | A settings change was refused. Nothing was changed. `details` names each field |
+| 401 | `UNAUTHORIZED` | The credential is missing or isn't valid |
+| 402 | `CREDITS_EXHAUSTED` | [Start a scan](#start-a-scan) only: the team has no credits left this month |
+| 403 | `FORBIDDEN` | The credential belongs to a member or a billing admin, or to a user who left the account |
+| 403 | `ACCOUNT_INACTIVE` | The account is disabled |
+| 404 | `NOT_FOUND` | No such project or record in your account |
+| 404 | `ROUTE_NOT_FOUND` | No such endpoint |
+| 409 | `CODE_SECURITY_DISABLED` | Code security is off for the repository. Its records are kept, and its runs within your plan's retention, but they aren't served |
+| 409 | `SECURITY_RECORD_CHANGED` | [Set a decision](#set-a-decision) only: a scan changed the record since you read it |
+| 413 | `PAYLOAD_TOO_LARGE` | The body is larger than 64 KiB |
+| 429 | `REFRESH_TOO_SOON` | [Start a scan](#start-a-scan) only: someone started a scan of this repository by hand less than an hour ago |
+| 429 | `TOO_MANY_REQUESTS` | Your account sent too many requests in the last minute, across the whole API. Wait and try again |
+| 500 | `INTERNAL_SERVER_ERROR` | Something failed on IronBee's side. Try again |
+
+The examples below show credit amounts as `"…"`. The rates are on the rate card on [Credit usage](/console/usage#what-a-job-costs).
+
+---
+
+## Where a repository stands
+
+```
+GET /v1/code-analysis/projects/{projectId}/security
+```
+
+What the top of the project's **Code security** tab shows: whether code security is on, where the scans stand, the open records and what the next scans cost.
+
+```bash
+curl -s "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security" \
+  -H "X-API-Key: $IRONBEE_API_KEY"
+```
+
+```json
+{
+  "enabled": true,
+  "status": "running",
+  "job": {
+    "id": "a0b1c2d3-e4f5-46b7-88d9-e0f1a2b3c4d5",
+    "status": "running",
+    "notBefore": "2026-11-19T03:12:00.000Z",
+    "trigger": "scheduled",
+    "full": false,
+    "scan": "incremental",
+    "sizeClass": "M",
+    "checkoutLines": 48210,
+    "profile": "standard",
+    "auto": true,
+    "execution": true,
+    "credits": { "estimated": "…", "charged": null, "reason": null }
+  },
+  "lastRun": { "jobId": "7d2e4f60-1a3b-4c5d-8e9f-0a1b2c3d4e5f", "status": "succeeded" },
+  "counts": {
+    "confirmed": { "critical": 0, "high": 1, "medium": 2, "low": 0, "informational": 1 },
+    "needsValidation": 5
+  },
+  "price": {
+    "profile": "standard",
+    "auto": true,
+    "execution": true,
+    "checkoutLines": 48210,
+    "sizeClass": "M",
+    "full": "…",
+    "incremental": "…"
+  }
+}
+```
+
+`lastRun` is shortened here. It's a whole [run](#the-run-object).
+
+| Field | What it holds |
+|-------|---------------|
+| `enabled` | Whether code security is on for the repository. Off, `status` is `off`, `lastRun` and `price` are `null`, and the counts are 0 |
+| `status` | Where things stand. See the table below |
+| `job` | The repository's current scan: the one running, else the one waiting, else the newest. See [The scan object](#the-scan-object). `null` before the first |
+| `lastRun` | The newest scan that stored its results, as a [run](#the-run-object). A period with no change and a failed scan store none. `null` before the first |
+| `counts.confirmed` | Open confirmed findings by severity: `critical`, `high`, `medium`, `low`, `informational`. Open means the decision is **Open** |
+| `counts.needsValidation` | Open leads to validate |
+| `price` | What the repository's scans cost, at its newest count. `null` before the repository is first counted |
+| `price.profile`, `price.auto` | The profile a scan takes at this size, and whether **Auto** picked it |
+| `price.execution` | Whether the prices include **Execution** |
+| `price.checkoutLines`, `price.sizeClass` | The repository's lines outside the paths to ignore, and its size on the rate card, `S` to `XXXL` |
+| `price.full` | The credits of a full scan. `null` at a size the rate card doesn't price |
+| `price.incremental` | The credits of a scan of a period with changes. `null` at a size the rate card doesn't price |
+
+`status` matches the band at the top of the tab:
+
+| `status` | The tab says |
+|----------|--------------|
+| `off` | **Code security is off for this repository** |
+| `none` | **The first scan has not run yet** |
+| `queued` | **A scan is waiting to start** |
+| `running` | **A scan is getting ready**, or **A scan is running** |
+| `waiting_for_credits` | **The last scan did not have enough credits**. The team has no credits left, or the newest scan was refused for credits. When it was refused after the repository was counted, its `job.credits.estimated` is what it needed |
+| `size_unsupported` | **This repository is larger than the rate card covers**. A scan at this size needs a contract with IronBee |
+| `execution_checkout_too_large` | **Too large to scan with execution**. Turn **Execution** off to scan it by reading only |
+| `failed` | **The last scan failed**. The newest entry of [List runs](#list-runs) gives the reason |
+| `ready` | The last scan finished and its records are ready |
+
+### The scan object
+
+`job` here, and the answer of [Start a scan](#start-a-scan), describe one scan:
+
+| Field | What it holds |
+|-------|---------------|
+| `id` | The scan's ID |
+| `status` | `queued` (waiting), `starting`, `running`, then `succeeded` or `failed` |
+| `notBefore` | The earliest the scan may start |
+| `trigger` | What started it: `scheduled`, `console` or `api`. The console's **Scheduled**, **Run by hand** and **API**. A follow-up run is `scheduled` |
+| `full` | Someone asked for a full scan |
+| `scan` | `full` or `incremental`, once the scan has started. `null` while it waits, and when nothing had changed |
+| `sizeClass`, `checkoutLines` | The repository's size on the rate card and its lines outside the paths to ignore, once counted. `null` before |
+| `profile` | `quick`, `standard` or `deep`: the profile the scan runs at, once it's priced. `null` before |
+| `auto` | **Auto** picked the profile |
+| `execution` | The scan runs the code. `null` before it's priced |
+| `credits.estimated` | The scan's price, counted when it starts. For a scan refused for credits, what it needed. 0 for a follow-up run |
+| `credits.charged` | What the scan was charged, once it ended: its price when it succeeded, else 0 |
+| `credits.reason` | Once it ended: `charged`, `free_action` (a follow-up run), `nothing_read` (nothing to read, or nothing changed), `not_started` (refused before it ran) or `failed` |
+
+---
+
+## List records
+
+```
+GET /v1/code-analysis/projects/{projectId}/security/records
+```
+
+A page of the repository's records. With no filter, the list holds what the console's **Records** tab opens on: the confirmed findings and the leads to validate whose decision is **Open**.
+
+| Parameter | Values | Default |
+|-----------|--------|---------|
+| `verdict` | A comma-separated list of `confirmed`, `needs_validation`, `rejected` | `confirmed,needs_validation` |
+| `severity` | A comma-separated list of `critical`, `high`, `medium`, `low`, `informational`. Given, only confirmed records match | Every severity |
+| `disposition` | A comma-separated list of `none`, `accepted`, `fixed_elsewhere`, `not_an_issue` | `none` |
+| `limit` | Records on a page, 1-200 | 50 |
+| `cursor` | The previous page's `nextCursor`, as it came | The first page |
+
+To list every record, pass every value of `verdict` and `disposition`:
+
+```bash
+curl -s -G "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security/records" \
+  -H "X-API-Key: $IRONBEE_API_KEY" \
+  --data-urlencode "verdict=confirmed,needs_validation,rejected" \
+  --data-urlencode "disposition=none,accepted,fixed_elsewhere,not_an_issue"
+```
+
+```json
+{
+  "records": [
+    {
+      "id": "3b7e0c55d1a24f8e9b6c0d2e4f6a8b1c3d5e7f9a0b2c4d6e8f0a1b3c5d7e9f02",
+      "fingerprint": "billing.getInvoice.missing-tenant-filter",
+      "verdict": "confirmed",
+      "severity": "high",
+      "title": "An invoice of another tenant can be read by its ID",
+      "location": { "file": "src/repositories/billingRepo.ts", "line": 59 },
+      "firstCommit": "9f2c4e1b7a3d5f60812e4c9b0a7d3e5f1c2b4a69",
+      "lastCommit": "9f2c4e1b7a3d5f60812e4c9b0a7d3e5f1c2b4a69",
+      "disposition": "none",
+      "createdAt": "2026-11-10T03:12:00.000Z",
+      "updatedAt": "2026-11-10T03:12:00.000Z"
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+The records come confirmed first, from `critical` to `informational`, then the leads to validate, then the rejected ones, newest first within each. While `nextCursor` isn't `null`, pass it as `cursor` for the next page.
+
+| Field | What it holds |
+|-------|---------------|
+| `id` | The record's ID |
+| `fingerprint` | The record's identity, the same from scan to scan. The console's **Fingerprint** |
+| `verdict` | `confirmed`, `needs_validation` or `rejected`. The console's **Confirmed**, **Lead to validate** and **Rejected** |
+| `severity` | A confirmed record's severity. `null` for any other |
+| `title` | The record's title |
+| `location` | The `file`, relative to the repository's root, and the `line`, from 1. `null` when the record names no single place: the console shows **Repository-wide** |
+| `firstCommit`, `lastCommit` | The commits of the scans that first and last saw it |
+| `disposition` | Your team's decision: `none`, `accepted`, `fixed_elsewhere` or `not_an_issue`. The console's **Open**, **Accepted**, **Fixed elsewhere** and **Not an issue** |
+| `createdAt` | When a scan first found it |
+| `updatedAt` | When a scan last changed its verdict, severity or title |
+
+---
+
+## Get a record
+
+```
+GET /v1/code-analysis/projects/{projectId}/security/records/{recordId}
+```
+
+One record, with everything the console's record panel shows.
+
+```bash
+export RECORD_ID=<record-id>
+curl -s "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security/records/$RECORD_ID" \
+  -H "X-API-Key: $IRONBEE_API_KEY"
+```
+
+The answer has the fields of [List records](#list-records), and these:
+
+| Field | What it holds |
+|-------|---------------|
+| `firstJobId`, `lastJobId` | The scans that first and last saw it, as `jobId` in [List runs](#list-runs) |
+| `record` | The record as the scan wrote it. See below |
+| `dispositionDetail.value` | The decision, as `disposition` |
+| `dispositionDetail.by` | Who set it: `{ "type": "user", "userId": "…" }`, or `{ "type": "account_key" }` for the API key. `null` while it's `none` |
+| `dispositionDetail.at` | When it was set |
+| `dispositionDetail.note` | The note, or `null` |
+| `dispositionDetail.verdict`, `dispositionDetail.severity` | The verdict and severity the decision was set on |
+
+`record` is the record's content as the scan wrote it: what the problem is, its root cause, the trace from the entry point, the reproduction, the fix, the evidence and the conditions, and for a lead how to validate it, or for a rejected record why it doesn't hold. It's the object the console shows under **Show it as data**. Its keys aren't a fixed schema and can change between scans, so read the ones you need and ignore the rest. Secrets found in it are replaced before it's saved. The paths inside it aren't checked: check one yourself before you build a link from it, the way `location.file` already is.
+
+---
+
+## Set a decision
+
+```
+PUT /v1/code-analysis/projects/{projectId}/security/records/{recordId}/disposition
+```
+
+Sets your team's decision on a record, as **Save decision** does in the console.
+
+| Field | Required | What it holds |
+|-------|----------|---------------|
+| `disposition` | Yes | `none`, `accepted`, `fixed_elsewhere` or `not_an_issue`. `none` is **Open**, and clears who set it, when and the note |
+| `verdict` | Yes | The record's `verdict` as you read it |
+| `severity` | Yes | The record's `severity` as you read it: `null` unless the verdict is `confirmed` |
+| `note` | No | Why, up to 1,000 characters. `null` or left out for no note |
+
+```bash
+curl -s -X PUT "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security/records/$RECORD_ID/disposition" \
+  -H "X-API-Key: $IRONBEE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"disposition": "accepted", "verdict": "confirmed", "severity": "high", "note": "Only reachable from the admin network"}'
+```
+
+The answer is the record after the change, as in [Get a record](#get-a-record).
+
+A decision holds while the record keeps the verdict and severity it was set on: a scan that changes either sets it back to `none`. The `verdict` and `severity` you send guard against that. If a scan changed the record since you read it, the request is refused with `409 SECURITY_RECORD_CHANGED` and nothing is written. Read the record again and decide again. A `verdict` and `severity` that no record can hold together, such as `confirmed` with no severity, are refused with `400`.
+
+---
+
+## List runs
+
+```
+GET /v1/code-analysis/projects/{projectId}/security/runs
+```
+
+A page of the repository's scans that ended, newest first, as on the console's **Runs** tab.
+
+| Parameter | Values | Default |
+|-----------|--------|---------|
+| `limit` | Runs on a page, 1-100 | 20 |
+| `cursor` | The previous page's `nextCursor`, as it came | The first page |
+
+```bash
+curl -s "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security/runs?limit=5" \
+  -H "X-API-Key: $IRONBEE_API_KEY"
+```
+
+```json
+{
+  "runs": [
+    {
+      "jobId": "7d2e4f60-1a3b-4c5d-8e9f-0a1b2c3d4e5f",
+      "status": "succeeded",
+      "trigger": "scheduled",
+      "scan": "incremental",
+      "commit": "9f2c4e1b7a3d5f60812e4c9b0a7d3e5f1c2b4a69",
+      "endedAt": "2026-11-17T04:01:12.000Z",
+      "endReason": "complete",
+      "errorType": null,
+      "incompleteReason": null,
+      "profile": "standard",
+      "auto": true,
+      "execution": true,
+      "scopePaths": 14,
+      "checkoutLines": 48210,
+      "sizeClass": "M",
+      "credits": { "estimated": "…", "charged": "…", "reason": "charged" },
+      "linesRead": 18420,
+      "counts": {
+        "units": {
+          "planned": 0, "in_progress": 0, "covered": 9, "candidate": 2, "blocked": 0,
+          "deferred": 0, "out_of_scope": 1, "not_applicable": 0
+        },
+        "deferred": 0,
+        "records": { "confirmed": 1, "needsValidation": 2, "rejected": 0 },
+        "new": 1
+      }
+    }
+  ],
+  "nextCursor": "eyJ0IjoiMjAyNi0xMS0xN1QwNDowMToxMi4wMDBaIn0"
+}
+```
+
+### The run object
+
+| Field | What it holds |
+|-------|---------------|
+| `jobId` | The scan's ID |
+| `status` | `succeeded` or `failed` |
+| `trigger` | `scheduled`, `console` or `api`, as in [The scan object](#the-scan-object) |
+| `scan` | `full` or `incremental`. `null` when nothing had changed, or when the scan failed before it started |
+| `commit` | The commit the scan read |
+| `endedAt` | When it ended |
+| `endReason` | How it ended. See the table below |
+| `errorType` | Why a failed scan failed. See the table below |
+| `incompleteReason` | For an incomplete scan, why it didn't finish |
+| `profile`, `auto`, `execution` | As in [The scan object](#the-scan-object) |
+| `scopePaths` | The paths in the scan's scope. 0 when it read the whole branch |
+| `checkoutLines`, `sizeClass` | The repository's lines outside the paths to ignore, and its size on the rate card |
+| `credits` | As in [The scan object](#the-scan-object) |
+| `linesRead` | The lines the scan read, counting a line again each time it was read. A scan isn't charged on it |
+| `counts` | What the scan stored. `null` when it stored nothing: nothing had changed, or it failed |
+| `counts.units` | The units of work the scan planned, by status. See below |
+| `counts.deferred` | Units put off to a [follow-up run](/code-security/how-a-scan-works#follow-up-runs) |
+| `counts.records` | What this scan recorded: `confirmed`, `needsValidation` and `rejected` |
+| `counts.new` | Records this scan found for the first time |
+
+The console's **Scan** column reads the kind from these fields: **Follow-up** when `credits.reason` is `free_action`, **No scan** when `scan` is `null`, and otherwise **Full** or **Incremental** from `scan`.
+
+The **Units** in the console's run details add up `counts.units` this way: **Read** is `covered` and `candidate`, **Put off to a follow-up run** is `deferred`, **Outside this scan** is `out_of_scope` and `not_applicable`, and **Blocked** is `blocked`, `planned` and `in_progress`.
+
+| `endReason` | The console's **How it ended** |
+|-------------|-------------------------------|
+| `complete` | **Complete** |
+| `incomplete` | **Incomplete** |
+| `deadline` | **Stopped at its time limit** |
+| `spend` | **Stopped at its spend limit** |
+| `context` | **Stopped at its context limit** |
+| `nothing_in_scope` | **Nothing to read** |
+| `unchanged` | **Unchanged** |
+| `failed` | **Failed** |
+
+Among the `errorType` values a failed scan can have:
+
+| `errorType` | What it means |
+|-------------|---------------|
+| `credits_exhausted` | The credits left didn't cover the scan's price. Nothing was charged |
+| `size_unsupported` | The repository is larger than the rate card covers. A scan at this size needs a contract with IronBee |
+| `execution_checkout_too_large` | The checkout is too large to scan with **Execution** on |
+| `repository_empty` | The default branch has no commit yet |
+| `vcs_not_connected` | The repository's connection is gone |
+| `vcs_permissions_missing` | The connection is missing a permission it needs |
+| `repository_unavailable` | The host no longer shows the repository |
+| `run_unfinished` | The scan stopped before it could finish |
+| `deadline_exceeded`, `deadline_passed` | The scan ran out of time |
+
+Other values can appear. A failed scan is never charged.
+
+---
+
+## Start a scan
+
+```
+POST /v1/code-analysis/projects/{projectId}/security/run
+```
+
+Asks for a scan of the repository's default branch now. The body is optional:
+
+| Field | What it does |
+|-------|--------------|
+| `full` | `true` reads the whole branch, as **Run full scan** does, at a full scan's price. Without it, the scan is the one the schedule would run: a full scan the first time, then an incremental scan of what changed |
+
+```bash
+curl -s -X POST "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/security/run" \
+  -H "X-API-Key: $IRONBEE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"full": true}'
+```
+
+It answers `202 Accepted` with the waiting scan:
+
+```json
+{
+  "job": {
+    "id": "c4d5e6f7-0819-4a2b-9c3d-4e5f60718293",
+    "status": "queued",
+    "notBefore": "2026-11-19T10:00:00.000Z",
+    "trigger": "api",
+    "full": true,
+    "scan": null,
+    "sizeClass": null,
+    "checkoutLines": null,
+    "profile": null,
+    "auto": false,
+    "execution": null,
+    "credits": { "estimated": null, "charged": null, "reason": null }
+  }
+}
+```
+
+- The scan waits its turn: your account runs one code security scan at a time. See [One scan at a time](/code-security/how-a-scan-works#one-scan-at-a-time).
+- If a scan of the repository is already waiting, it's brought forward and answered instead of a second one. `full` makes it a full scan.
+- If a scan of the repository is running, the new one waits for it to end. The console's **Run full scan** isn't offered then, but the API takes the request.
+- A repository can be started by hand once an hour, the console and the API counted together. Sooner, the request is refused with `429 REFRESH_TOO_SOON`, and the `Retry-After` header gives the seconds until the next one can start.
+- With no credits left this month, the request is refused with `402 CREDITS_EXHAUSTED`, and nothing is queued. `error.details` holds `left`, the credits left, purchased ones included; `allowance`, the monthly allowance; `resetsAt`, when the credits reset; and `topUp`, how the team can get more: `add_seats`, `upgrade`, `pay_invoice`, `contact`, or `null`.
+- The scan's price is counted when it starts. If it's more than the credits left, the scan is refused then, free: it ends `failed` with `credits_exhausted`, and the repository's `status` reads `waiting_for_credits`.
+
+To follow the scan, call [Where a repository stands](#where-a-repository-stands) every minute or so. While `job.id` is the scan's ID, `job.status` says where it is. While an earlier scan of the repository runs, `job.id` names that one, and the scan waits behind it. The scan has ended once `job.status` is `succeeded` or `failed` while `job.id` is its ID, once `job.id` names a scan queued after it, or once its ID appears as `jobId` in [List runs](#list-runs). Find it there, and its records in [List records](#list-records). A scan takes up to two hours. Follow-up runs can come after it, each a scan of its own.
+
+The scan shows **API** under the **Scan** column on the console's **Runs** tab.
+
+---
+
+## Settings
+
+The settings routes read and change what [Code security settings](/console/code-security-settings) shows. They're served whether code security is on or off, so you can turn it on through them.
+
+| Setting | API values | The console's labels |
+|---------|------------|----------------------|
+| `refresh` | `daily`, `weekly`, `biweekly`, `monthly` | **Scheduled scan**: **Daily**, **Weekly**, **Every two weeks**, **Monthly** |
+| `profile` | `auto`, `quick`, `standard`, `deep` | **Profile**: **Auto**, **Quick**, **Standard**, **Deep** |
+| `execution` | `false`, `true` | **Execution**: **Off**, **On** |
+
+Each setting is answered with its `value` and its `source`: `repository` (set for this repository), `account` (the account's default) or `default` (IronBee's default). IronBee's defaults are `weekly`, `auto` and `false`.
+
+A change applies at each repository's next scan. A scan already running keeps the settings it started with.
+
+### Get the account's settings
+
+```
+GET /v1/code-security/settings
+```
+
+```bash
+curl -s "https://api.service.ironbee.ai/v1/code-security/settings" \
+  -H "X-API-Key: $IRONBEE_API_KEY"
+```
+
+```json
+{
+  "settings": {
+    "refresh": { "value": "weekly", "source": "default", "repositoriesDiffering": 0 },
+    "profile": { "value": "auto", "source": "default", "repositoriesDiffering": 2 },
+    "execution": { "value": true, "source": "account", "repositoriesDiffering": 1 }
+  }
+}
+```
+
+`repositoriesDiffering` counts the repositories that set their own value.
+
+### Change the account's settings
+
+```
+PATCH /v1/code-security/settings
+```
+
+Send the settings to change under `settings`, at least one. `null` puts one back to IronBee's default.
+
+```bash
+curl -s -X PATCH "https://api.service.ironbee.ai/v1/code-security/settings" \
+  -H "X-API-Key: $IRONBEE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"settings": {"execution": true, "refresh": "biweekly"}}'
+```
+
+The answer is the account's settings after the change. There's no account setting that turns code security on: each repository has its own switch.
+
+### Get a repository's settings
+
+```
+GET /v1/code-security/projects/{projectId}/settings
+```
+
+```bash
+curl -s "https://api.service.ironbee.ai/v1/code-security/projects/$PROJECT_ID/settings" \
+  -H "X-API-Key: $IRONBEE_API_KEY"
+```
+
+```json
+{
+  "projectId": "2f9a41c0-7b3e-4d1a-9c55-0e8f6a2b1d47",
+  "enabled": true,
+  "ignorePaths": ["vendor/**", "**/*.min.js"],
+  "settings": {
+    "refresh": { "value": "weekly", "source": "default" },
+    "profile": { "value": "standard", "source": "repository" },
+    "execution": { "value": true, "source": "account" }
+  }
+}
+```
+
+| Field | What it holds |
+|-------|---------------|
+| `enabled` | Whether code security is on for the repository. The console's **Scan this repository** |
+| `ignorePaths` | **Paths to ignore**: globs from the repository's root |
+| `settings` | `refresh`, `profile` and `execution`, each with its `value` and `source` |
+
+### Change a repository's settings
+
+```
+PATCH /v1/code-security/projects/{projectId}/settings
+```
+
+Send the fields to change, at least one:
+
+| Field | What it does |
+|-------|--------------|
+| `enabled` | `true` turns code security on for the repository, `false` turns it off |
+| `ignorePaths` | Replaces **Paths to ignore**: up to 100 globs from the repository's root, of up to 500 characters each, with no leading `/`, no `..` segment and at most 10 `**` in one. `null` clears the list |
+| `settings.refresh`, `settings.profile`, `settings.execution` | The repository's own value. `null` puts one back to the account's |
+
+```bash
+curl -s -X PATCH "https://api.service.ironbee.ai/v1/code-security/projects/$PROJECT_ID/settings" \
+  -H "X-API-Key: $IRONBEE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true, "ignorePaths": ["vendor/**"], "settings": {"profile": null}}'
+```
+
+The answer is the repository's settings after the change. A change that's refused changes nothing.
+
+- Turning code security on queues no scan by itself. A repository that has never been scanned is due at once, so its first scheduled scan comes within minutes, in its turn. See [The schedule](/code-security/how-a-scan-works#the-schedule).
+- Turning it off keeps the records, and the runs within your plan's retention. While it's off, the records, runs, decision and start routes for the repository answer `409 CODE_SECURITY_DISABLED`, and [Where a repository stands](#where-a-repository-stands) answers with `status` `off`.
+- Changing `ignorePaths` makes the repository's next scan a full scan, at a full scan's price.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Code security overview" icon="shield-check" href="/code-security/overview">
+    What code security is, where it runs, and what it costs.
+  </Card>
+  <Card title="How a scan works" icon="scan-search" href="/code-security/how-a-scan-works">
+    What a scan reads, when it runs, and what running your code means.
+  </Card>
+  <Card title="Account API key" icon="key" href="/console/account#account-api-key">
+    The shared key scripts and CI use.
+  </Card>
+  <Card title="OAuth tokens" icon="user-round" href="/console/access-tokens">
+    Personal tokens that act with your role.
+  </Card>
+</CardGroup>

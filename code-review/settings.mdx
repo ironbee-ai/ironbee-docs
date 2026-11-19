@@ -46,6 +46,18 @@ A newly connected repository starts with review on, unless **Review new reposito
 <img className="ib-shot ib-shot-light" src="/images/console/code-review/project-settings-code-review-light.png" alt="The Code review page of a project's settings, with the Review pull requests in this repository switch turned on and how many settings follow the account" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-review/project-settings-code-review-dark.png" alt="The Code review page of a project's settings, with the Review pull requests in this repository switch turned on and how many settings follow the account" />
 
+### With the self-hosted runner
+
+When your account uses the [self-hosted runner](/code-review/self-hosted-runner/overview), these pages change:
+
+- **A connected repository:** the switch is IronBee's cloud's alone. Off reads **Off in IronBee's cloud: the cloud does not review this repository.**, and adds that the repository's own IronBee workflow, runner project or pipeline, when it has one, still reviews it.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/project-settings-runner-off-light.png" alt="A connected repository's Review pull requests in this repository switch turned off, reading Off in IronBee's cloud: the cloud does not review this repository" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/project-settings-runner-off-dark.png" alt="A connected repository's Review pull requests in this repository switch turned off, reading Off in IronBee's cloud: the cloud does not review this repository" />
+
+- **A repository no connection covers:** there's no switch. The page says the repository is reviewed by its IronBee workflow while the workflow is in the repository (on GitLab, while a runner project serves it; on Bitbucket, its pipeline), and that the settings below apply to its runs. While the project is archived, its runs take the account's settings instead.
+- **The account page:** a line under the title for each license: **Self-hosted runner** and its id, the products it covers, **Enabled** or **Suspended** and the day it's good through, and how many developers it counted this month against the license's limit. A license that hasn't started yet gives the day it starts and the day it ends, and its limit of developers a month, with no count. An ended license is left out, unless no code review license is current or upcoming: then the one that ended last stays, with **Ended on** and its last day. A month over the limit is marked **over the contract's limit**, and reviews go on.
+
 ---
 
 ## Triggers

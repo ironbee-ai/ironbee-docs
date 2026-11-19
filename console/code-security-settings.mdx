@@ -52,6 +52,8 @@ With execution on, a scan:
 - installs Node, Python and Go at the version the repository declares. Other languages are read, not run
 - is refused, free, for a checkout larger than 2 GiB. The **Code security** tab then says **Too large to scan with execution**
 
+See [Running your code](/code-security/how-a-scan-works#running-your-code).
+
 ### Scheduled scan
 
 **Scheduled scan** sets how often each repository's scheduled scan comes: **Daily**, **Weekly**, **Every two weeks** or **Monthly**. A period in which the default branch didn't move scans nothing and costs nothing.
@@ -68,9 +70,9 @@ A repository's page is for that repository only. Whatever isn't set there follow
 The page opens with **Scan this repository**:
 
 - **On:** the default branch is scanned on its schedule.
-- **Off:** nothing is scanned. The records already found are kept, not shown.
+- **Off:** nothing is scanned. The records already found are kept, and the runs within your plan's retention, but they aren't shown.
 
-Turning the switch on starts no scan by itself. The next scheduled scan reads the repository, or you can start one with [**Run full scan**](/console/code-security#run-a-full-scan).
+Turning the switch on starts no scan by itself, but a repository that has never been scanned is due at once: its first scheduled scan, a full scan, usually starts within minutes, once no other code security scan of your account is waiting or running and the team has credits left. You can also start one with [**Run full scan**](/console/code-security#run-a-full-scan).
 
 Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **3 of 3 settings follow the account, 0 set here.** When the repository sets something, it offers **Reset all to account settings**.
 
@@ -85,7 +87,7 @@ Once a scan has counted the repository, each profile shows its price at this rep
 
 **Paths to ignore** are files left out of every scan and of the repository's size, which a scan's price is counted from. Type a pattern such as `vendor/**` or `**/*.min.js`, then press Enter or click **Add a pattern**.
 
-A pattern is a glob from the repository root: `*` matches within one path segment and `**` matches across segments. The list takes up to 100 patterns, of up to 500 characters each, with at most 10 `**` in one pattern.
+A pattern is a glob from the repository root, with no leading `/` and no `..` segment: `*` matches within one path segment and `**` matches across segments. The list takes up to 100 patterns, of up to 500 characters each, with at most 10 `**` in one pattern.
 
 Changing the list makes the next scan a full scan. The page says so, with the full scan's price when the repository's size is known.
 

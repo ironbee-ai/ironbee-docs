@@ -129,7 +129,7 @@ include:
     <div className="ib-section-head">
       <p className="ib-eyebrow">Code review</p>
       <h2 className="ib-h2">Review every pull request and merge request</h2>
-      <p className="ib-sub">Install the GitHub App or connect your GitLab group or Bitbucket workspace, and every pull request or merge request gets a review that comments on what it finds and can hold a merge until it's fixed.</p>
+      <p className="ib-sub">Install the GitHub App or connect your GitLab group or Bitbucket workspace, and every pull request or merge request gets a review that comments on what it finds and can hold a merge until it's fixed. It works on GitHub Enterprise and GitLab Self-Managed or Dedicated too, or in your own CI with the self-hosted runner.</p>
     </div>
     <div className="ib-tiles">
       <a className="ib-tile" href="/code-review/overview">
@@ -161,6 +161,16 @@ include:
         <span className="ib-tile-icon ib-icon"><Icon icon="terminal" size={16} /></span>
         <span className="ib-tile-title">Review from the CLI</span>
         <span className="ib-tile-desc">Review a local branch with ironbee review before you open a pull request.</span>
+      </a>
+      <a className="ib-tile" href="/integrations/overview#enterprise-hosts">
+        <span className="ib-tile-icon ib-icon"><Icon icon="building-2" size={16} /></span>
+        <span className="ib-tile-title">Enterprise hosts</span>
+        <span className="ib-tile-desc">GitHub Enterprise Cloud, GHE.com, GitHub Enterprise Server, GitLab Self-Managed and Dedicated, Bitbucket Premium.</span>
+      </a>
+      <a className="ib-tile" href="/code-review/self-hosted-runner/overview">
+        <span className="ib-tile-icon ib-icon"><Icon icon="server" size={16} /></span>
+        <span className="ib-tile-title">Self-hosted runner</span>
+        <span className="ib-tile-desc">Run IronBee code review in your own CI, with your own model provider.</span>
       </a>
     </div>
   </section>
@@ -197,7 +207,7 @@ include:
         <span className="ib-tile-title">Scenarios</span>
         <span className="ib-tile-desc">Flows written in plain words, run against an environment one action at a time.</span>
       </a>
-      <a className="ib-tile" href="/console/code-security">
+      <a className="ib-tile" href="/code-security/overview">
         <span className="ib-tile-icon ib-icon"><Icon icon="shield-alert" size={16} /></span>
         <span className="ib-tile-title">Code security</span>
         <span className="ib-tile-desc">Scheduled security scans of a repository's default branch, with a record of each finding.</span>
@@ -210,7 +220,7 @@ include:
       <a className="ib-tile" href="/console/usage">
         <span className="ib-tile-icon ib-icon"><Icon icon="coins" size={16} /></span>
         <span className="ib-tile-title">Usage and credits</span>
-        <span className="ib-tile-desc">The team's credits this month, what each product used, and what a job costs.</span>
+        <span className="ib-tile-desc">The team's credits this period, where they went, buying more, and what a job costs.</span>
       </a>
     </div>
   </section>

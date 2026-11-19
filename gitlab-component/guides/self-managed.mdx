@@ -1,0 +1,103 @@
+---
+title: The GitLab component on Self-Managed and Dedicated
+sidebarTitle: Self-Managed and Dedicated
+description: Run the IronBee GitLab component on a GitLab Self-Managed server or a GitLab Dedicated tenant, from your own copy of the component on the instance.
+keywords: ["GitLab Self-Managed", "GitLab Dedicated", "self-hosted GitLab", "CI/CD component copy", "mirror", "CI_SERVER_FQDN", "IRONBEE_GITLAB_PROJECT"]
+---
+
+The IronBee GitLab component runs on a GitLab Self-Managed server and on a GitLab Dedicated tenant as it does on gitlab.com, with the same inputs, decisions and report. GitLab includes a component only from the instance the pipeline runs on, so your instance keeps a copy of the component, and your pipeline includes that copy.
+
+---
+
+## Before you start
+
+- **To verify on IronBee,** register your instance in the console and connect the project's group there. See [GitLab Self-Managed and Dedicated](/integrations/gitlab-self-managed).
+- **The IronBee CLI** the job installs is the latest release, unless `ironbee_cli_version` pins one. Pin 0.54.0 or newer: an older CLI names no repository for a job off gitlab.com.
+- **The CI/CD variables,** as on gitlab.com. See [Get started with the GitLab component](/gitlab-component/get-started/getting-started). Clear **Protect variable** on each, which GitLab ticks by default: a protected variable reaches only pipelines of protected branches and tags, so a merge request pipeline from another branch runs without it.
+
+---
+
+## Make your copy
+
+Your copy is a mirror of `gitlab.com/ironbee-ai/ironbee-gitlab`, with its tags, in a group of yours on the instance:
+
+- **With the IronBee CLI,** an administrator runs `ironbee host setup gitlab.acme.com --components tools`, which makes the group and the copy and pushes the component's branches and tags into it. Run it again to take a new release. See [The components' copies](/cli/guides/hosts#the-components-copies).
+- **By hand,** set up pull mirroring where your tier has it (Premium and Ultimate), or push the branches and tags yourself. A push by hand carries `-o ci.skip`: the copy holds IronBee's own release pipeline, which isn't meant to run on your runners. The copy doesn't follow gitlab.com by itself, so bring it up to each new release the same way.
+
+**Its visibility.** Public or internal. A private copy works too, when everyone who runs a pipeline that includes it is a Reporter of it, since GitLab resolves an include as the pipeline's user, and the projects that include it are on its job token allowlist (the copy's **Settings > CI/CD > Job token permissions**), for the job's fetch of its scripts.
+
+---
+
+## Include your copy
+
+The include names your copy on the job's own instance, at a tag, and the job names the same copy for its scripts:
+
+```yaml
+include:
+  - component: $CI_SERVER_FQDN/tools/ironbee-gitlab/verify@v1
+    inputs:
+      verification_mode: platform
+      verification_apply_fix: 'false'
+      app_install_command: npm ci
+      app_build_command: npm run build
+      app_start_command: npm run start
+      app_port: '3000'
+
+ironbee-verify:
+  timeout: 90m
+  variables:
+    IRONBEE_GITLAB_PROJECT: "tools/ironbee-gitlab"   # your copy's path
+```
+
+- **The tag.** The moving `@v1` or a release tag needs nothing more. A partial version, such as `@1`, or `~latest` resolves only for a copy published in your instance's CI/CD Catalog.
+- **`IRONBEE_GITLAB_PROJECT`** names your copy. Its default, `ironbee-ai/ironbee-gitlab`, is a path anyone on your instance may hold. The job fetches its scripts at the commit its include resolved, which a project other than your copy doesn't have, so a wrong or missing path fails the job at the fetch instead of running that project's scripts.
+
+**From the console.** The setup steps for a project on your instance open from the host's **Set up the Component** on **Integrations > GitLab**, or from the prompt on a project's card. They ask for **Your copy of the IronBee Component**, write both parts of the file, and link to the project's CI/CD variables and pipeline editor on your instance.
+
+---
+
+## Platform or local on your instance
+
+Off gitlab.com, the component counts the project as private whatever its visibility, since IronBee reads it only through its group's connection on your registered instance. So with `verification_mode: auto`, the job runs locally when an Anthropic credential is set, and on IronBee otherwise. Once the project's group is connected, set `verification_mode: platform`. See [How `auto` decides](/gitlab-component/concepts/verification-modes#how-auto-decides).
+
+---
+
+## A private certificate authority
+
+Name the authority's file in your GitLab runners' configuration, `tls-ca-file`. GitLab then hands each job its path as `CI_SERVER_TLS_CA_FILE`, and the component trusts it:
+- for its own fetch of the scripts
+- for the IronBee CLI and its own calls, through `NODE_EXTRA_CA_CERTS`, so every other host stays trusted
+- for its git that talks to your instance, through `GIT_SSL_CAINFO`
+
+A `NODE_EXTRA_CA_CERTS` or `GIT_SSL_CAINFO` your pipeline sets itself is kept, and then has to hold your authority. The job's image doesn't have the authority installed: your application's own commands that call your instance set it up themselves.
+
+---
+
+## Fix commits
+
+Fix commits are authored as `IronBee <ironbee-gitlab@users.noreply.gitlab.acme.com>`, with your instance's host. They carry `[skip ci]` as on gitlab.com. See [Running in GitLab CI/CD](/gitlab-component/guides/running-in-ci).
+
+---
+
+## What the job's runner must reach
+
+On 443:
+- IronBee's API and collector, `api.service.ironbee.ai` and `collector.service.ironbee.ai`
+- on IronBee with the application on the runner, the verification tunnel's endpoint, an address the IronBee API gives each run, with no fixed name
+- the npm registry
+- Docker Hub, for the job's default image
+- Anthropic's API, whenever fixing is on or the mode is local
+- in local mode, Playwright's browser download
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="GitLab Self-Managed and Dedicated" icon="server" href="/integrations/gitlab-self-managed">
+    Register your instance and connect its groups.
+  </Card>
+  <Card title="Configuration" icon="settings" href="/gitlab-component/configuration/configuration">
+    Every input and output, with defaults.
+  </Card>
+</CardGroup>

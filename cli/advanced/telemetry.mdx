@@ -28,10 +28,10 @@ The `npm_installed` and `npm_uninstalled` events follow only the global config a
 
 ## Enable or disable
 
-```bash
-ironbee telemetry disable   # opt out
-ironbee telemetry enable    # opt back in (the default)
-```
+| Command | What it does |
+|---------|--------------|
+| `ironbee telemetry disable` | Opt out |
+| `ironbee telemetry enable` | Opt back in (the default) |
 
 Disabling turns telemetry off in **both** the CLI and the IronBee DevTools MCP servers (it injects `TELEMETRY_ENABLE=false` into their environment), so one switch covers both sides.
 

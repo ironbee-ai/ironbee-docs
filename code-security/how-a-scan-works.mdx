@@ -1,0 +1,146 @@
+---
+title: How a code security scan works
+sidebarTitle: How a scan works
+description: What a code security scan reads, when it runs and waits its turn, how follow-up runs finish it, and what running your code with execution means.
+---
+
+A code security scan clones the repository's default branch, reads it, and writes a record for each security problem it finds. Each scan runs on a machine of its own and is given no secrets. The code it runs has no network access: with execution on, only the dependency install reaches the public package registries. See [Where it runs](#where-it-runs).
+
+This page explains what decides each scan and what happens when a scan may run your code. For what the console shows while a scan waits and runs, see [Where a scan stands](/console/code-security#where-a-scan-stands).
+
+---
+
+## What a scan reads
+
+A scan reads the default branch at its newest commit. Files under [**Paths to ignore**](/console/code-security-settings#paths-to-ignore) are left out of the scan and of the repository's size.
+
+What the scan reads depends on what changed since the last one:
+
+| What happened since the last scan | The scan | What it reads | Price |
+|---|---|---|---|
+| The repository has never been scanned | **Full** | The whole branch | A full scan |
+| **Run full scan** in the console, or `full` through the API | **Full** | The whole branch | A full scan |
+| **Paths to ignore** changed | **Full** | The whole branch | A full scan |
+| New commits on the default branch | **Incremental** | The files the commits changed, and whatever an earlier scan [put off](#follow-up-runs) | A period with changes |
+| The default branch's history was rewritten, such as by a force push, or the repository's default branch changed | **Incremental** | The whole branch | A period with changes |
+| The last scan put work off, and no commit came since | **Follow-up** | What was put off | Free |
+| New commits touched only ignored paths | **Incremental** | Nothing: **Nothing to read** | Free |
+| No new commit, and nothing was put off | **No scan** | Nothing: **Unchanged** | Free |
+
+A scan reads the code with the [profile](/console/code-security-settings#profile) and [execution](#running-your-code) the repository's settings hold when it starts, and a follow-up run keeps those of the scan it finishes. A change to the settings applies at the next scan. A scan already running keeps the settings it started with.
+
+### How records carry over
+
+A record is identified from scan to scan, so a later scan that sees the same problem again updates its record. Its **Found** date stays, and **Last seen** moves to the new scan's commit.
+
+A record that a later scan doesn't see again stays as it was. An incremental scan reads only part of the branch, so a scan never drops a record because it didn't read that code. A record leaves the default list only when a scan rejects it or your team sets a [decision](/console/code-security-records#decide-on-a-record). If a later scan describes the same problem in a new way, it can appear as a second record.
+
+Your team's decisions are never sent to a scan, so a decision doesn't change what a scan reads or reports. A decision holds while the record's verdict and severity stay the same. A scan that changes either sets the record back to **Open**.
+
+---
+
+## When a scan runs
+
+### The schedule
+
+[**Scheduled scan**](/console/code-security-settings#scheduled-scan) sets how often each repository is scanned: **Daily**, **Weekly**, **Every two weeks** or **Monthly**. The period counts from the end of the repository's last scan, whatever started it and however it ended. A scan you run by hand on a Tuesday of a weekly repository moves its next scheduled scan to the following Tuesday.
+
+A repository that has never been scanned is due at once. Turning code security on queues nothing by itself, but IronBee checks for due repositories every few minutes, so the first scan of a newly turned-on repository usually starts within minutes, unless another scan of your account is waiting or running. It's a full scan, priced by the repository's size once it's counted. If you don't want to wait for it, start it with [**Run full scan**](/console/code-security#run-a-full-scan).
+
+### One scan at a time
+
+Your account runs one code security scan at a time, across all its repositories:
+
+- A scheduled scan is queued only while no other code security scan of your account is waiting or running, apart from a [follow-up run](#follow-up-runs). Among the repositories that are due, one that has never been scanned goes first, then the one whose last scan ended longest ago.
+- A scan you start by hand or through the API waits behind the scans queued before it.
+- When a scan ends, the account's oldest waiting scan goes next, whichever repository it's for.
+
+A scan takes up to two hours. With many repositories on a short schedule, each one can be scanned less often than its **Scheduled scan** says.
+
+### Scans you start
+
+An owner or an admin can start a scan with **Run full scan** in the console, or with the API's [Start a scan](/code-security/api#start-a-scan). Either way, a repository can be started by hand once an hour, the console and the API counted together.
+
+If a scan of the repository is already waiting, starting another brings that one forward instead of adding a second. Asking for a full scan makes the waiting one full. If a scan of the repository is running, the new one waits for it to end.
+
+### When scans stop coming
+
+- **No credits left.** While the team has no credits left this month, no scheduled scan is queued. A scan whose counted price is more than the credits left is refused, free. See [Credits](/code-security/overview#credits).
+- **Repeated failures.** When a repository's last three scans all failed, whatever started them, and the newest of the three was scheduled, IronBee stops scheduling it until someone starts a scan, in the console or through the API. A scan refused for credits, for a size the rate card doesn't cover, or as too large to scan with execution is left out of those three.
+- **Code security turned off, or the project archived.** Nothing is scanned.
+
+---
+
+## Follow-up runs
+
+A scan plans the work its profile allows, and one run may not finish it. A scan that doesn't finish everything it planned ends **Incomplete**, **Stopped at its time limit**, **Stopped at its spend limit** or **Stopped at its context limit**. It keeps what it found, is charged like a complete scan, and puts off what it didn't read. The **Last scan** card shows those units as put off, and the run's details count them under **Put off to a follow-up run**. A scan that fails instead, such as with **The scan stopped before it could finish**, keeps nothing and is free.
+
+Work that was put off is finished by follow-up runs:
+
+- A follow-up run is queued as soon as the scan ends, and waits its turn behind the account's scans queued before it.
+- It reads only what was put off, at the commit the scan started on, with the profile and execution that scan was priced at, even if the settings changed since.
+- It's free.
+- Up to two follow-up runs come after a scan, and only while each one finishes some of what's left. Anything still left waits for the next scheduled scan or a scan you start.
+
+Commits pushed while follow-up runs finish a scan wait for the next scan, which reads them together with whatever is still left. If the scan's commit is no longer on the branch, such as after a force push, the follow-up run reads nothing and is free.
+
+---
+
+## Running your code
+
+[**Execution**](/console/code-security-settings#execution) decides whether a scan may run the repository's code. It's off by default, and an owner or an admin turns it on for the account or for one repository.
+
+- **Off:** the scan reads the code and runs none of it. Everything it finds stays a lead to validate, with no severity.
+- **On:** the scan installs the repository's dependencies, then runs its code in its sandbox to try to reproduce what it found. A finding it reproduces is confirmed and gets a severity. What it can't reproduce stays a lead, with what blocked a verdict.
+
+A scan with execution costs more than one without. See the rate card on [Credit usage](/console/usage#what-a-job-costs).
+
+### What it installs and runs
+
+With execution on, a scan first installs the dependencies the repository pins at its root:
+
+| Language | What the scan installs from |
+|---|---|
+| Node.js | `package-lock.json` with npm, or `pnpm-lock.yaml` with pnpm |
+| Python | `requirements.txt` with pip, in a virtual environment |
+| Go | `go.mod` and `go.sum` |
+
+- The scan installs Node.js, Python and Go at the version the repository declares, such as in `.nvmrc`, `.node-version`, `.python-version` or `go.mod`, and uses a default version when it declares none.
+- Install scripts run, and source packages are built, as they would be on a developer's machine. They run inside the sandbox, like the repository's own code.
+- Code in other languages is read, not run. A repository whose dependencies are pinned another way, such as with `yarn.lock`, is scanned without them installed.
+- For Python, the install takes only requirements by name, with their versions, markers and hashes, `-r` and `-c` files of the repository, and the options `--pre`, `--require-hashes`, `--no-binary`, `--only-binary` and `--prefer-binary`. Any other line in `requirements.txt`, such as `-e .`, a path, a URL or `--index-url`, leaves the Python dependencies uninstalled.
+
+Then the scan runs the repository's code: it starts the parts it needs, sends them the input an attacker would, and checks what happens. It never runs the code against your deployments.
+
+### Where it runs
+
+- Each scan runs on a machine of its own on IronBee's infrastructure, and the repository's code runs only inside the scan's sandbox there.
+- The code a scan runs has no network access outside its sandbox: not the internet, not your deployments, databases or cloud accounts, and not IronBee's own systems. A finding whose proof needs an outside service stays a lead.
+- The sandbox provides no database server or other services.
+- Installs reach only the public package registries: the npm registry, PyPI and the Go module proxy, plus the sites the Node.js, Python and Go builds are downloaded from. A dependency from a private registry, or one hosted on your GitHub Enterprise or GitLab instance, can't be fetched, and that fails the whole install for its language: the scan then goes on without any of that language's dependencies installed. Registry settings in the repository, such as an `.npmrc` file, aren't used.
+- A checkout too large to scan with execution is refused before the scan reads the code, and nothing is charged. The tab then says **Too large to scan with execution**. Turn **Execution** off for that repository to scan it by reading only. The size limit is under [Execution](/console/code-security-settings#execution).
+
+### What a scan is given
+
+- **No secrets.** A scan gets none of the project's [secrets](/console/secrets), [variables](/console/variables) or [environments](/console/environments). The repository is cloned before any of its code runs, and the code can't reach the token used for the clone or any IronBee credential.
+- **No secret in a record.** Records are checked for secrets before they're saved, and a secret found in one is replaced. The record keeps the file and line where the secret is.
+- **No write access.** A scan writes nothing to the repository or the Git host, with execution on or off.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Code security overview" icon="shield-check" href="/code-security/overview">
+    What code security is, where it runs, and what it costs.
+  </Card>
+  <Card title="Code security settings" icon="settings" href="/console/code-security-settings">
+    Choose the profile, the schedule, execution and the paths a scan leaves out.
+  </Card>
+  <Card title="Security records and runs" icon="shield-alert" href="/console/code-security-records">
+    Read a record, decide on it, and see every scan that ran.
+  </Card>
+  <Card title="Code security API" icon="code" href="/code-security/api">
+    Start a scan and read its records and runs from your own tools.
+  </Card>
+</CardGroup>
