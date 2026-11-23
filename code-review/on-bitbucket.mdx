@@ -71,7 +71,7 @@ A review sets a build status named **IronBee review** on the commit it reviewed,
 
 The status's description is the check's title on GitHub, such as `3 findings · 1 high · 2 low`, `Nothing to add` or **IronBee review · too large to review**. See [When the review is done](/code-review/on-github#when-the-review-is-done) for the titles. A status that would read only **IronBee review** adds the first line of the review's summary, such as **IronBee review · retracted**. A running status shows no progress.
 
-A neutral or cancelled outcome is successful on Bitbucket, so it never fails a build. Only an open finding that reaches **Block merging when** turns the status to failed.
+A neutral or cancelled outcome is successful on Bitbucket, so it never fails a build. Only an open finding that reaches **Block merging when** turns the status to failed, counted at its severity now: the newest rating a later review gave it, or else the one it was written with. See [Conclusions](/code-review/on-github#conclusions).
 
 ### Merges
 
@@ -93,7 +93,7 @@ IronBee doesn't set them: its app holds no admin permission on your repositories
 
 Before you turn them on:
 - **The enforcement holds every merge check of the branch, not IronBee's alone:** a number of approvals, default reviewers' approvals, no changes requested, every task completed, every comment resolved, at most a number of commits behind. A branch that asked for two approvals as a warning refuses every merge without them from then on.
-- **"No changes are requested" only reacts to people.** IronBee's review never requests changes, so only a person's request for changes holds a merge under the enforcement, until it's taken back. With **Reset requested changes when the source branch is modified**, ticked in the same place, the next push to the source branch clears it.
+- **"No changes are requested" only reacts to people.** IronBee's review never requests changes, so only a person's request for changes holds a merge under the enforcement, until that person takes it back, after the fix too. With **Reset requested changes when the source branch is modified**, ticked in the same place, the next push to the source branch clears it.
 - **The builds check counts every build on the last commit,** IronBee's and any other tool's, and names none. Any successful build satisfies it, so it doesn't prove a review ran. What it does is hold a merge on a review that failed.
 - **A pull request nothing reports a build on can't merge.** Where IronBee is the only tool that writes builds, a pull request IronBee doesn't review, such as one its settings leave out, gets no build and waits, until a repository admin merges it another way or relaxes the restriction.
 

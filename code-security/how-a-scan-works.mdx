@@ -67,7 +67,7 @@ If a scan of the repository is already waiting, starting another brings that one
 
 - **No credits left.** While the team has no credits left this month, no scheduled scan is queued. A scan whose counted price is more than the credits left is refused, free. See [Credits](/code-security/overview#credits).
 - **Repeated failures.** When a repository's last three scans all failed, whatever started them, and the newest of the three was scheduled, IronBee stops scheduling it until someone starts a scan, in the console or through the API. A scan refused for credits, for a size the rate card doesn't cover, or as too large to scan with execution is left out of those three.
-- **Code security turned off, or the project archived.** Nothing is scanned.
+- **Code security turned off, for the repository or for the whole account, or the project archived.** Nothing is scanned. A scan that was waiting fails when it would start, and costs nothing.
 
 ---
 

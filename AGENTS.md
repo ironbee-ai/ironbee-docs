@@ -20,6 +20,10 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 
 **The self-hosted runner.** On an Enterprise agreement, code review runs in the customer's own CI instead, from IronBee's image and with the customer's own model provider. On GitHub Actions it is a reusable workflow, on GitLab CI/CD a component in a runner project, and on Bitbucket Pipelines a custom pipeline with a trigger app. It runs under a license with an end date and a developer limit, and uses no credits. Its status is **Code Review Result**. The console keeps its settings, rules and memories, and lists its pull requests and runs from counts, with no findings. `ironbee runner setup|add|check` sets it up.
 
+**BYOM (Bring Your Own Model).** An Enterprise account registers one model endpoint of its own in **Settings > BYOM**, and once BYOM is enabled, which needs a passing connection test, every job IronBee runs for it calls that model: code reviews (the CLI's `ironbee review` included), the code wiki, code security scans and platform verification runs. The jobs still run on IronBee's infrastructure; only their model calls go to the endpoint, in Anthropic Messages, OpenAI Chat Completions or OpenAI Responses format. Each save runs a connection test, and a job on the account's model is charged the rate card times 0.5, rounded up. An owner or an admin manages it; members and billing admins see it read-only. It's managed in the console alone, with no API route or CLI command. It isn't the self-hosted runner, which runs code review in the customer's own CI.
+
+**The account's switches.** Code review, the code wiki and code security each have a switch for the whole account at the top of the product's account settings page (**Code review for this account**, **Code wiki for this account**, **Code security for this account**), on by default, and a switch on each repository. A product runs on a repository only while both are on. Code review on the self-hosted runner is the exception: the runner reviews a repository whose own switch is off, and the account's switch off refuses every registration and run of it. Turning the account's switch off cancels nothing, keeps posts, pages and records, and changes no repository's switch; turning it on queues nothing by itself.
+
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
 - A run is started by the IronBee GitHub Action, the IronBee GitLab component, the IronBee Bitbucket Pipe, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
 - A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**, and so does picking a repository in a GitLab group or a Bitbucket workspace.
@@ -39,6 +43,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 - each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
 - project settings: environments, variables, secrets
 - **Settings > Usage**: the team's credits this period, by product, day, project and run, the credits it bought, and the rate card. On Free and Team, owners and billing admins buy credits there with **Add credits**
+- **Settings > BYOM**: the account's own model endpoint, its connection test and its last failure
 - Search: the command palette and the query builder
 
 ## Terminology
@@ -63,6 +68,8 @@ Use these terms. When you describe something on screen, quote the console label 
 | follow-up run | continuation, leftovers run | Code security: a free run that reads what a scan put off, at the same commit. The console's kind is **Follow-up** |
 | profile, execution | depth, mode, dynamic analysis | Code security settings: **Profile** is how far a scan goes; **Execution** is whether it may run the repository's code. Code review's setting is depth, not profile |
 | self-hosted runner | on-prem reviewer, self-hosted review, BYOM | IronBee code review in the customer's own CI. Say "your own runner" or "a runner of yours" for GitHub's, GitLab's or Bitbucket's CI runners |
+| BYOM | custom LLM, bring your own key, self-hosted model | IronBee's cloud jobs on the account's own model endpoint, as **Settings > BYOM** names it. Spell it out, BYOM (Bring Your Own Model), on the BYOM pages, in key concepts and on the home page. Any other page may say BYOM alone, with a link to `/byom/overview`, or to `/console/byom` where it names the settings page, at its first mention. After that, say "your model" or "your endpoint", or BYOM alone as the console does ("a job on BYOM", "the BYOM settings", "the BYOM endpoint"). Never use it for the self-hosted runner |
+| the account's switch | master switch, kill switch | A product's switch for the whole account: **Code review for this account**, **Code wiki for this account**, **Code security for this account**. A repository's own switch stays "the repository's switch" |
 | license | licence | The self-hosted runner's license. Quote "licence" only in product output (log lines, status text), which spells it that way |
 | runner project, trigger app | | The self-hosted runner's GitLab project that holds its pipeline (GitLab only), and its Forge app that starts the pipeline (Bitbucket only) |
 | registered host | enterprise instance, on-prem install | A GHE.com tenant, a GitHub Enterprise Server, a GitLab Self-Managed server or a GitLab Dedicated tenant registered in the console. Say "tenant" for GHE.com and Dedicated, "server" for GHES and Self-Managed, "instance" for either GitLab one. GitHub Enterprise Cloud on github.com is github.com, not a registered host |
@@ -98,7 +105,8 @@ Console labels, quoted verbatim:
 | Vercel integration | Integrations > `integrations/vercel` | Preview deployments of enabled projects |
 | Netlify extension | Integrations > `integrations/netlify` | Deploy previews and branch deploys of enabled sites |
 | `@ironbee-ai/cli` npm package | CLI | Wraps AI coding agents; `ironbee verify` starts platform verification runs; `ironbee review` reviews a local branch; `ironbee credits` shows credit use; `ironbee runner` sets up the self-hosted runner for code review (`cli/guides/runner`); `ironbee host` prepares GitLab instances, group IP restrictions and Bitbucket merge checks (`cli/guides/hosts`) |
-| Code security | Features > Code security (`code-security/*`), Console > Code security (`console/code-security*`) | `code-security/*`: what it is, where it runs, how a scan works, and its API. The console pages: the project tab, its records and runs, and the settings at the account and repository level |
+| BYOM | Features > BYOM (`byom/*`), its console page `console/byom` | What BYOM is, the endpoint's side, the formats, failures, and **Settings > BYOM**. Key concepts gives it a section, **Jobs on BYOM** on `console/usage` holds its credits product by product, and the self-hosted runner's overview says how the two differ. Other pages give it one line and a link |
+| Code security | Features > Code security (`code-security/*`), its console pages under **In the console** (`console/code-security*`) | `code-security/*`: what it is, where it runs, how a scan works, and its API. The console pages: the project tab, its records and runs, and the settings at the account and repository level |
 | IronBee Console | Console | Web UI at console.ironbee.ai |
 
 ## CLI conventions
@@ -128,7 +136,7 @@ Console labels, quoted verbatim:
 - **Overview:** the home page (`index.mdx`). It is the only way back to the home page besides the logo, so there is no separate Home link in the sidebar
 - **Get started:** introduction, quickstart, key concepts, help
 - **Integrations:** GitHub App, GitHub Enterprise, GitLab, GitLab Self-Managed and Dedicated, Bitbucket, Vercel, Netlify, then the GitHub Action, GitLab component and Bitbucket Pipe groups
-- **Features:** a tab that opens a menu (`menu` in `docs.json`) of four items. **Code review** holds the code review pages: overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings), then the self-hosted runner (overview, on GitHub, on GitLab, on Bitbucket). **Code security** holds its own pages (overview, how a scan works, API), then its console pages under **In the console** (scans, records and runs, settings), like code review's. **Code wiki** and **Verification** are shortcuts: each lists one page, that feature's first page in the **Console** tab, and nothing else
+- **Features:** a tab that opens a menu (`menu` in `docs.json`) of five items. **Code review** holds the code review pages: overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings), then the self-hosted runner (overview, on GitHub, on GitLab, on Bitbucket). **Code security** holds its own pages (overview, how a scan works, API), then its console pages under **In the console** (scans, records and runs, settings), like code review's. **BYOM** holds its own pages, then its console page under **In the console**, like code security. **Code wiki** and **Verification** are shortcuts: each lists one page, that feature's first page in the **Console** tab, and nothing else
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
 - **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
 
@@ -172,7 +180,7 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
 `index.mdx` is a custom-mode page built with the `ib-*` classes in `style.css`, whose tokens follow the ironbee.ai palette. `style.css` also restyles Mintlify's chrome: the top tabs are chips with an icon, and the active tab has a background and a border. Follow these rules when you change either:
 
 - Keep every border radius at 4px or less, including buttons, cards, chips, the code group, the top tabs and the sidebar's active page (desktop `#sidebar` and the phone menu `#mobile-nav`).
-- The **Features** tab is a menu button. `style.css` gives it the active chip while a code review page is open, and keeps its menu and the menu's rows at 4px corners. Check a new tab at 1024px, the narrowest width that shows the tab row.
+- The **Features** tab is a menu button. `style.css` gives it the active chip while one of its pages is open, and keeps its menu and the menu's rows at 4px corners. Check a new tab at 1024px, the narrowest width that shows the tab row.
 - Section eyebrow labels are neutral gray, with no accent color and no dot.
 - Check the page in light and dark themes and at mobile width.
 
@@ -206,12 +214,12 @@ When you remove or rename a page, add a `redirects` entry in `docs.json`. Keep t
   - The same goes for credits: other pages say what uses credits and what's free, never how many a plan gets or a job costs
   - Purchased credits: other pages say who can buy them (owners and billing admins, on Free and Team), how they're spent and that they stay valid for 12 months. The price of a credit and the smallest and largest purchase live on `console/pricing.mdx` only, under **Buy credits**, like plan prices; other pages link there
   - Plans are priced in credits. Leave out the website's session limits (its sessions row and session lines) when you mirror it
-- The public REST API has no reference docs for now, except the code security routes on `code-security/api`. Running a saved scenario through the API stays undocumented
+- The public REST API has no reference docs for now, except the code security routes on `code-security/api` and IronBee's addresses (`/v1/vcs-network`, its `egressAddresses`) on `byom/your-endpoint`. Running a saved scenario through the API stays undocumented
 - API examples use `curl -s`, the base URL `https://api.service.ironbee.ai`, and `-H "X-API-Key: $IRONBEE_API_KEY"`
 - Self-hosted runner: never state the license's price, developer bands or numbers; link to Pricing. Don't show the image's Docker Hub organization or name, or the registration API call; link to the runner repositories for steps done by hand
   - Give the secrets' setup facts (which secret, where to store it) without threat framing: no "anyone who can push a branch reads the secrets or writes the status", no "the account's full API key"
   - Jev: an optional classifier from Typesafe, off by default, used only with the customer's own Typesafe key; what it receives goes from the customer's CI to Typesafe and never passes through IronBee. No vendor measurements, no prices
-- Code security: never name the skill or the models behind a scan. The run details' **Skill**, **Agents** and **Sandbox** lines stay undocumented, and so do the API fields behind them (`skillProfile`, `skillCommit`, `counts.agents`, `counts.refusals`, `counts.prompts`, `counts.notEnforced`) and `runStatus`
+- Code security: never name the skill, or the models behind a scan on IronBee's model. On BYOM the model is the customer's own, and the models measured on it may be named, as `byom/formats-and-models` does. The run details' **Skill**, **Agents** and **Sandbox** lines stay undocumented, and so do the API fields behind them (`skillProfile`, `skillCommit`, `counts.agents`, `counts.refusals`, `counts.prompts`, `counts.notEnforced`) and `runStatus`
 - Security and compliance content changes only with the owner's sign-off
   - This covers `help/compliance.mdx` and the Security card in `getting-started/introduction.mdx`
 - A feature that hasn't reached production yet is written on a branch and published together with its release

@@ -50,6 +50,8 @@ Scans run on IronBee's infrastructure:
 
 See [Where it runs](/code-security/how-a-scan-works#where-it-runs) and [What a scan is given](/code-security/how-a-scan-works#what-a-scan-is-given).
 
+While your account runs its jobs on its own model with [BYOM](/byom/overview), a scan runs on that model.
+
 The [self-hosted runner](/code-review/self-hosted-runner/overview) reviews pull requests in your own CI and doesn't run code security, so a host that IronBee can't reach from the internet has no code security.
 
 Vercel, Netlify and CLI projects have no code security. Connect the project's repository through one of the hosts above to scan it.
@@ -64,11 +66,11 @@ Code security is turned on one repository at a time. An owner or an admin does o
 - turns on **Scan this repository** in the project's **Settings > Code security**. See [Repository settings](/console/code-security-settings#repository-settings).
 - sets `enabled` to `true` through the API. See [Change a repository's settings](/code-security/api#change-a-repositorys-settings).
 
-There's no account setting that turns it on for every repository. The account's settings hold the defaults each repository follows: the profile, execution and how often a scan comes.
+No account setting turns it on for a repository. The account's settings hold the defaults each repository follows: the profile, execution and how often a scan comes. They also hold **Code security for this account**, a switch that turns code security off for every repository at once, whatever each one's own switch says, and keeps their records. See [Turn code security off for the account](/console/code-security-settings#turn-code-security-off-for-the-account).
 
 A repository that has never been scanned is due at once, so its first scan, a full scan, comes within minutes of turning code security on, once no other code security scan of your account is waiting or running and the team has credits left. See [When a scan runs](/code-security/how-a-scan-works#when-a-scan-runs).
 
-Once code security is off for a repository, no scan of it starts. Its records are kept, and its runs within your plan's retention. They aren't shown, and come back when you turn it on again.
+Once code security is off for a repository, or for the account, no scan of it starts. Its records are kept, and its runs within your plan's retention. They aren't shown, and come back when you turn it on again.
 
 ---
 
@@ -119,7 +121,7 @@ What's free:
 
 When the team has no credits left, no scheduled scan starts and **Run full scan** is unavailable until the credits reset or the team gets more. A repository larger than the rate card covers is scanned by contract with IronBee.
 
-The rates are under **What a job costs** on [Credit usage](/console/usage#what-a-job-costs). Each plan's credits are on [Pricing](/console/pricing).
+The rates are under **What a job costs** on [Credit usage](/console/usage#what-a-job-costs), with what a scan on [BYOM](/byom/overview) is charged. Each plan's credits are on [Pricing](/console/pricing).
 
 ---
 

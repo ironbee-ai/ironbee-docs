@@ -7,7 +7,7 @@ keywords: ["security scan", "vulnerability scan", "SAST"]
 
 IronBee scans the default branch of a GitHub repository the [IronBee GitHub App](/integrations/github) covers, or of a repository you picked in a [connected GitLab group](/integrations/gitlab) or [Bitbucket workspace](/integrations/bitbucket), for security problems. Each thing a scan finds is kept as a record, with where it is in the code, how it could be used and how to fix it. Your team then decides what to do with each record. Repositories on a [GitHub Enterprise](/integrations/github-enterprise) host or a [GitLab Self-Managed or Dedicated](/integrations/gitlab-self-managed) instance registered to your account can be scanned too.
 
-Code security is off until an owner or an admin turns it on for a repository. A scan uses [credits](#credits). Only owners and admins see code security: the tab, its records and its settings.
+Code security is off until an owner or an admin turns it on for a repository, and an owner or an admin can turn it off for every repository at once with [**Code security for this account**](/console/code-security-settings#turn-code-security-off-for-the-account). A scan uses [credits](#credits). Only owners and admins see code security: the tab, its records and its settings.
 
 The scans are on each project's **Code security** tab, after **Code wiki**. To choose how far a scan goes and how often it runs, see [Code security settings](/console/code-security-settings).
 
@@ -67,6 +67,7 @@ Until a scan has finished and its records are ready, a band at the top of the ta
 | The tab says | What it means |
 |--------------|---------------|
 | **Code security is off for this repository** | Nothing is scanned. An owner or an admin can click **Turn on**. **What a scan costs** opens the rate card on [Usage](/console/usage#what-a-job-costs) |
+| **Code security is off for this account** | No repository of the account is scanned, whatever its own switch says. Its records and runs are kept. **Turn it on in the account's settings** opens [Code security settings](/console/code-security-settings#turn-code-security-off-for-the-account), and **What a scan costs** the rate card |
 | **The first scan has not run yet** | It comes at the next scheduled time, or now with **Run full scan** |
 | **A scan is waiting to start** | It starts within a few minutes, or at the time the band shows. While a scan of another repository in your account runs, it waits for that one to end |
 | **A scan is getting ready** | The repository is being counted. The scan's price shows once it's counted, and nothing is charged before that |
@@ -134,7 +135,7 @@ A scan uses the team's credits, as code review and verification do. Its price de
 - A follow-up run, which only finishes an earlier scan, is never charged.
 - A scan the team's credits can't cover is refused, free.
 
-The prices are on the rate card on [Usage](/console/usage#what-a-job-costs).
+The prices are on the rate card on [Usage](/console/usage#what-a-job-costs). While your account runs its jobs on its own model with [BYOM](/byom/overview), a scan is charged the BYOM price: the **Next scan** card shows it, and the **Run full scan** dialog shows it with a line that says so.
 
 ---
 
@@ -146,7 +147,7 @@ The prices are on the rate card on [Usage](/console/usage#what-a-job-costs).
 | **No code security for this project** | The repository isn't connected through the GitHub App, a GitLab group or a Bitbucket workspace, or the project is archived |
 | **Only owners and admins see code security** | You opened the tab's address as a member or a billing admin. Ask an owner or an admin for access |
 
-When code security is turned off for a repository, its records are kept, and its runs within your plan's retention, but they aren't shown. Turn it on again to see them.
+When code security is turned off for a repository, or for the whole account, its records are kept, and its runs within your plan's retention, but they aren't shown. Turn it on again to see them.
 
 ---
 

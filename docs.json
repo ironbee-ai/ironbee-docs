@@ -68,6 +68,7 @@
       "Console scenarios (https://docs.ironbee.ai/console/scenarios) and CLI saved scenarios (https://docs.ironbee.ai/cli/guides/scenarios) are separate features.",
       "Code security (https://docs.ironbee.ai/code-security/overview) scans a repository's default branch on a schedule. It is off until an owner or admin turns it on for a repository, and only owners and admins see it.",
       "The self-hosted runner (https://docs.ironbee.ai/code-review/self-hosted-runner/overview) runs IronBee code review in your own GitHub Actions, GitLab CI/CD or Bitbucket Pipelines, with your own model provider; set it up with `ironbee runner setup`.",
+      "BYOM (https://docs.ironbee.ai/byom/overview) runs the code reviews, code wiki, code security scans and verification runs IronBee runs for an Enterprise account on the account's own model endpoint, set up in Settings > BYOM in the console. It is not the self-hosted runner.",
       "For plans and prices, link to https://ironbee.ai/pricing; the website is the source of truth for them."
     ]
   },
@@ -439,6 +440,31 @@
             "description": "Every verification run, with its evidence",
             "pages": [
               "console/verifications"
+            ]
+          },
+          {
+            "item": "BYOM",
+            "icon": "cpu",
+            "description": "Every job on a model endpoint of your own",
+            "groups": [
+              {
+                "group": "BYOM",
+                "icon": "cpu",
+                "pages": [
+                  "byom/overview",
+                  "byom/your-endpoint",
+                  "byom/formats-and-models",
+                  "byom/server-recipes",
+                  "byom/when-a-job-fails"
+                ]
+              },
+              {
+                "group": "In the console",
+                "icon": "layout-dashboard",
+                "pages": [
+                  "console/byom"
+                ]
+              }
             ]
           }
         ]

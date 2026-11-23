@@ -94,7 +94,7 @@ An error answers with a status and a JSON body:
 | 403 | `ACCOUNT_INACTIVE` | The account is disabled |
 | 404 | `NOT_FOUND` | No such project or record in your account |
 | 404 | `ROUTE_NOT_FOUND` | No such endpoint |
-| 409 | `CODE_SECURITY_DISABLED` | Code security is off for the repository. Its records are kept, and its runs within your plan's retention, but they aren't served |
+| 409 | `CODE_SECURITY_DISABLED` | Code security is off for the repository, or for the whole account; the message names which. Its records are kept, and its runs within your plan's retention, but they aren't served |
 | 409 | `SECURITY_RECORD_CHANGED` | [Set a decision](#set-a-decision) only: a scan changed the record since you read it |
 | 413 | `PAYLOAD_TOO_LARGE` | The body is larger than 64 KiB |
 | 429 | `REFRESH_TOO_SOON` | [Start a scan](#start-a-scan) only: someone started a scan of this repository by hand less than an hour ago |
@@ -157,7 +157,7 @@ curl -s "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/se
 
 | Field | What it holds |
 |-------|---------------|
-| `enabled` | Whether code security is on for the repository. Off, `status` is `off`, `lastRun` and `price` are `null`, and the counts are 0 |
+| `enabled` | Whether code security is on for the repository: `true` only while the repository's own switch and the account's are both on. Off, `status` is `off`, `lastRun` and `price` are `null`, and the counts are 0 |
 | `status` | Where things stand. See the table below |
 | `job` | The repository's current scan: the one running, else the one waiting, else the newest. See [The scan object](#the-scan-object). `null` before the first |
 | `lastRun` | The newest scan that stored its results, as a [run](#the-run-object). A period with no change and a failed scan store none. `null` before the first |
@@ -174,7 +174,7 @@ curl -s "https://api.service.ironbee.ai/v1/code-analysis/projects/$PROJECT_ID/se
 
 | `status` | The tab says |
 |----------|--------------|
-| `off` | **Code security is off for this repository** |
+| `off` | **Code security is off for this repository**, or **Code security is off for this account** while the account's switch is off. A repository's `accountEnabled` in [Get a repository's settings](#get-a-repositorys-settings) says which |
 | `none` | **The first scan has not run yet** |
 | `queued` | **A scan is waiting to start** |
 | `running` | **A scan is getting ready**, or **A scan is running** |
@@ -518,6 +518,7 @@ curl -s "https://api.service.ironbee.ai/v1/code-security/settings" \
 
 ```json
 {
+  "enabled": true,
   "settings": {
     "refresh": { "value": "weekly", "source": "default", "repositoriesDiffering": 0 },
     "profile": { "value": "auto", "source": "default", "repositoriesDiffering": 2 },
@@ -526,7 +527,10 @@ curl -s "https://api.service.ironbee.ai/v1/code-security/settings" \
 }
 ```
 
-`repositoriesDiffering` counts the repositories that set their own value.
+| Field | What it holds |
+|-------|---------------|
+| `enabled` | The account's switch, the console's **Code security for this account**. `true` until you turn it off. While it's `false`, no repository of the account is scanned or served, whatever its own `enabled` says |
+| `settings` | `refresh`, `profile` and `execution`, each with its `value`, its `source`, and `repositoriesDiffering`: the repositories that set their own value |
 
 ### Change the account's settings
 
@@ -534,7 +538,12 @@ curl -s "https://api.service.ironbee.ai/v1/code-security/settings" \
 PATCH /v1/code-security/settings
 ```
 
-Send the settings to change under `settings`, at least one. `null` puts one back to IronBee's default.
+Send at least one field:
+
+| Field | What it does |
+|-------|--------------|
+| `enabled` | `false` turns code security off for every repository of the account, `true` turns the account's switch back on. It takes `true` or `false` only: `null` is refused with `400 INVALID_SETTINGS` |
+| `settings.refresh`, `settings.profile`, `settings.execution` | The account's default. `null` puts one back to IronBee's |
 
 ```bash
 curl -s -X PATCH "https://api.service.ironbee.ai/v1/code-security/settings" \
@@ -543,7 +552,12 @@ curl -s -X PATCH "https://api.service.ironbee.ai/v1/code-security/settings" \
   -d '{"settings": {"execution": true, "refresh": "biweekly"}}'
 ```
 
-The answer is the account's settings after the change. There's no account setting that turns code security on: each repository has its own switch.
+The answer is the account's settings after the change.
+
+No account setting turns code security on for a repository: each repository has its own switch. The account's `enabled` can only keep every repository off:
+
+- Turning it off never changes a repository's own `enabled`, stops a scan that's running, or deletes a record or a run. A scan that was waiting fails when it would start, and costs nothing. While it's off, the records, runs, decision and start routes answer `409 CODE_SECURITY_DISABLED` for every repository, and [Where a repository stands](#where-a-repository-stands) answers with `status` `off`.
+- Turning it on again queues no scan by itself. Each repository is as it was, and its next scheduled scan comes when it's due.
 
 ### Get a repository's settings
 
@@ -560,6 +574,7 @@ curl -s "https://api.service.ironbee.ai/v1/code-security/projects/$PROJECT_ID/se
 {
   "projectId": "2f9a41c0-7b3e-4d1a-9c55-0e8f6a2b1d47",
   "enabled": true,
+  "accountEnabled": true,
   "ignorePaths": ["vendor/**", "**/*.min.js"],
   "settings": {
     "refresh": { "value": "weekly", "source": "default" },
@@ -571,7 +586,8 @@ curl -s "https://api.service.ironbee.ai/v1/code-security/projects/$PROJECT_ID/se
 
 | Field | What it holds |
 |-------|---------------|
-| `enabled` | Whether code security is on for the repository. The console's **Scan this repository** |
+| `enabled` | The repository's own switch, the console's **Scan this repository** |
+| `accountEnabled` | The account's switch, read-only here. While it's `false`, the repository isn't scanned or served, whatever `enabled` says. Change it with [Change the account's settings](#change-the-accounts-settings) |
 | `ignorePaths` | **Paths to ignore**: globs from the repository's root |
 | `settings` | `refresh`, `profile` and `execution`, each with its `value` and `source` |
 
@@ -585,7 +601,7 @@ Send the fields to change, at least one:
 
 | Field | What it does |
 |-------|--------------|
-| `enabled` | `true` turns code security on for the repository, `false` turns it off |
+| `enabled` | `true` turns code security on for the repository, `false` turns it off. While the account's switch is off, `true` scans nothing until the account's is on again |
 | `ignorePaths` | Replaces **Paths to ignore**: up to 100 globs from the repository's root, of up to 500 characters each, with no leading `/`, no `..` segment and at most 10 `**` in one. `null` clears the list |
 | `settings.refresh`, `settings.profile`, `settings.execution` | The repository's own value. `null` puts one back to the account's |
 

@@ -168,7 +168,7 @@ Set these in the repository's **Repository settings > Branch restrictions**, on 
 - **Minimum number of successful builds for the last commit with no failed builds and no in progress builds:** a merge waits until no build on the head is failed or in progress. A blocking review is a failed build, and a review under way is a build in progress.
 - **Prevent a merge with unresolved merge checks,** on Premium only. Without it, the checks only warn and the merge button works.
 
-The second makes every merge check of the branch hold a merge, not the builds check alone: approvals, no changes requested, completed tasks and the rest. The reviewer never requests changes, so **No changes are requested** only reacts to people: a person's request for changes holds the merge until it's taken back, or, with **Reset requested changes when the source branch is modified**, until the next push to the source branch.
+The second makes every merge check of the branch hold a merge, not the builds check alone: approvals, no changes requested, completed tasks and the rest. The reviewer never requests changes, so **No changes are requested** only reacts to people: a person's request for changes holds the merge until that person takes it back, after the fix too, or, with **Reset requested changes when the source branch is modified**, until the next push to the source branch.
 
 `ironbee host merge-check acme/shop` adds both where they're missing, on the default branch or the one `--branch` names, asking before each change. See [`ironbee host merge-check`](/cli/guides/hosts#ironbee-host-merge-check). `ironbee runner check` reports what the default branch has.
 
@@ -217,7 +217,7 @@ Look first at the pull request's builds, then at the repository's **Pipelines**:
 | The step waits and no runner takes it | `runs-on` names labels no runner of yours has, or the runner is offline |
 | A comment started nothing | The trigger app isn't installed, or the comment wasn't for the reviewer. Its log says which |
 | **Run pipeline** on a pull request's source branch fails | That's on purpose: it isn't a pull request's run. Comment `@ironbee-ai review`, or push |
-| A `SUCCESSFUL` status that says nothing was reviewed | The reason is in its description. The license, IronBee's refusal and the cloud reviewing the repository read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting) |
+| A `SUCCESSFUL` status that says nothing was reviewed | The reason is in its description. The license, the account's code review turned off, IronBee's other refusals and the cloud reviewing the repository read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting). For a version no longer served, move the block with `ironbee runner setup --update`. An open pull request runs the block its source branch brings, so it's reviewed again once its branch takes the default branch in |
 
 The runner's [Troubleshooting](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/docs/troubleshooting.md) lists every message.
 

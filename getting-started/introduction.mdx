@@ -15,6 +15,8 @@ You can use any of these, or all of them:
 - **On your deployments and pull requests.** Connect Vercel or Netlify, or add the GitHub Action, the GitLab component or the Bitbucket Pipe, and IronBee verifies each preview deployment, pull request or merge request on its own infrastructure. The result lands on the pull request, on the deployment, and in the console.
 - **Inside your AI coding agent.** The IronBee CLI gives Claude Code, Cursor and Codex the tools to verify their own changes in a real browser, a running backend or a terminal before they call the work done.
 
+On the Enterprise plan, the code reviews, code wiki, code security scans and verification runs IronBee runs for you can call a model endpoint of your own instead of IronBee's. See [BYOM (Bring Your Own Model)](/byom/overview).
+
 ## The problem
 
 AI coding agents are fast, but they lack accountability. An agent can write hundreds of lines of code, declare success, and move on without ever checking if the browser renders correctly, if the API responds as expected, or if anything broke.

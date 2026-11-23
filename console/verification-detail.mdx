@@ -32,6 +32,8 @@ The credits read as in the [Credits column](/console/verifications#credits) of t
 
 A run refused because the team's credits for the month were used up shows **Refused** in **Run details**, with the date the credits reset, instead of an error. See [When credits run out](/console/usage#when-credits-run-out).
 
+A run on your account's own model through [BYOM](/byom/overview) adds **BYOM** after its credits in **Run details**.
+
 ---
 
 ## Watch a run live
@@ -96,6 +98,8 @@ The result panel shows the verdict of the run:
 | **Suggested fixes** | The changes the run suggests for the issues. They are suggestions, not applied fixes |
 
 When the verdict lists findings, the tabs are **Summary**, **Checks** and **Findings**, and a link to **Issues** or **Suggested fixes** opens **Findings**. The count on **Findings** takes the color of the worst finding's severity. Otherwise, as on a passing run, an older run or a CLI verification cycle, the tabs are **Summary**, **Checks**, **Issues** and **Suggested fixes**.
+
+A run that met a failure of your account's BYOM endpoint shows what the endpoint answered, with **BYOM settings**: on **Summary** when the run still finished, or under the reason when it failed, with the error type `byom_unavailable` or `byom_failed`. See [When a job fails](/byom/when-a-job-fails).
 
 You can resize the panel, collapse it, or swap it with the recording.
 

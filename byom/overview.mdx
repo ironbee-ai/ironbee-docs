@@ -1,0 +1,169 @@
+---
+title: BYOM (Bring Your Own Model)
+sidebarTitle: Overview
+description: Run every job IronBee runs for your account, from code review to verification, on your own model through your Anthropic or OpenAI key or a server of yours.
+keywords: ["private LLM", "custom LLM", "own LLM endpoint", "self-hosted LLM"]
+---
+
+BYOM (Bring Your Own Model) runs every job IronBee runs for your account on your model instead of IronBee's:
+
+- [code reviews](/code-review/overview), including the ones `ironbee review` starts from the CLI
+- the [code wiki](/console/code-wiki)
+- [code security](/code-security/overview) scans
+- platform [verification runs](/console/verifications)
+
+The jobs still run on IronBee's infrastructure, as before. Only their model calls change: IronBee's model proxy makes every call to your endpoint, an HTTPS address you give, in Anthropic Messages, OpenAI Chat Completions or OpenAI Responses format. Your endpoint can be:
+
+- your own Anthropic API key
+- your own OpenAI API key
+- a server or gateway of yours that speaks one of those APIs, such as vLLM, SGLang or Ollama
+
+The CLI's own verification cycles run in your AI coding agent, on its model, so BYOM doesn't change them.
+
+<CardGroup cols={2}>
+  <Card title="Your endpoint" icon="server" href="/byom/your-endpoint">
+    Security, reach, what to serve, the window and capacity.
+  </Card>
+  <Card title="Formats and models" icon="shuffle" href="/byom/formats-and-models">
+    Which format to choose, the known models, verification on your model.
+  </Card>
+  <Card title="Server recipes" icon="terminal" href="/byom/server-recipes">
+    vLLM, SGLang, Ollama and NIM behind a reverse proxy.
+  </Card>
+  <Card title="When a job fails" icon="triangle-alert" href="/byom/when-a-job-fails">
+    What to expect once it's on, and what a failed job says.
+  </Card>
+</CardGroup>
+
+---
+
+## Who sets it up, and where
+
+BYOM is managed in the console alone, under **Settings > BYOM**. No API route or CLI command manages it. See [BYOM settings](/console/byom).
+
+- **Owners and admins** set up BYOM and change its settings.
+- **Every other role** sees the page read-only: whether BYOM is on, its format, its host, its model and the names of its headers. Never the key or a header's value.
+- **Setting up BYOM needs the Enterprise plan.** BYOM settings made earlier keep working whatever the plan becomes, and editing, enabling, disabling and deleting them need no plan. See [Pricing](/console/pricing).
+- **One model for the whole account.** It serves every call of every job. A model per team, per project, per product or per task isn't offered.
+
+---
+
+## Set it up
+
+<Steps>
+  <Step title="Prepare your endpoint">
+    For your own server, allow IronBee's addresses and require the key on every path. For a provider's API, make a key for BYOM alone. See [Prepare your endpoint](/byom/your-endpoint).
+  </Step>
+  <Step title="Fill in the form">
+    Open **Settings > BYOM** and pick **Anthropic**, **OpenAI** or **Other**. A preset fills in what its provider fixes, so you give the key and the model. **Other** asks for the format, the base URL and how the key is sent.
+  </Step>
+  <Step title="Save">
+    Click **Save** or **Save and enable**. Saving runs a connection test first, which takes up to 90 seconds, and shows its report. See [Save and the connection test](/console/byom#save-and-the-connection-test).
+  </Step>
+  <Step title="Enable">
+    Once the test passes, click **Enable**. From the next job, every job of the account runs on your model. Jobs already running finish on IronBee's model.
+  </Step>
+</Steps>
+
+---
+
+## The three formats
+
+Your endpoint speaks one format, the one you pick or your provider's preset fixes. A server may serve more than one, so IronBee doesn't guess it.
+
+| Format | IronBee calls | Typical endpoints |
+|--------|---------------|-------------------|
+| **Anthropic Messages** | `<base URL>/v1/messages` | Anthropic's API (the **Anthropic** preset), vLLM, SGLang, Ollama |
+| **OpenAI Chat Completions** | `<base URL>/chat/completions` | vLLM, SGLang, Ollama, a hosted gateway such as OpenRouter |
+| **OpenAI Responses** | `<base URL>/responses` | OpenAI's API (the **OpenAI** preset), and servers that work as it does |
+
+Which one suits your server, and what each one changes for verification and code review, is on [Formats and models](/byom/formats-and-models).
+
+---
+
+## Credits and your provider's bill
+
+On BYOM two bills meet:
+
+- **Your provider or your server** pays for every model call, at its own rates. The console doesn't show your model's token usage: your provider's or your server's records hold it.
+- **IronBee** still charges credits for the jobs that use them. A job on BYOM is charged the rate card's credits times 0.5, rounded up to a whole credit. A verification's started minutes are halved the same way. What's free stays free, and the code wiki uses no credits either way.
+
+While BYOM is on, the rate card on [Credit usage](/console/usage#what-a-job-costs) says so, the prices on the code review and code security settings pages are already halved, and each charge made on your model is marked **BYOM**. Each plan's credits are on [Pricing](/console/pricing).
+
+Jobs no person starts also run on your model, and your provider bills them: a repository's scheduled wiki refreshes, scheduled code security scans, and the [follow-up runs](/code-security/how-a-scan-works#follow-up-runs) after a scan. Follow-up runs are free on IronBee's side and billed in full by your provider. Measured on 2026-11-22 on `gpt-5.4` at OpenAI's API, a scan and its two follow-up runs together cost about 2.5 times the scan alone at the provider.
+
+<Warning>
+Set a spending or a rate limit on your gateway or at your provider. IronBee's caps on a job's tokens guard against a job that runs away, and aren't a budget. On BYOM, code security runs with no spending stop of IronBee's.
+</Warning>
+
+---
+
+## What reaches your endpoint
+
+From every job claimed while BYOM is enabled:
+
+- the code the job reads: diffs, files, the repository's contents a tool returns, the wiki's facts
+- a pull request's or merge request's text, its comments, and the replies the reviewer reads
+- a verification's target pages and API answers, and the names of its run's secrets, never their values
+- IronBee's prompts: the reviewer's, the code wiki's and code security's
+- on verification, Claude Code's own texts in its requests: its identity sentence, an environment entry, the definitions of its built-in tools (Edit, Glob, Grep, Read, WebFetch, Write), and in longer sessions its reminders and its compaction prompt
+
+No account id, job id or user is sent. Nothing reaches a third party for the model: IronBee's own model isn't called for a job claimed while BYOM is enabled. What reaches your repository's host and your deployment's provider is the same as on IronBee's model.
+
+In OpenAI Responses format every call is sent with `store: false`, so IronBee asks the endpoint to keep no response of a job. Your model's reasoning comes back as content the endpoint encrypted, rides inside the job's conversation and goes back to the same endpoint; neither IronBee nor the job's machine can read it. What your provider itself keeps of a request is its own policy and your agreement with it.
+
+What stays on IronBee's side: the code, inside IronBee's machines while a job runs; the job's records and the wiki; the findings, the jobs and their usage counts; and IronBee's logs, which hold no request or answer. IronBee runs its jobs, and its calls to your endpoint, in the United States (AWS us-west-2, Oregon).
+
+BYOM moves the model, not the code. To keep the code inside your network, use the self-hosted runner.
+
+---
+
+## BYOM and the self-hosted runner
+
+BYOM and the [self-hosted runner](/code-review/self-hosted-runner/overview) both run on a model of yours, in different places:
+
+| | BYOM | Self-hosted runner |
+|---|---|---|
+| **What runs on your model** | Every job: code review, the code wiki, code security, verification | Code review only |
+| **Where the jobs run** | IronBee's cloud | Your CI: GitHub Actions, GitLab CI/CD or Bitbucket Pipelines, from IronBee's image |
+| **Where your code is read** | IronBee's machines | Your CI job |
+| **Who calls your model** | IronBee's model proxy, from IronBee's addresses | Your CI job |
+| **A model on a private network** | Not supported: the endpoint is public HTTPS | Supported |
+| **What it needs** | The Enterprise plan | An Enterprise agreement and a license |
+| **Credits** | Charged at half the rate card | None: the license covers it |
+| **Results** | As in IronBee's cloud: findings, wiki pages and records in the console | The review on the pull request; the console shows counts |
+| **Set up in** | **Settings > BYOM** | Your CI, with `ironbee runner` |
+
+BYOM doesn't change the runner: the runner calls the model its own settings name.
+
+---
+
+## What isn't supported
+
+- A model on a private network, reached through a private link or a relay. The self-hosted runner reviews code with such a model.
+- An endpoint that answers without a key.
+- A cloud's model service reached with the cloud's own identity (an assumed role, a service account, a workload identity) instead of a key.
+- A query parameter on the base URL, such as Azure's `api-version`.
+- A subscription's sign-in, such as a Claude or ChatGPT plan, in place of an API key.
+- A second model, or a model per team, per project, per product or per task.
+- Client certificates (mutual TLS), and OAuth or Entra tokens that IronBee would refresh.
+- A fallback model: while BYOM is enabled, no job moves to IronBee's model, and none to another model of yours.
+- A spending budget set for a run. Set one on your gateway or at your provider.
+- Managing BYOM through the public API or the CLI.
+- A summary of your model's reasoning shown to anyone: none is asked of the Responses API.
+- A chat template whose rules go beyond one tool round trip, such as nine-character tool-call ids, or no user message right after tool messages. The test's tool step catches a template that refuses IronBee's second turn.
+- Images and documents given by URL, and documents that aren't text on OpenAI Chat Completions and OpenAI Responses. A short note takes their place.
+- Your model's token usage in the console.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Prepare your endpoint" icon="server" href="/byom/your-endpoint">
+    What your endpoint needs before you save.
+  </Card>
+  <Card title="BYOM settings" icon="settings" href="/console/byom">
+    The form, the connection test and the record in the console.
+  </Card>
+</CardGroup>

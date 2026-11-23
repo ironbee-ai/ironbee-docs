@@ -1,0 +1,176 @@
+---
+title: Server recipes for BYOM
+sidebarTitle: Server recipes
+description: Serve a model for BYOM with vLLM, SGLang, Ollama or NIM behind a reverse proxy - the flags, keys, parsers and window settings IronBee's runs measured.
+---
+
+These recipes serve a model of your own for BYOM (Bring Your Own Model), with the flags IronBee's runs measured. In each one the server listens on the host's loopback alone, and a [reverse proxy](#a-reverse-proxy-in-front) in front terminates TLS on the public address. Where the server doesn't check its key on every path, the proxy checks the key or exposes only the paths the server protects. What the endpoint needs in general is on [Prepare your endpoint](/byom/your-endpoint).
+
+| Server | Formats it serves | Checks its key | In front of it |
+|--------|-------------------|----------------|----------------|
+| [vLLM](#vllm) | Anthropic Messages, OpenAI Chat Completions | On `/v1/` paths only, as `Authorization: Bearer` | A reverse proxy, required |
+| [SGLang](#sglang) | Anthropic Messages, OpenAI Chat Completions | On every path, as `Authorization: Bearer` | A reverse proxy for TLS |
+| [Ollama](#ollama) | Anthropic Messages, OpenAI Chat Completions | No | A reverse proxy that checks the key, required |
+| [NIM](#nim) | Not tested apart: it bundles vLLM or SGLang | Doesn't validate `x-api-key` | A reverse proxy that checks the key, required |
+
+---
+
+## vLLM
+
+vLLM serves OpenAI Chat Completions at `<origin>/v1` (base URL `https://llm.example.com/v1`) and Anthropic Messages at the origin (base URL `https://llm.example.com`). It reads its key as `Authorization: Bearer` alone, on its Anthropic endpoint too, so choose **Bearer token** in the form.
+
+```bash
+docker run -d --gpus all --ipc=host -p 127.0.0.1:8000:8000 \
+  -v <hf-cache>:/root/.cache/huggingface -e VLLM_API_KEY \
+  vllm/vllm-openai:<version> \
+  <model> \
+  --enable-auto-tool-choice --tool-call-parser <parser>
+```
+
+- **The key:** `VLLM_API_KEY`, passed from the environment the container starts in. `--api-key <key>` is the same setting.
+- **The tool parser** the model needs: `--tool-call-parser qwen3_coder` for Qwen3-Coder, and for a thinking Qwen3, `--tool-call-parser hermes --reasoning-parser qwen3`. Measured: without a parser vLLM refuses `tool_choice: auto` with a 400, and with the wrong one (`hermes` for Qwen3-Coder) it writes the call as text. The connection test's tool step says which.
+- **The model name** for the form is the model as the server serves it: its path as given, or what `--served-model-name` sets.
+
+<Warning>
+vLLM's key covers the `/v1/` paths alone. `/invocations` (a full chat completion answered with no key), `/tokenize`, `/detokenize`, `/metrics`, `/health` and `/version` answer without it, which the connection test can't see. Put vLLM behind a [reverse proxy](#a-reverse-proxy-in-front) that checks the key on every path, or exposes the `/v1/` paths alone.
+</Warning>
+
+### vLLM at the floor, on one 48 GB card
+
+Measured on one L40S (48 GB), vLLM 0.34.0, the publisher's 8-bit build of Qwen3-Coder 30B, at a real 131,072-token window:
+
+```bash
+docker run -d --gpus all --ipc=host -p 127.0.0.1:8000:8000 \
+  -v <hf-cache>:/root/.cache/huggingface -e VLLM_API_KEY \
+  vllm/vllm-openai:v0.34.0 \
+  Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 \
+  --max-model-len 131072 --max-num-seqs 16 \
+  --enable-auto-tool-choice --tool-call-parser qwen3_coder
+```
+
+- With vLLM's defaults the server doesn't start at 131,072 tokens: the cache left for the window is a little short of it. `--max-num-seqs 16` gives it room for 1.07 windows. `--kv-cache-dtype fp8`, in place of `--max-num-seqs 16`, gives 1.86, its answers still right. A lower `--gpu-memory-utilization` makes it worse, never better.
+- The BYOM settings then name the model `Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8` and declare a 131,072-token window.
+- This recipe says what the server does at the floor. It names no model for a product: [Formats and models](/byom/formats-and-models#the-measured-table) does that.
+
+### What one card gives
+
+One request alone took 4.35 seconds to its first token at 30,000 tokens of prompt, 10.4 at 60,000, 25.6 at 100,000 and 39.9 at 125,000, and decoded at about 40 tokens a second near the window. The card holds about one full window at a time, and the rest queue:
+
+- **A call waits for the prompt reading and the answer of each full-window call ahead of it.** Measured on 2026-11-21: about 66 seconds a call ahead with 1,500-token answers on vLLM 0.34.0, and 57 seconds on SGLang 0.5.23 with its 8-bit cache. Behind eight such calls, a verification's call in Anthropic Messages format reached Claude Code's 300 seconds with no body byte, was cut and sent again, and the run passed. A single call ahead that writes a 32,000-token answer is past both limits on its own: a review's answer that ran to 32,000 tokens there took 794 seconds.
+- **A call near the window reads its whole prompt again on every turn while anything else runs.** Measured on vLLM 0.34.0 on that card: a review's reader call of about 124,000 tokens took 40 to 54 seconds a turn, and every other call of the account waited behind each of its turns. At about 45 seconds a turn, a 60-turn call would hold the card about 45 minutes.
+- **The remedy is a cache of about two windows:** the 8-bit cache (`--kv-cache-dtype fp8`, 1.86 windows on that card) holds more of the window at once and shortens the queue.
+
+### Sampling defaults
+
+IronBee's engines send no temperature or other sampling field, so the server's defaults apply, which vLLM and SGLang take from the model's own `generation_config.json`. They can decide whether a review finishes at all. For Qwen3-Coder 30B those are temperature 0.7, top_p 0.8, top_k 20 and repetition penalty 1.05. Measured on 2026-11-21 with that model's 8-bit build, on vLLM 0.34.0 and SGLang 0.5.23, both formats: 9 of 9 standard reviews on those defaults met the reader's 60-iteration cap with nothing written, and 4 of 4 on neutral sampling (temperature 1, top_p 1, top_k -1, repetition penalty 1) answered.
+
+Serve such a model with neutral defaults: `--generation-config vllm` on vLLM, `--sampling-defaults openai` on SGLang.
+
+---
+
+## SGLang
+
+SGLang serves both formats, as vLLM does, and reads its key as `Authorization: Bearer` alone, on its Anthropic endpoint too. Its key covers every path.
+
+```bash
+python3 -m sglang.launch_server --model-path <model> --host 127.0.0.1 --port 30000 \
+  --api-key <key> --tool-call-parser qwen3_coder
+```
+
+- For a thinking Qwen3: `--tool-call-parser qwen25 --reasoning-parser qwen3`.
+- Its parsers default to none. Measured: without a tool parser it answers a tool call as text, and without a reasoning parser a thinking model's reasoning lands in its answers.
+- **Keep the server's logs private.** Measured: SGLang 0.5.23 prints its `--api-key` in its start log, among its server arguments, so whoever reads that log holds the key IronBee calls with.
+- **Warm it before the test:** its first start on a small GPU compiled its kernels for over ten minutes.
+
+### SGLang at the floor, on one 48 GB card
+
+Measured on one L40S (48 GB), SGLang 0.5.23 (`lmsysorg/sglang`), the same 8-bit build of Qwen3-Coder 30B, at a real 131,072-token window:
+
+```bash
+python3 -m sglang.launch_server --model-path Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 \
+  --host 127.0.0.1 --port 30000 --api-key <key> \
+  --context-length 131072 --tool-call-parser qwen3_coder \
+  --kv-cache-dtype fp8_e4m3 --mem-fraction-static 0.86 \
+  --max-running-requests 16 --cuda-graph-max-bs-decode 16
+```
+
+- On this card SGLang serves the floor with its 8-bit cache alone, about 1.42 windows of cache. With a 16-bit cache, `--mem-fraction-static 0.93` holds 0.97 of a window, short of the floor, and 0.95 holds 1.04 but left so little memory free that the server crashed under the connection test's concurrent calls.
+- Like vLLM's floor recipe, it names no model for a product.
+
+---
+
+## Ollama
+
+Ollama checks no key itself, so it goes behind a [reverse proxy](#a-reverse-proxy-in-front) that checks the key on every path. Measured with Ollama 0.40.16 and `qwen3-coder:30b`, with these in its service's environment:
+
+```ini
+OLLAMA_HOST=127.0.0.1:11434
+OLLAMA_CONTEXT_LENGTH=131072
+```
+
+- `OLLAMA_CONTEXT_LENGTH` sets the context a request gets. Ollama's default is smaller than the floor, and past its window it drops the oldest messages without an error.
+- Base URLs: `https://<your host>/v1` for OpenAI Chat Completions, `https://<your host>` for Anthropic Messages. The model name is the model's tag, such as `qwen3-coder:30b`.
+
+---
+
+## NIM
+
+NIM doesn't validate `x-api-key`, so it goes behind a reverse proxy that checks the key on every path, as Ollama does. NIM bundles vLLM or SGLang and wasn't tested apart.
+
+---
+
+## A reverse proxy in front
+
+Measured with nginx. For a server that checks no key itself (Ollama, NIM), the proxy checks it on every path:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name llm.example.com;
+    ssl_certificate     /etc/nginx/tls/server.pem;
+    ssl_certificate_key /etc/nginx/tls/server.key;
+
+    default_type application/json;
+    client_max_body_size 20m;
+    proxy_http_version 1.1;
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+
+    location / {
+        if ($http_authorization != "Bearer <your key>") {
+            return 401 '{"error":{"type":"authentication_error","message":"a valid key is required"}}';
+        }
+        proxy_pass http://127.0.0.1:11434;
+    }
+}
+```
+
+For vLLM, which checks its own key on `/v1/`, the proxy may instead expose those paths alone, with the same settings above them:
+
+```nginx
+    location /v1/ {
+        proxy_pass http://127.0.0.1:8000;
+    }
+    location / {
+        return 404 '{"error":{"type":"not_found_error","message":"not found"}}';
+    }
+```
+
+- `client_max_body_size 20m`: one call's body can reach 16 MiB.
+- `proxy_buffering off`: a stream must pass as it comes.
+- The long read and send timeouts: a call can stream for many minutes, and a turn that isn't streamed is silent until its whole answer comes. See [Code review on a server that answers slowly](/byom/formats-and-models#code-review-on-a-server-that-answers-slowly).
+- Make the file that holds the key readable by its owner alone. nginx's default access log records no header.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="BYOM settings" icon="settings" href="/console/byom">
+    Save the settings and read the connection test's report.
+  </Card>
+  <Card title="Formats and models" icon="shuffle" href="/byom/formats-and-models">
+    Which format to register your server in.
+  </Card>
+</CardGroup>

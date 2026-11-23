@@ -1,0 +1,184 @@
+---
+title: Formats and models for BYOM
+sidebarTitle: Formats and models
+description: Choose Anthropic Messages, OpenAI Chat Completions or OpenAI Responses for BYOM, see the known models, and what verification does on your model.
+---
+
+Your BYOM (Bring Your Own Model) settings name one format and one model. This page helps you choose the format, lists the models the form knows, and says what IronBee has measured on which model.
+
+---
+
+## Choosing the format
+
+Code review, the code wiki and code security speak either Anthropic Messages or OpenAI Chat Completions, so in those two formats their calls reach your endpoint as they're sent. Verification runs Claude Code, which speaks Anthropic Messages alone.
+
+| Format | How each product's calls reach your endpoint |
+|--------|----------------------------------------------|
+| **Anthropic Messages** | Every product's calls as they're sent. Claude Code's own limits apply to a server that stays silent: see [Verification's limits on silence](#verifications-limits-on-silence) |
+| **OpenAI Chat Completions** | Code review's, the wiki's and code security's as they're sent. IronBee's proxy converts verification's calls, and keeps a call alive while your server reads a long prompt or reasons |
+| **OpenAI Responses** | IronBee's proxy converts every product's calls. It writes each call as a stateless Responses request, carries the model's reasoning from one turn to the next as the encrypted content your endpoint returned, and keeps a call alive while the model reasons |
+
+vLLM, SGLang and Ollama serve the first two formats. A few fields don't survive the conversion to OpenAI Chat Completions: prompt-caching marks (vLLM and SGLang cache prompt prefixes without them) and the model's earlier reasoning, except on an endpoint that needs it back (see [APIs that need the model's reasoning back](#apis-that-need-the-models-reasoning-back)).
+
+### Code review on a server that answers slowly
+
+In Anthropic Messages and OpenAI Responses formats, code review's turns aren't streamed: each turn's whole answer comes in one response, so it must come within the reviewer's own timeouts. Those are 1,500 seconds for a reader call with all its turns, 900 for the summary call and 600 for the classifier. Past them, the call fails, is tried once more, and the review says it's partial. Your two levers:
+
+- **The output limit you declare,** which caps every turn. Size it to what your server writes in about 20 minutes, such as 32,768 tokens at 40 tokens a second.
+- **OpenAI Chat Completions,** on a server that serves both formats. There every call of the reviewer streams, except on an endpoint that needs the model's reasoning back, whose calls go through IronBee's proxy unstreamed.
+
+A gateway in front must allow a silent answer that long, such as nginx's `proxy_read_timeout`. The [reverse proxy recipe](/byom/server-recipes#a-reverse-proxy-in-front) sets 3600 seconds.
+
+### A hosted gateway
+
+Register a hosted gateway such as OpenRouter in OpenAI Chat Completions format, the route IronBee's runs measured on it (see [the measured table](#the-measured-table)). At a gateway the price is that of the providers it routes to, not the model's listed price: in IronBee's runs, Kimi K3.1 Pro through OpenRouter's providers was billed well above its listed input price.
+
+### APIs that need the model's reasoning back
+
+Some OpenAI-compatible APIs answer a tool call with the model's reasoning in a field of its own and, by their documents, refuse the next turn when that reasoning doesn't come back with the call: DeepSeek's and Moonshot's (Kimi) APIs with `reasoning_content`, and Google's OpenAI-compatible Gemini endpoint with a signature on each tool call (`extra_content`). The field's name is the server's own: vLLM 0.34.0 gives a thinking model's as `reasoning`.
+
+Register such an endpoint in OpenAI Chat Completions format. The connection test finds the need at its tool step and records it, and **Settings > BYOM** shows **Reasoning handed back**: **Every turn** or **The current turn**. Then:
+
+- **Every product's calls go through IronBee's proxy,** which carries the reasoning fields from each answer to the next request, unchanged and under your endpoint's names, and keeps a call alive while the model reasons. Code review's turns are then not streamed.
+- **How far back the reasoning goes is the test's finding:** the current turn's alone where the endpoint takes that, else every turn's. Where a turn's reasoning was lost, an empty one goes in its place if the endpoint takes it.
+- **It costs context and input tokens.** The reasoning handed back is part of every later call: your provider bills it as input, and IronBee's engines count it against your window, so a long job compacts sooner. In IronBee's reading, each earlier turn carried back added about 1,100 tokens to a request, and after four rounds the reasoning alone was about a third of a request.
+
+How it's tested:
+
+- **On a server of IronBee's own** (2026-11-22): vLLM 0.34.0 serving `Qwen/Qwen3-30B-A3B-Thinking-2507-FP8` with its `qwen3` reasoning parser, behind a check that refuses a tool round as DeepSeek's documents describe. A code review and a wiki build succeeded, a verification and a code security run failed on the model's own output, and in all four every earlier message's reasoning went back intact.
+- **Through OpenRouter:** OpenRouter takes a tool round with the reasoning fields or without them, so BYOM there records no need and is served as any other endpoint.
+- **DeepSeek's, Moonshot's and Google's own endpoints** are built to their documents and tested against servers that behave as those documents say; IronBee hasn't read them live. A provider whose API differs from its documents shows it at your save, as a failed connection test in its own words, not in a job.
+
+---
+
+## The presets and the known models
+
+The form opens with a provider: **Anthropic**, **OpenAI** or **Other**. A preset fills in what its provider fixes:
+
+| Provider | Fixed by the preset | You give | Not shown |
+|----------|---------------------|----------|-----------|
+| **Anthropic** | Anthropic Messages, `https://api.anthropic.com`, the key sent as `x-api-key` | The key; the model; the window and the output limit, filled in for a known model | IronBee's addresses, the CA bundle, the headers |
+| **OpenAI** | OpenAI Responses, `https://api.openai.com/v1`, the key sent as a Bearer token | The same, from OpenAI's known models | IronBee's addresses and the CA bundle. The headers stay, folded, for OpenAI's optional `OpenAI-Organization` and `OpenAI-Project` |
+| **Other** | Nothing | Every field, the format one of the three | Nothing |
+
+A preset is stored nowhere: the saved settings are the same whichever provider filled them in. On a preset, the model field lists that provider's known models, newest first, and a pick fills in the window and the output limit, both still editable. A name the list doesn't hold is taken as you type it and leaves the two numbers to you, so a model your provider serves after the list was written is one more name to type.
+
+| Provider | Known models, newest first | Context window | Most output tokens a turn |
+|----------|---------------------------|----------------|---------------------------|
+| OpenAI | `gpt-6.2-astra`, `gpt-6.2-sol`, `gpt-6.1-sol`, `gpt-6.1-terra`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4` | 922,000 | 128,000 |
+| Anthropic | `claude-fable-5-2`, `claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-opus-5`, `claude-sonnet-5-5`, `claude-sonnet-5`, `claude-haiku-5-5` | 1,000,000 | 128,000 |
+
+Each window is what one call may hold, served with no beta and on no special tier. For OpenAI's models, 922,000 is the window less the model's whole output allowance, which OpenAI's API takes away from the input whatever limit a request asks. Claude's 1,000,000 holds a call's input and its output together.
+
+### OpenAI's models
+
+- **The OpenAI preset uses the Responses route,** the one on which OpenAI's current models call tools with their reasoning. Every product's calls reach it through IronBee's proxy, which converts them.
+- **OpenAI's Chat Completions route is under Other,** at the same address, for the models that call tools there without reasoning. Measured on OpenAI's API on 2026-11-21: `gpt-6-sol`, `gpt-6-luna`, `gpt-6.1-terra` and the three `gpt-5.6-*` take tools there only with their reasoning effort stated as none, which the test finds and records, every call of every job then stating it. `gpt-5.4` and `gpt-5.5` take tools there as they are. `gpt-6-astra`, `gpt-6.1-sol` and both `gpt-6.2-*` fail the test there, with a message that names the Responses format.
+- Settings at OpenAI's address in Chat Completions format open as **Other**.
+
+### Claude's models
+
+On the Anthropic preset the model is Claude, so verification runs on Claude, with its thinking, as IronBee's own runs of the same model do. One difference: Claude Code's experimental features stay off, so it runs without its context management.
+
+On every provider, code review runs IronBee's review profiles made for a model of your own, at the depth your [code review settings](/code-review/settings#review) choose, and calls no third-party classifier.
+
+---
+
+## Which model for which product
+
+The connection test checks that your endpoint speaks the protocol IronBee's engines use. It doesn't show that your model can carry a review, a wiki, a code security run or a verification: a context window of 131,072 tokens is needed, and isn't enough. IronBee lists a model for an engine only after that engine has run on it on the serving stack named; a model that isn't listed carries no statement.
+
+What's measured so far, on BYOM, on 2026-11-21 and 22:
+
+- **At Anthropic's API:** every served Claude 5.x model ran a code review and reached a verification's verdict. Sonnet 5.5 and Opus 5.5 also ran a wiki build and a code security run.
+- **At OpenAI's API in Chat Completions format:** `gpt-5.5` and `gpt-5.4` each ran a code review, a wiki build, a verification and a code security run.
+- **OpenAI's models in Responses format,** and the known models as a whole, aren't measured yet for every product.
+- **Code review's quality** is measured on Claude Sonnet alone. IronBee makes no quality statement for code review on another model.
+
+A model that passes the test may not carry an engine. The one IronBee's runs found:
+
+| Model | Engine | Served by | What happened |
+|-------|--------|-----------|---------------|
+| Qwen3-Coder 30B | Code security | Amazon Bedrock, OpenAI Chat Completions; Ollama 0.40.16, both formats | No run finished its work: the model's output failed the run's own checks three times, and the run stopped |
+
+---
+
+## Verification on your model
+
+Verification on a model that isn't Claude is offered as compatible, best effort. Anthropic doesn't support Claude Code against models that aren't Claude. Verification needs tool calling, since its verdict is a tool call, and for a web target it needs vision to judge what only shows on screen. A model without vision still runs web verification: it judges a page from its text, its DOM and its tools' answers, and misses what only shows on screen. Its quality depends on the model.
+
+A GPT model is a model that isn't Claude. On the OpenAI preset it gets what OpenAI's Responses API gives it: its tools, its reasoning carried across turns, its effort, its images and its window. Verification on it is still best effort, and it enters the measured table by the same rule as any model.
+
+### The measured table
+
+Each model ran a set of 20 IronBee targets with known verdicts, 10 web and 10 API, half that pass and half with seeded failures, three of the web targets judged from the screen alone. A model enters the table with a verdict on every run and at least 16 of 20 right. For a model without vision, the screen-only targets are reported apart.
+
+| Model | Served by, format | Reads images | Right of 20 |
+|-------|-------------------|--------------|-------------|
+| Kimi K2.5 (`moonshotai.kimi-k2.5`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | Yes | 20 |
+| Kimi K2.6 (`moonshotai/kimi-k2.6`) | OpenRouter, default routing, OpenAI Chat Completions | Yes | 20 |
+| Kimi K3.1 (`us.moonshotai.kimi-k3.1`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | Yes | 20 |
+| Kimi K3.1 Pro (`moonshotai/kimi-k3.1-pro`) | OpenRouter, default routing, OpenAI Chat Completions | Yes | 20 |
+| Claude Sonnet 5.5 (`us.anthropic.claude-sonnet-5-5`) | Amazon Bedrock's Anthropic endpoint, us-west-2, Anthropic Messages | Yes | 20 |
+| Claude Sonnet 5.5 (`claude-sonnet-5-5`) | Anthropic's API, Anthropic Messages | Yes | 20 |
+| Claude Fable 5.2 (`claude-fable-5-2`) | Anthropic's API, Anthropic Messages | Yes | 19 |
+| DeepSeek V4.1 Flash (`deepseek/deepseek-v4.1-flash`) | OpenRouter, default routing, OpenAI Chat Completions | Yes | 19 |
+| Qwen3-VL 235B (`qwen.qwen3-vl-235b-a22b`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | Yes | 18 |
+| Claude Fable 5.2 (`us.anthropic.claude-fable-5-2`) | Amazon Bedrock's Anthropic endpoint, us-west-2, Anthropic Messages | Yes | 18 |
+| `gpt-6.2-sol` | OpenAI's API, OpenAI Responses | Yes | 17 |
+| `gpt-5.4` | OpenAI's API, OpenAI Responses | Yes | 16 |
+| GLM-5.3 (`z-ai/glm-5.3`) | OpenRouter, default routing, OpenAI Chat Completions | No | 20; screen-only: 3 of 3, read from the images through its tools |
+| DeepSeek V3.2 (`deepseek.v3.2`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | No | 18; screen-only: 1 of 3 |
+| GLM-5 (`zai.glm-5`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | No | 18; screen-only: 1 of 3 |
+| Qwen3-Coder 480B (`qwen.qwen3-coder-480b-a35b-v1:0`) | Amazon Bedrock, us-west-2, OpenAI Chat Completions | No | 18; screen-only: 2 of 3 |
+| Qwen3-Coder 30B (`Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8`) | vLLM 0.34.0 on one L40S (48 GB), OpenAI Chat Completions | No | 17; screen-only: 1 of 3 |
+| Qwen3-Coder 30B (`Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8`) | SGLang 0.5.23 with its 8-bit cache on one L40S (48 GB), Anthropic Messages | No | 16; screen-only: 1 of 3 |
+
+- Every row reached a verdict on all 20 runs. The rows were read with IronBee's pinned Claude Code, 2.1.290, each target once on each model, on 2026-11-21 and 2026-11-22.
+- A row holds for the serving stack it was measured on, and for no other. OpenRouter's rows hold for its default routing, which sent the calls to several of its providers: an endpoint pinned to one provider is another stack.
+- The two Qwen3-Coder 30B rows are servers of IronBee's own, on the model's sampling defaults, each in the one format that met the rule there. In the other format on each server, one run reached no verdict.
+- The two GPT rows were read before IronBee's proxy sent Claude Code's system messages between turns as `developer` messages, and aren't read again yet.
+- Anthropic's API rows were read on an account whose credit covers Claude Code's traffic. See [Provider out of credit](/byom/when-a-job-fails#provider-out-of-credit).
+
+Refused by the connection test, at step 6, because their answers carry their reasoning in their text, so an answer to a JSON schema isn't the schema's JSON:
+
+- gpt-oss-120b (`openai.gpt-oss-120b-1:0`), Amazon Bedrock, us-west-2, OpenAI Chat Completions
+- MiniMax M2.5 (`minimax.minimax-m2.5`), Amazon Bedrock, us-west-2, OpenAI Chat Completions
+
+Measured, not meeting the rule: Gemini 4 Carbon (`google/gemini-4-carbon`), OpenRouter, default routing, OpenAI Chat Completions. It reads images, and reached 18 verdicts of 20 with 17 right: Gemini's content filter blocked one run's first request, and one run had no verdict within the 30-minute bound. It passes the connection test and is slow and costly on verification: its 20 runs took 158 minutes in all, where the same set took 10.5 minutes on Kimi K3.1 Pro. It reasons long, and some answers spent a whole 16,384-token output on reasoning and wrote nothing; declare a larger output limit for it, such as 32,768.
+
+### Verification's limits on silence
+
+How long verification waits on a model that sends nothing depends on the format:
+
+- **OpenAI Chat Completions:** 600 seconds before the endpoint's first byte, and about 1,050 seconds (17 minutes) of reasoning streamed with no content, IronBee's proxy keeping the call alive meanwhile.
+- **Anthropic Messages,** Claude Code's own limits: 300 seconds without a body byte on a server that sends its response headers at once, and 360 seconds without any byte on a server that holds its headers until its first token. Measured on 2026-11-21: vLLM 0.34.0 (both routes) and SGLang 0.5.23's Anthropic route send their headers at once and their first body byte only with the first token. Claude Code cut such a call at 300 seconds, sent it again, and the run went on. On such a server a large prompt's reading, with whatever waits ahead of it, must stay under the limit.
+- **OpenAI Responses:** the two of Chat Completions, and a third: 600 seconds of one reasoning item during which the endpoint sends nothing. A turn that reasons in silence past it ends with an error, and its resend reasons again.
+
+For settings in Anthropic Messages format on a server that stays silent too long, two remedies: the server's reasoning parser on, so that the model's reasoning streams as it comes, or the settings in OpenAI Chat Completions format, whose calls IronBee's proxy converts and keeps alive.
+
+### The request bound
+
+One request to your endpoint is bounded at 16 MiB, and a long verification can reach it before its context window is full. That call then fails as `request_too_large`. Two things grow a request so:
+
+- a verification whose tools return many screenshots, on a model that reads images
+- on OpenAI Responses, a long session at a high effort: the model's encrypted reasoning rides in the conversation and goes back with every request
+
+### Claude models and IronBee's Claude Code version
+
+IronBee pins verification's Claude Code to one version, now 2.1.290. Anthropic's API refuses a Claude Code version older than the one a model asks for, at Claude Code's first call. Settings naming such a model pass the connection test, whose calls aren't Claude Code's, and run code review, the wiki and code security. Their verifications fail at their first call, at no credit, with the API's own sentence in the console.
+
+Measured on 2026-11-21, Anthropic's API refused Claude Code 2.1.284 for `claude-fable-5-2` and asked for 2.1.290 or newer, the version IronBee now pins; at 2.1.290 the same verification reached its verdict. Served Claude models the pinned version can't drive: none known. A model released after the pin may ask for a newer Claude Code; until the pin covers it, it's named here.
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Server recipes" icon="terminal" href="/byom/server-recipes">
+    The flags for vLLM, SGLang, Ollama and NIM.
+  </Card>
+  <Card title="When a job fails" icon="triangle-alert" href="/byom/when-a-job-fails">
+    What a failed job says, and what to do.
+  </Card>
+</CardGroup>

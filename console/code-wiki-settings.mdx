@@ -15,10 +15,19 @@ A repository follows the account's defaults until it sets its own value, at eith
 
 ## Account settings
 
-The account page opens with **Defaults**, then the **Repositories** table.
+The account page opens with [**Code wiki for this account**](#turn-the-code-wiki-off-for-the-account), then **Defaults**, then the **Repositories** table.
 
 <img className="ib-shot ib-shot-light" src="/images/console/code-wiki/settings-account-light.png" alt="The account Code wiki page with the Defaults section and the Repositories table" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-wiki/settings-account-dark.png" alt="The account Code wiki page with the Defaults section and the Repositories table" />
+
+### Turn the code wiki off for the account
+
+**Code wiki for this account** is one switch over every repository of the account. It's on until an owner or an admin turns it off. A flip applies at once, apart from **Save changes**.
+
+- **On:** IronBee writes a wiki for every repository whose own switch is on.
+- **Off:** no wiki is written, refreshed or shown, whatever each repository's switch says. **Refresh** is unavailable, and every [public link](/console/code-wiki#share-the-wiki-with-a-public-link) opens nothing. Each repository's settings page says **The code wiki is off for this account, so this repository's wiki is not written or served whatever its switch below says.**, with **Turn it on in the account's settings**.
+
+Turning it off never changes a repository's own switch, stops a run that's already going, or deletes a page: a run that was queued fails when it would start. Turning it on again queues nothing by itself, and the pages show again as they were. A repository with no wiki yet gets its first build, usually within a few minutes. One whose first build was waiting when the switch went off shows **No wiki yet: the first run failed**, and gets its next try a day after that build was queued, or now with **Refresh**. A push made while the switch was off isn't read later: every other wiki catches up at its next push to the default branch or a **Refresh**.
 
 ### Defaults
 
@@ -68,7 +77,7 @@ If no repository is connected yet, the table reads **No repository connected**: 
 
 A repository's page opens with **Write a wiki for this repository**:
 
-- **On:** the wiki is written from the default branch and kept current as it moves.
+- **On:** the wiki is written from the default branch and kept current as it moves, while [**Code wiki for this account**](#turn-the-code-wiki-off-for-the-account) is on.
 - **Off:** nothing new is written. The pages already written are kept, not shown. A [public link](/console/code-wiki#share-the-wiki-with-a-public-link) to the wiki opens nothing while it's off.
 
 Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **Settings: 2 of 2 follow the account, 0 set here**. It links to **Account settings** and, when the repository sets something, offers **Reset all to account settings**.
@@ -104,7 +113,7 @@ Click **Save changes** to save, or **Discard** to drop your changes. If the cons
 
 ## Who can change settings
 
-Everyone in the account can see code wiki settings, at both levels. Only owners and admins can change them. Others see **Owners and admins change these settings; you can see them.** above a read-only form. See [Roles and permissions](/console/roles).
+Everyone in the account can see code wiki settings, at both levels. Only owners and admins can change them, the account's switch included. Others see **Owners and admins change these settings; you can see them.** above a read-only form. See [Roles and permissions](/console/roles).
 
 An archived project's page is read-only for everyone, and says **This project is archived. Unarchive it to change its code wiki settings.** See [Project settings](/console/project-settings).
 

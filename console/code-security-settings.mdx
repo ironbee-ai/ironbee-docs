@@ -15,7 +15,7 @@ A repository follows the account's defaults until it sets its own value. Only ow
 
 ## Account settings
 
-The account page holds the defaults for every repository: **Profile**, **Execution** and **Scheduled scan**. A repository can set its own on its settings page. When repositories hold their own value of a setting, the setting counts them, such as **2 repositories set their own**.
+The account page opens with [**Code security for this account**](#turn-code-security-off-for-the-account), then holds the defaults for every repository: **Profile**, **Execution** and **Scheduled scan**. A repository can set its own on its settings page. When repositories hold their own value of a setting, the setting counts them, such as **2 repositories set their own**.
 
 | Setting | Options | Default |
 |---------|---------|---------|
@@ -23,7 +23,16 @@ The account page holds the defaults for every repository: **Profile**, **Executi
 | [**Execution**](#execution) | **Off**, **On** | **Off** |
 | [**Scheduled scan**](#scheduled-scan) | **Daily**, **Weekly**, **Every two weeks**, **Monthly** | **Weekly** |
 
-There's no account setting that turns code security on. Each repository has its own switch, and it's off until you turn it on.
+No account setting turns code security on for a repository. Each repository has its own switch, and it's off until you turn it on. The account's switch can turn it off for all of them at once.
+
+### Turn code security off for the account
+
+**Code security for this account** is one switch over every repository of the account. It's on until an owner or an admin turns it off. A flip applies at once, apart from **Save changes**.
+
+- **On:** IronBee scans every repository whose own switch is on.
+- **Off:** no repository is scanned, and no record or run is shown, whatever each repository's switch says. The project's **Code security** tab says **Code security is off for this account**, with **Turn it on in the account's settings**, and each repository's settings page says **Code security is off for this account, so this repository is not scanned whatever its switch below says.** The [API](/code-security/api#settings) refuses the records, runs, decision and start routes with `CODE_SECURITY_DISABLED`.
+
+Turning it off never changes a repository's own switch, stops a scan that's already running, or deletes a record or a run: a scan that was queued fails when it would start, and costs nothing. Turning it on again queues nothing by itself. Each repository is as it was, and its next scheduled scan comes when it's due.
 
 ### Profile
 
@@ -36,7 +45,7 @@ The profile sets how far a scan follows what it finds. A deeper profile reads mo
 | **Standard** | A broader scan that follows more leads |
 | **Deep** | The most thorough scan, and the slowest |
 
-On the account page, the profiles are a table with a column for each repository size, which gives the credits of a full scan at that size. **The whole rate card** opens [Usage](/console/usage#what-a-job-costs).
+On the account page, the profiles are a table with a column for each repository size, which gives the credits of a full scan at that size. **The whole rate card** opens [Usage](/console/usage#what-a-job-costs). While your account runs its jobs on its own model with [BYOM](/byom/overview), the prices in this table and on a repository's page are BYOM prices, and a line says so. The rate card on Usage keeps its own prices, with a line that says what a job on BYOM is charged.
 
 ### Execution
 
@@ -69,7 +78,7 @@ A repository's page is for that repository only. Whatever isn't set there follow
 
 The page opens with **Scan this repository**:
 
-- **On:** the default branch is scanned on its schedule.
+- **On:** the default branch is scanned on its schedule, while [**Code security for this account**](#turn-code-security-off-for-the-account) is on.
 - **Off:** nothing is scanned. The records already found are kept, and the runs within your plan's retention, but they aren't shown.
 
 Turning the switch on starts no scan by itself, but a repository that has never been scanned is due at once: its first scheduled scan, a full scan, usually starts within minutes, once no other code security scan of your account is waiting or running and the team has credits left. You can also start one with [**Run full scan**](/console/code-security#run-a-full-scan).
