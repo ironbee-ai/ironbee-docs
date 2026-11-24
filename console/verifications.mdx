@@ -6,7 +6,7 @@ keywords: ["test runs", "verification jobs", "run history"]
 
 A project's **Verifications** tab lists every verification run of the project:
 
-- **Runs on IronBee's infrastructure.** These are started by Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), or **Run instant verification** in the console.
+- **Runs on IronBee's infrastructure.** These are started by Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification** or **Run scenario** in the console, or a scenario's [schedule](/console/scenario-schedules).
 - **Verification cycles from the [IronBee CLI](/cli/concepts/how-it-works).** These are reported by your AI coding agent while it works.
 
 Open **Projects**, click a project, and select its **Verifications** tab; a project opens on **Code review**. The card's **Verifications** row also opens it. Click a row to open the run's [verification detail](/console/verification-detail) page.
@@ -19,7 +19,7 @@ Open **Projects**, click a project, and select its **Verifications** tab; a proj
 ## Filter and search
 
 - The date range at the top of the page shows runs started in that window. Pick **Last 24 Hours**, **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, or a **Custom Range** down to the hour. On a project's **Verifications** tab, it sits with **Run instant verification** beside the page title, and both move to the end of the tab row when you scroll down.
-- **Statuses**, **Results** and **Triggers** narrow the list. **Search name…** matches run names from 3 characters.
+- **Statuses**, **Results** and **Triggers** narrow the list. Pick **Schedule** under **Triggers** to see the runs that scenario schedules started. **Search name…** matches run names from 3 characters.
 - **Clear filters** resets them.
 
 ---
@@ -28,8 +28,8 @@ Open **Projects**, click a project, and select its **Verifications** tab; a proj
 
 | Column | What it shows |
 |--------|---------------|
-| **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id. A [scenario](/console/scenarios) run is named after its scenario, with a **Scenario** mark under it |
-| **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **Bitbucket Pipelines**, **API**, **Console** or **CLI** |
+| **Name** | The run's name. Deployment runs are named after their pull request, or their branch and commit. A CLI cycle without a name shows a short id. A [scenario](/console/scenarios) run is named after its scenario, with a **Scenario** mark under it. A time a [schedule](/console/scenario-schedules) skipped says **Skipped: the schedule's previous run had not finished.** under its name, with **View that run** |
+| **Trigger** | What started the run: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **Bitbucket Pipelines**, **API**, **Console**, **Schedule** or **CLI**. Click **Schedule** to open the schedule on its scenario's **Schedules** tab |
 | **Source**, **Branch**, **Commit**, **PR** | The repository, branch, commit and pull request the run verified, for runs tied to a GitHub, GitLab or Bitbucket repository. A run bound to a pull request alone shows the pull request's branch and the commit it checked out. A CLI cycle shows what its session reported about the repository |
 | **Type** | **Web** or **API**. For CLI cycles: browser verification shows **Web**, backend shows **API**, other platforms show `-` |
 | **Status** | Where the run is |
@@ -52,7 +52,7 @@ You can sort by **Name**, **Status** and **Started**. The newest runs come first
 | Running | The agent is verifying. A run on IronBee can be watched live |
 | Completed | The run ended with a verdict |
 | Failed | The run ended without a verdict, because of an error or a timeout. A scenario run shows **Run error** instead |
-| Cancelled | The run was stopped before it finished |
+| Cancelled | The run was stopped before it finished, or a schedule skipped this time because its previous run hadn't finished |
 | Interrupted | CLI only: the cycle closed without a verdict |
 | Unknown | CLI only: the cycle never reported an end |
 

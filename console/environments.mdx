@@ -25,7 +25,7 @@ Most environments appear on their own. A deployment or a run that names a new en
 | Bitbucket Pipe | The name in `IRONBEE_ENVIRONMENT`, or the step's deployment environment |
 | `ironbee verify` | The name in `--environment` |
 
-Each card says how the environment got its name: created in the console, or named by Vercel deploys, Netlify deploys, GitHub Actions runs, GitLab CI runs, Bitbucket Pipelines runs, API runs, Console runs or CLI runs.
+Each card says how the environment got its name: created in the console, or named by Vercel deploys, Netlify deploys, GitHub Actions runs, GitLab CI runs, Bitbucket Pipelines runs, API runs, Console runs, Scheduled runs or CLI runs.
 
 To set an environment up before its first run, click **New environment**:
 
@@ -100,19 +100,20 @@ Beside the editor, or below it on a narrow screen, the environment page shows th
 
 No secret value appears in the briefing or in the run.
 
-A [scenario](/console/scenario-references#references) reads the variables, secrets and properties of the environment you run it against. Before a run starts, the run dialog checks that the environment defines every variable, secret and property the scenario's actions read.
+A [scenario](/console/scenario-references#references) reads the variables, secrets and properties of the environment you run it against. Before a run starts, the run dialog checks that the environment defines every variable, secret and property the scenario's actions read. A scenario's [schedule](/console/scenario-schedules) runs against one environment, and each of its runs reads them as they are at that time.
 
 ---
 
 ## Delete an environment
 
-Owners and admins can delete an environment with **Delete** at the bottom of its page, or from the **...** menu on its card. Type its name to confirm and click **Delete environment**. Deleting isn't reversible:
+Owners and admins can delete an environment with **Delete** at the bottom of its page, or from the **...** menu on its card. The dialog lists what goes with it; click **Delete environment** to confirm. When the environment has secrets of its own, scoped to it, the dialog also asks you to type its name, and **Delete environment** stays disabled until the name matches. Deleting isn't reversible:
 
 - The variables scoped to it are deleted. Project-wide variables stay.
 - The secrets scoped to it are deleted and their values destroyed. Runs that reference them fail until they are recreated.
+- The [scenario schedules](/console/scenario-schedules) that run against it are deleted, so those scenarios stop running against it on a timer. The dialog lists them as **1 schedule deleted**, or with their count, when there are any.
 - Its runs keep their results, but lose the environment label.
 
-A provider that names the environment, such as Vercel for `preview`, adds it back on its next deploy, without its configuration.
+A provider that names the environment, such as Vercel for `preview`, adds it back on its next deploy, without its configuration. The dialog says so under **It may come back**. It has no such row for an environment created in the console, or for one a scheduled run named, whose schedules are deleted with it.
 
 ---
 

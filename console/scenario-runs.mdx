@@ -38,6 +38,10 @@ If preflight finds a problem, such as a secret the environment doesn't have, it 
   - If the project has no environments yet, the dialog links to them with **Open environments**. The environment needs a URL that a cloud run can reach.
 </Note>
 
+<Tip>
+  To run a scenario by itself, every hour, every day or on some days of the week, give it a [schedule](/console/scenario-schedules).
+</Tip>
+
 ---
 
 ## The run page
@@ -48,6 +52,8 @@ The run opens on its verification detail page, with the scenario's steps in fron
 <img className="ib-shot ib-shot-dark" src="/images/console/scenarios/run-page-dark.png" alt="A passed scenario run: the outcome band says all actions passed and cleanup ran, the Steps panel lists Setup and Main with each action's status and time, and the Action tab shows the selected action with Edit this action" />
 
 **Run again** starts a new run of the same scenario, with the inputs of this one filled in.
+
+A run that a [schedule](/console/scenario-schedules) started has **Schedule** in the strip under the title, which opens the schedule on the scenario's **Schedules** tab.
 
 ### The outcome
 
@@ -117,9 +123,11 @@ When you open the editor from **Edit this action**, a banner names the run you c
 
 Scenario runs appear in the project's [Verifications](/console/verifications) list like any other run:
 - The **Name** is the scenario's name, with a **Scenario** mark under it.
-- The **Trigger** is **Console** for runs you start in the console.
+- The **Trigger** is **Console** for runs you start in the console, and **Schedule** for runs a [schedule](/console/scenario-schedules) started. Click **Schedule** to open the schedule on the scenario's **Schedules** tab.
 - Where other runs show the **Failed** status, a scenario run shows **Run error**: the run ended without a verdict on the app.
 - The **Result** can be **Soft fail**.
+
+A time that a schedule skipped, because its previous run hadn't finished, is listed too, with the **Schedule** trigger, the status **Cancelled** and `0` credits. It has no **Scenario** mark; under its name it says **Skipped: the schedule's previous run had not finished.**, with **View that run** to open the run that was still going. Its page has no evidence. **Previous run** in the strip under the title opens that run as well, and **Run details** gives the reason.
 
 To see only one scenario's runs, open the scenario and click its **Runs** tab. Its **Version** column says whether each run used the scenario as it is now. See [Runs](/console/scenarios#runs).
 

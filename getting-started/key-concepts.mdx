@@ -100,7 +100,7 @@ The records are on the project's **Code security** tab. See [Code security](/cod
 A **verification run** is one verification of a change: a preview deployment, a push, a pull request, or a run you start yourself. An agent reads what changed, exercises it against your running app, and records a **result** with the evidence behind it.
 
 Every run has:
-- **A trigger**, what started it: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **Bitbucket Pipelines**, **API**, **CLI** or **Console**.
+- **A trigger**, what started it: **Vercel**, **Netlify**, **GitHub Actions**, **GitLab CI**, **Bitbucket Pipelines**, **API**, **CLI**, **Console** or **Schedule**.
 - **A status**, where it is: Created, Queued, Starting, Running, Completed, Failed, Cancelled.
 - **A result**, what it concluded: **Pass**, **Fail**, **Not applicable** (the change left nothing to verify), **Soft fail** or **Unknown**.
 - **The source** it verified, for runs tied to a GitHub, GitLab or Bitbucket repository: repository, branch, commit and pull request.
@@ -127,8 +127,9 @@ A **scenario** is a flow written in plain words, such as "sign in, add a product
 - **Setup** prepares the run, **Main** decides the verdict, and **Teardown** cleans up.
 - Each action is an **Act**, an **Assert**, an **Extract** or a **Wait**. A scenario can import another one to reuse it.
 - Each run is a verification run. Its result is **Soft fail** when only a soft assert failed.
+- A **schedule** runs it by itself, hourly, daily or weekly, against an environment with the inputs it sets. A scenario can have several.
 
-See [Scenarios](/console/scenarios). The CLI's [saved scenarios](/cli/guides/scenarios) are separate: your AI coding agent writes them into your repository.
+See [Scenarios](/console/scenarios) and [Run a scenario on a schedule](/console/scenario-schedules). The CLI's [saved scenarios](/cli/guides/scenarios) are separate: your AI coding agent writes them into your repository.
 
 ---
 

@@ -56,14 +56,14 @@ To archive, an owner or admin opens **Settings > General**, clicks **Archive** u
 
 The dialog lists what changes:
 
-- **Triggers stop.** Deployments no longer start runs. For a CLI project, nothing starts on its own anyway.
+- **Triggers stop.** The provider's deployments and the project's [scenario schedules](/console/scenario-schedules) no longer start runs, for example "Vercel deployments and scenario schedules no longer start runs." For a CLI project, this line reads **Schedules stop**: its scenario schedules no longer start runs, and its other runs are started by hand, from the console, the CLI or the API.
 - **New data is refused.** Sessions and runs reporting to the project are dropped until you unarchive it. That includes teammates on an older CLI, a fork of the repository, or a CI job.
 - **History stays.** Verifications, findings and evidence remain readable.
 - **Reversible.** Unarchiving brings the project back as it was. Data refused in the meantime doesn't come back.
 
 If data reached the project recently, the dialog opens with a **Data arrived** warning that says when, because anything still reporting to the project is dropped once it's archived.
 
-An archived project is read-only and hidden from the **Projects** page and the pickers.
+An archived project is read-only and hidden from the **Projects** page and the pickers. Its [scenario schedules](/console/scenario-schedules) are kept and don't run; after you unarchive it, each one runs from its next time.
 
 ### Unarchive a project
 

@@ -76,7 +76,7 @@ An owner or billing admin on Free or Team sees **Add credits** next to the link 
 
 Owners and billing admins can buy credits on Free and Team. They sit beside the plan's monthly credits, and every product spends them the same way. An account whose credits IronBee sets by contract, and one with unlimited credits, has no **Add credits**.
 
-**Add credits** appears under the bar on this page, in the top bar, on the credit banners, and on [Pricing](/console/pricing#add-credits). Each opens the same dialog; a banner's opens it on this page:
+**Add credits** appears under the bar on this page, in the top bar, on the credit banners, on a scenario schedule's **Waiting for credits** notice, and on [Pricing](/console/pricing#add-credits). Each opens the same dialog; a banner's or a notice's opens it on this page:
 
 1. Click **Add credits**.
 2. Under **Credits**, type the number of credits, or pick one of the common amounts under the field. The line under the field gives the smallest and the largest purchase and the price of a credit, which are on [Pricing](/console/pricing#buy-credits). For a number outside them, it says so and the button stays disabled. For more than the largest purchase, email [support@ironbee.ai](mailto:support@ironbee.ai).
@@ -237,12 +237,12 @@ A repository larger than the rate card covers is scanned by contract with IronBe
 
 ### Verification
 
-Every verification run on IronBee uses credits, whatever started it: Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification**, or a [scenario run](/console/scenario-runs).
+Every verification run on IronBee uses credits, whatever started it: Vercel, Netlify, the [GitHub Action](/github-action/get-started/getting-started), the [GitLab component](/gitlab-component/get-started/getting-started), the [Bitbucket Pipe](/bitbucket-pipe/get-started/getting-started), [`ironbee verify`](/cli/guides/verification-jobs), **Run instant verification**, a [scenario run](/console/scenario-runs), or a scenario's [schedule](/console/scenario-schedules).
 
 A run is charged for each started minute, up to a cap set by its time limit. Once the run has started, it's charged for its minutes however it ends: passed, failed or cancelled.
 
 A run isn't charged when:
-- it never started: it was refused before it started, or cancelled while it was queued
+- it never started: it was refused before it started, cancelled while it was queued, or skipped by its schedule because the schedule's previous run hadn't finished
 - it failed for a reason on IronBee's side before the agent started working
 - on [BYOM](/byom/overview), it failed with `byom_unavailable`: your endpoint never answered. A run that fails with `byom_failed` is charged its minutes
 
@@ -292,6 +292,7 @@ For owners and billing admins, the bell in the top bar also shows **IronBee cred
 - If a run dialog is open, the same sentence shows at the top and its run button stays disabled.
 - A run created before the credits ran out, but not started yet, is refused when it would start, and uses no credits. In the list its status is **Failed**, or **Run error** for a scenario run, whose page says **Stopped before it started**. **Run details** on its [verification detail](/console/verification-detail#header) page gives the reason under **Refused**.
 - A deployment from Vercel or Netlify isn't verified, and no run appears in the list. Its GitHub or Vercel check closes as neutral, and says **IronBee did not run this verification · out of credits this month**. On GitLab, the pipeline status with that description is passed, where IronBee writes one: on a project with **Pipelines must succeed** and **Block merges** off, it writes none. On Bitbucket, the build status with that description is successful.
+- A scenario's [schedule](/console/scenario-schedules) skips its times, and its **Schedules** tab says **Waiting for credits**, with the same actions as the banner for no credits left: **Add credits** for an owner or billing admin who can buy credits, then the link or sentence from [Get more credits](#get-more-credits). The first time after the credits reset, or after the team gets more, runs.
 - A scheduled code security scan doesn't start. The project's **Code security** tab says **The last scan did not have enough credits**. Once the credits reset or the team gets more, the next scheduled scan starts when it's due. **Run full scan** is unavailable, with **No credits left this month**. See [Where a scan stands](/console/code-security#where-a-scan-stands).
 - `ironbee verify` and `ironbee review` stop with an error. See [When credits run out](/cli/guides/credits#when-credits-run-out) in the CLI docs.
 

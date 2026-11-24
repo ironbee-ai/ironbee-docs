@@ -25,7 +25,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 **The account's switches.** Code review, the code wiki and code security each have a switch for the whole account at the top of the product's account settings page (**Code review for this account**, **Code wiki for this account**, **Code security for this account**), on by default, and a switch on each repository. A product runs on a repository only while both are on. Code review on the self-hosted runner is the exception: the runner reviews a repository whose own switch is off, and the account's switch off refuses every registration and run of it. Turning the account's switch off cancels nothing, keeps posts, pages and records, and changes no repository's switch; turning it on queues nothing by itself.
 
 **Platform verification runs.** IronBee runs the verification on its own infrastructure.
-- A run is started by the IronBee GitHub Action, the IronBee GitLab component, the IronBee Bitbucket Pipe, the Vercel integration, the Netlify extension, `ironbee verify`, or **Run instant verification** in the console.
+- A run is started by the IronBee GitHub Action, the IronBee GitLab component, the IronBee Bitbucket Pipe, the Vercel integration, the Netlify extension, `ironbee verify`, **Run instant verification** or **Run scenario** in the console, or a scenario's schedule.
 - A Vercel or Netlify project is verified only after it's enabled with a verification type, **Web** or **API**; **None** starts nothing. Installing the GitHub App makes every repository it covers a project with the type **None**, and so does picking a repository in a GitLab group or a Bitbucket workspace.
 - Results appear in three places:
   - on the pull request or merge request, for a run bound to a connected repository: a check (a pipeline status on GitLab, a build status on Bitbucket), an inline comment on each finding with a suggested fix, and a summary comment. The GitHub Action, the GitLab component and the Bitbucket Pipe then leave their own report comment out
@@ -40,7 +40,7 @@ IronBee reviews pull requests and verifies code changes the way a QA engineer wo
 - each GitHub, GitLab or Bitbucket project's code wiki: pages IronBee writes from the default branch and keeps current, with its settings. An owner or admin can share a wiki through a public link, which opens the wiki alone at `console.ironbee.ai/share/code-wiki/...` with no account
 - each GitHub, GitLab or Bitbucket project's code security: scheduled scans of the default branch, their records and runs, with its settings. Off until an owner or admin turns it on for a repository, credit-charged, and seen by owners and admins only. It posts nothing on the pull request. One scan runs at a time per account, oldest waiting first; at most two free follow-up runs come after a scan. Its records, decisions and runs can also be read and a scan started through the code security API
 - each project's verification runs, with the evidence (recording, screenshots, actions, network, traces, logs) and a live view while a run is in progress
-- each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor and their runs
+- each project's scenarios: flows written in plain words, run against an environment one action at a time, with their editor, their runs and their schedules. A schedule runs a scenario on a timer (hourly, daily or weekly, in a time zone) against one environment with its inputs; each run is an ordinary, credit-charged scenario run with the **Schedule** trigger. At most 50 per project, one hour apart at least; a time that comes while the schedule's previous run is going is skipped and listed as a cancelled run. A schedule sends no notifications
 - project settings: environments, variables, secrets
 - **Settings > Usage**: the team's credits this period, by product, day, project and run, the credits it bought, and the rate card. On Free and Team, owners and billing admins buy credits there with **Add credits**
 - **Settings > BYOM**: the account's own model endpoint, its connection test and its last failure
@@ -58,6 +58,7 @@ Use these terms. When you describe something on screen, quote the console label 
 | session | run, task | CLI only: one AI client session |
 | activity | step, action | CLI only: one agent turn. In the console scenario docs, **action** (an Act, Assert, Extract or Wait row) and **Step** (the grouping row) are console labels, so use them there |
 | scenario | test case, script, flow (as a noun for the feature) | Console: a saved flow in a project, run against an environment. CLI: a saved scenario in `.ironbee/scenarios/`. When both could apply, say which one |
+| schedule | cron, cron job, timer, recurring job | Console: a scenario run on a timer against an environment, on the scenario's **Schedules** tab. Say "time" for one of its due times, and "turn on" and "turn off" for its switch. Don't show or name crons |
 | verdict | outcome | The CLI's verdict (`pass`, `fail`, `not_applicable`). In the console the column is **Result** |
 | fix | patch, correction | The agent's self-correction. **Suggested fixes** is a console tab label |
 | code review | PR review, review bot | IronBee's review of a pull request. "Review" alone is fine once the context is clear |
@@ -79,7 +80,8 @@ Use these terms. When you describe something on screen, quote the console label 
 Console labels, quoted verbatim:
 - **Status:** Created, Queued, Starting, Running, Completed, Failed, Cancelled, Interrupted, Unknown
 - **Result:** Pass, Fail, Not applicable, Soft fail, Unknown
-- **Trigger:** Vercel, Netlify, GitHub Actions, GitLab CI, Bitbucket Pipelines, API, CLI, Console
+- **Trigger:** Vercel, Netlify, GitHub Actions, GitLab CI, Bitbucket Pipelines, API, CLI, Console, Schedule
+- **Scenario schedule:** frequencies Hourly, Daily, Weekly. Columns Environment, When, Next Run, Latest Run, Enabled. **Due now** while a run waits to start
 - **Scenario row kinds:** Act, Assert, Extract, Wait, Step, Import. Sections: Setup, Main, Teardown
 - **Code review status:** Reviewing, Changes requested, Passed, Could not complete, Cancelled, Retracted, Reviewed, Not reviewed
 - **Finding severity:** Critical, High, Medium, Low
@@ -138,7 +140,7 @@ Console labels, quoted verbatim:
 - **Integrations:** GitHub App, GitHub Enterprise, GitLab, GitLab Self-Managed and Dedicated, Bitbucket, Vercel, Netlify, then the GitHub Action, GitLab component and Bitbucket Pipe groups
 - **Features:** a tab that opens a menu (`menu` in `docs.json`) of five items. **Code review** holds the code review pages: overview, on the pull request (GitHub), on the merge request (GitLab), on Bitbucket, then the console pages (pull requests, rules and memories, settings), then the self-hosted runner (overview, on GitHub, on GitLab, on Bitbucket). **Code security** holds its own pages (overview, how a scan works, API), then its console pages under **In the console** (scans, records and runs, settings), like code review's. **BYOM** holds its own pages, then its console page under **In the console**, like code security. **Code wiki** and **Verification** are shortcuts: each lists one page, that feature's first page in the **Console** tab, and nothing else
 - **CLI:** get started, concepts, guides, configuration, advanced, AI clients
-- **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs), search, settings
+- **Console:** projects, code wiki (the wiki and its settings), verifications, scenarios (scenarios, editor, references and imports, runs, schedules), search, settings
 
 The shortcuts depend on two things, so keep both:
 - In `docs.json` the **Features** tab comes last, after **Console**. Mintlify opens a page under the first tab that lists it, so a shortcut's page opens under **Console**, with the console's sidebar. `style.css` draws the tab after **Integrations** with `order`
