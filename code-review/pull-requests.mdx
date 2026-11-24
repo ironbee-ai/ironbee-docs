@@ -296,7 +296,8 @@ The findings list on the right holds every finding of the pull request, grouped 
 | **Withdrawn** | **taken back by IronBee** | Findings IronBee withdrew |
 | **Addressed** | **fixed since; the threads resolved** | Findings the code has fixed since |
 | **No longer applies** | **the code changed or went away** | Findings whose code changed or was removed |
-| **Turned down** | **turned down by a person: a thumbs-down, a rejecting reply, a hidden comment or a resolved thread** | Findings a person turned down on the pull request. They no longer count as open. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads) |
+| **Turned down** | **turned down by a person: a thumbs-down, a rejecting reply or a hidden comment** | Findings a person turned down on the pull request. They no longer count as open. See [Replies, reactions and resolved threads](/code-review/on-github#replies-reactions-and-resolved-threads) |
+| **Resolved** | **resolved by a person without turning it down** | Findings whose thread a person resolved without turning them down, and that the next review didn't find fixed. One it found fixed is under **Addressed**. They no longer count as open |
 | **Open** | **open, or standing after a reply** | Findings still open, including those IronBee kept after a reply on the thread |
 | **Listed in the review body** | **in the review body only; never block a merge** | Findings below the **Comment on findings of** setting, low findings that read as a minor remark, and security findings [to validate outside the code](/code-review/on-github#the-review-body). They are listed in the review body, have no comment of their own, and never hold a merge |
 
@@ -313,7 +314,7 @@ Each row shows:
 - **The category**: **Correctness**, **Security**, or **Docs, names and tests**, which has an info mark that explains it.
 - **The file and line**, where the finding stands now.
 - **The claim**: what IronBee says is wrong.
-- **The state**: **open**, **stands**, **addressed**, **changed**, **gone**, **withdrawn** or **turned down**, with when it last changed. An addressed row is dimmed, with a check mark before **addressed**.
+- **The state**: **open**, **stands**, **addressed**, **changed**, **gone**, **withdrawn**, **turned down** or **resolved**, with when it last changed. An addressed row is dimmed, with a check mark before **addressed**.
 
 Click a row to open it in the [finding dialog](#the-finding-dialog).
 
@@ -347,7 +348,7 @@ The sections follow in this order. A section with nothing to show is left out.
 6. **Cites**: the **Rule**, **Memory** and **Skill** entries the finding relies on. See [Rules and memories](/code-review/rules-and-memories).
 7. **History**: what happened to the finding, in order:
    - **Posted by the review at a1b2c3d**.
-   - Each later change: **Still open**, **Stands**, **Addressed**, **The code changed**, **The code went away**, **Withdrawn** or **Turned down**, with **after a reply on the thread** and the commit when they apply. IronBee's sentence about it follows. **Read the whole reply on GitHub** opens the reply, a line such as **now rated high** shows a new severity, and **the thread was resolved by someone else** says a person, not IronBee, resolved it.
+   - Each later change: **Still open**, **Stands**, **Addressed**, **The code changed**, **The code went away**, **Withdrawn**, **Turned down** or **Resolved**, with **after a reply on the thread** and the commit when they apply. IronBee's sentence about it follows. **Read the whole reply on GitHub** opens the reply, a line such as **now rated high** shows a new severity, and **the thread was resolved by someone else** says a person, not IronBee, resolved it.
    - How the thread stands now: **Thread open on GitHub**, **Thread resolved by IronBee**, **No comment on GitHub any more**, **Listed in the review body; no comment of its own**, or **Listed in the review body as a lead to validate outside the code; no comment of its own**.
 
 **Suggested fix** and **How it happens** appear when the review wrote them; the **Suggested fixes** and **Diagrams** settings turn them on or off.
