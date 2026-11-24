@@ -43,19 +43,19 @@ With the **Anthropic** or **OpenAI** preset there's no address rule to set: neit
 
 ### IronBee's addresses
 
-IronBee's calls to your endpoint come from a fixed set of addresses. When you pick **Other**, the form shows them under **On your side**, with the region the calls come from and what a model must support in the format you picked:
+Every call IronBee makes to your endpoint comes from one IPv4 address, `52.35.245.203`: let it in on your endpoint's port. When you pick **Other**, the form shows it under **On your side**, with the region the calls come from and what a model must support in the format you picked:
 
 <img className="ib-shot ib-shot-light" src="/images/console/byom/facts-light.png" alt="The On your side section of the BYOM form, with Our addresses, Region, and What a model must support for OpenAI Chat Completions" />
 <img className="ib-shot ib-shot-dark" src="/images/console/byom/facts-dark.png" alt="The On your side section of the BYOM form, with Our addresses, Region, and What a model must support for OpenAI Chat Completions" />
 
-The public API answers the same list as `egressAddresses`, with any API key or OAuth token of your account:
+The public API answers the same list as `egressAddresses`, with any API key or OAuth token of your account, so a script can keep your rule in step with it:
 
 ```bash
 curl -s https://api.service.ironbee.ai/v1/vcs-network \
   -H "X-API-Key: $IRONBEE_API_KEY"
 ```
 
-They're the same addresses a [registered GitLab instance](/integrations/gitlab-self-managed) or [GitHub Enterprise Server](/integrations/github-enterprise) lets in.
+It's the same address a [registered GitLab instance](/integrations/gitlab-self-managed) or [GitHub Enterprise Server](/integrations/github-enterprise) lets in.
 
 ---
 
