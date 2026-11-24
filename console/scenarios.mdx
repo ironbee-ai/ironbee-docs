@@ -6,7 +6,7 @@ keywords: ["test case", "end-to-end test", "e2e test", "regression test", "user 
 
 A scenario is a flow written in plain words, such as "sign in, add two products to the cart and check that the cart badge counts both". IronBee runs it against one of your project's [environments](/console/environments), one action at a time, and shows what happened at each action.
 
-A scenario is saved, unlike an [instant verification](/console/verifications#run-instant-verification): you write the flow once and run it again whenever you need. Every run is kept with its result and its evidence.
+A scenario is saved, unlike an [instant verification](/console/verifications#run-instant-verification): you write the flow once and run it again whenever you need, or on a [schedule](/console/scenario-schedules). Every run is kept with its result and its evidence.
 
 Scenarios belong to a project. Each one is **Web** or **API**, like the project's [verification type](/console/project-settings#verification-type).
 
@@ -57,8 +57,8 @@ The projects with the most recent scenario changes come first. Search to filter 
 
 Open a project and click its **Scenarios** tab.
 
-<img className="ib-shot ib-shot-light" src="/images/console/scenarios/scenarios-tab-light.png" alt="A project's Scenarios tab with the search, type and tag filters, and a table of scenarios with their type, Used By count, last 5 runs, and created and updated columns" />
-<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/scenarios-tab-dark.png" alt="A project's Scenarios tab with the search, type and tag filters, and a table of scenarios with their type, Used By count, last 5 runs, and created and updated columns" />
+<img className="ib-shot ib-shot-light" src="/images/console/scenarios/scenarios-tab-light.png" alt="A project's Scenarios tab with the search, type and tag filters, and a table of scenarios with their type, Used By count, last 5 runs and next scheduled run: one due now with 5 of 6 schedules on, one today with 1 schedule on, and one with 1 schedule, off" />
+<img className="ib-shot ib-shot-dark" src="/images/console/scenarios/scenarios-tab-dark.png" alt="A project's Scenarios tab with the search, type and tag filters, and a table of scenarios with their type, Used By count, last 5 runs and next scheduled run: one due now with 5 of 6 schedules on, one today with 1 schedule on, and one with 1 schedule, off" />
 
 | Column | What it shows |
 |--------|---------------|
@@ -66,6 +66,7 @@ Open a project and click its **Scenarios** tab.
 | **Type** | **Web** or **API** |
 | **Used By** | How many scenarios in the project import this one. Hover the count to see them |
 | **Last 5 Runs** | One bar per run, oldest first, colored by result. Hover a bar for its result and time |
+| **Next Scheduled Run** | For a scenario with [schedules](/console/scenario-schedules), the earliest next run among those that are on, in your own time, and how many are on, such as **5 of 6 schedules on**. **Due now** when a run is waiting to start. When all of its schedules are off, a dash and, for example, **1 schedule, off** |
 | **Created**, **Created By**, **Updated**, **Updated By** | When the scenario was created and last saved, and by whom |
 
 To narrow the list:
@@ -80,7 +81,7 @@ Sort by **Scenario** or **Updated**. The **...** menu on a row offers **Run scen
 
 ## The scenario page
 
-Click a scenario to open it. The header shows its type, how many actions it runs (including the ones its imports bring) and how many scenarios it imports. Use **Edit** to open the [editor](/console/scenario-editor), **Run scenario** to [run it](/console/scenario-runs), and the **...** menu to **Duplicate** or **Delete** it.
+Click a scenario to open it. It has three tabs: **Definition**, **Runs** and **Schedules**. The header shows its type, how many actions it runs (including the ones its imports bring) and how many scenarios it imports. Use **Edit** to open the [editor](/console/scenario-editor), **Run scenario** to [run it](/console/scenario-runs), and the **...** menu to **Duplicate** or **Delete** it.
 
 ### Definition
 
@@ -103,6 +104,10 @@ The **Runs** tab lists every run of the scenario with its result, with the same 
 - **Older**, with a count of changes: the scenario changed after the run.
 
 Click a run to open it. See [Run a scenario](/console/scenario-runs).
+
+### Schedules
+
+The **Schedules** tab lists the scenario's schedules: each one runs the scenario on a timer, against an environment, with its own inputs. It shows when each one runs next, its latest run and a switch to turn it on or off, and **New schedule** adds one. See [Run a scenario on a schedule](/console/scenario-schedules).
 
 ---
 
@@ -134,8 +139,11 @@ A project can have up to 100 scenarios. The dialog shows how many the project ha
 
 **Duplicate** opens the editor on a copy, named after the original with **(copy)** at the end. If that name is taken, the copy is named **(copy 2)**, then **(copy 3)**, and so on. The copy is saved when you click **Save changes**.
 
+A copy has no [schedules](/console/scenario-schedules).
+
 **Delete** asks you to confirm with **Delete scenario**. Deleting can't be undone:
 - The scenario's past runs keep their copy of it and stay in **Verifications**.
+- Its schedules are deleted with it. The dialog says how many, such as **Its 2 schedules are deleted with it.**
 - If another scenario imports it, the dialog lists them and you can't delete it. Remove the import from those scenarios first.
 
 ---
@@ -144,12 +152,12 @@ A project can have up to 100 scenarios. The dialog shows how many the project ha
 
 | Role | What they can do |
 |------|------------------|
-| Owner, Admin, Member | Create, edit, duplicate, delete and run scenarios |
-| Billing Admin | See scenarios, their definitions and their runs, and open the editor read-only |
+| Owner, Admin, Member | Create, edit, duplicate, delete and run scenarios, and manage their [schedules](/console/scenario-schedules) |
+| Billing Admin | See scenarios, their definitions, their runs and their schedules, and open the editor read-only |
 
 A Billing Admin doesn't see **New scenario**, **Edit**, **Run scenario** or the **...** menus. The **Scenarios** tab, the scenario page and the editor say **Only owners, admins and members can change scenarios.** In the editor, **Discard** and **Save changes** are gone and the rows can't be changed.
 
-On an archived project, scenarios are read-only and can't be run. The same places say **This project is archived. Unarchive it to edit or run scenarios.** See [Roles](/console/roles).
+On an archived project, scenarios are read-only and can't be run. The same places say **This project is archived. Unarchive it to edit or run scenarios.** Its schedules are kept and don't run; see [Who can manage schedules](/console/scenario-schedules#who-can-manage-schedules). See [Roles](/console/roles).
 
 ---
 

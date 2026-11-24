@@ -303,6 +303,7 @@ Current structure as of the `docs.json` navigation configuration.
 | `console/scenario-editor.mdx` | Write a scenario | ✅ |
 | `console/scenario-references.mdx` | Inputs, references and imports | ✅ |
 | `console/scenario-runs.mdx` | Run a scenario | ✅ |
+| `console/scenario-schedules.mdx` | Run a scenario on a schedule | ✅ |
 
 ### Search
 

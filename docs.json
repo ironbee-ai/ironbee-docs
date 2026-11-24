@@ -334,7 +334,8 @@
               "console/scenarios",
               "console/scenario-editor",
               "console/scenario-references",
-              "console/scenario-runs"
+              "console/scenario-runs",
+              "console/scenario-schedules"
             ]
           },
           {
