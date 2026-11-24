@@ -214,7 +214,7 @@ The runner serves projects on a GitLab Dedicated tenant and on a GitLab Self-Man
 | A private certificate authority | - | named in your runners' `tls-ca-file`, which the jobs then trust |
 | How IronBee files a project | `acme/shop` | `gitlab.acme.com:acme/shop`, a project of its own in the console |
 
-**Your copy of the component.** GitLab includes a component only from the instance the pipeline runs on, so the runner project includes a copy on your instance. It must be public: the pipelines run as the trigger owner, a service account, which can't read an internal or private project it isn't a member of. Make it with a pull mirror where your tier has one, or by pushing the branches and tags, with `-o ci.skip`. Bring it up to date for each new release.
+**Your copy of the component.** GitLab includes a component only from the instance the pipeline runs on, so the runner project includes a copy on your instance. It must be public: the pipelines run as the trigger owner, a service account, which can't read an internal or private project it isn't a member of. Make it with a pull mirror where your tier has one, or by pushing the branches and tags, with `-o ci.skip`. Bring it up to date for each new release. IronBee serves 1.1.0 and later, so your copy needs the 1.1.0 release or a later one.
 
 **The administrator's steps.** An administrator of the instance allows top-level group Owners to create service accounts, and adds the instance's own host name to the hosts webhooks may reach. Where the instance keeps the Public level from its users, an administrator also makes your copy public. `ironbee host setup <host> --runner --components <group>` takes the first two steps and makes the group and the copy, public, where they're absent. It changes the visibility of nothing it finds: a group that exists must already be public, or the step stops and asks you to make it public or name another group. See [`ironbee host setup`](/cli/guides/hosts#ironbee-host-setup).
 
@@ -245,7 +245,7 @@ Look first at the **Code Review Result** job in the merge request's pipeline, th
 | The review job waits and never starts | `runner-tags` names tags no runner has, or the runner is offline |
 | The review job fails before the runner starts | The images couldn't be pulled: check `DOCKER_AUTH_CONFIG` |
 | No status on the merge request | The review job's log says why, in a line that starts with `check: none written`. Most often **Pipelines must succeed** is on and **Block merges** off, which writes none, or the head pipeline is on a protected branch. A newer pipeline of the same commit carries no status either: comment `@ironbee-ai review` |
-| "Not reviewed: ..." | The reason is in the sentence. The license, IronBee's refusal and the cloud reviewing the project read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting) |
+| "Not reviewed: ..." | The reason is in the sentence. The license, the account's code review turned off, a version no longer served, IronBee's other refusals and the cloud reviewing the project read as on [GitHub](/code-review/self-hosted-runner/github#troubleshooting). For a version no longer served, move the runner project's include, or run `ironbee runner setup --update`, with `--component` naming your copy's new tag on an instance |
 | `error: <input>: <why>` in the review job's log | A configuration error. Fix the input it names |
 | A running status stays | The run died while it reviewed. The sweep settles it within its interval, or comment `@ironbee-ai review` |
 

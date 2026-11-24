@@ -192,6 +192,22 @@ Current structure as of the `docs.json` navigation configuration.
 | `console/code-security-records.mdx` | Security records and runs | ✅ |
 | `console/code-security-settings.mdx` | Code security settings | ✅ |
 
+### BYOM
+
+| File | Title | Status |
+|------|-------|--------|
+| `byom/overview.mdx` | BYOM (Bring Your Own Model) | ✅ |
+| `byom/your-endpoint.mdx` | Prepare your BYOM endpoint | ✅ |
+| `byom/formats-and-models.mdx` | Formats and models for BYOM | ✅ |
+| `byom/server-recipes.mdx` | Server recipes for BYOM | ✅ |
+| `byom/when-a-job-fails.mdx` | When a BYOM job fails | ✅ |
+
+### BYOM in the console
+
+| File | Title | Status |
+|------|-------|--------|
+| `console/byom.mdx` | BYOM settings | ✅ |
+
 ---
 
 ## CLI

@@ -67,7 +67,7 @@ A review sets a commit status named **IronBee review** on the commit it reviewed
 
 The status's description is the check's title on GitHub, such as `3 findings · 1 high · 2 low`, `Nothing to add` or **IronBee review · too large to review**. See [When the review is done](/code-review/on-github#when-the-review-is-done) for the titles. A status that would read only **IronBee review** adds the first line of the review's summary, such as **IronBee review · retracted**. A running status shows no progress.
 
-A neutral or cancelled outcome is passed on GitLab, so it never holds a merge. Only an open finding that reaches **Block merging when** turns the status to failed.
+A neutral or cancelled outcome is passed on GitLab, so it never holds a merge. Only an open finding that reaches **Block merging when** turns the status to failed, counted at its severity now: the newest rating a later review gave it, or else the one it was written with. See [Conclusions](/code-review/on-github#conclusions).
 
 ### Merges
 

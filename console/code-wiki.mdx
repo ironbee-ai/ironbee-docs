@@ -5,7 +5,7 @@ description: IronBee writes a wiki of each connected GitHub, GitLab or Bitbucket
 keywords: ["repository documentation", "codebase wiki", "architecture overview", "onboarding docs"]
 ---
 
-IronBee writes a wiki of each GitHub repository the [IronBee GitHub App](/integrations/github) covers, and of each repository you pick in a [connected GitLab group](/integrations/gitlab) or [Bitbucket workspace](/integrations/bitbucket). It reads the repository's default branch and writes pages that explain the code: what the repository does, where to start, how its parts depend on each other, and one page for each area of the code. As pull requests or merge requests merge, the wiki is written again. Writing the wiki uses no credits. Repositories on a [GitHub Enterprise](/integrations/github-enterprise) host or a [GitLab Self-Managed or Dedicated](/integrations/gitlab-self-managed) instance registered to your account get a wiki too, and its links open on that host.
+IronBee writes a wiki of each GitHub repository the [IronBee GitHub App](/integrations/github) covers, and of each repository you pick in a [connected GitLab group](/integrations/gitlab) or [Bitbucket workspace](/integrations/bitbucket). It reads the repository's default branch and writes pages that explain the code: what the repository does, where to start, how its parts depend on each other, and one page for each area of the code. As pull requests or merge requests merge, the wiki is written again. Writing the wiki uses no credits. While your account runs its jobs on its own model with [BYOM](/byom/overview), the wiki is written on that model. Repositories on a [GitHub Enterprise](/integrations/github-enterprise) host or a [GitLab Self-Managed or Dedicated](/integrations/gitlab-self-managed) instance registered to your account get a wiki too, and its links open on that host.
 
 The wiki is on each project's **Code wiki** tab, after **Code review**. The project's card on the [Projects](/console/projects) page shows how many pages it has and when it was written. To choose which repositories get a wiki and in which language, see [Code wiki settings](/console/code-wiki-settings).
 
@@ -93,7 +93,7 @@ The wiki says where each claim comes from. A small file mark after a sentence ho
 
 Click **Refresh**, at the end of the tab row, to write the wiki again from the default branch now. **Refresh queued** confirms it; the run starts within a few minutes and the tab follows it.
 
-After a refresh, the next one has to wait a while. Until then, IronBee says **Refreshed recently, again at** a time. The button is unavailable while a run is already going, or while the wiki is off for the repository.
+After a refresh, the next one has to wait a while. Until then, IronBee says **Refreshed recently, again at** a time. The button is unavailable while a run is already going, or while the wiki is off for the repository or for the whole account.
 
 ---
 
@@ -148,7 +148,7 @@ The link opens the wiki alone, with none of the console around it: the page list
 A link opens nothing while:
 
 - it's past its expiry
-- the wiki is off for the repository
+- the wiki is off for the repository, or for the whole account
 - the project is archived
 - the repository is no longer connected
 
@@ -165,11 +165,13 @@ When an owner or an admin leaves the account, or their role changes to member or
 | **Writing the first wiki** | The first wiki is being written. The tab updates by itself |
 | **No wiki yet** | The first run starts within a few minutes of connecting the repository. Click **Refresh** to ask for it now |
 | **No wiki yet: the first run failed** | Click **Refresh** to try again |
-| **The repository wiki is off** | The wiki is turned off for this repository. Its pages are kept but not shown. **Turn on in Settings** opens [Code wiki settings](/console/code-wiki-settings#repositories) |
+| **The repository wiki is off** | The wiki is turned off for this repository, or for the whole account with [**Code wiki for this account**](/console/code-wiki-settings#turn-the-code-wiki-off-for-the-account). Its pages are kept but not shown. **Turn on in Settings** opens [Code wiki settings](/console/code-wiki-settings#repositories) |
 | **No wiki for this project** | The repository isn't connected through the GitHub App, a GitLab group or a Bitbucket workspace, or the project is archived |
 | **The wiki is written for GitHub, GitLab and Bitbucket repositories** | A Vercel, Netlify or CLI project. **Open integrations** shows how to connect its repository through the GitHub App, a GitLab group or a Bitbucket workspace |
 
 If a later run fails, the tab keeps showing the pages from the last run that finished, under **The last run could not finish**. The next push to the default branch, or **Refresh**, starts a new run.
+
+When a run met a failure of your account's BYOM endpoint, a note under the band, or under **No wiki yet: the first run failed**, says what the endpoint answered, with **BYOM settings**. See [When a job fails](/byom/when-a-job-fails).
 
 ---
 

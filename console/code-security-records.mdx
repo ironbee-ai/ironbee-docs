@@ -132,7 +132,7 @@ The **Runs** tab lists every scan of the repository once it ends, scheduled or r
 | **Scan** | The kind: **Full**, **Incremental**, **Follow-up**, or **No scan** when the branch had not moved. Under it, what started it, **Scheduled**, **Run by hand** or **API**, and the profile |
 | **Read** | How much of the repository the scan read, as units, or **Nothing to read** |
 | **Records** | What the scan recorded, such as **2 confirmed, 5 leads, 1 rejected**, and how many are new |
-| **Credits** | What was charged, such as **120 charged**, or **No charge** with the reason |
+| **Credits** | What was charged, such as **120 charged**, or **No charge** with the reason, and **BYOM** for a scan that ran on your account's own model through [BYOM](/byom/overview) |
 | **How it ended** | **Complete**, **Incomplete**, **Stopped at its time limit**, **Stopped at its spend limit**, **Stopped at its context limit**, **Nothing to read**, **Unchanged** or **Failed** |
 
 Click **Show the details** on a run to open:
@@ -141,7 +141,7 @@ Click **Show the details** on a run to open:
 - **Reading:** the **Lines counted for the price**, the **Lines the models read**, the **Changed paths in scope** and the repository's **Size**.
 - **Run:** the **Commit** the scan read and its **Profile**.
 
-A failed run shows the reason, such as **The scan ran out of time**, **The repository's connection is gone** or **The default branch has no commit yet**. A scan that fails costs nothing.
+A failed run shows the reason, such as **The scan ran out of time**, **The repository's connection is gone** or **The default branch has no commit yet**. A scan that fails costs nothing. A run that met a failure of your account's BYOM endpoint also shows what the endpoint answered, with **BYOM settings**. See [When a job fails](/byom/when-a-job-fails).
 
 If no scan has ended yet, the tab says **No runs yet**.
 

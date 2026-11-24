@@ -93,7 +93,7 @@ The **Review** column, and the band on the pull request page, show one of these 
 | **Reviewed** | **no check written** | IronBee published a review but wrote no check |
 | **Not reviewed** | The reason | No review was published. The reasons are below |
 
-For **Changes requested** and **Passed**, the detail line names the commit the check is on. It adds **an earlier commit**, as in **on a1b2c3d, an earlier commit**, when that isn't the commit IronBee last reviewed. The merge block severity is the **Block merging when** setting; see [Code review settings](/code-review/settings).
+For **Changes requested** and **Passed**, the detail line names the commit the check is on. It adds **an earlier commit**, as in **on a1b2c3d, an earlier commit**, when that isn't the commit IronBee last reviewed. The merge block severity is the **Block merging when** setting; see [Code review settings](/code-review/settings). A finding a later review rated again counts at its new severity there, as in [Open findings](#open-findings).
 
 **Not reviewed** gives the first reason that applies:
 
@@ -108,7 +108,7 @@ For **Changes requested** and **Passed**, the detail line names the commit the c
 
 ## Open findings
 
-The **Open Findings** column shows four counts, always in this order: critical, high, medium and low. A zero is drawn hollow. Hover a count to read it, such as **2 High open** or **no Medium finding open**.
+The **Open Findings** column shows four counts, always in this order: critical, high, medium and low. A zero is drawn hollow. Hover a count to read it, such as **2 High open** or **no Medium finding open**. A finding counts at its severity now: the newest rating a later review gave it, or else the severity it was written with, as its [row](#a-findings-row) shows.
 
 Before IronBee has published a review, the column shows `-`, or **after the review** while the first one runs. With **Needs review** ticked, an open pull request with no review shows a **Review** button there instead; see [Pull requests that need a review](#pull-requests-that-need-a-review).
 
@@ -211,7 +211,7 @@ The rail on the left of the page has two parts. In a narrow window, it moves und
 
 Every job IronBee ran on the pull request, newest first. When there are more than the rail shows, the last line says how many older ones are left out, such as **4 older not shown**. With no job yet, the rail says **No job has run on this pull request.**
 
-Each job shows its kind, its status, and a line with what started it, what came of it, its [credits](/console/pricing) (what it used, what it's expected to use while it runs, or **free**), how long it ran and when it was created. Hover the line to see the date and time.
+Each job shows its kind, its status, and a line with what started it, what came of it, its [credits](/console/pricing) (what it used, what it's expected to use while it runs, or **free**), **BYOM** when it ran on your account's own model through [BYOM](/byom/overview), how long it ran and when it was created. Hover the line to see the date and time.
 
 | Kind | What started it, as the line says |
 |------|-----------------------------------|
@@ -222,7 +222,7 @@ Each job shows its kind, its status, and a line with what started it, what came 
 | **Reactions** | **learning from reactions** |
 | **Retract** | **taking the review back** |
 
-What came of a job reads **4 comments** or **2 answers**, the reviewer's own word for the run, or why it failed. A cancelled job adds nothing there.
+What came of a job reads **4 comments** or **2 answers**, the reviewer's own word for the run, or why it failed. A cancelled job adds nothing there. A job that met a failure of your BYOM endpoint shows what the endpoint answered under its line, with **BYOM settings**; see [When a job fails](/byom/when-a-job-fails).
 
 The status is one of **queued**, **starting**, **running**, **publishing**, **succeeded**, **failed** or **cancelled**. A job that hasn't ended has a **Cancel** link; see [Cancel a job](#cancel-a-job).
 
@@ -237,7 +237,7 @@ The settings the next review of this pull request will use:
 | **Comments** | Which findings get a comment of their own: **Every severity**, **Medium and above** or **High and above** |
 | **Merge block** | **Medium or worse open**, **High or worse open** or **Never**. On a GitLab repository with **Block merges** off, it reads **Never** |
 
-A value the repository sets for itself, rather than taking the account's, is marked **set here**. When code review is off for the repository, the section says **Code review is off for this repository**. **Settings** opens the repository's code review settings; see [Code review settings](/code-review/settings).
+A value the repository sets for itself, rather than taking the account's, is marked **set here**. When code review is off for the repository, or for the whole account, the section says **Code review is off for this repository or for the whole account**. **Settings** opens the repository's code review settings; see [Code review settings](/code-review/settings).
 
 ---
 
@@ -258,12 +258,12 @@ After you pick one, a message confirms what happened:
 - **A review is already queued**: the review already waiting covers your ask, and nothing more was queued.
 - **A review is already running**: ask again once it has ended.
 
-If the review can't start, **Couldn't start the review** says why: code review is off for the repository, the team's credits are used up, or too many reviews were started in a minute.
+If the review can't start, **Couldn't start the review** says why: code review is off for the repository or for the [account](/code-review/settings#turn-code-review-off-for-the-account), the team's credits are used up, or too many reviews were started in a minute.
 
 The button is disabled, with the reason on hover, when:
 
 - the project is archived: **The project is archived**
-- code review is off: **Code review is off for this repository**
+- code review is off: **Code review is off for this repository or for the whole account**
 - the team's credits are used up, with the date they reset
 - a job is already running: **A job is already running on this pull request**
 

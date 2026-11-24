@@ -6,7 +6,7 @@ description: Choose when IronBee reviews a pull request, what it looks for, what
 
 Code review settings decide when a review runs, what it looks at, what it writes and what it does on the pull request. You set them at two levels:
 
-- **The account:** open **Settings > Code review**, or **Code review > Settings** in the sidebar. The page is marked **All repositories**, and its values are the defaults of every repository.
+- **The account:** open **Settings > Code review**, or **Code review > Settings** in the sidebar. The page is marked **All repositories**, and its values are the defaults of every repository. It opens with [**Code review for this account**](#turn-code-review-off-for-the-account), the account's switch.
 - **One repository:** open the project, go to its **Settings** tab and select **Code review**. The page is marked **This repository only**.
 
 Both pages show the same form, in four sections: [Triggers](#triggers), [Review](#review), [Output](#output) and [On the pull request](#on-the-pull-request). The tabs above the form jump to each one, and mark a section that holds a refused value.
@@ -23,8 +23,8 @@ A repository follows the account for every setting until you change that setting
 
 Some settings exist at one level only:
 
-- **Review new repositories automatically** is on the account page only.
-- The on/off switch and the four lists in [Repository-only lists](#repository-only-lists) are on a repository's page only. They never follow the account.
+- **Code review for this account** and **Review new repositories automatically** are on the account page only.
+- The repository's on/off switch and the four lists in [Repository-only lists](#repository-only-lists) are on a repository's page only. They never follow the account.
 
 ### Example comment
 
@@ -32,11 +32,37 @@ Beside the form, **Example comment** shows one fixed review comment, not generat
 
 ---
 
+## Turn code review off for the account
+
+The account page opens with **Code review for this account**, one switch over every repository of the account. It's on until an owner or an admin turns it off. A flip applies at once, apart from **Save changes**, and **Code review is off for this account** or **Code review is on for this account** confirms it.
+
+- **On:** a repository is reviewed while its own switch, [**Review pull requests in this repository**](#turn-review-on-or-off-for-a-repository), is on.
+- **Off:** no repository of the account is reviewed, whatever its own switch says.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/settings-account-switch-light.png" alt="The account Code review page marked All repositories, opening with the Code review for this account switch turned off and what off means" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/settings-account-switch-dark.png" alt="The account Code review page marked All repositories, opening with the Code review for this account switch turned off and what off means" />
+
+While it's off:
+
+- A pull request event starts no review, and IronBee ignores commands, questions, replies and resolved or unresolved threads on the pull request. It posts nothing, so an **IronBee review** check, pipeline status or build status that held a merge keeps holding it: resolving IronBee's threads doesn't recheck it while the switch is off.
+- The API and [`ironbee review`](/cli/guides/code-review) are refused with `CODE_REVIEW_DISABLED`, the same code a repository's own switch gives, with a message that names the account. In the console, **Review now** is disabled, with **Code review is off for this repository or for the whole account** on hover.
+- A review that was queued before you turned it off fails when it would start, and uses no credits.
+- Each repository's page says **Code review is off for this account, so this repository is not reviewed whatever its switch below says.**, with **Turn it on in the account's settings**.
+
+<img className="ib-shot ib-shot-light" src="/images/console/code-review/project-settings-account-off-light.png" alt="A repository's Code review settings page marked This repository only, with the warning that code review is off for this account above the repository's own switch, still on" />
+<img className="ib-shot ib-shot-dark" src="/images/console/code-review/project-settings-account-off-dark.png" alt="A repository's Code review settings page marked This repository only, with the warning that code review is off for this account above the repository's own switch, still on" />
+
+Turning it off never changes a repository's own switch, stops a review that's already running, or removes what IronBee posted. Turning it on again queues nothing: each repository whose own switch is on is reviewed again from its next pull request event, or when someone asks.
+
+Only owners and admins can flip it. Others see it read-only.
+
+---
+
 ## Turn review on or off for a repository
 
 A repository's page opens with **Review pull requests in this repository**:
 
-- **On:** every pull request in the repository gets a review and the **IronBee review** check.
+- **On:** every pull request in the repository gets a review and the **IronBee review** check, while [**Code review for this account**](#turn-code-review-off-for-the-account) is on.
 - **Off:** no review and no check for the repository, and [`@ironbee-ai review`](/code-review/on-github#commands) does nothing there.
 
 Under the switch, a line counts the settings this repository follows and the ones it sets itself, such as **Settings: 14 of 16 follow the account, 2 set here**. It links to **Account settings** and, when the repository sets something, offers **Reset all to account settings**. The switch itself isn't counted, and no reset changes it.
@@ -55,6 +81,7 @@ When your account uses the [self-hosted runner](/code-review/self-hosted-runner/
 <img className="ib-shot ib-shot-light" src="/images/console/code-review/project-settings-runner-off-light.png" alt="A connected repository's Review pull requests in this repository switch turned off, reading Off in IronBee's cloud: the cloud does not review this repository" />
 <img className="ib-shot ib-shot-dark" src="/images/console/code-review/project-settings-runner-off-dark.png" alt="A connected repository's Review pull requests in this repository switch turned off, reading Off in IronBee's cloud: the cloud does not review this repository" />
 
+- **The account's switch:** **Code review for this account** stops the runner too. While it's off, every registration and run is refused and nothing is reviewed, whatever each repository's switch says. See [Code review turned off for the account](/code-review/self-hosted-runner/overview#code-review-turned-off-for-the-account).
 - **A repository no connection covers:** there's no switch. The page says the repository is reviewed by its IronBee workflow while the workflow is in the repository (on GitLab, while a runner project serves it; on Bitbucket, its pipeline), and that the settings below apply to its runs. While the project is archived, its runs take the account's settings instead.
 - **The account page:** a line under the title for each license: **Self-hosted runner** and its id, the products it covers, **Enabled** or **Suspended** and the day it's good through, and how many developers it counted this month against the license's limit. A license that hasn't started yet gives the day it starts and the day it ends, and its limit of developers a month, with no count. An ended license is left out, unless no code review license is current or upcoming: then the one that ended last stays, with **Ended on** and its last day. A month over the limit is marked **over the contract's limit**, and reviews go on.
 
@@ -89,7 +116,7 @@ What a review looks at, and how deeply.
 | **Extra checks** | See the next table | None | Kinds of findings the focus areas leave out on purpose |
 | **Rules and memories from the repository** | On, Off | On | Reads the team's `.ironbee/` files from the pull request's base branch. See [Repository files](/code-review/rules-and-memories#repository-files) |
 
-Under **Review depth**, the console shows what a review at the chosen depth costs in credits, with a **See the rate card** link to [Credit usage](/console/usage#what-a-job-costs). For plans, see [Pricing](/console/pricing).
+Under **Review depth**, the console shows what a review at the chosen depth costs in credits, with a **See the rate card** link to [Credit usage](/console/usage#what-a-job-costs). While your account runs its jobs on its own model with [BYOM](/byom/overview), the price shown is the BYOM price, and the line says so. For plans, see [Pricing](/console/pricing).
 
 **Docs, names and tests** looks for text, names and tests that disagree with the code: messages, comments and names that say what the code doesn't do, and docs or tests the change should have updated.
 
@@ -128,7 +155,7 @@ Merging, replies and what the team teaches the review.
 
 | Setting | Options | Default | What it does |
 |---------|---------|---------|--------------|
-| **Block merging when** | **Medium or worse open**, **High or worse open**, **Never** | **Medium or worse open** | IronBee's check doesn't pass while a finding at or above that severity is open. It holds a merge only where the repository requires it: branch protection on GitHub; on Bitbucket, a merge check on successful builds, which blocks on a Premium plan only; or on GitLab, **Pipelines must succeed** with **Block merges** on. On GitLab, a merge request set to auto-merge also stops at a blocking result, unless this is **Never** |
+| **Block merging when** | **Medium or worse open**, **High or worse open**, **Never** | **Medium or worse open** | IronBee's check doesn't pass while a finding at or above that severity is open. A finding counts at its severity now: the newest rating a later review gave it, or else the severity it was written with. It holds a merge only where the repository requires it: branch protection on GitHub; on Bitbucket, a merge check on successful builds, which blocks on a Premium plan only; or on GitLab, **Pipelines must succeed** with **Block merges** on. On GitLab, a merge request set to auto-merge also stops at a blocking result, unless this is **Never** |
 | **Block merges** | On, Off | Off | GitLab repositories only; the account page calls it **Block merges on GitLab**. Off: on a project with **Pipelines must succeed**, IronBee writes no new status and releases the statuses it has open, and an earlier red status of IronBee's clears at the next review, a reply under a finding, a resolved thread or a push. On: there, a running review or verification and a blocking result hold the merge. **Block merging when** on **Never** lifts a review's result, not the hold while the review runs. See [Merges on GitLab](/code-review/on-gitlab#merges) |
 | **Answer questions** | On, Off | On | A question asked in a reply under an IronBee comment gets an answer |
 | **Close fixed threads** | **Resolve the thread**, **Reply only** | **Resolve the thread** | When a later review finds a finding fixed, IronBee says so in its thread. **Resolve the thread** also resolves it. With **Resolve the thread**, a finding a person [turned down](/code-review/on-github#replies-reactions-and-resolved-threads) has its thread resolved too |

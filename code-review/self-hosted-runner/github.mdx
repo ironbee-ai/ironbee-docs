@@ -211,7 +211,7 @@ IronBee files the repository as `<host>:owner/name`, so it gets a project of its
 
 A workflow on github.com can't be called from GHE.com or a server, so there you call a copy of `ironbee-ai/ironbee-github-runner` on your own host. On github.com, an enterprise that allows no workflows from outside keeps a copy too.
 
-- **Make it** from a release, keeping the tags: mirror the repository, or on a server use `actions-sync`. To move to a later release, copy again and change the tag in `uses:`.
+- **Make it** from a release, keeping the tags: mirror the repository, or on a server use `actions-sync`. To move to a later release, copy again and change the tag in `uses:`. IronBee serves 1.1.0 and later, so a copy made at 1.0.0 needs copying again.
 - **Call it** at a release tag in place of `ironbee-ai/ironbee-github-runner`. On a server, name it again in `runner-repository`.
 - **Give `runner-token`,** a read-only token that can read the copy, as an Actions secret and as a Dependabot secret of the same name. Under SAML single sign-on, authorize the token for the organization.
 
@@ -242,8 +242,9 @@ Look first at the **Code Review Result** check, whose neutral text says why noth
 |---|---|
 | "IronBee's self-hosted review is not enabled for this account; contact IronBee." | Contact IronBee |
 | "The licence for IronBee's self-hosted review has ended; contact IronBee to renew it." | Renew the license. The next event is reviewed |
+| "Code review is turned off for this account in IronBee; turn it on in the console's code review settings before the runner reviews." | Turn on **Code review for this account** in the account's **Settings > Code review**. The next event is reviewed. See [Code review turned off for the account](/code-review/self-hosted-runner/overview#code-review-turned-off-for-the-account) |
 | "IronBee's cloud reviews this repository; turn its code review off in the console before the runner reviews it." | Turn off **Review pull requests in this repository** in the project's **Settings > Code review**, or remove the workflow |
-| "This version of the IronBee runner is no longer served; move the workflow to ..." | Move the workflow to the version it names |
+| "This version of the IronBee runner is no longer served; move the workflow to ..." | Move `uses:` to the version it names. A 1.0.0 workflow is told to move to 1.1.0, which `@v1` also runs. Where `uses:` calls your copy of the runner's repository, copy the 1.1.0 release to it first, then change the tag: see [Your copy of the runner's repository](#your-copy-of-the-runners-repository) |
 | "IronBee could not be reached, so this pull request was not reviewed." | Check that the job reaches `api.service.ironbee.ai`, then re-run the workflow |
 | "The review did not run; the workflow's log says why." | The image couldn't be pulled, its container didn't start, or the step was cancelled or timed out. Check the log and the `registry-token` secret, then re-run |
 | "This run of the workflow lacked the `ironbee-api-key` or `registry-token` secret ..." | Pass both secrets in the workflow file. For Dependabot, see [Who it writes as](#who-it-writes-as) |

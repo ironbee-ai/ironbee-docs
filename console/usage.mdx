@@ -159,6 +159,7 @@ Point at a day to read its credits by product and **Day total**, or **Used so fa
 **Charges** lists the charged runs, **Recent** or **Largest** first. Each row shows:
 - what was charged: the pull request's number and title, **Local review** for an [`ironbee review`](/cli/guides/code-review) of a local branch, the verification run's name, or **Full scan** or **Incremental scan** for code security
 - the product, the project and when it was charged, with "half price: cancelled part-way" for a review cancelled after it started
+- **BYOM**, for a run on your account's own model through [BYOM](/byom/overview)
 - the credits
 
 Click a row's title to open the pull request, the verification run, or, for owners and admins, the project's code security **Runs** tab. A run past your plan's retention keeps its row, without a link, and **run no longer kept** in place of its project.
@@ -208,6 +209,8 @@ For owners and billing admins, the line under the list links to the invoices: **
 
 The rate card always shows the current rates. The plans and their monthly credits are on [Pricing](/console/pricing).
 
+While your account runs its jobs on its own model with [BYOM](/byom/overview), a line under the title says "A job on BYOM is charged this card's credits times 0.5, rounded up to a whole credit." The card itself keeps its prices. See [Jobs on BYOM](#jobs-on-byom).
+
 ---
 
 ## What uses credits
@@ -241,6 +244,17 @@ A run is charged for each started minute, up to a cap set by its time limit. Onc
 A run isn't charged when:
 - it never started: it was refused before it started, or cancelled while it was queued
 - it failed for a reason on IronBee's side before the agent started working
+- on [BYOM](/byom/overview), it failed with `byom_unavailable`: your endpoint never answered. A run that fails with `byom_failed` is charged its minutes
+
+### Jobs on BYOM
+
+A job that starts while [BYOM](/byom/overview) is enabled for your account runs on your own model, and is charged the rate card's credits times 0.5, rounded up to a whole credit. A job already running when BYOM is enabled finishes on IronBee's model, at the rate card's price.
+
+- **Code review:** the review's price times 0.5, rounded up. A review cancelled after it started is charged half of that.
+- **Code security:** the scan's price, with what **Execution** adds, times 0.5, rounded up.
+- **Verification:** the price of the run's started minutes times 0.5, rounded up once for the whole run, and never less than one started minute's price on the rate card. Its cap is the cap at the same rate.
+
+What's free stays free, and the prices the console shows for the next review or scan are BYOM prices while BYOM is enabled. A BYOM job that fails is charged as any failed job of its product is. Why one fails, a job running when BYOM is disabled included, is on [When a job fails](/byom/when-a-job-fails).
 
 ### Free work
 

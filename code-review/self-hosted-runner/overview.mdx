@@ -2,7 +2,7 @@
 title: Self-hosted runner for code review
 sidebarTitle: Overview
 description: Run IronBee code review in your own GitHub Actions, GitLab CI/CD or Bitbucket Pipelines, with your own model, so your code never reaches IronBee.
-keywords: ["on-premises code review", "bring your own model", "BYOM", "private LLM", "self-hosted AI code review"]
+keywords: ["on-premises code review", "self-hosted AI code review"]
 ---
 
 The self-hosted runner is IronBee code review that runs in your own CI: GitHub Actions, GitLab CI/CD or Bitbucket Pipelines. A job of yours runs IronBee's reviewer from a container image IronBee ships, clones and reads the change there, and calls your own model. It reviews pull requests (merge requests on GitLab) the way [IronBee's cloud code review](/code-review/overview) does: a first review and follow-up rounds after each push, answers to questions on its threads, and commands addressed to it. It writes its review on the pull request and a status named **Code Review Result**, which can hold a merge.
@@ -10,6 +10,10 @@ The self-hosted runner is IronBee code review that runs in your own CI: GitHub A
 Your settings, rules and memories stay in the IronBee console. Each run asks IronBee for them, and for the license, when it starts.
 
 The runner comes with an Enterprise agreement: IronBee enables it on your account under a license of its own, and its reviews use no credits. See [Pricing](/console/pricing), or email [support@ironbee.ai](mailto:support@ironbee.ai).
+
+<Note>
+  The self-hosted runner isn't [BYOM](/byom/overview) (Bring Your Own Model). With BYOM, IronBee keeps running the jobs on its own infrastructure, code reviews, the code wiki, code security scans and verification runs, and each one calls a model endpoint of yours, set up in **Settings > BYOM**. With the runner, code review alone runs in your own CI, your code never reaches IronBee, and the runner calls the model its own inputs name. BYOM doesn't change that model.
+</Note>
 
 <CardGroup cols={3}>
   <Card title="On GitHub" icon="github" href="/code-review/self-hosted-runner/github">
@@ -30,7 +34,7 @@ The runner comes with an Enterprise agreement: IronBee enables it on your accoun
 | | IronBee's cloud | The self-hosted runner |
 |---|---|---|
 | Where your code is read | IronBee's cloud | your CI job |
-| Model | IronBee's | yours |
+| Model | IronBee's, or yours with [BYOM](/byom/overview), called from IronBee's cloud | yours, called from your CI job |
 | What starts a review | IronBee's GitHub App, GitLab connection or Bitbucket app | your CI: a workflow on GitHub, a runner project's pipelines on GitLab, a custom pipeline on Bitbucket |
 | Who comments | IronBee | your CI's identity: `github-actions[bot]` or a GitHub App of yours, a GitLab service account of yours, or `Bitbucket Pipelines` |
 | The status | **IronBee review** | **Code Review Result** |
@@ -44,7 +48,7 @@ The runner comes with an Enterprise agreement: IronBee enables it on your accoun
 
 The reviewer itself is the same on every host: one image, one version, the same review profiles, settings and rules. What differs from host to host is how a review starts, who it writes as and how its status holds a merge. Each host's page covers that.
 
-A repository is reviewed by IronBee's cloud or by the runner, never both. The runner refuses a repository whose code review is on in IronBee's cloud, so two reviewers never post on one pull request. Turn off **Review pull requests in this repository** in the project's **Settings > Code review** first. On an account that uses the runner, that switch is the cloud's alone. See [Code review settings](/code-review/settings#with-the-self-hosted-runner).
+A repository is reviewed by IronBee's cloud or by the runner, never both. The runner refuses a repository whose code review is on in IronBee's cloud, so two reviewers never post on one pull request. Turn off **Review pull requests in this repository** in the project's **Settings > Code review** first. On an account that uses the runner, that switch is the cloud's alone. See [Code review settings](/code-review/settings#with-the-self-hosted-runner). The account's switch, **Code review for this account**, isn't: turned off, it stops the runner too. See [Code review turned off for the account](#code-review-turned-off-for-the-account).
 
 ### What the runner doesn't do
 
@@ -138,7 +142,7 @@ The model is yours. A model call never goes to IronBee.
 - **A model must support tool calling,** and the output the reviewer asks for in a turn. Where your model or server allows less, lower it with `model-max-output`.
 - **IronBee states quality only for the models it measured.** Any other model runs, with no statement about its results. See the runner's [Supported models](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/supported-models.md).
 
-The **Review depth** setting picks the profile: **Quick**, **Standard** or **Deep**, or by the change's size on **Auto**. The [review file](#the-review-file) can name another model or effort for each kind of call.
+The **Review depth** setting picks the profile: **Quick**, **Standard** or **Deep**, or by the change's size on **Auto**. The job's log and the run's report name it `self-hosted-quick`, `self-hosted-standard` or `self-hosted-deep`. The [review file](#the-review-file) can name another model or effort for each kind of call.
 
 The models' inputs, the kinds of call and the model each one calls by default are in the runner's [Models](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/models.md) guide. They're the same on every host. On Bitbucket each input is a Pipelines variable instead, such as `IRONBEE_MODEL_PROVIDER` for `model-provider`.
 
@@ -162,6 +166,7 @@ A self-hosted run takes the [code review settings](/code-review/settings) of the
 
 | Setting | On a self-hosted run |
 |---|---|
+| **Code review for this account** | Applies: while it's off, nothing is reviewed ([below](#code-review-turned-off-for-the-account)) |
 | **Review depth**, **Focus areas**, **Extra checks**, **Comment on findings of**, **Comment language** | Apply |
 | **Pull request summary**, **Suggested fixes**, **Diagrams** | Apply |
 | **Automatic reviews**, **Draft pull requests**, **Pull requests opened by bots** | Apply. The runner checks them against the pull request itself, and tells IronBee only which one stopped a run |
@@ -173,6 +178,21 @@ A self-hosted run takes the [code review settings](/code-review/settings) of the
 | **Learn from the team's reactions** | Reactions, replies and resolved threads on the pull request are read at each round. Nothing is kept for other pull requests |
 | **Review new repositories automatically** | Doesn't apply: a repository is reviewed while its runner serves it |
 | **Review pull requests in this repository** | Doesn't apply: it's the cloud's switch |
+
+### Code review turned off for the account
+
+The account's switch, **Code review for this account** at the top of the account's **Settings > Code review**, stops the runner too, whatever each repository's own switch says. While it's off:
+
+- **Every registration is refused,** and every run at its start: nothing is reviewed, answered or retracted, no project is made and no developer is counted.
+- **The job's log** says why, in the sentence below. Where the runner writes a status, a pull request's event leaves one that passes with the same sentence, on a head that holds nothing of the reviewer's yet, so no merge is held. A comment's run writes nothing, and the job ends successfully.
+
+  ```
+  Code review is turned off for this account in IronBee; turn it on in the console's code review settings before the runner reviews.
+  ```
+
+- **A run that started before the switch went off** finishes as it would.
+
+When an owner or an admin turns the switch back on, the next event is reviewed, with nothing to change on your side. To have the runner alone review your repositories, keep the account's switch on and each repository's **Review pull requests in this repository** off.
 
 ### The rules repository
 
@@ -214,7 +234,7 @@ From your side:
     Contact IronBee to have the runner enabled on your account, and get your registry token. Copy the account's API key from the [Account page](/console/account).
   </Step>
   <Step title="Turn off cloud reviews where the runner takes over">
-    For a repository IronBee's cloud already reviews, turn off **Review pull requests in this repository** in its project's **Settings > Code review**.
+    For a repository IronBee's cloud already reviews, turn off **Review pull requests in this repository** in its project's **Settings > Code review**. Leave **Code review for this account** on: turned off, it stops the runner too.
   </Step>
   <Step title="Run the setup">
     From your machine, run `ironbee runner setup` for your host. It registers the repositories with IronBee, stores the secrets in your CI, and adds the runner's file, each step reading what exists first so it can be run again. See [`ironbee runner`](/cli/guides/runner). Every step is also written out in the runner's guide, for doing by hand.
@@ -235,8 +255,20 @@ The runner's file in your CI and the image it runs share one version. A release'
 
 - **Follow the major version** with `@v1` on GitHub and GitLab, or pin an exact release. Within a major version, no input, variable or setting you use is renamed or removed. On Bitbucket the block names its release, and `ironbee runner setup --update` moves it.
 - **Pre-releases** (`-rc.<N>`) and the `v0` tag are for IronBee's own tests. Don't use them in production.
-- **A version stops being served** only by major version, with a dated notice in the job's log first. After its last day, its runs are refused, with a passing status that says which version to move to. The one exception is a release with a fault that would harm its users: it's stopped at once, and its users are told.
+- **A version stops being served** by major version, with a dated notice in the job's log first. After its last day, its runs are refused, with a passing status that says which version to move to. A release with a fault that would harm its users is stopped at once, and its users are told. 1.0.0 is the one release stopped otherwise, as the next section says.
 - **Each release's image is signed,** with a bill of materials. The runner's repository holds IronBee's public key and the steps to verify it: see [Verifying the image](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/docs/verifying-the-image.md).
+
+### What 1.1.0 changes
+
+Release 1.1.0 changes the same on all three hosts:
+
+- **IronBee serves 1.1.0 and later.** 1.1.0 renamed the profiles a run reports, which 1.0.0 can't follow, so 1.0.0 stopped inside major version 1, with no dated notice. A 1.0.0 run or registration is refused: nothing is reviewed, and a pull request's event leaves a passing status that says to move to 1.1.0.
+- **Moving changes nothing you set.** A workflow or an include at `@v1` already runs 1.1.0. Move one pinned to 1.0.0 to `@v1`, or run `ironbee runner setup --update`, which writes the latest release and also moves a Bitbucket block. On Bitbucket, an open pull request keeps the block its source branch brings until that branch takes the default branch in. Where the file calls a copy of the runner's repository (on a GitHub Enterprise host or a GitLab instance, or on github.com where your enterprise allows no outside workflows), bring the copy up to 1.1.0 first, then change the tag in `uses:` or the include, or run `ironbee runner setup --update --component <your copy>@<tag>`.
+- **The profiles are named** `self-hosted-quick`, `self-hosted-standard` and `self-hosted-deep`, in place of `ironbee-self-hosted-<depth>`, in the job's log and in the run's report. No input, variable, secret or key of the review file is renamed.
+- **An account whose code review is turned off is refused,** at every registration and run. See [Code review turned off for the account](#code-review-turned-off-for-the-account).
+- **The reviewer.** An answer the model cut short, at its output limit or, on Claude, at its context window, no longer counts as finished: the review keeps the findings it holds and is posted as partial. With the `openai` provider, a broken or unfinished stream is tried again, a tool call with malformed arguments is answered as not run, and a retry waits at least as long as the server's `retry-after` asks.
+
+Each runner's changelog says what every release changes: [GitHub](https://github.com/ironbee-ai/ironbee-github-runner/blob/main/CHANGELOG.md), [GitLab](https://gitlab.com/ironbee-ai/ironbee-gitlab-runner/-/blob/main/CHANGELOG.md) and [Bitbucket](https://github.com/ironbee-ai/ironbee-bitbucket-runner/blob/main/CHANGELOG.md).
 
 ---
 

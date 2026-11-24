@@ -36,7 +36,7 @@ These settings keep an automatic review from running:
 
 These settings hold back automatic reviews only. A person who asks with [`@ironbee-ai review`](#commands), or with [**Review now**](/code-review/pull-requests#review-now) in the console, still gets a review. Comments and pushes from bots never start anything.
 
-When code review is off for the repository, IronBee doesn't review its pull requests and ignores commands there. See [Code review settings](/code-review/settings) for where each setting lives and who can change it.
+When code review is off for the repository, or for the whole account with [**Code review for this account**](/code-review/settings#turn-code-review-off-for-the-account), IronBee doesn't review its pull requests and ignores commands there. See [Code review settings](/code-review/settings) for where each setting lives and who can change it.
 
 ---
 
@@ -223,7 +223,7 @@ When something changed, IronBee replies on the finding's thread:
 | A fixed finding came back | "Applies again after `abc1234`, now at `src/cart.ts:42`: ..." | Reopened, if IronBee had resolved it |
 | The code changed and the comment no longer describes it | "The code here changed in `abc1234` and this comment no longer describes it." | Left as it is |
 
-With **Reply only**, IronBee replies and leaves the threads of fixed findings open for you to resolve. When the change makes a finding more or less severe, the reply ends with "Severity now 🟠 **High** (was medium)." IronBee replies only when something changed: a finding still at the same place gets no new reply.
+With **Reply only**, IronBee replies and leaves the threads of fixed findings open for you to resolve. When the change makes a finding more or less severe, the reply ends with "Severity now 🟠 **High** (was medium)." From then on, the [check](#conclusions) counts the finding at its new severity. IronBee replies only when something changed: a finding still at the same place gets no new reply.
 
 After you apply a fix IronBee asked for, the follow-up review doesn't post a new finding that only remarks on the trade-off the fix made, or that asks you to undo it. A defect the fix brings in is still reported.
 
@@ -264,7 +264,7 @@ The summary starts with the commit, the change's size, how long the review took 
 
 The **Action required** conclusion holds a merge only where the branch's protection rules require the **IronBee review** check. Without that, it's information only.
 
-Only open findings count toward the conclusion. A finding listed below the comment threshold, or to validate outside the code, never counts, and neither does a finding whose thread a person resolved or that a person [turned down](#replies-reactions-and-resolved-threads). When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
+Only open findings count toward the conclusion, each at its severity now: the newest rating a later review gave it, or else the severity it was written with. The counts in the title use the same severities, so a finding rated down below the threshold no longer holds a merge, and one rated up to it does. A finding listed below the comment threshold, or to validate outside the code, never counts, and neither does a finding whose thread a person resolved or that a person [turned down](#replies-reactions-and-resolved-threads). When a person resolves or unresolves one of IronBee's threads, IronBee rechecks the conclusion right away. The title shows what's open now, and the summary gains a line such as "_Rechecked after a thread was resolved or unresolved: ..._". A thread IronBee resolved itself doesn't count as resolved by people.
 
 A neutral check never holds a merge. Its title names what happened:
 
@@ -345,7 +345,7 @@ With **Answer questions** off, IronBee doesn't answer replies under its comments
 | A target branch that isn't in **Target branches** | Nothing |
 | A label from **Skip by label**, or a word from **Skip by title** | Nothing |
 | Files that match **Paths to ignore** | The review runs without them, and its body counts them |
-| Code review turned off for the repository | Nothing, and commands are ignored |
+| Code review turned off for the repository, or for the account | Nothing, and commands are ignored |
 | Too large, already reviewed, out of credits, or an error | A neutral [IronBee review check](#conclusions) that says why |
 
 Asking with `@ironbee-ai review` or **Review now** reviews a pull request that the first six rows hold back.
@@ -354,7 +354,7 @@ Asking with `@ironbee-ai review` or **Review now** reviews a pull request that t
 
 ## Credits
 
-A review uses credits, whether it started on its own, from `@ironbee-ai review` or `@ironbee-ai full review`, or from **Review now**. What it costs depends on the change's size and the review's depth. See [Pricing](/console/pricing).
+A review uses credits, whether it started on its own, from `@ironbee-ai review` or `@ironbee-ai full review`, or from **Review now**. What it costs depends on the change's size and the review's depth. See [Pricing](/console/pricing). While your account runs its jobs on its own model with [BYOM](/byom/overview), a review is charged at the BYOM rate under [What a job costs](/console/usage#what-a-job-costs).
 
 These use no credits:
 

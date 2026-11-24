@@ -99,12 +99,12 @@ Every verification run on IronBee uses credits by the minutes it runs. The **Cre
 | `≤` and a number | The run is in progress. The number is the most it can use, set by its time limit |
 | A number | The run ended. It's the credits the run used |
 
-A run that ended without being charged shows `0`. Hover it to see why: "not charged: the run never started", or "not charged: IronBee's own failure" when something on IronBee's side failed before the agent started working.
+A run that ended without being charged shows `0`. Hover it to see why: "not charged: the run never started", or "not charged: IronBee's own failure" when something on IronBee's side failed before the agent started working. On [BYOM](/byom/overview), a run that failed with `byom_unavailable`, because your endpoint never answered, shows "not charged: the BYOM endpoint was not available".
 
 <img className="ib-shot ib-shot-light" src="/images/console/verifications/verifications-credits-light.png" alt="The Status, Result, Started, Duration and Credits columns of the verification list, with a running run's upper bound, ended runs' credits and dashes for CLI cycles" />
 <img className="ib-shot ib-shot-dark" src="/images/console/verifications/verifications-credits-dark.png" alt="The Status, Result, Started, Duration and Credits columns of the verification list, with a running run's upper bound, ended runs' credits and dashes for CLI cycles" />
 
-What a run costs, and the team's credits this month, are on [Credit usage](/console/usage).
+What a run costs, and the team's credits this month, are on [Credit usage](/console/usage). While your account runs its jobs on its own model with [BYOM](/byom/overview), a run is charged the BYOM rate there, and the number in the cell is already that price.
 
 ---
 
